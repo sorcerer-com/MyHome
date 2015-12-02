@@ -1,3 +1,8 @@
-19/11/2015 23:23:04	info	Start My Home
-19/11/2015 23:24:04	info	SecurityAlarm Activated!!!
-19/11/2015 23:24:04	info	call ['fswebcam', '-r 640x480', '-F 10', 'temp.jpg']
+02/12/2015 22:08:21	info	Start My Home
+02/12/2015 22:08:21	info	SecurityAlarm enabled
+02/12/2015 22:08:21	info	SecurityAlarm disabled
+02/12/2015 22:08:21	info	Distance enabled
+02/12/2015 22:08:22	info	SecurityAlarm enabled
+02/12/2015 22:08:23	info	SecurityAlarm Activated!!!
+02/12/2015 22:08:23	info	call ['fswebcam', '-r 640x480', '-F 10', 'temp.jpg']
+02/12/2015 22:08:23	info	SecurityAlarm disabled

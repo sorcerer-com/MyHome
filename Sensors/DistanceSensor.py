@@ -6,11 +6,11 @@ class DistanceSensor(BaseSensor):
 	def __init__(self, owner):
 		BaseSensor.__init__(self, owner)
 		
-		self.Distance = 0.0
-		self.Changes = 10.0 # TODO: 0.0
+		self.distance = 0.0
+		self.changes = 10.0 # TODO: 0.0
 	
 	def refresh(self):
 		BaseSensor.refresh(self)
 		
 	def info(self):
-		return str(self.Distance) + " (" + str(self.Changes) + ")"
+		return str(self.distance) + " (" + str(self.changes) + ")"
