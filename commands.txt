@@ -1,0 +1,26 @@
+sudo apt-get install xrdp
+
+sudo rpi-update
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get clean
+
+#https://www.raspberrypi.org/documentation/remote-access/ftp.md
+sudo apt-get install pure-ftpd
+
+#http://elinux.org/RPi_Chromium
+sudo apt-get install chromium-browser
+sudo apt-get install ttf-mscorefonts-installer
+
+#http://elinux.org/R-Pi_NAS
+sudo apt-get install samba samba-common-bin
+
+#https://melgrubb.wordpress.com/2014/08/01/raspberry-pi-home-server-part-5-remote-desktop/
+sudo apt-get install x11vnc
+
+sudo apt-get install vlc
+
+#https://www.raspberrypi.org/documentation/usage/webcams/
+sudo apt-get install fswebcam
+
+sudo apt-get install python-xlib

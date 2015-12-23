@@ -10,6 +10,7 @@ class MHome():
 
 	def __init__(self):
 		Logger.log("info", "Start My Home")
+		Config.load()
 		
 		# systems
 		self.systems = {}
@@ -23,6 +24,7 @@ class MHome():
 		
 	def __del__(self):
 		MHome.updateTime = 0
+		Config.save();
 
 	def update(self):
 		# refresh sensors data
