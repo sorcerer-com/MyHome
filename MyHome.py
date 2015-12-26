@@ -1,8 +1,7 @@
 #!/usr/bin/python
 from threading import Timer
 from Utils.Logger import *
-from Systems.SecurityAlarmSystem import *
-from Sensors.DistanceSensor import *
+from Systems.SecuritySystem import *
 
 # TODO: may be implement one day(month) tests - check if everything is ok
 class MHome():
@@ -14,11 +13,7 @@ class MHome():
 		
 		# systems
 		self.systems = {}
-		self.systems[SecurityAlarmSystem.Name] = SecurityAlarmSystem(self)
-		
-		# sensors
-		self.sensors = {}
-		self.sensors[DistanceSensor.Name] = DistanceSensor(self)
+		self.systems[SecuritySystem.Name] = SecuritySystem(self)
 		
 		self.update()
 		
@@ -26,12 +21,7 @@ class MHome():
 		MHome.updateTime = 0
 		Config.save();
 
-	def update(self):
-		# refresh sensors data
-		for sensor in self.sensors.values():
-			if sensor.enabled:
-				sensor.refresh()
-				
+	def update(self):				
 		# update systems
 		for system in self.systems.values():
 			if system.enabled:

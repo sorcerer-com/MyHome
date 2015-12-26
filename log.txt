@@ -1,4 +1,0 @@
-23/12/2015 14:45:58	info	Start My Home
-23/12/2015 14:45:58	info	SecurityAlarm enabled
-23/12/2015 14:45:58	info	SecurityAlarm disabled
-23/12/2015 14:45:58	info	Distance enabled

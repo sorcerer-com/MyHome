@@ -5,7 +5,7 @@ class BaseSystem(object):
 
 	def __init__(self, owner):
 		self._owner = owner
-		self.enabled = True
+		self._enabled = True
 		
 	@property
 	def enabled(self):
@@ -13,8 +13,12 @@ class BaseSystem(object):
 		
 	@enabled.setter
 	def enabled(self, value):
-		Logger.log("info", self.Name + " " + ("enabled" if value else "disabled"))
-		self._enabled = value
+		if self._enabled <> value:
+			self._enabled = value
+			self._onEnabledChanged()
+		
+	def _onEnabledChanged(self):
+		Logger.log("info", self.Name + " " + ("enabled" if self.enabled else "disabled"))
 		
 	def update(self):
 		Logger.log("debug", "update " + self.Name)

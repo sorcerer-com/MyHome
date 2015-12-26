@@ -1,8 +1,9 @@
 import ConfigParser
 
 class Config:
+	# TODO: add them as options in UI
 	ConfigFileName = "config.ini"
-	LogFileName = "log.txt"
+	LogFileName = "bin/log.txt"
 	
 	GSMNumber = "359898555415"
 	MyTelenorPassword = "f25163"

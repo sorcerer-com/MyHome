@@ -1,4 +1,3 @@
-import subprocess
 import smtplib
 from os.path import basename
 from email.mime.application import MIMEApplication
@@ -24,12 +23,13 @@ class InternetService:
 		msg.attach(MIMEText(text))
 
 		for f in files or []:
-			with open(f, "rb") as file:
-				msg.attach(MIMEApplication(
-					file.read(),
-					Content_Disposition='attachment; filename="%s"' % basename(f),
-					Name=basename(f)
-				))
+			if os.path.isfile(f):
+				with open(f, "rb") as file:
+					msg.attach(MIMEApplication(
+						file.read(),
+						Content_Disposition='attachment; filename="%s"' % basename(f),
+						Name=basename(f)
+					))
 			
 		smtp = smtplib.SMTP_SSL(Config.SMTPServer, Config.SMTPServerPort)
 		smtp.login(Config.EMailUserName, Config.EMailPassword)
