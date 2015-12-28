@@ -1,5 +1,5 @@
 import smtplib
-from os.path import basename
+from os.path import basename, isfile
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -12,7 +12,7 @@ import External.mechanize
 class InternetService:
 	@staticmethod
 	def sendEMail(send_to, subject, text, files=None):
-		Logger.log("info", "send mail to '" + str(send_to) + "' subject:'" + subject + "'")
+		Logger.log("info", "Internet Service: send mail to '%s' subject: '%s'" % (str(send_to), subject))
 		
 		assert isinstance(send_to, list)
 		msg = MIMEMultipart()
@@ -23,7 +23,7 @@ class InternetService:
 		msg.attach(MIMEText(text))
 
 		for f in files or []:
-			if os.path.isfile(f):
+			if isfile(f):
 				with open(f, "rb") as file:
 					msg.attach(MIMEApplication(
 						file.read(),
@@ -38,11 +38,12 @@ class InternetService:
 		
 	@staticmethod
 	def sendSMSByEMail(number, msg):
-		Logger.log("info", "send SMS '" + msg + "' to " + number)
+		Logger.log("info", "Internet Service: send SMS '%s' to %s" % (msg, number))
 		InternetService.sendMail([number + "@sms.telenor.bg"], "", msg)
 		
 	@staticmethod
 	def sendSMS(number, msg, operator):
+		Logger.log("info", "Internet Service: send SMS '%s' to %s" % (msg, number))
 		if operator.lower() == "telenor":
 			if number.startswith("359"):
 				number = "0" + number[3:]

@@ -14,13 +14,14 @@ class SecuritySystem(BaseSystem):
 		
 		self.startDelay = timedelta(minutes=5)
 		self.sendInterval = timedelta(minutes=5)
-		self.numImages = 25
+		self.numImages = 30
 		
 		self.activated = False
 		self.currImage = 0
 		self.lastSendTime = datetime.now()
 
 	def _onEnabledChanged(self):
+		BaseSystem._onEnabledChanged(self)
 		self.lastSendTime = datetime.now() - self.sendInterval + self.startDelay
 
 	def update(self):
@@ -28,10 +29,8 @@ class SecuritySystem(BaseSystem):
 		
 		# TODO: add options in UI		
 		elapsed = datetime.now() - self.lastSendTime
-		print (elapsed)
 		if elapsed > self.sendInterval:
 			if self.activated:
-				Logger.log("info", "Security System Activated")
 				images = []
 				for i in range(0, self.currImage):
 					images.append("camera" + str(i) + ".jpg")
@@ -40,7 +39,12 @@ class SecuritySystem(BaseSystem):
 				for i in range(0, self.currImage):
 					os.remove("camera" + str(i) + ".jpg")
 			
-			self.activated = SensorsService.motionDetected
+			self.activated = False
+		
+		if not self.activated: # if not activated check for motion
+			self.activated = SensorsService.motionDetected()
+			if self.activated:
+				Logger.log("info", "Security System: Activated")
 			self.currImage = 0
 			self.lastSendTime = datetime.now()
 		

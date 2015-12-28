@@ -4,6 +4,7 @@ class Config:
 	# TODO: add them as options in UI
 	ConfigFileName = "config.ini"
 	LogFileName = "bin/log.txt"
+	PrintLog = "True"
 	
 	GSMNumber = "359898555415"
 	MyTelenorPassword = "f25163"

@@ -18,6 +18,7 @@ class MHome():
 		self.update()
 		
 	def __del__(self):
+		Logger.log("info", "Stop My Home")
 		MHome.updateTime = 0
 		Config.save();
 

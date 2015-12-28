@@ -11,6 +11,8 @@ class Logger:
 	@staticmethod
 	def log(type, msg):
 		getattr(logging, type)(Logger.format(type, msg))
+		if Config.PrintLog and type <> "debug":
+			print (type + ": " + Logger.format(type, msg))
 		
 	@staticmethod
 	def format(type, msg):
