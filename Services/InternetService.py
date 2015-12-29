@@ -30,11 +30,15 @@ class InternetService:
 						Content_Disposition='attachment; filename="%s"' % basename(f),
 						Name=basename(f)
 					))
-			
-		smtp = smtplib.SMTP_SSL(Config.SMTPServer, Config.SMTPServerPort)
-		smtp.login(Config.EMailUserName, Config.EMailPassword)
-		smtp.sendmail(Config.EMail, send_to, msg.as_string())
-		smtp.close()
+		
+		try:
+			smtp = smtplib.SMTP_SSL(Config.SMTPServer, Config.SMTPServerPort)
+			smtp.login(Config.EMailUserName, Config.EMailPassword)
+			smtp.sendmail(Config.EMail, send_to, msg.as_string())
+			smtp.close()
+			return True
+		except:
+			return False
 		
 	@staticmethod
 	def sendSMSByEMail(number, msg):
