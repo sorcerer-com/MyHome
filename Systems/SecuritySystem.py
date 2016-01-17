@@ -22,6 +22,8 @@ class SecuritySystem(BaseSystem):
 
 	def _onEnabledChanged(self):
 		BaseSystem._onEnabledChanged(self)
+		self._activated = False
+		self.clearImages()
 		self._lastSendTime = datetime.now() + self.startDelay
 
 	def update(self):
@@ -35,10 +37,7 @@ class SecuritySystem(BaseSystem):
 				for i in range(0, self._currImage):
 					images.append("camera" + str(i) + ".jpg")
 				if InternetService.sendEMail([Config.EMail], "My Home", "Security Alarm Activated!", images): # if send successful
-					for i in range(0, self._currImage):
-						if os.path.isfile("camera" + str(i) + ".jpg"):
-							 os.remove("camera" + str(i) + ".jpg")
-					self._currImage = 0
+					self.clearImages()
 			
 			self._activated = False
 		
@@ -53,3 +52,9 @@ class SecuritySystem(BaseSystem):
 		if self._activated and elapsed > (self.sendInterval / self.numImages) * (self._currImage % (self.numImages + 1)):
 			CameraService.saveImage("camera" + str(self._currImage) + ".jpg", "640x480", 1)
 			self._currImage += 1
+
+	def clearImages(self):
+		for i in range(0, self._currImage):
+			if os.path.isfile("camera" + str(i) + ".jpg"):
+				os.remove("camera" + str(i) + ".jpg")
+		self._currImage = 0

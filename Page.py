@@ -1,0 +1,177 @@
+from Utils.Utils import *
+
+def style():
+	result = "body\n"
+	result += "{\n"
+	result += "background: #C0A166;\n"
+	result += "}\n"
+	# title
+	result += ".title\n"
+	result += "{\n"
+	result += "display: table;\n"
+	result += "margin-bottom: 10px;\n"
+	result += "}\n"
+	result += ".title img\n"
+	result += "{\n"
+	result += "display: table-cell;\n"
+	result += "width: 32px;\n"
+	result += "height: 32px;\n"
+	result += "padding: 10px;\n"
+	result += "}\n"
+	result += ".title h1\n"
+	result += "{\n"
+	result += "display: table-cell;\n"
+	result += "vertical-align: middle;\n"
+	result += "}\n"
+	result += "h2.title\n"
+	result += "{\n"
+	result += "margin: 0px 0px 10px 15px;\n"
+	result += "}\n"
+	# button
+	result += ".button\n"
+	result += "{\n"
+	result += "text-decoration: none;\n"
+	result += "padding: 3px 5px;\n"
+	result += "color: black;\n"
+	result += "background: #ddd;\n"
+	result += "border-color: #fff #888 #888 #fff;\n"
+	result += "border-width: 2px;\n"
+	result += "border-style: solid;\n"
+	result += "margin: 3px;\n"
+	result += "}\n"
+	result += ".red\n"
+	result += "{\n"
+	result += "background: #d00;\n"
+	result += "border-color: #f00 #800 #800 #f00;\n"
+	result += "}\n"
+	result += ".green\n"
+	result += "{\n"
+	result += "background: #0d0;\n"
+	result += "border-color: #0f0 #080 #080 #0f0;\n"
+	result += "}\n"
+	# system list
+	result += "ul.system, .settings\n"
+	result += "{\n"
+	result += "list-style-type: none;\n"
+	result += "padding: 0px 5px;\n"
+	result += "}\n"
+	result += ".system h2\n"
+	result += "{\n"
+	result += "display: inline-block;\n"
+	result += "width: 150px;\n"
+	result += "margin: 5px 0px;\n"
+	result += "}\n"
+	# settings
+	result += ".settings h3\n"
+	result += "{\n"
+	result += "display: inline-block;\n"
+	result += "width: 200px;\n"
+	result += "margin: 3px 0px;\n"
+	result += "}\n"
+	return result
+	
+def script():
+	result = "function submitForm() {\n"
+	result += "document.getElementById('form').submit()\n"
+	result += "}\n"
+	result += "function addItem(sender) {\n"
+	result += "var parent = sender.parentElement\n"
+	result += "var newItem = parent.firstElementChild.cloneNode(true)\n"
+	result += "parent.insertBefore(newItem, parent.firstElementChild)\n"
+	result += "}\n"
+	result += "function removeItem(sender) {\n"
+	result += "var parent = sender.parentElement\n"
+	result += "parent.parentElement.removeChild(parent)\n"
+	result += "}\n"
+	return result
+
+def html(content, autorefresh = False):
+	result = "<!DOCTYPE html>\n"
+	result += "<html>\n"
+	result += "<head>\n"
+	result += "<title>My Home</title>\n"
+	if autorefresh:
+		result += "<meta http-equiv='Refresh' content='10'>\n"
+	result += "<meta name='viewport' content='initial-scale=1.0, width=device-width'/>\n"
+	result += "<style>\n"
+	result += style();
+	result += "</style>\n"
+	result += "<script type='text/javascript'>\n"
+	result += script();
+	result += "</script>\n"
+	result += "</head>\n"
+	result += "\n"
+	result += "<body>\n"
+	result += "<div class='title'>\n"
+	result += "<img src='/favicon.ico'/>\n"
+	result += "<h1>My Home</h1>\n"
+	result += "</div>\n"
+	result += content;
+	result += "</body>\n"
+	result += "</html>\n"
+	return result
+	
+	
+def indexContent(myHome):
+	result = "<ul class='system'>\n"
+	for (key, value) in myHome.systems.items():
+		result += "<li>\n"
+		result += "<h2>%s</h2>\n" % key
+		if value.enabled:
+			result += "<a class='button green' href='/?%s=%s'>Enabled</a>\n" % (value.Name, False)
+		else:
+			result += "<a class='button red' href='/?%s=%s'>Disabled</a>\n" % (value.Name, True)
+		result += "<a class='button' href='/settings/%s'>Settings</a>\n" % value.Name
+		result += "</li>\n"
+	result += "</ul>\n"
+	result += "<a class='button' href='/config'>Config</a>\n"
+	return result
+	
+def settingsContent(myHome, system):
+	result = "<h2 class='title'>%s Settings</h2>\n" % system
+	result += "<form id='form' action='/settings/%s' method='post'>\n" % system
+	result += "<ul class='settings'>\n"
+	items = getProperties(myHome.systems[system])
+	for prop in items:
+		value = getattr(myHome.systems[system], prop)
+		result += property(prop, value)
+	result += "</ul>\n"
+	result += "<a class='button' href=\"javascript:submitForm();\">Save</a>\n"
+	result += "<a class='button' href='/'>Cancel</a>\n"
+	result += "</form>\n"
+	return result
+	
+def configContent():
+	result = "<h2 class='title'>Config</h2>\n"
+	result += "<form id='form' action='/config' method='post'>\n"
+	result += "<ul class='settings'>\n"
+	items = Config.list()
+	for prop in items:
+		value = getattr(Config, prop)
+		result += property(prop, value)
+	result += "</ul>\n"
+	result += "<a class='button' href=\"javascript:submitForm()\">Save</a>\n"
+	result += "<a class='button' href='/'>Cancel</a>\n"
+	result += "</form>\n"
+	return result
+	
+	
+def property(name, value, item = False):
+	result = ""
+	if type(value) is list:
+		for i in range(0, len(value)):
+			result += "<div>" + property("%s[]" % name, value[i], True) + "</div>"
+			
+		if "<h3>&nbsp;</h3>" not in result:
+			result += "<h3>&nbsp;</h3>"
+		result += "<a class='button' href='javascript:;' onclick='addItem(this)'>+</a>\n"
+		if item:
+			result += "<a class='button' href='javascript:;' onclick='removeItem(this)'>-</a>\n"
+	else:
+		result += "<li>\n"
+		result += "<h3>%s: </h3>\n" % name
+		result += "<input type='text' name='%s' value='%s' title ='%s'/>\n" % (name, string(value), string(value))
+		if item:
+			result += "<a class='button' href='javascript:;' onclick='removeItem(this)'>-</a>\n"
+		result += "</li>\n"
+	return result

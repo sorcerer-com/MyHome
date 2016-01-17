@@ -14,13 +14,22 @@ class Config:
 	EMailPassword = "com123"
 	
 	@staticmethod
-	def save(configParser):
-		configParser.add_section("Config")
+	def list():
+		result = []
 		items = dir(Config)
 		for attr in items:
+			attrType = type(getattr(Config, attr))
+			if (attrType is str) and (not attr.startswith("_")):
+				result.append(attr)
+		return result
+	
+	@staticmethod
+	def save(configParser):
+		configParser.add_section("Config")
+		items = Config.list()
+		for attr in items:
 			value = getattr(Config, attr)
-			if (type(value) is str) and (attr[0] <> "_"):
-				configParser.set("Config", attr, value)
+			configParser.set("Config", attr, value)
 			
 	@staticmethod
 	def load(configParser):

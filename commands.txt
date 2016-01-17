@@ -24,3 +24,5 @@ sudo apt-get install vlc
 sudo apt-get install fswebcam
 
 sudo apt-get install python-xlib
+
+#https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md

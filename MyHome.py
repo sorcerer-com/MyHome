@@ -2,10 +2,11 @@ from threading import Timer
 from Utils.Utils import *
 from Utils.Logger import *
 from Systems.SecuritySystem import *
+from Systems.ScheduleSystem import *
 
 # TODO: may be implement one day(month) tests - check if everything is ok
 class MHome():
-	updateTime = 0.01
+	updateTime = 0.1
 
 	def __init__(self):
 		Logger.log("info", "Start My Home")
@@ -13,6 +14,7 @@ class MHome():
 		# systems
 		self.systems = {}
 		self.systems[SecuritySystem.Name] = SecuritySystem(self)
+		self.systems[ScheduleSystem.Name] = ScheduleSystem(self)
 		
 		self.loadSettings()
 		self.update()
@@ -42,11 +44,11 @@ class MHome():
 		# load systems settings
 		for (key, system) in self.systems.items():
 			items = configParser.items(key)
-			for (prop, value) in items:
-				if hasattr(system, prop):
-					propType = type(getattr(system, prop))
-					setattr(system, prop, parse(value, propType))
-	
+			for (name, value) in items:
+				if hasattr(system, name):
+					propType = type(getattr(system, name))
+					setattr(system, name, parse(value, propType))
+		
 	def saveSettings(self):
 		configParser = ConfigParser.RawConfigParser()
 		configParser.optionxform = str
@@ -56,10 +58,10 @@ class MHome():
 		# save systems settings
 		for (key, system) in self.systems.items():
 			configParser.add_section(key)
-			items = getProperties(system, False)
+			items = getProperties(system)
 			for prop in items:
 				value = getattr(system, prop)
-				configParser.set(key, prop, value)
+				configParser.set(key, prop, string(value))
 				
 		with open(Config.ConfigFileName, 'wb') as configfile:
 			configParser.write(configfile)
