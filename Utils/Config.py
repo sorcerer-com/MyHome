@@ -5,13 +5,13 @@ class Config:
 	LogFileName = "log.txt"
 	PrintLog = "True"
 	
-	GSMNumber = "359898555415"
-	MyTelenorPassword = "f25163"
+	GSMNumber = ""
+	MyTelenorPassword = ""
 	SMTPServer = "smtp.abv.bg"
 	SMTPServerPort = "465"
-	EMail = "sorcerer_com@abv.bg"
-	EMailUserName = "sorcerer_com@abv.bg"
-	EMailPassword = "com123"
+	EMail = ""
+	EMailUserName = ""
+	EMailPassword = ""
 	
 	@staticmethod
 	def list():
