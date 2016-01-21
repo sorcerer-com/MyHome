@@ -32,6 +32,14 @@ class MHome():
 				
 		if MHome.updateTime > 0:
 			Timer(MHome.updateTime, self.update).start()
+			
+	def test(self):
+		Logger.log("info", "My Home: test")
+		CameraService.saveImage("test.jpg", "640x480", 1)
+		InternetService.sendSMS(Config.GSMNumber, "Test", "telenor")
+		InternetService.sendEMail([Config.EMail], "My Home", "Test", ["test.jpg"])
+		if os.path.isfile("test.jpg"):
+			os.remove("test.jpg")
 
 	def loadSettings(self):
 		configParser = ConfigParser.RawConfigParser()

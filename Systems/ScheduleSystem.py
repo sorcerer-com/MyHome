@@ -30,6 +30,11 @@ class ScheduleSystem(BaseSystem):
 		self._schedule[-1].append(temp.replace(hour=10, minute=0, second=1, microsecond=0) + timedelta(6 - temp.weekday()))
 		self._schedule[-1].append(timedelta(hours=24*7))
 		self._schedule[-1].append("Security.enabled=False")
+		# test My Home every 30 days at 20:00
+		self._schedule.append([])
+		self._schedule[-1].append(temp.replace(month=temp.month+1, day=1, hour=20, minute=0, second=0, microsecond=0))
+		self._schedule[-1].append(timedelta(hours=24*30))
+		self._schedule[-1].append("MyHome.test()")
 		
 		self._nextTime = datetime.now()
 	
@@ -64,9 +69,11 @@ class ScheduleSystem(BaseSystem):
 			if datetime.now() > item[0]:
 				command = item[2]
 				if "." in command :
-					systemName = item[2].split(".")[0]
-					if systemName in self._owner.systems:
-						command = item[2].replace(systemName + ".", "self._owner.systems['%s']." % systemName)
+					name = item[2].split(".")[0]
+					if name == "MyHome":
+						command = item[2].replace(name + ".", "self._owner.")
+					elif name in self._owner.systems:
+						command = item[2].replace(name + ".", "self._owner.systems['%s']." % name)
 				
 				try:
 					exec(command)

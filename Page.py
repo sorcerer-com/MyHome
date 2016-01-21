@@ -125,6 +125,7 @@ def indexContent(myHome):
 		result += "</li>\n"
 	result += "</ul>\n"
 	result += "<a class='button' href='/config'>Config</a>\n"
+	result += "<a class='button' href='/test'>Test</a>\n"
 	return result
 	
 def settingsContent(myHome, system):

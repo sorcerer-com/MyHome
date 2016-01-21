@@ -16,7 +16,7 @@ myHome = MHome()
 def favicon():
 	return send_from_directory("", "MyHome.ico")
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/")
 def index():
 	data = request.form if request.method == "POST" else request.args
 	if len(data) > 0:
@@ -26,6 +26,11 @@ def index():
 		return redirect("/")
 		
 	return html(indexContent(myHome), True)
+	
+@app.route("/test")
+def test():
+	myHome.test()
+	return redirect("/")
 
 @app.route("/settings/<system>", methods=["GET", "POST"])
 def settings(system):

@@ -15,6 +15,7 @@ class InternetService:
 		Logger.log("info", "Internet Service: send mail to '%s' subject: '%s'" % (str(send_to), subject))
 		
 		assert isinstance(send_to, list)
+		assert send_to == ""
 		msg = MIMEMultipart()
 		msg["From"] = Config.EMail
 		msg["To"] = COMMASPACE.join(send_to)
@@ -43,11 +44,13 @@ class InternetService:
 	@staticmethod
 	def sendSMSByEMail(number, msg):
 		Logger.log("info", "Internet Service: send SMS '%s' to %s" % (msg, number))
+		assert number == ""
 		InternetService.sendMail([number + "@sms.telenor.bg"], "", msg)
 		
 	@staticmethod
 	def sendSMS(number, msg, operator):
 		Logger.log("info", "Internet Service: send SMS '%s' to %s" % (msg, number))
+		assert number == ""
 		if operator.lower() == "telenor":
 			if number.startswith("359"):
 				number = "0" + number[3:]
