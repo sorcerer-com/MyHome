@@ -93,20 +93,25 @@ def html(content, autorefresh = False):
 	if autorefresh:
 		result += "<meta http-equiv='Refresh' content='10'>\n"
 	result += "<meta name='viewport' content='initial-scale=1.0, width=device-width'/>\n"
+	result += "\n"
 	result += "<style>\n"
 	result += style();
 	result += "</style>\n"
+	result += "\n"
 	result += "<script type='text/javascript'>\n"
 	result += script();
 	result += "</script>\n"
 	result += "</head>\n"
 	result += "\n"
 	result += "<body>\n"
+	result += "\n"
 	result += "<div class='title'>\n"
 	result += "<img src='/favicon.ico'/>\n"
 	result += "<h1>My Home</h1>\n"
 	result += "</div>\n"
+	result += "\n"
 	result += content;
+	result += "\n"
 	result += "</body>\n"
 	result += "</html>\n"
 	return result
@@ -124,22 +129,24 @@ def indexContent(myHome):
 		result += "<a class='button' href='/settings/%s'>Settings</a>\n" % value.Name
 		result += "</li>\n"
 	result += "</ul>\n"
-	result += "<a class='button' href='/config'>Config</a>\n"
+	result += "<a class='button' href='/log'>Log</a>\n"
 	result += "<a class='button' href='/test'>Test</a>\n"
+	result += "<a class='button' href='/config'>Config</a>\n"
 	return result
 	
-def settingsContent(myHome, system):
-	result = "<h2 class='title'>%s Settings</h2>\n" % system
-	result += "<form id='form' action='/settings/%s' method='post'>\n" % system
-	result += "<ul class='settings'>\n"
-	items = getProperties(myHome.systems[system])
-	for prop in items:
-		value = getattr(myHome.systems[system], prop)
-		result += property(prop, value)
-	result += "</ul>\n"
-	result += "<a class='button' href=\"javascript:submitForm();\">Save</a>\n"
-	result += "<a class='button' href='/'>Cancel</a>\n"
-	result += "</form>\n"
+def logContent():
+	result = "<h2 class='title'>Log</h2>\n"
+	result += "<p>\n"
+	with open(Config.LogFileName, "r") as file:
+		for line in file:
+			if line.endswith("\n"):
+				line = line[:-1]
+			if "\terror\t" in line:
+				result += "<div class='red'>%s</div>\n" % line
+			else:
+				result += "%s<br/>\n" % line
+	result += "</p>\n"
+	result += "<a class='button' href='/'>Back</a>\n"
 	return result
 	
 def configContent():
@@ -152,6 +159,20 @@ def configContent():
 		result += property(prop, value)
 	result += "</ul>\n"
 	result += "<a class='button' href=\"javascript:submitForm()\">Save</a>\n"
+	result += "<a class='button' href='/'>Cancel</a>\n"
+	result += "</form>\n"
+	return result
+	
+def settingsContent(myHome, system):
+	result = "<h2 class='title'>%s Settings</h2>\n" % system
+	result += "<form id='form' action='/settings/%s' method='post'>\n" % system
+	result += "<ul class='settings'>\n"
+	items = getProperties(myHome.systems[system])
+	for prop in items:
+		value = getattr(myHome.systems[system], prop)
+		result += property(prop, value)
+	result += "</ul>\n"
+	result += "<a class='button' href=\"javascript:submitForm();\">Save</a>\n"
 	result += "<a class='button' href='/'>Cancel</a>\n"
 	result += "</form>\n"
 	return result

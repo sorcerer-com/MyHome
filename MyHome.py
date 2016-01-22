@@ -4,7 +4,6 @@ from Utils.Logger import *
 from Systems.SecuritySystem import *
 from Systems.ScheduleSystem import *
 
-# TODO: may be implement one day(month) tests - check if everything is ok
 class MHome():
 	updateTime = 0.1
 

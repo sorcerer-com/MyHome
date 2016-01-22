@@ -11,7 +11,7 @@ app = Flask(__name__)
 myHome = MHome()
 
 
-# TODO: login page
+# TODO: login page, autostart(/home/pi/.bashrc)
 @app.route('/favicon.ico')
 def favicon():
 	return send_from_directory("", "MyHome.ico")
@@ -25,12 +25,28 @@ def index():
 			myHome.systems[arg].enabled = value
 		return redirect("/")
 		
-	return html(indexContent(myHome), True)
+	return html(indexContent(myHome), False) # disable auto refresh for now
+	
+@app.route("/log")
+def log():
+	return html(logContent())
 	
 @app.route("/test")
 def test():
 	myHome.test()
 	return redirect("/")
+    
+@app.route("/config", methods=["GET", "POST"])
+def config():
+	data = request.form if request.method == "POST" else request.args
+	if len(data) > 0:
+		for arg in data:
+			value = data[arg]
+			if hasattr(Config, arg):
+				setattr(Config, arg, str(value))
+		return redirect("/")
+		
+	return html(configContent())
 
 @app.route("/settings/<system>", methods=["GET", "POST"])
 def settings(system):
@@ -49,18 +65,6 @@ def settings(system):
 		return redirect("/")
 		
 	return html(settingsContent(myHome, system))
-    
-@app.route("/config", methods=["GET", "POST"])
-def config():
-	data = request.form if request.method == "POST" else request.args
-	if len(data) > 0:
-		for arg in data:
-			value = data[arg]
-			if hasattr(Config, arg):
-				setattr(Config, arg, str(value))
-		return redirect("/")
-		
-	return html(configContent())
 
 
 def start():
