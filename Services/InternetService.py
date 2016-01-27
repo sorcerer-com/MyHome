@@ -14,8 +14,10 @@ class InternetService:
 	def sendEMail(send_to, subject, text, files=None):
 		Logger.log("info", "Internet Service: send mail to '%s' subject: '%s'" % (str(send_to), subject))
 		
-		assert isinstance(send_to, list)
-		assert send_to == ""
+		if (not isinstance(send_to, list)) or (len(send_to) == 0) or (send_to[0] == ""):
+			Logger.log("error", "Internet Service: cannot send mail - invalid mail list")
+			return False
+		
 		msg = MIMEMultipart()
 		msg["From"] = Config.EMail
 		msg["To"] = COMMASPACE.join(send_to)
@@ -44,13 +46,19 @@ class InternetService:
 	@staticmethod
 	def sendSMSByEMail(number, msg):
 		Logger.log("info", "Internet Service: send SMS '%s' to %s" % (msg, number))
-		assert number == ""
+		if number == "":
+			Logger.log("error", "Internet Service: cannot send sms - invalid number")
+			return
+			
 		InternetService.sendMail([number + "@sms.telenor.bg"], "", msg)
 		
 	@staticmethod
 	def sendSMS(number, msg, operator):
 		Logger.log("info", "Internet Service: send SMS '%s' to %s" % (msg, number))
-		assert number == ""
+		if number == "":
+			Logger.log("error", "Internet Service: cannot send sms - invalid number")
+			return
+			
 		if operator.lower() == "telenor":
 			if number.startswith("359"):
 				number = "0" + number[3:]

@@ -4,6 +4,7 @@ class Config:
 	ConfigFileName = "config.ini"
 	LogFileName = "log.txt"
 	PrintLog = "True"
+	Password = ""
 	
 	GSMNumber = ""
 	MyTelenorPassword = ""

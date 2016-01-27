@@ -3,85 +3,101 @@ from Utils.Utils import *
 def style():
 	result = "body\n"
 	result += "{\n"
-	result += "background: #C0A166;\n"
+	result += "	background: #C0A166;\n"
 	result += "}\n"
 	# title
 	result += ".title\n"
 	result += "{\n"
-	result += "display: table;\n"
-	result += "margin-bottom: 10px;\n"
+	result += "	display: table;\n"
+	result += "	margin-bottom: 10px;\n"
 	result += "}\n"
 	result += ".title img\n"
 	result += "{\n"
-	result += "display: table-cell;\n"
-	result += "width: 32px;\n"
-	result += "height: 32px;\n"
-	result += "padding: 10px;\n"
+	result += "	display: table-cell;\n"
+	result += "	width: 32px;\n"
+	result += "	height: 32px;\n"
+	result += "	padding: 10px;\n"
 	result += "}\n"
 	result += ".title h1\n"
 	result += "{\n"
-	result += "display: table-cell;\n"
-	result += "vertical-align: middle;\n"
+	result += "	display: table-cell;\n"
+	result += "	vertical-align: middle;\n"
 	result += "}\n"
 	result += "h2.title\n"
 	result += "{\n"
-	result += "margin: 0px 0px 10px 15px;\n"
+	result += "	margin: 0px 0px 10px 15px;\n"
 	result += "}\n"
 	# button
+	result += ".buttonContainer\n"
+	result += "{\n"
+	result += "	padding: 3px;\n"
+	result += "	margin: 4px;\n"
+	result += "}\n"
 	result += ".button\n"
 	result += "{\n"
-	result += "text-decoration: none;\n"
-	result += "padding: 3px 5px;\n"
-	result += "color: black;\n"
-	result += "background: #ddd;\n"
-	result += "border-color: #fff #888 #888 #fff;\n"
-	result += "border-width: 2px;\n"
-	result += "border-style: solid;\n"
-	result += "margin: 3px;\n"
+	result += "	text-decoration: none;\n"
+	result += "	padding: 3px 5px;\n"
+	result += "	color: black;\n"
+	result += "	background: #ddd;\n"
+	result += "	border-color: #fff #888 #888 #fff;\n"
+	result += "	border-width: 2px;\n"
+	result += "	border-style: solid;\n"
+	result += "	margin: 3px;\n"
 	result += "}\n"
 	result += ".red\n"
 	result += "{\n"
-	result += "background: #d00;\n"
-	result += "border-color: #f00 #800 #800 #f00;\n"
+	result += "	background: #d00;\n"
+	result += "	border-color: #f00 #800 #800 #f00;\n"
 	result += "}\n"
 	result += ".green\n"
 	result += "{\n"
-	result += "background: #0d0;\n"
-	result += "border-color: #0f0 #080 #080 #0f0;\n"
+	result += "	background: #0d0;\n"
+	result += "	border-color: #0f0 #080 #080 #0f0;\n"
 	result += "}\n"
 	# system list
 	result += "ul.system, .settings\n"
 	result += "{\n"
-	result += "list-style-type: none;\n"
-	result += "padding: 0px 5px;\n"
+	result += "	list-style-type: none;\n"
+	result += "	padding: 0px 5px;\n"
 	result += "}\n"
 	result += ".system h2\n"
 	result += "{\n"
-	result += "display: inline-block;\n"
-	result += "width: 150px;\n"
-	result += "margin: 5px 0px;\n"
+	result += "	display: inline-block;\n"
+	result += "	width: 150px;\n"
+	result += "	margin: 5px 0px;\n"
 	result += "}\n"
 	# settings
 	result += ".settings h3\n"
 	result += "{\n"
-	result += "display: inline-block;\n"
-	result += "width: 200px;\n"
-	result += "margin: 3px 0px;\n"
+	result += "	display: inline-block;\n"
+	result += "	width: 200px;\n"
+	result += "	margin: 3px 0px;\n"
 	result += "}\n"
 	return result
 	
 def script():
-	result = "function submitForm() {\n"
-	result += "document.getElementById('form').submit()\n"
+	result = "function submitForm(formName) {\n"
+	result += "	document.getElementById(formName).submit()\n"
 	result += "}\n"
 	result += "function addItem(sender) {\n"
-	result += "var parent = sender.parentElement\n"
-	result += "var newItem = parent.firstElementChild.cloneNode(true)\n"
-	result += "parent.insertBefore(newItem, parent.firstElementChild)\n"
+	result += "	var parent = sender.parentElement.parentElement\n"
+	result += "	var beforeLast = parent.children[parent.childElementCount - 2]\n"
+	result += "	var newItem = beforeLast.cloneNode(true)\n"
+	result += "	parent.insertBefore(newItem, parent.lastElementChild)\n"
 	result += "}\n"
 	result += "function removeItem(sender) {\n"
-	result += "var parent = sender.parentElement\n"
-	result += "parent.parentElement.removeChild(parent)\n"
+	result += "	var parent = sender.parentElement.parentElement\n"
+	result += "	parent.parentElement.removeChild(parent)\n"
+	result += "}\n"
+	result += "function addText(sender, formName, inputName) {\n"
+	result += "	var form = document.getElementById(formName)\n"
+	result += "	var element = form.elements[inputName]\n"
+	result += "	element.value += sender.text\n"
+	result += "}\n"
+	result += "function removeText(formName, inputName, count) {\n"
+	result += "	var form = document.getElementById(formName)\n"
+	result += "	var element = form.elements[inputName]\n"
+	result += "	element.value = element.value.substr(0, element.value.length - count)\n"
 	result += "}\n"
 	return result
 
@@ -134,6 +150,36 @@ def indexContent(myHome):
 	result += "<a class='button' href='/config'>Config</a>\n"
 	return result
 	
+def loginContent(invalid):
+	result = "<h2 class='title'>LogIn</h2>\n"
+	result += "<form id='form' action='' method='post'>\n"
+	if not invalid:
+		result += "<input type='password' name='password'/>\n"
+	else:
+		result += "<input type='password' name='password' class='red'/>\n"
+	result += "<div class='buttonContainer'>\n"
+	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>1</a>\n"
+	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>2</a>\n"
+	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>3</a>\n"
+	result += "</div>\n"
+	result += "<div class='buttonContainer'>\n"
+	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>4</a>\n"
+	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>5</a>\n"
+	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>6</a>\n"
+	result += "</div>\n"
+	result += "<div class='buttonContainer'>\n"
+	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>7</a>\n"
+	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>8</a>\n"
+	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>9</a>\n"
+	result += "</div>\n"
+	result += "<div class='buttonContainer'>\n"
+	result += "<a class='button' href='javascript:;' onclick='removeText(\"form\", \"password\", 1)'><</a>\n"
+	result += "<a class='button' href='javascript:;' onclick='addText(\"form\", \"password\", this)'>0</a>\n"
+	result += "<a class='button' href='javascript:;' onclick='submitForm(\"form\")'>></a>\n"
+	result += "<div>\n"
+	result += "</form>\n"
+	return result
+	
 def logContent():
 	result = "<h2 class='title'>Log</h2>\n"
 	result += "<p>\n"
@@ -151,28 +197,28 @@ def logContent():
 	
 def configContent():
 	result = "<h2 class='title'>Config</h2>\n"
-	result += "<form id='form' action='/config' method='post'>\n"
+	result += "<form id='form' action='' method='post'>\n"
 	result += "<ul class='settings'>\n"
 	items = Config.list()
 	for prop in items:
 		value = getattr(Config, prop)
 		result += property(prop, value)
 	result += "</ul>\n"
-	result += "<a class='button' href=\"javascript:submitForm()\">Save</a>\n"
+	result += "<a class='button' href='javascript:;' onclick='submitForm(\"form\")'>Save</a>\n"
 	result += "<a class='button' href='/'>Cancel</a>\n"
 	result += "</form>\n"
 	return result
 	
 def settingsContent(myHome, system):
 	result = "<h2 class='title'>%s Settings</h2>\n" % system
-	result += "<form id='form' action='/settings/%s' method='post'>\n" % system
+	result += "<form id='form' action='' method='post'>\n"
 	result += "<ul class='settings'>\n"
 	items = getProperties(myHome.systems[system])
 	for prop in items:
 		value = getattr(myHome.systems[system], prop)
 		result += property(prop, value)
 	result += "</ul>\n"
-	result += "<a class='button' href=\"javascript:submitForm();\">Save</a>\n"
+	result += "<a class='button' href='javascript:;' onclick='submitForm(\"form\");'>Save</a>\n"
 	result += "<a class='button' href='/'>Cancel</a>\n"
 	result += "</form>\n"
 	return result
@@ -184,11 +230,11 @@ def property(name, value, item = False):
 		for i in range(0, len(value)):
 			result += "<div>" + property("%s[]" % name, value[i], True) + "</div>"
 			
-		if "<h3>&nbsp;</h3>" not in result:
-			result += "<h3>&nbsp;</h3>"
+		result += "<div class='buttonContainer'>"
 		result += "<a class='button' href='javascript:;' onclick='addItem(this)'>+</a>\n"
 		if item:
 			result += "<a class='button' href='javascript:;' onclick='removeItem(this)'>-</a>\n"
+		result += "</div>"
 	else:
 		result += "<li>\n"
 		result += "<h3>%s: </h3>\n" % name

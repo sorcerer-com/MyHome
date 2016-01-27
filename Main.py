@@ -11,13 +11,15 @@ app = Flask(__name__)
 myHome = MHome()
 
 
-# TODO: login page, autostart(/home/pi/.bashrc)
+# TODO: autostart(/home/pi/.bashrc)
 @app.route('/favicon.ico')
 def favicon():
 	return send_from_directory("", "MyHome.ico")
 
 @app.route("/")
 def index():
+	if ("password" not in session) or (session["password"] != Config.Password):
+		return redirect("/login")
 	data = request.form if request.method == "POST" else request.args
 	if len(data) > 0:
 		for arg in data:
@@ -27,17 +29,42 @@ def index():
 		
 	return html(indexContent(myHome), False) # disable auto refresh for now
 	
+@app.route("/login", methods=["GET", "POST"])
+def login():
+	if Config.Password == "":
+		session["password"] = Config.Password
+		return redirect("/")
+	data = request.form if request.method == "POST" else request.args
+	if "password" in data: 
+		if str(hash(data["password"])) == Config.Password:
+			Logger.log("info", "LogIn: correct password")
+			session["password"] = str(hash(data["password"]))
+			return redirect("/")
+		else:
+			Logger.log("warning", "LogIn: invalid password")
+			invalid = True
+	else:
+		invalid = False
+		
+	return html(loginContent(invalid))
+	
 @app.route("/log")
 def log():
+	if ("password" not in session) or (session["password"] != Config.Password):
+		return redirect("/login")
 	return html(logContent())
 	
 @app.route("/test")
 def test():
+	if ("password" not in session) or (session["password"] != Config.Password):
+		return redirect("/login")
 	myHome.test()
 	return redirect("/")
     
 @app.route("/config", methods=["GET", "POST"])
 def config():
+	if ("password" not in session) or (session["password"] != Config.Password):
+		return redirect("/login")
 	data = request.form if request.method == "POST" else request.args
 	if len(data) > 0:
 		for arg in data:
@@ -50,6 +77,8 @@ def config():
 
 @app.route("/settings/<system>", methods=["GET", "POST"])
 def settings(system):
+	if ("password" not in session) or (session["password"] != Config.Password):
+		return redirect("/login")
 	data = request.form if request.method == "POST" else request.args
 	if len(data) > 0:
 		for arg in data:
@@ -68,6 +97,8 @@ def settings(system):
 
 
 def start():
+	app.secret_key = u"\xf2N\x8a 8\xb1\xd9(&\xa6\x90\x12R\xf0\\\xe8\x1e\xf92\xa6AN\xed\xb3"
+	app.permanent_session_lifetime = timedelta(minutes=30)
 	app.run(debug=False, host='0.0.0.0')
 
 if __name__ == "__main__":

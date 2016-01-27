@@ -5,9 +5,10 @@ class CameraService:
 	@staticmethod
 	def saveImage(fileName, size, frames):
 		Logger.log("info", "Camera Service: save image (%s, %s) to '%s'" % (size, frames, fileName))
-		assert fileName == ""
-		assert size == ""
-		assert frames == ""
+		if (fileName == "") or (size == "") or (frames == ""):
+			Logger.log("error", "CameraService: cannot save image - invalid parameters")
+			return
+
 		try:
 			subprocess.call(["fswebcam", "-r " + size, "-F " + str(frames), fileName], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		except:
