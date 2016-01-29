@@ -28,11 +28,6 @@ def style():
 	result += "	margin: 0px 0px 10px 15px;\n"
 	result += "}\n"
 	# button
-	result += ".buttonContainer\n"
-	result += "{\n"
-	result += "	padding: 3px;\n"
-	result += "	margin: 4px;\n"
-	result += "}\n"
 	result += ".button\n"
 	result += "{\n"
 	result += "	text-decoration: none;\n"
@@ -44,6 +39,11 @@ def style():
 	result += "	border-style: solid;\n"
 	result += "	margin: 3px;\n"
 	result += "}\n"
+	result += ".buttonContainer\n"
+	result += "{\n"
+	result += "	padding: 3px;\n"
+	result += "	margin: 5px;\n"
+	result += "}\n"
 	result += ".red\n"
 	result += "{\n"
 	result += "	background: #d00;\n"
@@ -53,6 +53,14 @@ def style():
 	result += "{\n"
 	result += "	background: #0d0;\n"
 	result += "	border-color: #0f0 #080 #080 #0f0;\n"
+	result += "}\n"
+	result += ".large\n"
+	result += "{\n"
+	result += "	font-size: large;\n"
+	result += "}\n"
+	result += ".bold\n"
+	result += "{\n"
+	result += "	font-weight: bold;\n"
 	result += "}\n"
 	# system list
 	result += "ul.system, .settings\n"
@@ -154,28 +162,28 @@ def loginContent(invalid):
 	result = "<h2 class='title'>LogIn</h2>\n"
 	result += "<form id='form' action='' method='post'>\n"
 	if not invalid:
-		result += "<input type='password' name='password'/>\n"
+		result += "<input type='password' name='password' autofocus/>\n"
 	else:
-		result += "<input type='password' name='password' class='red'/>\n"
+		result += "<input type='password' name='password' class='red' autofocus/>\n"
 	result += "<div class='buttonContainer'>\n"
-	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>1</a>\n"
-	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>2</a>\n"
-	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>3</a>\n"
+	result += "<a class='button large bold' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>1</a>\n"
+	result += "<a class='button large bold' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>2</a>\n"
+	result += "<a class='button large bold' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>3</a>\n"
 	result += "</div>\n"
 	result += "<div class='buttonContainer'>\n"
-	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>4</a>\n"
-	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>5</a>\n"
-	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>6</a>\n"
+	result += "<a class='button large bold' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>4</a>\n"
+	result += "<a class='button large bold' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>5</a>\n"
+	result += "<a class='button large bold' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>6</a>\n"
 	result += "</div>\n"
 	result += "<div class='buttonContainer'>\n"
-	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>7</a>\n"
-	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>8</a>\n"
-	result += "<a class='button' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>9</a>\n"
+	result += "<a class='button large bold' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>7</a>\n"
+	result += "<a class='button large bold' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>8</a>\n"
+	result += "<a class='button large bold' href='javascript:;' onclick='addText(this, \"form\", \"password\")'>9</a>\n"
 	result += "</div>\n"
 	result += "<div class='buttonContainer'>\n"
-	result += "<a class='button' href='javascript:;' onclick='removeText(\"form\", \"password\", 1)'><</a>\n"
-	result += "<a class='button' href='javascript:;' onclick='addText(\"form\", \"password\", this)'>0</a>\n"
-	result += "<a class='button' href='javascript:;' onclick='submitForm(\"form\")'>></a>\n"
+	result += "<a class='button large bold' href='javascript:;' onclick='removeText(\"form\", \"password\", 1)'><</a>\n"
+	result += "<a class='button large bold' href='javascript:;' onclick='addText(\"form\", \"password\", this)'>0</a>\n"
+	result += "<a class='button large bold' href='javascript:;' onclick='submitForm(\"form\")'>></a>\n"
 	result += "<div>\n"
 	result += "</form>\n"
 	return result
@@ -183,14 +191,14 @@ def loginContent(invalid):
 def logContent():
 	result = "<h2 class='title'>Log</h2>\n"
 	result += "<p>\n"
-	with open(Config.LogFileName, "r") as file:
-		for line in file:
-			if line.endswith("\n"):
-				line = line[:-1]
-			if "\terror\t" in line:
-				result += "<div class='red'>%s</div>\n" % line
-			else:
-				result += "%s<br/>\n" % line
+	#with open(Config.LogFileName, "r") as file:
+	for line in Logger.data:
+		if line.endswith("\n"):
+			line = line[:-1]
+		if "\terror\t" in line:
+			result += "<div class='red'>%s</div>\n" % line
+		else:
+			result += "%s<br/>\n" % line
 	result += "</p>\n"
 	result += "<a class='button' href='/'>Back</a>\n"
 	return result
@@ -223,7 +231,7 @@ def settingsContent(myHome, system):
 	result += "</form>\n"
 	return result
 	
-	
+		
 def property(name, value, item = False):
 	result = ""
 	if type(value) is list:

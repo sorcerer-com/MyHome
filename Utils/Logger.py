@@ -7,12 +7,17 @@ class Logger:
 	logger = logging.getLogger()
 	logger.setLevel(logging.INFO)
 	logger.addHandler(logging.FileHandler(Config.LogFileName, mode="w"))
+	
+	data = []
 
 	@staticmethod
 	def log(type, msg):
-		getattr(logging, type)(Logger.format(type, msg))
+		formatted = Logger.format(type, msg)
+		getattr(Logger.logger, type)(formatted)
+		if type <> "debug":
+			Logger.data.append(formatted)
 		if Config.PrintLog and type <> "debug":
-			print (type + ": " + Logger.format(type, msg))
+			print formatted
 		
 	@staticmethod
 	def format(type, msg):

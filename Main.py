@@ -68,9 +68,15 @@ def config():
 	data = request.form if request.method == "POST" else request.args
 	if len(data) > 0:
 		for arg in data:
-			value = data[arg]
+			if arg.endswith("[]"):
+				value = str(data.getlist(arg))
+				arg = arg[:-2]
+			else:
+				value = str(data[arg])
+				
 			if hasattr(Config, arg):
-				setattr(Config, arg, str(value))
+				attrType = type(getattr(Config, arg))
+				setattr(Config, arg, parse(value, attrType))
 		return redirect("/")
 		
 	return html(configContent())
@@ -86,8 +92,9 @@ def settings(system):
 				value = str(data.getlist(arg))
 				arg = arg[:-2]
 			else:
-				value = data[arg]
- 			sys = myHome.systems[system]
+				value = str(data[arg])
+				
+			sys = myHome.systems[system]
 			if hasattr(sys, arg):
 				attrType = type(getattr(sys, arg))
 				setattr(sys, arg, parse(value, attrType))
@@ -102,9 +109,16 @@ def start():
 	app.run(debug=False, host='0.0.0.0')
 
 if __name__ == "__main__":
-	t = threading.Thread(target=start)
-	t.daemon = True
-	t.start()
+	if len(sys.argv) > 1 and sys.argv[1] == "-service":
+		start()
+	else:		
+		t = threading.Thread(target=start)
+		t.daemon = True
+		t.start()
 
-	subprocess.call(["sensible-browser", "localhost:5000"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		try:
+			subprocess.call(["sensible-browser", "localhost:5000"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		except:
+			t.join()
+			
 	myHome.__del__()

@@ -58,7 +58,7 @@ def parse(value, valueType):
 			return datetime(1900 + int(value[0]), 1 + int(value[1]), 1 + int(value[2]), int(value[3]), int(value[4]), int(value[5])) - datetime(1900, 1, 1)
 		elif valueType is list:
 			return eval(value)
-		raise Exception("parse unknown type")
+		raise Exception("parse unknown type: " + str(valueType))
 	except Exception as e:
 		Logger.log("error", str(e))
 		return valueType()

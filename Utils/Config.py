@@ -1,15 +1,17 @@
 import ConfigParser
+import inspect
+import Utils
 
 class Config:
 	ConfigFileName = "config.ini"
 	LogFileName = "log.txt"
-	PrintLog = "True"
+	PrintLog = True
 	Password = ""
 	
 	GSMNumber = ""
 	MyTelenorPassword = ""
 	SMTPServer = "smtp.abv.bg"
-	SMTPServerPort = "465"
+	SMTPServerPort = 465
 	EMail = ""
 	EMailUserName = ""
 	EMailPassword = ""
@@ -19,8 +21,9 @@ class Config:
 		result = []
 		items = dir(Config)
 		for attr in items:
-			attrType = type(getattr(Config, attr))
-			if (attrType is str) and (not attr.startswith("_")):
+			value = getattr(Config, attr)
+			attrType = type(value)
+			if (not callable(value)) and (not attr.startswith("_")):
 				result.append(attr)
 		return result
 	
@@ -37,5 +40,6 @@ class Config:
 		items = configParser.items("Config")
 		for (name, value) in items:
 			if hasattr(Config, name):
+				value = Utils.parse(value, type(getattr(Config, name)))
 				setattr(Config, name, value)
 	
