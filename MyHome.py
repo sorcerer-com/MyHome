@@ -52,6 +52,8 @@ class MHome():
 		
 		# load systems settings
 		for (key, system) in self.systems.items():
+			if not configParser.has_section(key):
+				continue
 			items = configParser.items(key)
 			for (name, value) in items:
 				if hasattr(system, name):

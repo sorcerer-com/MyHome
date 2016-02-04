@@ -30,7 +30,7 @@ class MediaPlayerSystem(BaseSystem):
 		
 	@property
 	def select(self):
-		return 0
+		return -1
 	
 	@select.setter
 	def select(self, value):
