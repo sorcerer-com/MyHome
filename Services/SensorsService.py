@@ -13,10 +13,15 @@ if True:
 
 		@staticmethod
 		def motionDetected():
-			if GPIO.event_detected(SensorsService.MotionSensorPin):
-				Logger.log("info", "Sensors Service: motion detected")
-				return True
-			return False
+			try:
+				if GPIO.event_detected(SensorsService.MotionSensorPin):
+					Logger.log("info", "Sensors Service: motion detected")
+					return True
+				return False
+			except Exception as e:
+				Logger.log("error", "Sensors Service: cannot detect motion")
+				Logger.log("debug", str(e))
+				return False
 
 else:
 	class SensorsService:

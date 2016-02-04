@@ -89,9 +89,9 @@ def script():
 	result += "}\n"
 	result += "function addItem(sender) {\n"
 	result += "	var parent = sender.parentElement.parentElement\n"
-	result += "	var beforeLast = parent.children[parent.childElementCount - 2]\n"
-	result += "	var newItem = beforeLast.cloneNode(true)\n"
-	result += "	parent.insertBefore(newItem, parent.lastElementChild)\n"
+	result += "	var index = Array.prototype.indexOf.call(parent.children, sender.parentElement)\n"
+	result += "	var newItem = parent.children[index - 1].cloneNode(true)\n"
+	result += "	parent.insertBefore(newItem, parent.children[index])\n"
 	result += "}\n"
 	result += "function removeItem(sender) {\n"
 	result += "	var parent = sender.parentElement.parentElement\n"
@@ -235,6 +235,8 @@ def settingsContent(myHome, system):
 def property(name, value, item = False):
 	result = ""
 	if type(value) is list:
+		if len(value) == 0:
+			value.append("")
 		for i in range(0, len(value)):
 			result += "<div>" + property("%s[]" % name, value[i], True) + "</div>"
 			

@@ -5,7 +5,7 @@ from Config import *
 class Logger:
 	# TODO: may be rename last log file
 	logger = logging.getLogger()
-	logger.setLevel(logging.INFO)
+	logger.setLevel(logging.DEBUG)
 	logger.addHandler(logging.FileHandler(Config.LogFileName, mode="w"))
 	
 	data = []

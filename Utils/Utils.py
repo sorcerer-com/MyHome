@@ -38,7 +38,8 @@ def string(value):
 				result = result[:-2]
 			return result + "]"
 	except Exception as e:
-		Logger.log("error", str(e))
+		Logger.log("error", "Utils: cannot convert '%s' to string" % value)
+		Logger.log("debug", str(e))
 	return str(value)
 		
 def parse(value, valueType):
@@ -60,5 +61,6 @@ def parse(value, valueType):
 			return eval(value)
 		raise Exception("parse unknown type: " + str(valueType))
 	except Exception as e:
-		Logger.log("error", str(e))
+		Logger.log("error", "Utils: cannot convert '%s' to %s" % (value, valueType))
+		Logger.log("debug", str(e))
 		return valueType()

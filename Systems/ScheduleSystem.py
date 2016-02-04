@@ -77,8 +77,9 @@ class ScheduleSystem(BaseSystem):
 				
 				try:
 					exec(command)
-				except:
+				except Exception as e:
 					Logger.log("error", "Schedule System: cannot execute '%s'" % command)
+					Logger.log("debug", str(e))
 
 				if item[0] + item[1] == item[0]:
 					toRemove.append(item)

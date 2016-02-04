@@ -11,5 +11,6 @@ class CameraService:
 
 		try:
 			subprocess.call(["fswebcam", "-r " + size, "-F " + str(frames), fileName], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		except:
+		except Exception as e:
 			Logger.log("error", "Camera Service: cannot save image (%s, %s) to '%s'" % (size, frames, fileName))
+			Logger.log("debug", str(e))

@@ -18,29 +18,31 @@ class InternetService:
 			Logger.log("error", "Internet Service: cannot send mail - invalid mail list")
 			return False
 		
-		msg = MIMEMultipart()
-		msg["From"] = Config.EMail
-		msg["To"] = COMMASPACE.join(send_to)
-		msg["Subject"] = subject
-		msg["Date"] = formatdate(localtime=True)
-		msg.attach(MIMEText(text))
-
-		for f in files or []:
-			if isfile(f):
-				with open(f, "rb") as file:
-					msg.attach(MIMEApplication(
-						file.read(),
-						Content_Disposition='attachment; filename="%s"' % basename(f),
-						Name=basename(f)
-					))
-		
 		try:
+			msg = MIMEMultipart()
+			msg["From"] = Config.EMail
+			msg["To"] = COMMASPACE.join(send_to)
+			msg["Subject"] = subject
+			msg["Date"] = formatdate(localtime=True)
+			msg.attach(MIMEText(text))
+
+			for f in files or []:
+				if isfile(f):
+					with open(f, "rb") as file:
+						msg.attach(MIMEApplication(
+							file.read(),
+							Content_Disposition='attachment; filename="%s"' % basename(f),
+							Name=basename(f)
+						))
+		
 			smtp = smtplib.SMTP_SSL(Config.SMTPServer, Config.SMTPServerPort)
 			smtp.login(Config.EMailUserName, Config.EMailPassword)
 			smtp.sendmail(Config.EMail, send_to, msg.as_string())
 			smtp.close()
 			return True
-		except:
+		except Exception as e:
+			Logger.log("error", "Internet Service: cannot send mail to '%s' subject: '%s'" % (str(send_to), subject))
+			Logger.log("debug", str(e))
 			return False
 		
 	@staticmethod
@@ -48,33 +50,43 @@ class InternetService:
 		Logger.log("info", "Internet Service: send SMS '%s' to %s" % (msg, number))
 		if number == "":
 			Logger.log("error", "Internet Service: cannot send sms - invalid number")
-			return
+			return False
 			
-		InternetService.sendMail([number + "@sms.telenor.bg"], "", msg)
+		return InternetService.sendMail([number + "@sms.telenor.bg"], "", msg)
 		
 	@staticmethod
 	def sendSMS(number, msg, operator):
 		Logger.log("info", "Internet Service: send SMS '%s' to %s" % (msg, number))
 		if number == "":
 			Logger.log("error", "Internet Service: cannot send sms - invalid number")
-			return
+			return False
 			
-		if operator.lower() == "telenor":
-			if number.startswith("359"):
-				number = "0" + number[3:]
-			br = External.mechanize.Browser()
-			# login
-			br.open("http://my.telenor.bg")
-			br.select_form(nr=0)
-			br["username"] = number
-			br["password"] = Config.MyTelenorPassword
-			br.submit()
-			# go to sms
-			br.follow_link(url_regex="compose")
-			# sms
-			br.select_form(nr=1)
-			br["receiverPhoneNum"] = number
-			br["txtareaMessage"] = msg[:99]
-			br.submit()
-			br.follow_link(url_regex="logout")
-			br.close()
+		try:
+			if operator.lower() == "telenor":
+				if number.startswith("359"):
+					number = "0" + number[3:]
+				br = External.mechanize.Browser()
+				# login
+				br.open("http://my.telenor.bg")
+				br.select_form(nr=0)
+				br["username"] = number
+				br["password"] = Config.MyTelenorPassword
+				br.submit()
+				# go to sms
+				br.follow_link(url_regex="compose")
+				# sms
+				br.select_form(nr=1)
+				br["receiverPhoneNum"] = number
+				br["txtareaMessage"] = msg[:99]
+				br.submit()
+				br.follow_link(url_regex="logout")
+				br.close()
+				return True
+				
+			else:
+				Logger.log("error", "Internet Service: cannot send sms - invalid operator")
+				return False
+				
+		except Exception as e:
+			Logger.log("error", "Internet Service: cannot send SMS '%s' to %s" % (msg, number))
+			Logger.log("debug", str(e))

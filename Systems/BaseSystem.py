@@ -18,7 +18,7 @@ class BaseSystem(object):
 			self._onEnabledChanged()
 		
 	def _onEnabledChanged(self):
-		Logger.log("info", self.Name + "System " + ("enabled" if self.enabled else "disabled"))
+		Logger.log("info", self.Name + " System " + ("enabled" if self.enabled else "disabled"))
 		
 	def update(self):
-		Logger.log("debug", "update " + self.Name + " System")
+		pass
