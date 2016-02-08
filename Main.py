@@ -7,6 +7,7 @@ from External.flask import *
 from Page import *
 from MyHome import *
 
+logging.getLogger().info("")
 app = Flask(__name__)
 myHome = MHome()
 

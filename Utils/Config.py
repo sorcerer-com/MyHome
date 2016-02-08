@@ -5,6 +5,7 @@ import Utils
 class Config:
 	ConfigFileName = "config.ini"
 	LogFileName = "log.txt"
+	LogMaxSize = 100000
 	PrintLog = True
 	Password = ""
 	

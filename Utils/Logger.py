@@ -1,12 +1,18 @@
 import logging
 import time
+import os
 from Config import *
 
 class Logger:
-	# TODO: may be rename last log file
+	# if log file exists and its size is greate than set maximum rename it
+	if os.path.isfile(Config.LogFileName) and os.stat(Config.LogFileName).st_size > Config.LogMaxSize:
+		if os.path.isfile(Config.LogFileName + ".bak"):
+			os.remove(Config.LogFileName + ".bak")
+		os.rename(Config.LogFileName, Config.LogFileName + ".bak")
+		
 	logger = logging.getLogger()
 	logger.setLevel(logging.DEBUG)
-	logger.addHandler(logging.FileHandler(Config.LogFileName, mode="w"))
+	logger.addHandler(logging.FileHandler(Config.LogFileName))
 	
 	data = []
 
