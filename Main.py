@@ -21,6 +21,7 @@ def favicon():
 def index():
 	if ("password" not in session) or (session["password"] != Config.Password):
 		return redirect("/login")
+		
 	data = request.form if request.method == "POST" else request.args
 	if len(data) > 0:
 		for arg in data:
@@ -35,6 +36,7 @@ def login():
 	if Config.Password == "":
 		session["password"] = Config.Password
 		return redirect("/")
+		
 	data = request.form if request.method == "POST" else request.args
 	if "password" in data: 
 		if str(hash(data["password"])) == Config.Password:
@@ -64,28 +66,14 @@ def test():
     
 @app.route("/config", methods=["GET", "POST"])
 def config():
-	if ("password" not in session) or (session["password"] != Config.Password):
-		return redirect("/login")
-	data = request.form if request.method == "POST" else request.args
-	if len(data) > 0:
-		for arg in data:
-			if arg.endswith("[]"):
-				value = str(data.getlist(arg))
-				arg = arg[:-2]
-			else:
-				value = str(data[arg])
-				
-			if hasattr(Config, arg):
-				attrType = type(getattr(Config, arg))
-				setattr(Config, arg, parse(value, attrType))
-		return redirect("/")
-		
-	return html(configContent())
+	return settings("Config")
 
-@app.route("/settings/<system>", methods=["GET", "POST"])
-def settings(system):
+@app.route("/settings/<systemName>", methods=["GET", "POST"])
+def settings(systemName):
 	if ("password" not in session) or (session["password"] != Config.Password):
 		return redirect("/login")
+		
+	system = myHome.systems[systemName] if systemName <> "Config" else Config
 	data = request.form if request.method == "POST" else request.args
 	if len(data) > 0:
 		for arg in data:
@@ -95,13 +83,28 @@ def settings(system):
 			else:
 				value = str(data[arg])
 				
-			sys = myHome.systems[system]
-			if hasattr(sys, arg):
-				attrType = type(getattr(sys, arg))
-				setattr(sys, arg, parse(value, attrType))
+			if hasattr(system, arg):
+				attrType = type(getattr(system, arg))
+				setattr(system, arg, parse(value, attrType))
 		return redirect("/")
 		
-	return html(settingsContent(myHome, system))
+	return html(settingsContent(system))
+	
+@app.route("/settings/MediaPlayer", methods=["GET", "POST"])
+def mediaPlayer():
+	if ("password" not in session) or (session["password"] != Config.Password):
+		return redirect("/login")
+		
+	mediaPlayer = myHome.systems["MediaPlayer"]
+	data = request.form if request.method == "POST" else request.args
+	if len(data) > 0:
+		if "play" in data:
+			mediaPlayer.play(data["play"])
+		if "action" in data and hasattr(mediaPlayer, data["action"]):
+			getattr(mediaPlayer, data["action"])() # call function with set action name
+		return redirect("/settings/MediaPlayer")
+		
+	return html(mediaPlayerContent(mediaPlayer), True)
 
 
 def start():

@@ -11,8 +11,11 @@ class MediaPlayerSystem(BaseSystem):
 		
 		self.rootPath = "~/Public"
 		
+		self._playing = ""
+		self._process = None 
+		
 	@property
-	def list(self):
+	def _list(self):
 		if not os.path.isdir(self.rootPath):
 			return []
 			
@@ -20,25 +23,50 @@ class MediaPlayerSystem(BaseSystem):
 		for root, subFolders, files in os.walk(self.rootPath):
 			for f in files:
 				path = os.path.join(root, f)
-				path = os.path.relpath(path, self.rootPath)
-				result.append(str(len(result)) + ") " + path)
+				result.append(os.path.relpath(path, self.rootPath))
 		return result
 		
-	@list.setter
-	def list(self, value):
-		pass
-		
 	@property
-	def select(self):
-		return -1
-	
-	@select.setter
-	def select(self, value):
-		if value >= len(self.list) or value < 0:
-			return
-			
-		path = self.list[value]
-		path = path[path.find(" ") + 1:] # remove index
-		path = os.path.join(self.rootPath, path)
-		PCControlService.openMedia(path)
+	def playing(self):
+		if (self._process is None) or (self._process.poll() is not None):
+			self._playing = ""
+			self._process = None
+		return self._playing
 		
+		
+	def play(self, path):
+		self._playing = path
+		path = os.path.join(self.rootPath, path)
+		self._process = PCControlService.openMedia(path, False)
+		
+	def stop(self):
+		if (self._process is not None) and (self._process.poll() is None):
+			self._process.stdin.write("\027") # escape
+		
+	def pause(self):
+		if (self._process is not None) and (self._process.poll() is None):
+			self._process.stdin.write("\032") # space
+		
+	def volumeDown(self):
+		if (self._process is not None) and (self._process.poll() is None):
+			self._process.stdin.write("-")
+		
+	def volumeUp(self):
+		if (self._process is not None) and (self._process.poll() is None):
+			self._process.stdin.write("+")
+		
+	def seekBack(self):
+		if (self._process is not None) and (self._process.poll() is None):
+			self._process.stdin.write("\027[D") # left arrow
+		
+	def seekForward(self):
+		if (self._process is not None) and (self._process.poll() is None):
+			self._process.stdin.write("\027[C") # right arrow
+		
+	def seekBackFast(self):
+		if (self._process is not None) and (self._process.poll() is None):
+			self._process.stdin.write("\027[B") # down arrow
+		
+	def seekForwardFast(self):
+		if (self._process is not None) and (self._process.poll() is None):
+			self._process.stdin.write("\027[A") # up arrow

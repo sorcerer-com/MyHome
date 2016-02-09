@@ -90,3 +90,4 @@ class InternetService:
 		except Exception as e:
 			Logger.log("error", "Internet Service: cannot send SMS '%s' to %s" % (msg, number))
 			Logger.log("debug", str(e))
+			return False

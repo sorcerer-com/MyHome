@@ -5,6 +5,10 @@ def style():
 	result += "{\n"
 	result += "	background: #C0A166;\n"
 	result += "}\n"
+	result += "a\n"
+	result += "{\n"
+	result += "	text-decoration: none;\n"
+	result += "}\n"
 	# title
 	result += ".title\n"
 	result += "{\n"
@@ -30,7 +34,6 @@ def style():
 	# button
 	result += ".button\n"
 	result += "{\n"
-	result += "	text-decoration: none;\n"
 	result += "	padding: 3px 5px;\n"
 	result += "	color: black;\n"
 	result += "	background: #ddd;\n"
@@ -147,9 +150,9 @@ def indexContent(myHome):
 		result += "<li>\n"
 		result += "<h2>%s</h2>\n" % key
 		if value.enabled:
-			result += "<a class='button green' href='/?%s=%s'>Enabled</a>\n" % (value.Name, False)
+			result += "<a class='button green' href='?%s=%s'>Enabled</a>\n" % (value.Name, False)
 		else:
-			result += "<a class='button red' href='/?%s=%s'>Disabled</a>\n" % (value.Name, True)
+			result += "<a class='button red' href='?%s=%s'>Disabled</a>\n" % (value.Name, True)
 		result += "<a class='button' href='/settings/%s'>Settings</a>\n" % value.Name
 		result += "</li>\n"
 	result += "</ul>\n"
@@ -203,13 +206,16 @@ def logContent():
 	result += "<a class='button' href='/'>Back</a>\n"
 	return result
 	
-def configContent():
-	result = "<h2 class='title'>Config</h2>\n"
+def settingsContent(system):
+	if system <> Config:
+		result = "<h2 class='title'>%s Settings</h2>\n" % system.Name
+	else:
+		result = "<h2 class='title'>Config</h2>\n"
 	result += "<form id='form' action='' method='post'>\n"
 	result += "<ul class='settings'>\n"
-	items = Config.list()
+	items = getProperties(system) if system <> Config else Config.list()
 	for prop in items:
-		value = getattr(Config, prop)
+		value = getattr(system, prop)
 		result += property(prop, value)
 	result += "</ul>\n"
 	result += "<a class='button' href='javascript:;' onclick='submitForm(\"form\")'>Save</a>\n"
@@ -217,17 +223,31 @@ def configContent():
 	result += "</form>\n"
 	return result
 	
-def settingsContent(myHome, system):
-	result = "<h2 class='title'>%s Settings</h2>\n" % system
+def mediaPlayerContent(mediaPlayer):
+	result = "<h2 class='title'>Media Player</h2>\n"
 	result += "<form id='form' action='' method='post'>\n"
-	result += "<ul class='settings'>\n"
-	items = getProperties(myHome.systems[system])
-	for prop in items:
-		value = getattr(myHome.systems[system], prop)
-		result += property(prop, value)
-	result += "</ul>\n"
-	result += "<a class='button' href='javascript:;' onclick='submitForm(\"form\");'>Save</a>\n"
-	result += "<a class='button' href='/'>Cancel</a>\n"
+	result += "<select name='play'>\n"
+	for item in mediaPlayer._list:
+		if mediaPlayer.playing == item:
+			result += "<option value='%s' selected>%s</option>\n" %(item, item)
+		else:
+			result += "<option value='%s'>%s</option>\n" %(item, item)
+	result += "</select>\n"
+	result += "<div class='buttonContainer'>\n"
+	if mediaPlayer.playing == "":
+		result += "<a class='button' href='javascript:;' onclick='submitForm(\"form\");'>Play</a>\n"
+	else:
+		result += "<a class='button' href='?action=stop'>Stop</a>\n"
+	result += "<a class='button' href='?action=pause'>Pause</a>\n"
+	result += "<a class='button' href='?action=volumeDown'> - </a>\n"
+	result += "<a class='button' href='?action=volumeUp'> + </a>\n"
+	result += "<a class='button' href='?action=seekBack'> < </a>\n"
+	result += "<a class='button' href='?action=seekForward'> > </a>\n"
+	result += "<a class='button' href='?action=seekBackFast'> << </a>\n"
+	result += "<a class='button' href='?action=seekForwardFast'> >> </a>\n"
+	result += "</div>\n"
+	result += "<br/>\n"
+	result += "<a class='button' href='/'>Back</a>\n"
 	result += "</form>\n"
 	return result
 	
@@ -238,13 +258,13 @@ def property(name, value, item = False):
 		if len(value) == 0:
 			value.append("")
 		for i in range(0, len(value)):
-			result += "<div>" + property("%s[]" % name, value[i], True) + "</div>"
+			result += "<div>\n" + property("%s[]" % name, value[i], True) + "</div>\n"
 			
-		result += "<div class='buttonContainer'>"
+		result += "<div class='buttonContainer'>\n"
 		result += "<a class='button' href='javascript:;' onclick='addItem(this)'>+</a>\n"
 		if item:
 			result += "<a class='button' href='javascript:;' onclick='removeItem(this)'>-</a>\n"
-		result += "</div>"
+		result += "</div>\n"
 	else:
 		result += "<li>\n"
 		result += "<h3>%s: </h3>\n" % name
