@@ -21,13 +21,14 @@ class MediaPlayerSystem(BaseSystem):
 			
 		result = []
 		for root, subFolders, files in os.walk(self.rootPath):
+			subFolders.sort()
+			files.sort()
 			for f in files:
 				path = os.path.join(root, f)
 				result.append(os.path.relpath(path, self.rootPath))
 		return result
 		
-	@property
-	def playing(self):
+	def getPlaying(self):
 		if (self._process is None) or (self._process.poll() is not None):
 			self._playing = ""
 			self._process = None

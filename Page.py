@@ -228,13 +228,13 @@ def mediaPlayerContent(mediaPlayer):
 	result += "<form id='form' action='' method='post'>\n"
 	result += "<select name='play'>\n"
 	for item in mediaPlayer._list:
-		if mediaPlayer.playing == item:
+		if mediaPlayer.getPlaying() == item:
 			result += "<option value='%s' selected>%s</option>\n" %(item, item)
 		else:
 			result += "<option value='%s'>%s</option>\n" %(item, item)
 	result += "</select>\n"
 	result += "<div class='buttonContainer'>\n"
-	if mediaPlayer.playing == "":
+	if mediaPlayer.getPlaying() == "":
 		result += "<a class='button' href='javascript:;' onclick='submitForm(\"form\");'>Play</a>\n"
 	else:
 		result += "<a class='button' href='?action=stop'>Stop</a>\n"
@@ -246,7 +246,13 @@ def mediaPlayerContent(mediaPlayer):
 	result += "<a class='button' href='?action=seekBackFast'> << </a>\n"
 	result += "<a class='button' href='?action=seekForwardFast'> >> </a>\n"
 	result += "</div>\n"
-	result += "<br/>\n"
+	result += "</form>\n"
+	
+	result += "<form id='form1' action='' method='post'>\n"
+	result += "<ul class='settings'>\n"
+	result += property("rootPath", mediaPlayer.rootPath)
+	result += "</ul>\n"
+	result += "<a class='button' href='javascript:;' onclick='submitForm(\"form1\")'>Save</a>\n"
 	result += "<a class='button' href='/'>Back</a>\n"
 	result += "</form>\n"
 	return result

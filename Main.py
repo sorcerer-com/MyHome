@@ -102,9 +102,11 @@ def mediaPlayer():
 			mediaPlayer.play(data["play"])
 		if "action" in data and hasattr(mediaPlayer, data["action"]):
 			getattr(mediaPlayer, data["action"])() # call function with set action name
+		if "rootPath" in data:
+			mediaPlayer.rootPath = str(data["rootPath"])
 		return redirect("/settings/MediaPlayer")
 		
-	return html(mediaPlayerContent(mediaPlayer), True)
+	return html(mediaPlayerContent(mediaPlayer), False) # disable auto refresh for now, causing selection problem
 
 
 def start():

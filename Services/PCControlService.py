@@ -24,7 +24,7 @@ class PCControlService:
 		Logger.log("info", "PCControl Service: open media '%s'" % path)
 		try:
 			call = subprocess.call if wait else subprocess.Popen
-			return call(["omxplayer", "-r", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			return call(["omxplayer", "-r", path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		except Exception as e:
 			Logger.log("error", "PCControl Service: cannot open media '%s'" % path)
 			Logger.log("debug", str(e))
