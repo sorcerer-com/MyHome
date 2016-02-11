@@ -42,11 +42,11 @@ class MediaPlayerSystem(BaseSystem):
 		
 	def stop(self):
 		if (self._process is not None) and (self._process.poll() is None):
-			self._process.stdin.write("\027") # escape
+			self._process.stdin.write("q")
 		
 	def pause(self):
 		if (self._process is not None) and (self._process.poll() is None):
-			self._process.stdin.write("\032") # space
+			self._process.stdin.write(" ") # space
 		
 	def volumeDown(self):
 		if (self._process is not None) and (self._process.poll() is None):

@@ -50,7 +50,7 @@ class SecuritySystem(BaseSystem):
 			SensorsService.motionDetected()
 		
 		if self._activated and elapsed > (self.sendInterval / self.numImages) * (self._currImage % (self.numImages + 1)):
-			CameraService.saveImage("camera" + str(self._currImage) + ".jpg", "640x480", 1)
+			CameraService.saveImage("camera" + str(self._currImage) + ".jpg", "640x480", 1, 2)
 			self._currImage += 1
 
 	def clearImages(self):
