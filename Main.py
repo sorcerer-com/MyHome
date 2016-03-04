@@ -86,6 +86,7 @@ def settings(systemName):
 			if hasattr(system, arg):
 				attrType = type(getattr(system, arg))
 				setattr(system, arg, parse(value, attrType))
+		myHome.systemChanged = True
 		return redirect("/")
 		
 	return html(settingsContent(system))
@@ -104,6 +105,7 @@ def mediaPlayer():
 			getattr(mediaPlayer, data["action"])() # call function with set action name
 		if "rootPath" in data:
 			mediaPlayer.rootPath = str(data["rootPath"])
+			myHome.systemChanged = True
 		return redirect("/settings/MediaPlayer")
 		
 	return html(mediaPlayerContent(mediaPlayer), False) # disable auto refresh for now, causing selection problem

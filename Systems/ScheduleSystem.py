@@ -85,6 +85,7 @@ class ScheduleSystem(BaseSystem):
 					toRemove.append(item)
 				else:
 					item[0] += item[1]
+					self._owner.systemChanged = True
 			else:
 				break
 		for item in toRemove:

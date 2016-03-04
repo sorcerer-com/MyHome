@@ -2,7 +2,7 @@ import os
 from datetime import *
 from BaseSystem import *
 from Services.SensorsService import *
-from Services.CameraService import *
+from Services.PCControlService import *
 from Services.InternetService import *
 
 class SecuritySystem(BaseSystem):
@@ -14,7 +14,7 @@ class SecuritySystem(BaseSystem):
 		
 		self.startDelay = timedelta(minutes=15)
 		self.sendInterval = timedelta(minutes=5)
-		self.numImages = 30
+		self.numImages = 60
 		
 		self._activated = False
 		self._currImage = 0
@@ -42,15 +42,15 @@ class SecuritySystem(BaseSystem):
 			self._activated = False
 		
 		if not self._activated and elapsed > timedelta(): # if not _activated and after delay start - check for motion
-			self._activated = SensorsService.motionDetected()
+			self._activated = SensorsService.detectMotion()
 			if self._activated:
 				Logger.log("info", "Security System: Activated")
 			self._lastSendTime = datetime.now()
 		elif not self._activated:
-			SensorsService.motionDetected()
+			SensorsService.detectMotion()
 		
 		if self._activated and elapsed > (self.sendInterval / self.numImages) * (self._currImage % (self.numImages + 1)):
-			CameraService.saveImage("camera" + str(self._currImage) + ".jpg", "640x480", 1, 2)
+			PCControlService.captureImage("camera" + str(self._currImage) + ".jpg", "640x480", 1, 4)
 			self._currImage += 1
 
 	def clearImages(self):

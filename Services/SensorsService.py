@@ -12,7 +12,7 @@ if True:
 
 
 		@staticmethod
-		def motionDetected():
+		def detectMotion():
 			try:
 				if GPIO.event_detected(SensorsService.MotionSensorPin):
 					Logger.log("info", "Sensors Service: motion detected")
@@ -26,5 +26,5 @@ if True:
 else:
 	class SensorsService:
 		@staticmethod
-		def motionDetected():
+		def detectMotion():
 			return True
