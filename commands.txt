@@ -5,6 +5,9 @@ sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get clean
 
+sudo apt-get remove [name]
+sudo apt-get autoremove
+
 #https://www.raspberrypi.org/documentation/remote-access/ftp.md
 sudo apt-get install pure-ftpd
 
@@ -26,3 +29,5 @@ sudo apt-get install fswebcam
 sudo apt-get install python-xlib
 
 #https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md
+
+sudo apt-get install git
