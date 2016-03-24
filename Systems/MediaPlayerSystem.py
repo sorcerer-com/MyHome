@@ -43,6 +43,7 @@ class MediaPlayerSystem(BaseSystem):
 	def stop(self):
 		if (self._process is not None) and (self._process.poll() is None):
 			self._process.stdin.write("q")
+			self._playing = ""
 		
 	def pause(self):
 		if (self._process is not None) and (self._process.poll() is None):

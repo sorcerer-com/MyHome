@@ -1,5 +1,6 @@
-import os
+import os, time
 from datetime import *
+from SimpleCV import *
 from BaseSystem import *
 from Services.SensorsService import *
 from Services.PCControlService import *
@@ -17,8 +18,10 @@ class SecuritySystem(BaseSystem):
 		self.numImages = 60
 		
 		self._activated = False
-		self._currImage = 0
+		self._imageCount = 0
 		self._lastSendTime = datetime.now()
+		self._camera = Camera()
+		self._prevImg = None
 
 	def _onEnabledChanged(self):
 		BaseSystem._onEnabledChanged(self)
@@ -34,7 +37,7 @@ class SecuritySystem(BaseSystem):
 			if self._activated:
 				InternetService.sendSMS(Config.GSMNumber, "Security Alarm Activated!", "telenor")
 				images = []
-				for i in range(0, self._currImage):
+				for i in range(0, self._imageCount):
 					images.append("camera" + str(i) + ".jpg")
 				if InternetService.sendEMail([Config.EMail], "My Home", "Security Alarm Activated!", images): # if send successful
 					self.clearImages()
@@ -49,12 +52,30 @@ class SecuritySystem(BaseSystem):
 		elif not self._activated:
 			SensorsService.detectMotion()
 		
-		if self._activated and elapsed > (self.sendInterval / self.numImages) * (self._currImage % (self.numImages + 1)):
-			PCControlService.captureImage("camera" + str(self._currImage) + ".jpg", "640x480", 1, 4)
-			self._currImage += 1
+		if self._activated:
+			img = self._camera.getImage()
+			if elapsed > (self.sendInterval / self.numImages) * (self._imageCount % (self.numImages + 1)) or self.findMotion(self._prevImg, img):
+				Logger.log("info", "Security Service: capture image to 'camera%02d.jpg'" % self._imageCount)
+				self._prevImg = img
+				img = img.resize(640, 480)
+				img.drawText(time.strftime("%d/%m/%Y %H:%M:%S"), 5, 5, Color.WHITE)
+				img.save("camera%02d.jpg" % self._imageCount)
+				self._imageCount += 1
 
 	def clearImages(self):
-		for i in range(0, self._currImage):
-			if os.path.isfile("camera" + str(i) + ".jpg"):
-				os.remove("camera" + str(i) + ".jpg")
-		self._currImage = 0
+		for i in range(0, self._imageCount):
+			if os.path.isfile("camera%02d.jpg" % i):
+				os.remove("camera%02d.jpg" % i)
+		self._imageCount = 0
+		
+	
+	@staticmethod
+	def findMotion(prevImg, img):
+		if prevImg == None or img == None:
+			return False
+			
+		diff = img - prevImg
+		diff = diff.binarize(32).invert()
+		matrix = diff.getNumpy()
+		mean = matrix.mean()
+		return mean > 0.1
