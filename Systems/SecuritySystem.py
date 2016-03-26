@@ -20,7 +20,7 @@ class SecuritySystem(BaseSystem):
 		self._activated = False
 		self._imageCount = 0
 		self._lastSendTime = datetime.now()
-		self._camera = Camera()
+		self._camera = None
 		self._prevImg = None
 
 	def _onEnabledChanged(self):
@@ -28,6 +28,10 @@ class SecuritySystem(BaseSystem):
 		self._activated = False
 		self.clearImages()
 		self._lastSendTime = datetime.now() + self.startDelay
+		if self._camera != None:
+			self._camera.stop()
+		self._camera = None
+		self._prevImg = None
 
 	def update(self):
 		BaseSystem.update(self)
@@ -53,6 +57,8 @@ class SecuritySystem(BaseSystem):
 			SensorsService.detectMotion()
 		
 		if self._activated:
+			if self._camera == None:
+				self._camera = Camera()
 			img = self._camera.getImage()
 			if elapsed > (self.sendInterval / self.numImages) * (self._imageCount % (self.numImages + 1)) or self.findMotion(self._prevImg, img):
 				Logger.log("info", "Security Service: capture image to 'camera%02d.jpg'" % self._imageCount)
@@ -61,6 +67,10 @@ class SecuritySystem(BaseSystem):
 				img.drawText(time.strftime("%d/%m/%Y %H:%M:%S"), 5, 5, Color.WHITE)
 				img.save("camera%02d.jpg" % self._imageCount)
 				self._imageCount += 1
+		else:
+			if self._camera != None:
+				self._camera.stop()
+			self._camera = None
 
 	def clearImages(self):
 		for i in range(0, self._imageCount):

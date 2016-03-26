@@ -22,7 +22,7 @@ class FrameBufferThread(threading.Thread):
     """
     def run(self):
         global _cameras
-        while (1):
+        while len(_cameras) > 0:
             for cam in _cameras:
                 if cam.pygame_camera:
                     cam.pygame_buffer = cam.capture.get_image(cam.pygame_buffer)
@@ -494,7 +494,10 @@ class Camera(FrameSource):
         
         if calibrationfile:
             self.loadCalibration(calibrationfile)
-          
+
+    def stop(self):
+        global _cameras
+        _cameras.remove(self)         
         
     #todo -- make these dynamic attributes of the Camera class
     def getProperty(self, prop):

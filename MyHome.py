@@ -5,7 +5,7 @@ from Systems.SecuritySystem import *
 from Systems.ScheduleSystem import *
 from Systems.MediaPlayerSystem import *
 
-class MHome():
+class MHome(object):
 	updateTime = 0.1
 
 	def __init__(self):
