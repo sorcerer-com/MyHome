@@ -1,6 +1,5 @@
 import os, time
 from datetime import *
-from SimpleCV import *
 from BaseSystem import *
 from Services.SensorsService import *
 from Services.PCControlService import *
@@ -57,15 +56,14 @@ class SecuritySystem(BaseSystem):
 			SensorsService.detectMotion()
 		
 		if self._activated:
-			if self._camera == None:
-				self._camera = Camera()
-			img = self._camera.getImage()
+			img = self.captureImage()
 			if elapsed > (self.sendInterval / self.numImages) * (self._imageCount % (self.numImages + 1)) or self.findMotion(self._prevImg, img):
-				Logger.log("info", "Security Service: capture image to 'camera%02d.jpg'" % self._imageCount)
 				self._prevImg = img
-				img = img.resize(640, 480)
-				img.drawText(time.strftime("%d/%m/%Y %H:%M:%S"), 5, 5, Color.WHITE)
-				img.save("camera%02d.jpg" % self._imageCount)
+				if img != None:
+					Logger.log("info", "Security Service: capture image to 'camera%02d.jpg'" % self._imageCount)
+					img = img.resize(640, 480)
+					img.drawText(time.strftime("%d/%m/%Y %H:%M:%S"), 5, 5, Color.WHITE)
+					img.save("camera%02d.jpg" % self._imageCount)
 				self._imageCount += 1
 		else:
 			if self._camera != None:
@@ -77,7 +75,18 @@ class SecuritySystem(BaseSystem):
 			if os.path.isfile("camera%02d.jpg" % i):
 				os.remove("camera%02d.jpg" % i)
 		self._imageCount = 0
-		
+	
+	def captureImage(self):
+		try:
+			from SimpleCV import Camera
+
+			if self._camera == None:
+				self._camera = Camera()
+			return self._camera.getImage()
+		except:
+			PCControlService.captureImage("camera%02d.jpg" % self._imageCount, "640x480", 1, 4)
+			return None
+	
 	
 	@staticmethod
 	def findMotion(prevImg, img):

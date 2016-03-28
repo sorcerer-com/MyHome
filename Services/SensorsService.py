@@ -1,4 +1,4 @@
-if True:
+try:
 	import RPi.GPIO as GPIO
 	from Utils.Logger import *
 
@@ -23,7 +23,7 @@ if True:
 				Logger.log("debug", str(e))
 				return False
 
-else:
+except:
 	class SensorsService:
 		@staticmethod
 		def detectMotion():
