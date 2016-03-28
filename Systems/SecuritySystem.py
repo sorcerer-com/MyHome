@@ -60,6 +60,7 @@ class SecuritySystem(BaseSystem):
 			if elapsed > (self.sendInterval / self.numImages) * (self._imageCount % (self.numImages + 1)) or self.findMotion(self._prevImg, img):
 				self._prevImg = img
 				if img != None:
+					from SimpleCV import Color
 					Logger.log("info", "Security Service: capture image to 'camera%02d.jpg'" % self._imageCount)
 					img = img.resize(640, 480)
 					img.drawText(time.strftime("%d/%m/%Y %H:%M:%S"), 5, 5, Color.WHITE)
