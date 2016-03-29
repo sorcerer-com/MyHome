@@ -2,12 +2,14 @@ import re
 from datetime import *
 from Logger import *
 
-def getProperties(obj):
+def getProperties(obj, baseProps = False):
 	result = []
 	items = dir(obj)
 	for attr in items:
 		attrType = type(getattr(obj, attr))
-		if attr.startswith("_") or attr.istitle() or hasattr(obj.__class__.__bases__[0], attr):
+		if attr.startswith("_") or attr.istitle():
+			continue
+		if not baseProps and hasattr(obj.__class__.__bases__[0], attr):
 			continue
 		if (attrType is bool) or \
 			(attrType is int) or \

@@ -15,6 +15,7 @@ class BaseSystem(object):
 	def enabled(self, value):
 		if self._enabled <> value:
 			self._enabled = value
+			self._owner.systemChanged = True
 			self._onEnabledChanged()
 		
 	def _onEnabledChanged(self):

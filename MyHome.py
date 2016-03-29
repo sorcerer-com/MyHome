@@ -66,6 +66,8 @@ class MHome(object):
 					propType = type(getattr(system, name))
 					setattr(system, name, parse(value, propType))
 		
+		self.systemChanged = False
+		
 	def saveSettings(self):
 		Logger.log("info", "My Home: save settings")
 		configParser = ConfigParser.RawConfigParser()
@@ -76,7 +78,7 @@ class MHome(object):
 		# save systems settings
 		for (key, system) in self.systems.items():
 			configParser.add_section(key)
-			items = getProperties(system)
+			items = getProperties(system, True)
 			for prop in items:
 				value = getattr(system, prop)
 				configParser.set(key, prop, string(value))
