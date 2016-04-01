@@ -14,7 +14,7 @@ class SecuritySystem(BaseSystem):
 		
 		self.startDelay = timedelta(minutes=15)
 		self.sendInterval = timedelta(minutes=5)
-		self.numImages = 60
+		self.numImages = 30
 		
 		self._activated = False
 		self._imageCount = 0
@@ -37,13 +37,13 @@ class SecuritySystem(BaseSystem):
 		
 		elapsed = datetime.now() - self._lastSendTime
 		if elapsed > self.sendInterval:
-			if self._activated:
-				InternetService.sendSMS(Config.GSMNumber, "Security Alarm Activated!", "telenor")
+			if self._activated or self._imageCount != 0:
 				images = []
 				for i in range(0, self._imageCount):
 					images.append("camera" + str(i) + ".jpg")
-				if InternetService.sendEMail([Config.EMail], "My Home", "Security Alarm Activated!", images): # if send successful
-					self.clearImages()
+				if InternetService.sendSMS(Config.GSMNumber, "Security Alarm Activated!", "telenor") and \
+					InternetService.sendEMail([Config.EMail], "My Home", "Security Alarm Activated!", images): # if send successful
+					self.clearImages()				
 			
 			self._activated = False
 		
