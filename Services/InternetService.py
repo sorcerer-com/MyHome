@@ -1,9 +1,10 @@
-import smtplib
+import smtplib, poplib
 from os.path import basename, isfile
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import COMMASPACE, formatdate
+from email import parser
 
 from Utils.Logger import *
 import External.mechanize
@@ -15,7 +16,7 @@ class InternetService:
 		Logger.log("info", "Internet Service: send mail to '%s' subject: '%s'" % (str(send_to), subject))
 		
 		if (not isinstance(send_to, list)) or (len(send_to) == 0) or (send_to[0] == ""):
-			Logger.log("error", "Internet Service: cannot send mail - invalid mail list")
+			Logger.log("error", "Internet Service: cannot send email - invalid email list")
 			return False
 		
 		try:
@@ -41,9 +42,39 @@ class InternetService:
 			smtp.close()
 			return True
 		except Exception as e:
-			Logger.log("error", "Internet Service: cannot send mail to '%s' subject: '%s'" % (str(send_to), subject))
+			Logger.log("error", "Internet Service: cannot send email to '%s' subject: '%s'" % (str(send_to), subject))
 			Logger.log("debug", str(e))
 			return False
+			
+	@staticmethod
+	def receiveEMails(send_from = None, subject = None, date = None, maxResult = 100):
+		Logger.log("info", "Internet Service: receive emails")
+		
+		result = []
+		try:
+			pop = poplib.POP3_SSL(Config.POP3Server, Config.POP3ServerPort)
+			pop.user(Config.EMailUserName)
+			pop.pass_(Config.EMailPassword)
+			
+			msgsCount = len(pop.list()[1])
+			for i in reversed(range(1, msgsCount + 1)):
+				if len(result) >= maxResult:
+					break
+					
+				msg = "\n".join(pop.retr(i)[1])
+				msg = parser.Parser().parsestr(msg)
+				if date != None and msg["date"] == date:
+					break
+				if (send_from == None or send_from in msg["from"]) and \
+					(subject == None or subject in msg["subject"]):
+					result.append(msg)
+				
+		except Exception as e:
+			Logger.log("error", "Internet Service: cannot receive emails")
+			Logger.log("debug", str(e))
+			return False
+		
+		return result
 		
 	@staticmethod
 	def sendSMSByEMail(number, msg):

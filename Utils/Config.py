@@ -16,6 +16,8 @@ class Config:
 	EMail = ""
 	EMailUserName = ""
 	EMailPassword = ""
+	POP3Server = "pop3.abv.bg"
+	POP3ServerPort = 995
 	
 	@staticmethod
 	def list():
