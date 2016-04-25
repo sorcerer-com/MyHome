@@ -4,6 +4,7 @@ from Utils.Logger import *
 from Systems.SecuritySystem import *
 from Systems.ScheduleSystem import *
 from Systems.MediaPlayerSystem import *
+from Systems.ControlSystem import *
 
 class MHome(object):
 	updateTime = 0.1
@@ -16,6 +17,7 @@ class MHome(object):
 		self.systems[SecuritySystem.Name] = SecuritySystem(self)
 		self.systems[ScheduleSystem.Name] = ScheduleSystem(self)
 		self.systems[MediaPlayerSystem.Name] = MediaPlayerSystem(self)
+		self.systems[ControlSystem.Name] = ControlSystem(self)
 		self.systemChanged = False
 		
 		self.loadSettings()

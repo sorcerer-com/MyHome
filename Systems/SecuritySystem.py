@@ -29,7 +29,7 @@ class SecuritySystem(BaseSystem):
 		self._lastSendTime = datetime.now() + self.startDelay
 		if self._camera != None:
 			self._camera.stop()
-		self._camera = None
+			self._camera = None
 		self._prevImg = None
 
 	def update(self):
@@ -41,8 +41,8 @@ class SecuritySystem(BaseSystem):
 				images = []
 				for i in range(0, self._imageCount):
 					images.append("camera%02d.jpg" % i)
-				if InternetService.sendSMS(Config.GSMNumber, "Security Alarm Activated!", "telenor") and \
-					InternetService.sendEMail([Config.EMail], "My Home", "Security Alarm Activated!", images): # if send successful
+				if InternetService.sendEMail([Config.EMail], "My Home", "Security Alarm Activated!", images) and \
+					InternetService.sendSMS(Config.GSMNumber, "Security Alarm Activated!", "telenor"): # if send successful
 					self.clearImages()				
 			
 			self._activated = False
@@ -61,7 +61,7 @@ class SecuritySystem(BaseSystem):
 				self._prevImg = img
 				if img != None:
 					from SimpleCV import Color
-					Logger.log("info", "Security Service: capture image to 'camera%02d.jpg'" % self._imageCount)
+					Logger.log("info", "Security System: capture image to 'camera%02d.jpg'" % self._imageCount)
 					img = img.resize(640, 480)
 					img.drawText(time.strftime("%d/%m/%Y %H:%M:%S"), 5, 5, Color.WHITE)
 					img.save("camera%02d.jpg" % self._imageCount)
@@ -69,7 +69,7 @@ class SecuritySystem(BaseSystem):
 		else:
 			if self._camera != None:
 				self._camera.stop()
-			self._camera = None
+				self._camera = None
 
 	def clearImages(self):
 		for i in range(0, self._imageCount):
@@ -84,7 +84,8 @@ class SecuritySystem(BaseSystem):
 			if self._camera == None:
 				self._camera = Camera()
 			return self._camera.getImage()
-		except:
+		except Exception as e:
+			Logger.log("debug", str(e))
 			PCControlService.captureImage("camera%02d.jpg" % self._imageCount, "640x480", 1, 4)
 			return None
 	

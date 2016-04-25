@@ -497,7 +497,8 @@ class Camera(FrameSource):
 
     def stop(self):
         global _cameras
-        _cameras.remove(self)         
+        if self in _cameras:
+			_cameras.remove(self)         
         
     #todo -- make these dynamic attributes of the Camera class
     def getProperty(self, prop):
