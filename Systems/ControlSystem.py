@@ -9,6 +9,7 @@ class ControlSystem(BaseSystem):
 		BaseSystem.__init__(self, owner)
 
 		self.prevDate = ""
+		self.checkInterval = timedelta(minutes=1)
 		self._nextTime = datetime.now()
 		
 	def update(self):
@@ -16,9 +17,12 @@ class ControlSystem(BaseSystem):
 		
 		if datetime.now() < self._nextTime:
 			return
-		self._nextTime = datetime.now() + timedelta(minutes=1)
+		self._nextTime = datetime.now() + self.checkInterval
 		
-		res = InternetService.receiveEMails(date = self.prevDate)
+		try:
+			res = InternetService.receiveEMails(date = self.prevDate)
+		except:
+			res = False
 		if res == False or len(res) == 0:
 			return
 		

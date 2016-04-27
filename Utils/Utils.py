@@ -1,5 +1,7 @@
 import re
 from datetime import *
+from functools import wraps
+from multiprocessing import Process, Queue
 from Logger import *
 
 def getProperties(obj, baseProps = False):
@@ -66,3 +68,24 @@ def parse(value, valueType):
 		Logger.log("error", "Utils: cannot convert '%s' to %s" % (value, valueType))
 		Logger.log("debug", str(e))
 		return valueType()
+		
+def timeout(timeout):
+	def wrap_function(func):
+
+		@wraps(func)
+		def __wrapper(*args, **kwargs):
+			def queue_wrapper(args, kwargs):
+				q.put(func(*args, **kwargs))
+ 
+			q = Queue()
+			p = Process(target=queue_wrapper, args=(args, kwargs))
+			p.start()
+			p.join(float(timeout) / 1000)
+			if p.is_alive():
+				p.terminate()
+				p.join()
+				raise Exception("Timeout Exception")
+			p.terminate()
+			return q.get()
+		return __wrapper
+	return wrap_function

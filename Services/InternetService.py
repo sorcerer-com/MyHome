@@ -6,12 +6,14 @@ from email.mime.text import MIMEText
 from email.utils import COMMASPACE, formatdate
 from email import parser
 
-from Utils.Logger import *
 import External.mechanize
+from Utils.Logger import *
+from Utils.Utils import *
 
 
 class InternetService:
 	@staticmethod
+	@timeout(10000)
 	def sendEMail(send_to, subject, text, files=None):
 		Logger.log("info", "Internet Service: send mail to '%s' subject: '%s'" % (str(send_to), subject))
 		
@@ -47,9 +49,10 @@ class InternetService:
 			return False
 			
 	@staticmethod
-	def receiveEMails(send_from = None, subject = None, date = None, maxResult = 100):
-		Logger.log("info", "Internet Service: receive emails")
-		
+	@timeout(1000)
+	def receiveEMails(send_from = None, subject = None, date = None, maxResult = 10):
+		#Logger.log("info", "Internet Service: receive emails")
+	
 		result = []
 		try:
 			pop = poplib.POP3_SSL(Config.POP3Server, Config.POP3ServerPort)
