@@ -7,13 +7,14 @@ from email.utils import COMMASPACE, formatdate
 from email import parser
 
 import External.mechanize
+from External.timeout_decorator import *
 from Utils.Logger import *
 from Utils.Utils import *
 
 
 class InternetService:
 	@staticmethod
-	@timeout(10000)
+	@timeout(10, use_signals=False)
 	def sendEMail(send_to, subject, text, files=None):
 		Logger.log("info", "Internet Service: send mail to '%s' subject: '%s'" % (str(send_to), subject))
 		
@@ -49,7 +50,7 @@ class InternetService:
 			return False
 			
 	@staticmethod
-	@timeout(1000)
+	@timeout(10, use_signals=False)
 	def receiveEMails(send_from = None, subject = None, date = None, maxResult = 10):
 		#Logger.log("info", "Internet Service: receive emails")
 	

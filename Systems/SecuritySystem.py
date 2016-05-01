@@ -45,11 +45,13 @@ class SecuritySystem(BaseSystem):
 					if InternetService.sendEMail([Config.EMail], "My Home", "Security Alarm Activated!", images) and \
 						InternetService.sendSMS(Config.GSMNumber, "Security Alarm Activated!", "telenor"): # if send successful
 						self.clearImages()
+						self._activated = False
+					else:
+						raise Exception()
 				except:
-					pass
-			
-			self._activated = False
-		
+					Logger.log("warning", "Security System: cannot send email or sms")
+					Logger.log("debug", str(e))
+					
 		if not self._activated and elapsed > timedelta(): # if not _activated and after delay start - check for motion
 			self._activated = SensorsService.detectMotion()
 			if self._activated:
