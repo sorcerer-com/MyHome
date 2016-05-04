@@ -32,7 +32,13 @@ class ControlSystem(BaseSystem):
 				continue
 				
 			Logger.log("info", "Control System: command email received")
-			command = msg.get_payload()
+			if msg.is_multipart():
+				for part in msg.walk():
+					if part.get_content_type() == "text/plain":
+						command = part.get_payload()
+						break
+			else:
+				command = msg.get_payload()
 			if "." in command:
 				name = command.split(".")[0]
 				if name == "MyHome":

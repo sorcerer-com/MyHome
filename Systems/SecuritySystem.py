@@ -48,7 +48,7 @@ class SecuritySystem(BaseSystem):
 						self._activated = False
 					else:
 						raise Exception()
-				except:
+				except Exception as e:
 					Logger.log("warning", "Security System: cannot send email or sms")
 					Logger.log("debug", str(e))
 					
