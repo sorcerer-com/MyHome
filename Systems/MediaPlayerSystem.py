@@ -5,6 +5,7 @@ from Services.PCControlService import *
 
 class MediaPlayerSystem(BaseSystem):
 	Name = "MediaPlayer"
+	_Formats = [".mkv", ".avi", ".mov", ".wmv", ".mp4", ".mpg", ".mpeg", ".m4v", ".3gp"]
 
 	def __init__(self, owner):
 		BaseSystem.__init__(self, owner)
@@ -24,8 +25,9 @@ class MediaPlayerSystem(BaseSystem):
 			subFolders.sort()
 			files.sort()
 			for f in files:
-				path = os.path.join(root, f)
-				result.append(os.path.relpath(path, self.rootPath))
+				if os.path.splitext(f)[1] in self._Formats:
+					path = os.path.join(root, f)
+					result.append(os.path.relpath(path, self.rootPath))
 		return result
 		
 	def getPlaying(self):
@@ -36,6 +38,15 @@ class MediaPlayerSystem(BaseSystem):
 		
 		
 	def play(self, path):
+		# mark as watched
+		dirPath = os.path.dirname(os.path.join(self.rootPath, path))
+		fileName = os.path.splitext(os.path.basename(path))[0] # file name without extension
+		for file in os.listdir(dirPath):
+			if file.startswith(fileName) and not os.path.splitext(file)[0].endswith("_w"):
+				os.rename(os.path.join(dirPath, file), os.path.join(dirPath, fileName + "_w" + os.path.splitext(file)[1]))
+		if not os.path.splitext(path)[0].endswith("_w"):
+			path = os.path.splitext(path)[0] + "_w" + os.path.splitext(path)[1]
+		# play
 		self._playing = path
 		path = os.path.join(self.rootPath, path)
 		self._process = PCControlService.openMedia(path, False)
