@@ -15,7 +15,7 @@ myHome = MHome()
 # TODO: autostart(/home/pi/.bashrc)
 @app.route('/favicon.ico')
 def favicon():
-	return send_from_directory("", "MyHome.ico")
+	return send_from_directory("..", "MyHome.ico")
 
 @app.route("/")
 def index():
@@ -29,7 +29,7 @@ def index():
 			myHome.systems[arg].enabled = value
 		return redirect("/")
 		
-	return html(indexContent(myHome), False) # disable auto refresh for now
+	return template(indexContent(myHome), None) # disable auto refresh for now
 	
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -49,13 +49,13 @@ def login():
 	else:
 		invalid = False
 		
-	return html(loginContent(invalid))
+	return template(loginContent(invalid))
 	
 @app.route("/log")
 def log():
 	if ("password" not in session) or (session["password"] != Config.Password):
 		return redirect("/login")
-	return html(logContent())
+	return template(logContent())
 	
 @app.route("/test")
 def test():
@@ -89,7 +89,7 @@ def settings(systemName):
 		myHome.systemChanged = True
 		return redirect("/")
 		
-	return html(settingsContent(system))
+	return template(settingsContent(system))
 	
 @app.route("/settings/MediaPlayer", methods=["GET", "POST"])
 def mediaPlayer():
@@ -108,7 +108,7 @@ def mediaPlayer():
 			myHome.systemChanged = True
 		return redirect("/settings/MediaPlayer")
 		
-	return html(mediaPlayerContent(mediaPlayer), False) # disable auto refresh for now, causing selection problem
+	return template(mediaPlayerContent(mediaPlayer), None) # disable auto refresh for now, causing selection problem
 
 
 def start():

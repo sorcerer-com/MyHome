@@ -13,11 +13,11 @@ class Config:
 	MyTelenorPassword = ""
 	SMTPServer = "smtp.abv.bg"
 	SMTPServerPort = 465
+	POP3Server = "pop3.abv.bg"
+	POP3ServerPort = 995
 	EMail = ""
 	EMailUserName = ""
 	EMailPassword = ""
-	POP3Server = "pop3.abv.bg"
-	POP3ServerPort = 995
 	
 	@staticmethod
 	def list():
