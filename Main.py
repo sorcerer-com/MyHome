@@ -55,7 +55,7 @@ def login():
 def log():
 	if ("password" not in session) or (session["password"] != Config.Password):
 		return redirect("/login")
-	return template(logContent())
+	return template(logContent(), 10) # refresh every 10 seconds
 	
 @app.route("/test")
 def test():
@@ -96,20 +96,46 @@ def mediaPlayer():
 	if ("password" not in session) or (session["password"] != Config.Password):
 		return redirect("/login")
 		
-	mediaPlayer = myHome.systems["MediaPlayer"]
+	mediaPlayerSystem = myHome.systems["MediaPlayer"]
 	data = request.form if request.method == "POST" else request.args
 	if len(data) > 0:
 		if "play" in data:
-			mediaPlayer.play(data["play"])
-		if "action" in data and hasattr(mediaPlayer, data["action"]):
-			getattr(mediaPlayer, data["action"])() # call function with set action name
+			mediaPlayerSystem.play(data["play"])
+		if "action" in data and hasattr(mediaPlayerSystem, data["action"]):
+			getattr(mediaPlayerSystem, data["action"])() # call function with set action name
 		if "rootPath" in data:
-			mediaPlayer.rootPath = str(data["rootPath"])
+			mediaPlayerSystem.rootPath = str(data["rootPath"])
 			myHome.systemChanged = True
 		return redirect("/settings/MediaPlayer")
 		
-	return template(mediaPlayerContent(mediaPlayer), None) # disable auto refresh for now, causing selection problem
+	return template(mediaPlayerContent(mediaPlayerSystem), None) # disable auto refresh for now, causing selection problem
 
+@app.route("/settings/Schedule", methods=["GET", "POST"])
+def schedule():
+	if ("password" not in session) or (session["password"] != Config.Password):
+		return redirect("/login")
+		
+	scheduleSystem = myHome.systems["Schedule"]
+	data = request.form if request.method == "POST" else request.args
+	if len(data) > 0:
+		scheduleSystem.schedule = []
+		for arg in data:
+			temp = data.getlist(arg)
+			for i in range(0, len(temp)):
+				if len(scheduleSystem.schedule) <= i:
+					scheduleSystem.schedule.append({})
+				if arg == "Time":
+					value = parse(temp[i], datetime)
+				elif arg == "Repeat":
+					value = parse(temp[i], timedelta)
+				else:
+					value = parse(temp[i], str)
+				scheduleSystem.schedule[i][arg] = value
+		scheduleSystem.schedule.sort(key=lambda x: x["Name"])
+		myHome.systemChanged = True
+		return redirect("/")
+		
+	return template(scheduleContent(scheduleSystem))
 
 def start():
 	app.secret_key = u"\xf2N\x8a 8\xb1\xd9(&\xa6\x90\x12R\xf0\\\xe8\x1e\xf92\xa6AN\xed\xb3"

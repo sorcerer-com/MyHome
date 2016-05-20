@@ -15,14 +15,16 @@ def template(content, autorefresh = None):
 	
 def indexContent(myHome):
 	result = "<ul class='system'>\n"
-	for (key, value) in myHome.systems.items():
+	systemNames = myHome.systems.keys()
+	systemNames.sort()
+	for name in systemNames:
 		result += "<li>\n"
-		result += "<h2>%s</h2>\n" % key
-		if value.enabled:
-			result += "<a class='button green' href='?%s=%s'>Enabled</a>\n" % (value.Name, False)
+		result += "<h2>%s</h2>\n" % name
+		if myHome.systems[name].enabled:
+			result += "<a class='button green' href='?%s=%s'>Enabled</a>\n" % (name, False)
 		else:
-			result += "<a class='button red' href='?%s=%s'>Disabled</a>\n" % (value.Name, True)
-		result += "<a class='button' href='/settings/%s'>Settings</a>\n" % value.Name
+			result += "<a class='button red' href='?%s=%s'>Disabled</a>\n" % (name, True)
+		result += "<a class='button' href='/settings/%s'>Settings</a>\n" % name
 		result += "</li>\n"
 	result += "</ul>\n"
 	result += "<a class='button' href='/log'>Log</a>\n"
@@ -92,18 +94,18 @@ def settingsContent(system):
 	result += "</form>\n"
 	return result
 	
-def mediaPlayerContent(mediaPlayer):
+def mediaPlayerContent(mediaPlayerSystem):
 	result = "<h2 class='title'>Media Player</h2>\n"
 	result += "<form id='form' action='' method='post'>\n"
 	result += "<select name='play'>\n"
-	for item in mediaPlayer._list:
-		if mediaPlayer.getPlaying() == item:
+	for item in mediaPlayerSystem._list:
+		if mediaPlayerSystem.getPlaying() == item:
 			result += "<option value='%s' selected>%s</option>\n" %(item, item)
 		else:
 			result += "<option value='%s'>%s</option>\n" %(item, item)
 	result += "</select>\n"
 	result += "<div class='buttonContainer'>\n"
-	if mediaPlayer.getPlaying() == "":
+	if mediaPlayerSystem.getPlaying() == "":
 		result += "<a class='button' href='javascript:;' onclick='submitForm(\"form\");'>Play</a>\n"
 	else:
 		result += "<a class='button' href='?action=stop'>Stop</a>\n"
@@ -119,10 +121,33 @@ def mediaPlayerContent(mediaPlayer):
 	
 	result += "<form id='form1' action='' method='post'>\n"
 	result += "<ul class='settings'>\n"
-	result += property("rootPath", mediaPlayer.rootPath)
+	result += property("rootPath", mediaPlayerSystem.rootPath)
 	result += "</ul>\n"
 	result += "<a class='button' href='javascript:;' onclick='submitForm(\"form1\")'>Save</a>\n"
 	result += "<a class='button' href='/'>Back</a>\n"
+	result += "</form>\n"
+	return result
+	
+def scheduleContent(scheduleSystem):
+	result = "<h2 class='title'>Schedule</h2>\n"
+	result += "<form id='form' action='' method='post'>\n"
+	result += "<ul class='settings'>\n"
+	for item in scheduleSystem.schedule:
+		result += "<details>\n"
+		tooltip = "%s (%s)" % (string(item["Time"]), string(item["Repeat"]))
+		result += "<summary style='background-color: %s' title='%s'>%s</summary>\n" % (item["Color"], tooltip, item["Name"])
+		for (key, value) in item.items():
+			result += property(key, value)
+		result += "<div class='buttonContainer'>\n"
+		result += "<a class='button' href='javascript:;' onclick='removeItem(this)'>-</a>\n"
+		result += "</div>\n"
+		result += "</details>\n"
+	result += "<div class='buttonContainer'>\n"
+	result += "<a class='button' href='javascript:;' onclick='addItem(this)'>+</a>\n"
+	result += "</div>\n"
+	result += "</ul>\n"
+	result += "<a class='button' href='javascript:;' onclick='submitForm(\"form\")'>Save</a>\n"
+	result += "<a class='button' href='/'>Cancel</a>\n"
 	result += "</form>\n"
 	return result
 	

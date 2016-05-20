@@ -1,4 +1,5 @@
 from Utils.Logger import *
+from Utils.Utils import *
 
 class BaseSystem(object):
 	Name = ""
@@ -23,3 +24,21 @@ class BaseSystem(object):
 		
 	def update(self):
 		pass
+		
+	def loadSettings(self, configParser):
+		if not configParser.has_section(self.Name):
+			return
+			
+		items = configParser.items(self.Name)
+		for (name, value) in items:
+			if hasattr(self, name):
+				propType = type(getattr(self, name))
+				setattr(self, name, parse(value, propType))
+
+	def saveSettings(self, configParser):
+		configParser.add_section(self.Name)
+		
+		items = getProperties(self, True)
+		for prop in items:
+			value = getattr(self, prop)
+			configParser.set(self.Name, prop, string(value))

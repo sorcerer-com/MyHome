@@ -1,5 +1,4 @@
 from threading import Timer
-from Utils.Utils import *
 from Utils.Logger import *
 from Systems.SecuritySystem import *
 from Systems.ScheduleSystem import *
@@ -60,13 +59,7 @@ class MHome(object):
 		
 		# load systems settings
 		for (key, system) in self.systems.items():
-			if not configParser.has_section(key):
-				continue
-			items = configParser.items(key)
-			for (name, value) in items:
-				if hasattr(system, name):
-					propType = type(getattr(system, name))
-					setattr(system, name, parse(value, propType))
+			system.loadSettings(configParser)
 		
 		self.systemChanged = False
 		
@@ -79,11 +72,7 @@ class MHome(object):
 		
 		# save systems settings
 		for (key, system) in self.systems.items():
-			configParser.add_section(key)
-			items = getProperties(system, True)
-			for prop in items:
-				value = getattr(system, prop)
-				configParser.set(key, prop, string(value))
+			system.saveSettings(configParser)
 				
 		with open(Config.ConfigFileName, 'wb') as configfile:
 			configParser.write(configfile)
