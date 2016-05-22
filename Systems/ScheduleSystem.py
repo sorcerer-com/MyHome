@@ -84,7 +84,7 @@ class ScheduleSystem(BaseSystem):
 		if datetime.now() < self._nextTime:
 			return
 		
-		self.schedule.sort(key=lambda x: x["Name"])
+		self.schedule.sort(key=lambda x: x["Time"])
 		toRemove = []
 		for item in self.schedule:
 			if datetime.now() > item["Time"]:

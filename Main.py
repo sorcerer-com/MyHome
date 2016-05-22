@@ -131,7 +131,7 @@ def schedule():
 				else:
 					value = parse(temp[i], str)
 				scheduleSystem.schedule[i][arg] = value
-		scheduleSystem.schedule.sort(key=lambda x: x["Name"])
+		scheduleSystem.schedule.sort(key=lambda x: x["Time"])
 		myHome.systemChanged = True
 		return redirect("/")
 		
