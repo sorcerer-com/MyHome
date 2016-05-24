@@ -17,7 +17,7 @@ class PCControlService:
 
 		try:
 			call = subprocess.call if wait else subprocess.Popen
-			return call(["fswebcam", "-r " + size, "-F " + str(frames), "-S " + str(skipFrames), fileName], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			return call(["fswebcam", "-r", str(size), "-F", str(frames), "-S", str(skipFrames), fileName], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		except Exception as e:
 			Logger.log("error", "PCControl Service: cannot capture image (%s, %s) to '%s'" % (size, frames, fileName))
 			Logger.log("debug", str(e))
@@ -39,7 +39,7 @@ class PCControlService:
 		Logger.log("info", "PCControl Service: open media '%s'" % path)
 		try:
 			call = subprocess.call if wait else subprocess.Popen
-			return call(["omxplayer", "-r", path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			return call(["omxplayer", "-r", "-o", "hdmi", path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		except Exception as e:
 			Logger.log("error", "PCControl Service: cannot open media '%s'" % path)
 			Logger.log("debug", str(e))
