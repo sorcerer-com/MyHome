@@ -25,18 +25,34 @@ def convert(filePath, fps):
 				f2.write("\n")
 				f2.write("\n")
 				count += 1
-
+				
+def fixEncoding(filePath):
+	content = ""
+	with codecs.open(filePath, "r", encoding="windows-1251") as f1:
+		content = f1.read()
+	with codecs.open(filePath, "w", encoding="utf8") as f2:
+		f2.write(content)
+		
+		
 if len(sys.argv) < 3:
-	print "set argument Use: (fps filePath)"
+	print "Usage: fps filePath"
 else:
 	fps = float(sys.argv[1])
 	path = sys.argv[2]
-	if os.path.isfile(path) and filePath.endswith(".sub"):
+	if os.path.isfile(path) and path.endswith(".sub"):
 		convert(path, fps)
+	elif os.path.isfile(path) and path.endswith(".srt"):
+		fixEncoding(path)
 	elif os.path.isdir(path):
 		for file in os.listdir(path):
-			if file.endswith(".sub"):
-				print file
-				convert(path + file, fps)
+			try:
+				if file.endswith(".sub"):
+					print file
+					convert(path + file, fps)
+				elif file.endswith(".srt"):
+					print file
+					fixEncoding(path + file)
+			except Exception as e:
+				print "\t" + e
 	else:
 		print "invalid path"

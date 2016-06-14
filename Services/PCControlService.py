@@ -4,8 +4,13 @@ from External.pymouse import PyMouse
 from External.pykeyboard import PyKeyboard
 
 class PCControlService:
-	Mouse = PyMouse()
-	Keyboard = PyKeyboard()
+	@staticmethod
+	def mouse():
+		return PyMouse()
+		
+	@staticmethod
+	def keyboard():
+		return PyKeyboard()
 	
 	# TODO: may be implement them as platform independent
 	@staticmethod

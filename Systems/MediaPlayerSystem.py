@@ -11,6 +11,7 @@ class MediaPlayerSystem(BaseSystem):
 		BaseSystem.__init__(self, owner)
 		
 		self.rootPath = "~/Public"
+		self.volume = 0
 		
 		self._playing = ""
 		self._process = None 
@@ -50,6 +51,14 @@ class MediaPlayerSystem(BaseSystem):
 		self._playing = path
 		path = os.path.join(self.rootPath, path)
 		self._process = PCControlService.openMedia(path, False)
+		# adjust volume
+		time.sleep(1)
+		for i in range(0, self.volume):
+			self._process.stdin.write("+")
+			time.sleep(0.1)
+		for i in range(self.volume, 0):
+			self._process.stdin.write("-")
+			time.sleep(0.1)
 		
 	def stop(self):
 		if (self._process is not None) and (self._process.poll() is None):
@@ -63,10 +72,14 @@ class MediaPlayerSystem(BaseSystem):
 	def volumeDown(self):
 		if (self._process is not None) and (self._process.poll() is None):
 			self._process.stdin.write("-")
+			self.volume -= 1
+			self._owner.systemChanged = True
 		
 	def volumeUp(self):
 		if (self._process is not None) and (self._process.poll() is None):
 			self._process.stdin.write("+")
+			self.volume += 1
+			self._owner.systemChanged = True
 		
 	def seekBack(self):
 		if (self._process is not None) and (self._process.poll() is None):

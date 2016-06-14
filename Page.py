@@ -122,6 +122,7 @@ def mediaPlayerContent(mediaPlayerSystem):
 	result += "<form id='form1' action='' method='post'>\n"
 	result += "<ul class='settings'>\n"
 	result += property("rootPath", mediaPlayerSystem.rootPath)
+	result += property("volume", mediaPlayerSystem.volume)
 	result += "</ul>\n"
 	result += "<a class='button' href='javascript:;' onclick='submitForm(\"form1\")'>Save</a>\n"
 	result += "<a class='button' href='/'>Back</a>\n"

@@ -1,4 +1,4 @@
-#!/usr/bin/env
+#!/usr/bin/env python
 import sys, os, threading, subprocess
 sys.path.append(os.path.join(os.getcwd(), "External"))
 os.chdir("bin")
@@ -12,7 +12,7 @@ app = Flask(__name__)
 myHome = MHome()
 
 
-# TODO: autostart(/home/pi/.bashrc)
+# autostart: http://blog.scphillips.com/posts/2013/07/getting-a-python-script-to-run-in-the-background-as-a-service-on-boot/
 @app.route('/favicon.ico')
 def favicon():
 	return send_from_directory("..", "MyHome.ico")
