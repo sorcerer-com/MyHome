@@ -1,5 +1,6 @@
 from threading import Timer
 from Utils.Logger import *
+from Utils.Event import *
 from Systems.SecuritySystem import *
 from Systems.ScheduleSystem import *
 from Systems.MediaPlayerSystem import *
@@ -18,6 +19,8 @@ class MHome(object):
 		self.systems[MediaPlayerSystem.Name] = MediaPlayerSystem(self)
 		self.systems[ControlSystem.Name] = ControlSystem(self)
 		self.systemChanged = False
+		
+		self.event = Event()
 		
 		self.loadSettings()
 		self.update()
@@ -62,6 +65,7 @@ class MHome(object):
 			system.loadSettings(configParser)
 		
 		self.systemChanged = False
+		self.event(self, "SettingsLoaded")
 		
 	def saveSettings(self):
 		Logger.log("info", "My Home: save settings")
@@ -76,3 +80,5 @@ class MHome(object):
 				
 		with open(Config.ConfigFileName, 'wb') as configfile:
 			configParser.write(configfile)
+		
+		self.event(self, "SettingsSaved")

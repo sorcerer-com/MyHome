@@ -51,48 +51,58 @@ class MediaPlayerSystem(BaseSystem):
 		self._playing = path
 		path = os.path.join(self.rootPath, path)
 		self._process = PCControlService.openMedia(path, False)
-		# adjust volume
-		time.sleep(1)
-		for i in range(0, self.volume):
-			self._process.stdin.write("+")
-			time.sleep(0.1)
-		for i in range(self.volume, 0):
-			self._process.stdin.write("-")
-			time.sleep(0.1)
+		if (self._process is not None) and (self._process.poll() is None):
+			# adjust volume
+			time.sleep(1)
+			for i in range(0, self.volume):
+				self._process.stdin.write("+")
+				time.sleep(0.1)
+			for i in range(self.volume, 0):
+				self._process.stdin.write("-")
+				time.sleep(0.1)
+			self._owner.event(self, "MediaPlayed", self._playing)
 		
 	def stop(self):
 		if (self._process is not None) and (self._process.poll() is None):
 			self._process.stdin.write("q")
 			self._playing = ""
+			self._owner.event(self, "MediaStoped")
 		
 	def pause(self):
 		if (self._process is not None) and (self._process.poll() is None):
 			self._process.stdin.write(" ") # space
+			self._owner.event(self, "MediaPaused")
 		
 	def volumeDown(self):
 		if (self._process is not None) and (self._process.poll() is None):
 			self._process.stdin.write("-")
 			self.volume -= 1
 			self._owner.systemChanged = True
+			self._owner.event(self, "MediaVolumeDown")
 		
 	def volumeUp(self):
 		if (self._process is not None) and (self._process.poll() is None):
 			self._process.stdin.write("+")
 			self.volume += 1
 			self._owner.systemChanged = True
+			self._owner.event(self, "MediaVolumeUp")
 		
 	def seekBack(self):
 		if (self._process is not None) and (self._process.poll() is None):
 			self._process.stdin.write("\027[D") # left arrow
+			self._owner.event(self, "MediaSeekBack")
 		
 	def seekForward(self):
 		if (self._process is not None) and (self._process.poll() is None):
 			self._process.stdin.write("\027[C") # right arrow
+			self._owner.event(self, "MediaSeekForward")
 		
 	def seekBackFast(self):
 		if (self._process is not None) and (self._process.poll() is None):
 			self._process.stdin.write("\027[B") # down arrow
+			self._owner.event(self, "MediaSeekBackFast")
 		
 	def seekForwardFast(self):
 		if (self._process is not None) and (self._process.poll() is None):
 			self._process.stdin.write("\027[A") # up arrow
+			self._owner.event(self, "MediaSeekForwardFast")

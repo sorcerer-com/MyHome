@@ -45,12 +45,14 @@ class ControlSystem(BaseSystem):
 					command = command.replace(name + ".", "self._owner.")
 				elif name in self._owner.systems:
 					command = command.replace(name + ".", "self._owner.systems['%s']." % name)
+			self._owner.event(self, "CommandReceived", command)
 			
 			try:
 				exec(command)
 			except Exception as e:
 				Logger.log("error", "Control System: cannot execute '%s'" % command)
 				Logger.log("debug", str(e))
+			self._owner.event(self, "CommandExecuted", command)
 			
 		self.prevDate = res[0]["date"]
 		self._owner.systemChanged = True
