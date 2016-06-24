@@ -1,15 +1,15 @@
 import subprocess
 from Utils.Logger import *
-from External.pymouse import PyMouse
-from External.pykeyboard import PyKeyboard
 
 class PCControlService:
 	@staticmethod
 	def mouse():
+		from External.pymouse import PyMouse
 		return PyMouse()
 		
 	@staticmethod
 	def keyboard():
+		from External.pykeyboard import PyKeyboard
 		return PyKeyboard()
 	
 	# TODO: may be implement them as platform independent

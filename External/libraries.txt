@@ -1,0 +1,25 @@
+Flask - micro web framework
+	Jinja2 - template engine
+		MarkupSafe - unicode subclass that supports HTML strings
+
+	Werkzeug - WSGI utility library
+	itsdangerous - helpers to pass trusted data to untrusted environments and back
+
+gTTS - Google Text to Speech
+	gTTS-token - calculates a token to run the Google Translate text to speech
+	requests - Non-GMO HTTP library
+
+Mechanize - stateful programmatic web browsing
+
+SimpleCV - computer vision library
+	CV - computer vision library
+	NumPy - general-purpose array-processing package
+	PIL - Python Imaging Library (image processing capabilities)
+	pkg_resources - part of setuptools(package development process library)
+	PyGame - modules designed for writing video games
+	SciPy - scientific computing library
+
+PyKeyboard - module for keyboard control
+PyMouse - module for mouse control
+
+timeout-decorator - function decorator(attribute) for timeout
