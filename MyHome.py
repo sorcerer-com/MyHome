@@ -5,12 +5,16 @@ from Systems.SecuritySystem import *
 from Systems.ScheduleSystem import *
 from Systems.MediaPlayerSystem import *
 from Systems.ControlSystem import *
+from Systems.AISystem import *
 
 class MHome(object):
-	updateTime = 0.1
+	Name = "MyHome"
+	_UpdateTime = 0.1
 
 	def __init__(self):
 		Logger.log("info", "Start My Home")
+		
+		self.event = Event()
 		
 		# systems
 		self.systems = {}
@@ -18,16 +22,15 @@ class MHome(object):
 		self.systems[ScheduleSystem.Name] = ScheduleSystem(self)
 		self.systems[MediaPlayerSystem.Name] = MediaPlayerSystem(self)
 		self.systems[ControlSystem.Name] = ControlSystem(self)
+		self.systems[AISystem.Name] = AISystem(self)
 		self.systemChanged = False
-		
-		self.event = Event()
 		
 		self.loadSettings()
 		self.update()
 		
 	def __del__(self):
 		Logger.log("info", "Stop My Home")
-		MHome.updateTime = 0
+		MHome._UpdateTime = 0
 		self.saveSettings();
 
 	def update(self):				
@@ -40,8 +43,8 @@ class MHome(object):
 			self.saveSettings();
 			self.systemChanged = False
 				
-		if MHome.updateTime > 0:
-			Timer(MHome.updateTime, self.update).start()
+		if MHome._UpdateTime > 0:
+			Timer(MHome._UpdateTime, self.update).start()
 			
 	def test(self):
 		Logger.log("info", "My Home: test")

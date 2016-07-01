@@ -132,6 +132,7 @@ def schedule():
 					value = parse(temp[i], str)
 				scheduleSystem.schedule[i][arg] = value
 		scheduleSystem.schedule.sort(key=lambda x: x["Time"])
+		scheduleSystem._nextTime = datetime.now()
 		myHome.systemChanged = True
 		return redirect("/")
 		

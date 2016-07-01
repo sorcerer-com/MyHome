@@ -44,7 +44,7 @@ def string(value):
 	except Exception as e:
 		Logger.log("error", "Utils: cannot convert '%s' to string" % value)
 		Logger.log("debug", str(e))
-	return str(value)
+	return str(value).replace("\"", "\\\"")
 		
 def parse(value, valueType):
 	try:

@@ -40,11 +40,15 @@ class PCControlService:
 			return None
 		
 	@staticmethod
-	def openMedia(path, wait=True):
+	def openMedia(path, audioOutput="hdmi", wait=True):
 		Logger.log("info", "PCControl Service: open media '%s'" % path)
+		if (path == "") or (audioOutput not in ["hdmi", "local"]):
+			Logger.log("error", "PCControl Service: cannot open media - invalid parameters")
+			return None
+			
 		try:
 			call = subprocess.call if wait else subprocess.Popen
-			return call(["omxplayer", "-r", "-o", "hdmi", path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			return call(["omxplayer", "-r", "-o", audioOutput, path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		except Exception as e:
 			Logger.log("error", "PCControl Service: cannot open media '%s'" % path)
 			Logger.log("debug", str(e))

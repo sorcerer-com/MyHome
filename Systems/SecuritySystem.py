@@ -10,7 +10,6 @@ class SecuritySystem(BaseSystem):
 
 	def __init__(self, owner):
 		BaseSystem.__init__(self, owner)
-		self._enabled = False
 		
 		self.startDelay = timedelta(minutes=15)
 		self.sendInterval = timedelta(minutes=5)
