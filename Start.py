@@ -7,7 +7,7 @@ import External.mechanize
 proc = None
 def killProc():
 	global proc
-	if proc is not None:
+	if (proc is not None) and (proc.poll() is None):
 		proc.terminate()
 		proc.kill()
 		proc = None
@@ -20,11 +20,21 @@ signal.signal(signal.SIGTERM, signal_handler)
 		
 try:
 	while True:
-		proc = subprocess.Popen(["python", "Main.py", "-service"])
-
-		while (proc is not None) and (proc.poll() is None):
+		try:
+			killProc()
+			proc = subprocess.Popen(["python", "Main.py", "-service"])
+		except Exception as e:
 			time.sleep(60) # wait a minute
 
+		while (proc is not None) and (proc.poll() is None):
+			for i in range(0, 60): # wait a minute
+				time.sleep(1)
+				if (proc is None) or (proc.poll() is not None):
+					break
+			
+			if (proc is None) or (proc.poll() is not None):
+				break
+			
 			# open page
 			try:
 				br = External.mechanize.Browser()

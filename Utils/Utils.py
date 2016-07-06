@@ -37,14 +37,14 @@ def string(value):
 				if type(obj) is list:
 					result += "%s, " % string(obj)
 				else:
-					result += "\"%s\", " % string(obj)
+					result += "\"%s\", " % string(obj).replace("\"", "\\\"")
 			if len(result) > 2:
 				result = result[:-2]
 			return result + "]"
 	except Exception as e:
 		Logger.log("error", "Utils: cannot convert '%s' to string" % value)
 		Logger.log("debug", str(e))
-	return str(value).replace("\"", "\\\"")
+	return str(value)
 		
 def parse(value, valueType):
 	try:
@@ -55,7 +55,7 @@ def parse(value, valueType):
 		elif valueType is float:
 			return float(value)
 		elif valueType is str:
-			return value
+			return value.replace("\\\"", "\"")
 		elif valueType is datetime:
 			return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
 		elif valueType is timedelta:

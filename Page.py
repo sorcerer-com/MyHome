@@ -28,8 +28,9 @@ def indexContent(myHome):
 		result += "</li>\n"
 	result += "</ul>\n"
 	result += "<a class='button' href='/log'>Log</a>\n"
-	result += "<a class='button' href='/test'>Test</a>\n"
 	result += "<a class='button' href='/config'>Config</a>\n"
+	result += "<a class='button' href='/test'>Test</a>\n"
+	result += "<a class='button' href='/restart'>Restart</a>\n"
 	return result
 	
 def loginContent(invalid):

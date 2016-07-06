@@ -50,7 +50,7 @@ class MediaPlayerSystem(BaseSystem):
 		# play
 		self._playing = path
 		path = os.path.join(self.rootPath, path)
-		self._process = PCControlService.openMedia(path, False)
+		self._process = PCControlService.openMedia(path, "hdmi", False)
 		if (self._process is not None) and (self._process.poll() is None):
 			# adjust volume
 			time.sleep(1)

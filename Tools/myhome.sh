@@ -46,6 +46,7 @@ case "$1" in
 
     restart|reload|force-reload)
         do_stop
+        sleep 5s
         do_start
         ;;
 

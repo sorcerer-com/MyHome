@@ -67,6 +67,13 @@ def test():
 @app.route("/config", methods=["GET", "POST"])
 def config():
 	return settings("Config")
+	
+@app.route("/restart")
+def restart():
+	func = request.environ.get('werkzeug.server.shutdown')
+	if func is not None:
+		func()
+	return redirect("/")
 
 @app.route("/settings/<systemName>", methods=["GET", "POST"])
 def settings(systemName):

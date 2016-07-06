@@ -32,14 +32,20 @@ class AISystem(BaseSystem):
 			print "%s %s %s" % (sender.Name, event, data)
 	
 	
+	_LastSayTime = datetime.now() - timedelta(hours=2)
+	
 	@staticmethod
 	def say(text):
+		if AISystem._LastSayTime < datetime.now() - timedelta(hours=2):
+			AISystem._LastSayTime = datetime.now()
+			AISystem.say("beeeeep")
+			
 		with warnings.catch_warnings():
 			warnings.simplefilter("ignore")
 			
 			tts = gTTS(text=text, lang="cs", debug=False) # pl/cs
-			tts.save("1.mp3")
+			tts.save("say.mp3")
 		
-		PCControlService.openMedia(os.path.join(os.getcwd(), "1.mp3"), "local")
+		PCControlService.openMedia(os.path.join(os.getcwd(), "say.mp3"), "local")
 		
-		os.remove("1.mp3")
+		os.remove("say.mp3")

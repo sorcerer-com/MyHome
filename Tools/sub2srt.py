@@ -53,6 +53,6 @@ else:
 					print file
 					fixEncoding(path + file)
 			except Exception as e:
-				print "\t" + e
+				print "\t" + str(e)
 	else:
 		print "invalid path"
