@@ -1,4 +1,4 @@
-import warnings
+import warnings, threading
 from gtts import gTTS
 from BaseSystem import *
 from Services.PCControlService import *
@@ -32,20 +32,21 @@ class AISystem(BaseSystem):
 			print "%s %s %s" % (sender.Name, event, data)
 	
 	
-	_LastSayTime = datetime.now() - timedelta(hours=2)
-	
 	@staticmethod
-	def say(text):
-		if AISystem._LastSayTime < datetime.now() - timedelta(hours=2):
-			AISystem._LastSayTime = datetime.now()
-			AISystem.say("beeeeep")
-			
+	def _say(text):
+		text = "beep %s beep" % text
 		with warnings.catch_warnings():
 			warnings.simplefilter("ignore")
 			
 			tts = gTTS(text=text, lang="cs", debug=False) # pl/cs
 			tts.save("say.mp3")
 		
-		PCControlService.openMedia(os.path.join(os.getcwd(), "say.mp3"), "local")
+		PCControlService.openMedia(os.path.join(os.getcwd(), "say.mp3"), "local", 100)
 		
 		os.remove("say.mp3")
+	
+	@staticmethod
+	def say(text):
+		t = threading.Thread(target=lambda: AISystem._say(text))
+		t.daemon = True
+		t.start()
