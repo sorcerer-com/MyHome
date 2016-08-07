@@ -26,7 +26,7 @@ class BaseSystem(object):
 	def update(self):
 		pass
 		
-	def loadSettings(self, configParser):
+	def loadSettings(self, configParser, data):
 		if not configParser.has_section(self.Name):
 			return
 			
@@ -36,10 +36,9 @@ class BaseSystem(object):
 				propType = type(getattr(self, name))
 				setattr(self, name, parse(value, propType))
 
-	def saveSettings(self, configParser):
-		configParser.add_section(self.Name)
-		
+	def saveSettings(self, configParser, data):
 		items = getProperties(self, True)
 		for prop in items:
 			value = getattr(self, prop)
 			configParser.set(self.Name, prop, string(value))
+		

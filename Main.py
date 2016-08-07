@@ -17,6 +17,10 @@ myHome = MHome()
 def favicon():
 	return send_from_directory("..", "MyHome.ico")
 
+@app.before_request
+def func():
+	session.modified = True
+
 @app.route("/")
 def index():
 	if ("password" not in session) or (session["password"] != Config.Password):
@@ -125,20 +129,20 @@ def schedule():
 	scheduleSystem = myHome.systems["Schedule"]
 	data = request.form if request.method == "POST" else request.args
 	if len(data) > 0:
-		scheduleSystem.schedule = []
+		scheduleSystem._schedule = []
 		for arg in data:
 			temp = data.getlist(arg)
 			for i in range(0, len(temp)):
-				if len(scheduleSystem.schedule) <= i:
-					scheduleSystem.schedule.append({})
+				if len(scheduleSystem._schedule) <= i:
+					scheduleSystem._schedule.append({})
 				if arg == "Time":
 					value = parse(temp[i], datetime)
 				elif arg == "Repeat":
 					value = parse(temp[i], timedelta)
 				else:
 					value = parse(temp[i], str)
-				scheduleSystem.schedule[i][arg] = value
-		scheduleSystem.schedule.sort(key=lambda x: x["Time"])
+				scheduleSystem._schedule[i][arg] = value
+		scheduleSystem._schedule.sort(key=lambda x: x["Time"])
 		scheduleSystem._nextTime = datetime.now()
 		myHome.systemChanged = True
 		return redirect("/")

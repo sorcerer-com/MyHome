@@ -61,11 +61,22 @@ class MHome(object):
 		if Config.ConfigFileName not in configParser.read(Config.ConfigFileName):
 			return
 			
+		data = []
+		with open(Config.DataFileName, 'r') as f:
+			data = f.read().split("\n")
+			
 		Config.load(configParser)
 		
 		# load systems settings
 		for (key, system) in self.systems.items():
-			system.loadSettings(configParser)
+			if ("[%s]" % key) in data:
+				systemData = data[data.index("[%s]" % key)+1:]
+				for i in range(1, len(systemData)):
+					if systemData[i].startswith("["):
+						systemData = systemData[:i]
+						break
+						
+			system.loadSettings(configParser, systemData)
 		
 		self.systemChanged = False
 		self.event(self, "SettingsLoaded")
@@ -78,10 +89,21 @@ class MHome(object):
 		Config.save(configParser)
 		
 		# save systems settings
+		data = []
 		for (key, system) in self.systems.items():
-			system.saveSettings(configParser)
+			configParser.add_section(system.Name)
+			systemData = []
+			system.saveSettings(configParser, systemData)
+
+			data.append("[%s]" % system.Name)
+			data.extend(systemData)
+			data.append("")
 				
-		with open(Config.ConfigFileName, 'wb') as configfile:
-			configParser.write(configfile)
+		with open(Config.ConfigFileName, 'wb') as configFile:
+			configParser.write(configFile)
+			
+		with open(Config.DataFileName, 'w') as dataFile:
+			for item in data:
+				dataFile.write("%s\n" % item)
 		
 		self.event(self, "SettingsSaved")

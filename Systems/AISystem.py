@@ -14,11 +14,11 @@ class AISystem(BaseSystem):
 		
 		self._enabled = False
 		
-	def loadSettings(self, configParser):
-		BaseSystem.loadSettings(self, configParser)
+	def loadSettings(self, configParser, data):
+		BaseSystem.loadSettings(self, configParser, data)
 
-	def saveSettings(self, configParser):
-		BaseSystem.saveSettings(self, configParser)
+	def saveSettings(self, configParser, data):
+		BaseSystem.saveSettings(self, configParser, data)
 
 	def _onEnabledChanged(self):
 		BaseSystem._onEnabledChanged(self)

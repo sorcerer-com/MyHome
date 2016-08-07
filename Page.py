@@ -134,7 +134,7 @@ def scheduleContent(scheduleSystem):
 	result = "<h2 class='title'>Schedule</h2>\n"
 	result += "<form id='form' action='' method='post'>\n"
 	result += "<ul class='settings'>\n"
-	for item in scheduleSystem.schedule:
+	for item in scheduleSystem._schedule:
 		result += "<details>\n"
 		tooltip = "%s (%s)" % (string(item["Time"]), string(item["Repeat"]))
 		result += "<summary style='background-color: %s' title='%s'>%s</summary>\n" % (item["Color"], tooltip, item["Name"])
