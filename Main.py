@@ -20,20 +20,6 @@ def favicon():
 @app.before_request
 def func():
 	session.modified = True
-
-@app.route("/")
-def index():
-	if ("password" not in session) or (session["password"] != Config.Password):
-		return redirect("/login")
-		
-	data = request.form if request.method == "POST" else request.args
-	if len(data) > 0:
-		for arg in data:
-			value = data[arg] == "True"
-			myHome.systems[arg].enabled = value
-		return redirect("/")
-		
-	return template(indexContent(myHome), None) # disable auto refresh for now
 	
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -53,13 +39,27 @@ def login():
 	else:
 		invalid = False
 		
-	return template(loginContent(invalid))
+	return template(loginContent(invalid), "LogIn")
+
+@app.route("/")
+def index():
+	if ("password" not in session) or (session["password"] != Config.Password):
+		return redirect("/login")
+		
+	data = request.form if request.method == "POST" else request.args
+	if len(data) > 0:
+		for arg in data:
+			value = data[arg] == "True"
+			myHome.systems[arg].enabled = value
+		return redirect("/")
+		
+	return template(indexContent(myHome), None, None) # disable auto refresh for now
 	
 @app.route("/log")
 def log():
 	if ("password" not in session) or (session["password"] != Config.Password):
 		return redirect("/login")
-	return template(logContent(), 10) # refresh every 10 seconds
+	return template(logContent(), "Log", 10) # refresh every 10 seconds
 	
 @app.route("/test")
 def test():
@@ -100,7 +100,8 @@ def settings(systemName):
 		myHome.systemChanged = True
 		return redirect("/")
 		
-	return template(settingsContent(system))
+	title = "Config" if system == Config else system.Name + " Settings"
+	return template(settingsContent(system), title)
 	
 @app.route("/settings/MediaPlayer", methods=["GET", "POST"])
 def mediaPlayer():
@@ -114,12 +115,15 @@ def mediaPlayer():
 			mediaPlayerSystem.play(data["play"])
 		if "action" in data and hasattr(mediaPlayerSystem, data["action"]):
 			getattr(mediaPlayerSystem, data["action"])() # call function with set action name
+		if "volume" in data:
+			mediaPlayerSystem.volume = int(data["volume"])
+			myHome.systemChanged = True
 		if "rootPath" in data:
 			mediaPlayerSystem.rootPath = str(data["rootPath"])
 			myHome.systemChanged = True
 		return redirect("/settings/MediaPlayer")
 		
-	return template(mediaPlayerContent(mediaPlayerSystem), None) # disable auto refresh for now, causing selection problem
+	return template(mediaPlayerContent(mediaPlayerSystem), "Media Player", None) # disable auto refresh for now, causing selection problem
 
 @app.route("/settings/Schedule", methods=["GET", "POST"])
 def schedule():
@@ -147,7 +151,7 @@ def schedule():
 		myHome.systemChanged = True
 		return redirect("/")
 		
-	return template(scheduleContent(scheduleSystem))
+	return template(scheduleContent(scheduleSystem), "Schedule")
 
 def start():
 	app.secret_key = u"\xf2N\x8a 8\xb1\xd9(&\xa6\x90\x12R\xf0\\\xe8\x1e\xf92\xa6AN\xed\xb3"

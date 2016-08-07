@@ -1,6 +1,6 @@
 from Utils.Utils import *
 
-def template(content, autorefresh = None):
+def template(content, title, autorefresh = None):
 	result = ""
 	with open("../Page.html") as file:
 		result = file.read()
@@ -9,33 +9,14 @@ def template(content, autorefresh = None):
 	if autorefresh != None:
 		head += "<meta http-equiv='Refresh' content='%s'>\n" % autorefresh
 	result = result.replace("<head/>", head)
+	if title != None:
+		content = "<h2 class='title'>" + title + "</h2>\n" + content
 	result = result.replace("<content/>", content)
 	return result
-	
-	
-def indexContent(myHome):
-	result = "<ul class='system'>\n"
-	systemNames = myHome.systems.keys()
-	systemNames.sort()
-	for name in systemNames:
-		result += "<li>\n"
-		result += "<h2>%s</h2>\n" % name
-		if myHome.systems[name].enabled:
-			result += "<a class='button green' href='?%s=%s'>Enabled</a>\n" % (name, False)
-		else:
-			result += "<a class='button red' href='?%s=%s'>Disabled</a>\n" % (name, True)
-		result += "<a class='button' href='/settings/%s'>Settings</a>\n" % name
-		result += "</li>\n"
-	result += "</ul>\n"
-	result += "<a class='button' href='/log'>Log</a>\n"
-	result += "<a class='button' href='/config'>Config</a>\n"
-	result += "<a class='button' href='/test'>Test</a>\n"
-	result += "<a class='button' href='/restart'>Restart</a>\n"
-	return result
-	
+
+
 def loginContent(invalid):
-	result = "<h2 class='title'>LogIn</h2>\n"
-	result += "<form id='form' action='' method='post'>\n"
+	result = "<form id='form' action='' method='post'>\n"
 	if not invalid:
 		result += "<input type='password' name='password' autofocus/>\n"
 	else:
@@ -63,9 +44,28 @@ def loginContent(invalid):
 	result += "</form>\n"
 	return result
 	
+def indexContent(myHome):
+	result = "<ul class='system'>\n"
+	systemNames = myHome.systems.keys()
+	systemNames.sort()
+	for name in systemNames:
+		result += "<li>\n"
+		result += "<h2>%s</h2>\n" % name
+		if myHome.systems[name].enabled:
+			result += "<a class='button green' href='?%s=%s'>Enabled</a>\n" % (name, False)
+		else:
+			result += "<a class='button red' href='?%s=%s'>Disabled</a>\n" % (name, True)
+		result += "<a class='button' href='/settings/%s'>Settings</a>\n" % name
+		result += "</li>\n"
+	result += "</ul>\n"
+	result += "<a class='button' href='/log'>Log</a>\n"
+	result += "<a class='button' href='/config'>Config</a>\n"
+	result += "<a class='button' href='/test'>Test</a>\n"
+	result += "<a class='button' href='/restart'>Restart</a>\n"
+	return result
+	
 def logContent():
-	result = "<h2 class='title'>Log</h2>\n"
-	result += "<p>\n"
+	result = "<p>\n"
 	#with open(Config.LogFileName, "r") as file:
 	for line in Logger.data:
 		if line.endswith("\n"):
@@ -79,11 +79,7 @@ def logContent():
 	return result
 	
 def settingsContent(system):
-	if system <> Config:
-		result = "<h2 class='title'>%s Settings</h2>\n" % system.Name
-	else:
-		result = "<h2 class='title'>Config</h2>\n"
-	result += "<form id='form' action='' method='post'>\n"
+	result = "<form id='form' action='' method='post'>\n"
 	result += "<ul class='settings'>\n"
 	items = getProperties(system) if system <> Config else Config.list()
 	for prop in items:
@@ -96,8 +92,7 @@ def settingsContent(system):
 	return result
 	
 def mediaPlayerContent(mediaPlayerSystem):
-	result = "<h2 class='title'>Media Player</h2>\n"
-	result += "<form id='form' action='' method='post'>\n"
+	result = "<form id='form1' action='' method='post'>\n"
 	result += "<select name='play'>\n"
 	for item in mediaPlayerSystem._list:
 		if mediaPlayerSystem.getPlaying() == item:
@@ -107,7 +102,7 @@ def mediaPlayerContent(mediaPlayerSystem):
 	result += "</select>\n"
 	result += "<div class='buttonContainer'>\n"
 	if mediaPlayerSystem.getPlaying() == "":
-		result += "<a class='button' href='javascript:;' onclick='submitForm(\"form\");'>Play</a>\n"
+		result += "<a class='button' href='javascript:;' onclick='submitForm(\"form1\");'>Play</a>\n"
 	else:
 		result += "<a class='button' href='?action=stop'>Stop</a>\n"
 	result += "<a class='button' href='?action=pause'>Pause</a>\n"
@@ -120,19 +115,11 @@ def mediaPlayerContent(mediaPlayerSystem):
 	result += "</div>\n"
 	result += "</form>\n"
 	
-	result += "<form id='form1' action='' method='post'>\n"
-	result += "<ul class='settings'>\n"
-	result += property("rootPath", mediaPlayerSystem.rootPath)
-	result += property("volume", mediaPlayerSystem.volume)
-	result += "</ul>\n"
-	result += "<a class='button' href='javascript:;' onclick='submitForm(\"form1\")'>Save</a>\n"
-	result += "<a class='button' href='/'>Back</a>\n"
-	result += "</form>\n"
+	result += settingsContent(mediaPlayerSystem)
 	return result
 	
 def scheduleContent(scheduleSystem):
-	result = "<h2 class='title'>Schedule</h2>\n"
-	result += "<form id='form' action='' method='post'>\n"
+	result = "<form id='form1' action='' method='post'>\n"
 	result += "<ul class='settings'>\n"
 	for item in scheduleSystem._schedule:
 		result += "<details>\n"
@@ -148,7 +135,7 @@ def scheduleContent(scheduleSystem):
 	result += "<a class='button' href='javascript:;' onclick='addItem(this)'>+</a>\n"
 	result += "</div>\n"
 	result += "</ul>\n"
-	result += "<a class='button' href='javascript:;' onclick='submitForm(\"form\")'>Save</a>\n"
+	result += "<a class='button' href='javascript:;' onclick='submitForm(\"form1\")'>Save</a>\n"
 	result += "<a class='button' href='/'>Cancel</a>\n"
 	result += "</form>\n"
 	return result
