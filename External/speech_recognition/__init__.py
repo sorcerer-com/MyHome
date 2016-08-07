@@ -922,6 +922,10 @@ def get_flac_converter():
     system = platform.system()
     path = os.path.dirname(os.path.abspath(__file__)) # directory of the current module file, where all the FLAC bundled binaries are stored
     flac_converter = shutil_which("flac") # check for installed version first
+    if flac_converter is None: # flac utility is not installed, check for current dir
+		p = os.path.join(path, "flac")
+		if os.path.exists(p) and os.access(p, os.X_OK):
+			flac_converter = p
     if flac_converter is None: # flac utility is not installed
         compatible_machine_types = ["i686", "i786", "x86", "x86_64", "AMD64"] # whitelist of machine types our bundled binaries are compatible with
         if system == "Windows" and platform.machine() in compatible_machine_types:
