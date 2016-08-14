@@ -61,9 +61,7 @@ def parse(value, valueType):
 		elif valueType is timedelta:
 			value = re.split("-| |:", value)
 			return datetime(1900 + int(value[0]), 1 + int(value[1]), 1 + int(value[2]), int(value[3]), int(value[4]), int(value[5])) - datetime(1900, 1, 1)
-		elif valueType is list:
-			return eval(value)
-		raise Exception("parse unknown type: " + str(valueType))
+		return eval(value)
 	except Exception as e:
 		Logger.log("error", "Utils: cannot convert '%s' to %s" % (value, valueType))
 		Logger.log("debug", str(e))

@@ -6,6 +6,7 @@ from Systems.ScheduleSystem import *
 from Systems.MediaPlayerSystem import *
 from Systems.ControlSystem import *
 from Systems.AISystem import *
+from Systems.SensorsSystem import *
 
 class MHome(object):
 	Name = "MyHome"
@@ -23,6 +24,7 @@ class MHome(object):
 		self.systems[MediaPlayerSystem.Name] = MediaPlayerSystem(self)
 		self.systems[ControlSystem.Name] = ControlSystem(self)
 		self.systems[AISystem.Name] = AISystem(self)
+		self.systems[SensorsSystem.Name] = SensorsSystem(self)
 		self.systemChanged = False
 		
 		self.loadSettings()
@@ -33,7 +35,8 @@ class MHome(object):
 		MHome._UpdateTime = 0
 		self.saveSettings();
 
-	def update(self):				
+	def update(self):
+		#start = datetime.now()
 		# update systems
 		for system in self.systems.values():
 			if system.enabled:
@@ -42,6 +45,7 @@ class MHome(object):
 		if self.systemChanged:
 			self.saveSettings();
 			self.systemChanged = False
+		#Logger.log("info", str(datetime.now() - start))
 				
 		if MHome._UpdateTime > 0:
 			Timer(MHome._UpdateTime, self.update).start()
@@ -68,7 +72,8 @@ class MHome(object):
 		Config.load(configParser)
 		
 		# load systems settings
-		for (key, system) in self.systems.items():
+		keys = sorted(self.systems.keys())
+		for key in keys:
 			if ("[%s]" % key) in data:
 				systemData = data[data.index("[%s]" % key)+1:]
 				for i in range(1, len(systemData)):
@@ -76,7 +81,7 @@ class MHome(object):
 						systemData = systemData[:i]
 						break
 						
-			system.loadSettings(configParser, systemData)
+			self.systems[key].loadSettings(configParser, systemData)
 		
 		self.systemChanged = False
 		self.event(self, "SettingsLoaded")
@@ -90,12 +95,13 @@ class MHome(object):
 		
 		# save systems settings
 		data = []
-		for (key, system) in self.systems.items():
-			configParser.add_section(system.Name)
+		keys = sorted(self.systems.keys())
+		for key in keys:
+			configParser.add_section(self.systems[key].Name)
 			systemData = []
-			system.saveSettings(configParser, systemData)
+			self.systems[key].saveSettings(configParser, systemData)
 
-			data.append("[%s]" % system.Name)
+			data.append("[%s]" % self.systems[key].Name)
 			data.extend(systemData)
 			data.append("")
 				

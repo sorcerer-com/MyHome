@@ -1,7 +1,7 @@
 import os, time
 from datetime import *
 from BaseSystem import *
-from Services.SensorsService import *
+from Systems.SensorsSystem import *
 from Services.PCControlService import *
 from Services.InternetService import *
 
@@ -52,13 +52,12 @@ class SecuritySystem(BaseSystem):
 					Logger.log("debug", str(e))
 					
 		if not self._activated and elapsed > timedelta(): # if not _activated and after delay start - check for motion
-			self._activated = SensorsService.detectMotion()
+			self._activated = self._owner.systems[SensorsSystem.Name].detectAnyMotion()
 			if self._activated:
 				Logger.log("info", "Security System: Activated")
-				self._owner.event(self, "Activated")
 			self._lastSendTime = datetime.now()
 		elif not self._activated:
-			SensorsService.detectMotion()
+			self._owner.systems[SensorsSystem.Name].detectAnyMotion()
 		
 		if self._activated:
 			img = self.captureImage()
