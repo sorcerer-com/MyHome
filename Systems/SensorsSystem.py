@@ -66,33 +66,46 @@ class SensorsSystem(BaseSystem):
 		
 		# if data from all sensors is collected
 		if None not in self._data[self._nextTime]:
-			if not self._removeLastData():
-				self._owner.systemChanged = True
+			if self._nextTime.minute <= self.checkInterval:
+				self._archiveData()
+			self._owner.systemChanged = True
 			self._nextTime += timedelta(minutes=self.checkInterval)
 			
-	def _removeLastData(self):
-		prevTime = None
-		if len(self._data) > 1:
-			prevTime = sorted(self._data.keys())[-2]
-		# if the last data is the same with previous one delete it
-		if prevTime in self._data:
-			remove = True
-			for i in range(0, len(self._data[self._nextTime])):
-				if self.sensorTypes[i] == "TempHum":
-					# if temperature diff is more then 1 or humidity diff is more then 5
-					if abs(self._data[self._nextTime][i][0] - self._data[prevTime][i][0]) > 1 or \
-						abs(self._data[self._nextTime][i][1] - self._data[prevTime][i][1]) > 5:
-						remove = False
-				else:
-					remove = self._data[self._nextTime] == self._data[self._nextTime]
-				if remove == False:
-					break
+	def _archiveData(self):
+		keys = sorted(self._data.keys())
+		idx = 0
+		while idx < len(keys):
+			times = []
+			if (self._nextTime - keys[idx]).days > 30: # for older then 30 days, save only 1 per day
+				for j in range(idx, len(keys)):
+					if keys[j].day == keys[idx].day and (keys[j] - keys[idx]).days < 1:
+						times.append(keys[j])
+					else:
+						break
+			elif (self._nextTime - keys[idx]).days >= 1: # for older then 24 hour, save only 1 per hour
+				for j in range(idx, len(keys)):
+					if keys[j].day == keys[idx].day and keys[j].hour == keys[idx].hour and \
+						(keys[j] - keys[idx]).seconds < 1 * 3600: # less then hour
+						times.append(keys[j])
+					else:
+						break
 			
-			if remove:
-				del self._data[self._nextTime]
-				return True
-		return False
-	
+			if len(times) > 1:
+				values = [self._data[t] for t in times]
+				values = map(list, zip(*values)) # transpose array
+				newValue = []
+				for i in range(0, len(values)):
+					if self.sensorTypes[i] == "Motion":
+						newValue.append(len([v for v in values[i] if v]) >= len(values[i]) / 2) # if True values are more then False
+					elif self.sensorTypes[i] == "TempHum":
+						newValue.append(tuple([sum(v) / len(values[i]) for v in zip(*values[i])])) # avarage value for the tuple
+				for t in times:
+					del self._data[t]
+				self._data[times[0].replace(minute=0, second=0, microsecond=0)] = newValue
+				idx += len(times)
+			else:
+				idx += 1
+		
 	def _initSensors(self):
 		try:
 			GPIO.cleanup()
@@ -209,7 +222,7 @@ class SensorsSystem(BaseSystem):
 			Humidity = bin2dec(HumidityBit)
 			Temperature = bin2dec(TemperatureBit)
 
-			if int(Humidity) + int(Temperature) == int(bin2dec(crc)):
+			if int(Humidity) + int(Temperature) == int(bin2dec(crc)) and int(bin2dec(crc)) != 0:
 				return (int(Temperature), int(Humidity))
 			else:
 				return None

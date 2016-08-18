@@ -139,6 +139,47 @@ def scheduleContent(scheduleSystem):
 	result += "<a class='button' href='/'>Cancel</a>\n"
 	result += "</form>\n"
 	return result
+
+def sensorsContent(sensorsSystem):
+	result = ""
+	for i in range(0, len(sensorsSystem.sensorTypes)):
+		result += "<details open>\n"
+		result += "<summary>%s</summary>\n" % sensorsSystem.sensorTypes[i]
+		data = [sensorsSystem._data[key][i] for key in sorted(sensorsSystem._data.keys()) if key.day == datetime.now().day]
+		if len(data) > 0 and type(data[0]) is tuple:
+			temp = [string(int(value[0])) for value in data if value is not None]
+			result += chart("canvas0" + str(i), 300, 150, temp) + "<br/>"
+			data = [string(int(value[1])) for value in data if value is not None]
+		else:
+			data = [string(int(value)) for value in data if value is not None]
+		result += chart("canvas1" + str(i), 300, 150, data) + "<br/>"
+		result += "</details>\n"
+	result += "<details>\n"
+	result += "<summary>Archive</summary>\n"
+	for i in range(0, len(sensorsSystem.sensorTypes)):
+		result += "%s - 30 days<br/>\n" % sensorsSystem.sensorTypes[i]
+		data = [sensorsSystem._data[key][i] for key in sorted(sensorsSystem._data.keys()) if key.day != datetime.now().day and (datetime.now() - key).days <= 30]
+		if len(data) > 0 and type(data[0]) is tuple:
+			temp = [string(int(value[0])) for value in data if value is not None]
+			result += chart("canvas2" + str(i), 300, 150, temp) + "<br/>"
+			data = [string(int(value[1])) for value in data if value is not None]
+		else:
+			data = [string(int(value)) for value in data if value is not None]
+		result += chart("canvas3" + str(i), 300, 150, data) + "<br/>"
+	for i in range(0, len(sensorsSystem.sensorTypes)):
+		result += "%s - Older<br/>\n" % sensorsSystem.sensorTypes[i]
+		data = [sensorsSystem._data[key][i] for key in sorted(sensorsSystem._data.keys()) if (datetime.now() - key).days > 30]
+		if len(data) > 0 and type(data[0]) is tuple:
+			temp = [string(int(value[0])) for value in data if value is not None]
+			result += chart("canvas4" + str(i), 300, 150, temp) + "<br/>"
+			data = [string(int(value[1])) for value in data if value is not None]
+		else:
+			data = [string(int(value)) for value in data if value is not None]
+		result += chart("canvas5" + str(i), 300, 150, data) + "<br/>"
+	result += "</details>\n"
+	
+	result += settingsContent(sensorsSystem)
+	return result
 	
 		
 def property(name, value, item = False):
@@ -161,4 +202,12 @@ def property(name, value, item = False):
 		if item:
 			result += "<a class='button' href='javascript:;' onclick='removeItem(this)'>-</a>\n"
 		result += "</li>\n"
+	return result
+	
+def chart(name, width, height, data):
+	result = "<canvas id='%s' width='%s' height='%s'></canvas>\n" % (name, width, height)
+	result += "<script type='text/javascript'>\n"
+	result += "var data1 = [%s];\n" % (",".join(data))
+	result += "drawLineChart('%s', data1)\n" % name
+	result += "</script>\n"
 	return result

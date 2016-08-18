@@ -101,7 +101,12 @@ def settings(systemName):
 		return redirect("/")
 		
 	title = "Config" if system == Config else system.Name + " Settings"
-	return template(settingsContent(system), title)
+	content = ""
+	if type(system) is SensorsSystem:
+		content = sensorsContent(system)
+	else:
+		content = settingsContent(system)
+	return template(content, title)
 	
 @app.route("/settings/MediaPlayer", methods=["GET", "POST"])
 def mediaPlayer():
