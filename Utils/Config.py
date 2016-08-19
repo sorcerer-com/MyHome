@@ -4,7 +4,8 @@ import Utils
 
 class Config:
 	ConfigFileName = "config.ini"
-	LogFileName = "log.txt"
+	DataFileName = "data.dat"
+	LogFileName = "log.log"
 	LogMaxSize = 100000
 	PrintLog = True
 	Password = ""

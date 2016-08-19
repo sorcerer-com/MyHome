@@ -1,5 +1,8 @@
-import RPi.GPIO as GPIO
 from BaseSystem import *
+try:
+	import RPi.GPIO as GPIO
+except:
+	Logger.log("warning", "Sensors System: the device isn't Raspberry Pi and Sensors are not supported")
 
 class SensorsSystem(BaseSystem):
 	Name = "Sensors"
@@ -11,9 +14,7 @@ class SensorsSystem(BaseSystem):
 		self.sensorPins = ["7", "4"]
 		self.checkInterval = 15
 		
-		GPIO.setwarnings(False)
 		self._init = self._initSensors()
-		GPIO.setwarnings(True)
 		self._nextTime = datetime.now()
 		self._nextTime = self._nextTime.replace(minute=int(self._nextTime.minute / self.checkInterval) * self.checkInterval, second=0, microsecond=0) # the exact self.checkInterval minute in the hour
 		self._data = {}
@@ -22,6 +23,9 @@ class SensorsSystem(BaseSystem):
 		BaseSystem.loadSettings(self, configParser, data)
 		if self._init:
 			self._initSensors()
+		if len(data) ==  0:
+			return
+		self._data = {}
 		
 		count = int(data[0])
 		for i in range(0, count):
@@ -108,7 +112,9 @@ class SensorsSystem(BaseSystem):
 		
 	def _initSensors(self):
 		try:
+			GPIO.setwarnings(False)
 			GPIO.cleanup()
+			GPIO.setwarnings(True)
 			GPIO.setmode(GPIO.BCM)
 			for i in range(0, len(self.sensorTypes)):
 				pin = int(self.sensorPins[i])

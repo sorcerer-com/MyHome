@@ -50,6 +50,8 @@ class ScheduleSystem(BaseSystem):
 		
 	def loadSettings(self, configParser, data):
 		BaseSystem.loadSettings(self, configParser, data)
+		if len(data) ==  0:
+			return
 		self._schedule = []
 		
 		count = int(data[0])

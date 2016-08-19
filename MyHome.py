@@ -66,14 +66,16 @@ class MHome(object):
 			return
 			
 		data = []
-		with open(Config.DataFileName, 'r') as f:
-			data = f.read().split("\n")
+		if os.path.isfile(Config.DataFileName):
+			with open(Config.DataFileName, 'r') as f:
+				data = f.read().split("\n")
 			
 		Config.load(configParser)
 		
 		# load systems settings
 		keys = sorted(self.systems.keys())
 		for key in keys:
+			systemData = []
 			if ("[%s]" % key) in data:
 				systemData = data[data.index("[%s]" % key)+1:]
 				for i in range(1, len(systemData)):
