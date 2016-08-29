@@ -34,7 +34,7 @@ class AISystem(BaseSystem):
 	
 	@staticmethod
 	def _say(text):
-		text = "beep %s beep" % text
+		text = "bee eep %s" % text
 		with warnings.catch_warnings():
 			warnings.simplefilter("ignore")
 			

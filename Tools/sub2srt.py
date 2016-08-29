@@ -1,4 +1,4 @@
-#!/usr/bin/env
+#!/usr/bin/env python
 import sys, os, codecs
 from datetime import *
 

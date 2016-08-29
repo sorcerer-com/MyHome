@@ -145,37 +145,37 @@ def sensorsContent(sensorsSystem):
 	for i in range(0, len(sensorsSystem.sensorTypes)):
 		result += "<details open>\n"
 		result += "<summary>%s</summary>\n" % sensorsSystem.sensorTypes[i]
-		data = [sensorsSystem._data[key][i] for key in sorted(sensorsSystem._data.keys()) if key.day == datetime.now().day]
-		if len(data) > 0 and type(data[0]) is tuple:
-			temp = [string(int(value[0])) for value in data if value is not None]
-			result += chart("canvas0" + str(i), 300, 150, temp) + "<br/>"
-			data = [string(int(value[1])) for value in data if value is not None]
+		data = {key: value[i] for (key, value) in sensorsSystem._data.items() if (datetime.now() - key).days < 1}
+		if len(data) > 0 and type(data[data.keys()[0]]) is tuple:
+			temp = {key: value[0] for (key, value) in data.items()}
+			result += chart("canvas0" + str(i), 300, 150, temp, True, False) + "<br/>"
+			data = {key: value[1] for (key, value) in data.items()}
 		else:
-			data = [string(int(value)) for value in data if value is not None]
-		result += chart("canvas1" + str(i), 300, 150, data) + "<br/>"
+			data = {key: value for (key, value) in data.items()}
+		result += chart("canvas1" + str(i), 300, 150, data, True, False) + "<br/>"
 		result += "</details>\n"
 	result += "<details>\n"
 	result += "<summary>Archive</summary>\n"
 	for i in range(0, len(sensorsSystem.sensorTypes)):
-		result += "%s - 30 days<br/>\n" % sensorsSystem.sensorTypes[i]
-		data = [sensorsSystem._data[key][i] for key in sorted(sensorsSystem._data.keys()) if key.day != datetime.now().day and (datetime.now() - key).days <= 30]
-		if len(data) > 0 and type(data[0]) is tuple:
-			temp = [string(int(value[0])) for value in data if value is not None]
-			result += chart("canvas2" + str(i), 300, 150, temp) + "<br/>"
-			data = [string(int(value[1])) for value in data if value is not None]
+		result += "%s - 10 days<br/>\n" % sensorsSystem.sensorTypes[i]
+		data = {key: value[i] for (key, value) in sensorsSystem._data.items() if (datetime.now() - key).days >= 1 and (datetime.now() - key).days <= 10}
+		if len(data) > 0 and type(data[data.keys()[0]]) is tuple:
+			temp = {key: value[0] for (key, value) in data.items()}
+			result += chart("canvas2" + str(i), 300, 150, temp, False, True) + "<br/>"
+			data = {key: value[1] for (key, value) in data.items()}
 		else:
-			data = [string(int(value)) for value in data if value is not None]
-		result += chart("canvas3" + str(i), 300, 150, data) + "<br/>"
+			data = {key: value for (key, value) in data.items()}
+		result += chart("canvas3" + str(i), 300, 150, data, False, True) + "<br/>"
 	for i in range(0, len(sensorsSystem.sensorTypes)):
 		result += "%s - Older<br/>\n" % sensorsSystem.sensorTypes[i]
-		data = [sensorsSystem._data[key][i] for key in sorted(sensorsSystem._data.keys()) if (datetime.now() - key).days > 30]
-		if len(data) > 0 and type(data[0]) is tuple:
-			temp = [string(int(value[0])) for value in data if value is not None]
-			result += chart("canvas4" + str(i), 300, 150, temp) + "<br/>"
-			data = [string(int(value[1])) for value in data if value is not None]
+		data = {key: value[i] for (key, value) in sensorsSystem._data.items() if (datetime.now() - key).days > 10}
+		if len(data) > 0 and type(data[data.keys()[0]]) is tuple:
+			temp = {key: value[0] for (key, value) in data.items()}
+			result += chart("canvas4" + str(i), 300, 150, temp, False, True) + "<br/>"
+			data = {key: value[1] for (key, value) in data.items()}
 		else:
-			data = [string(int(value)) for value in data if value is not None]
-		result += chart("canvas5" + str(i), 300, 150, data) + "<br/>"
+			data = {key: value for (key, value) in data.items()}
+		result += chart("canvas5" + str(i), 300, 150, data, False, True) + "<br/>"
 	result += "</details>\n"
 	
 	result += settingsContent(sensorsSystem)
@@ -204,10 +204,15 @@ def property(name, value, item = False):
 		result += "</li>\n"
 	return result
 	
-def chart(name, width, height, data):
+def chart(name, width, height, data, showValues, showAxis):
 	result = "<canvas id='%s' width='%s' height='%s'></canvas>\n" % (name, width, height)
 	result += "<script type='text/javascript'>\n"
-	result += "var data1 = [%s];\n" % (",".join(data))
-	result += "drawLineChart('%s', data1)\n" % name
+	result += "// %s\n" % len(data)
+	keys = sorted(data.keys())
+	values = [string(int(data[key])) for key in keys if data[key] is not None]
+	result += "var values = [%s];\n" % (",".join(values))
+	names = [("'%s'" % string(key)) for key in keys if data[key] is not None]
+	result += "var names = [%s];\n" % (",".join(names))
+	result += "drawLineChart('%s', values, names, %s, %s);\n" % (name, str(showValues).lower(), str(showAxis).lower())
 	result += "</script>\n"
 	return result
