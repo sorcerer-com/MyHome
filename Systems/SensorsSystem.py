@@ -97,7 +97,7 @@ class SensorsSystem(BaseSystem):
 						break
 			
 			if len(times) > 1:
-				values = [self._data[t] for t in times]
+				values = [self._data[t] for t in times if self._data[t] is not None and None not in self._data[t]]
 				values = map(list, zip(*values)) # transpose array
 				newValue = []
 				for i in range(0, len(values)):

@@ -86,7 +86,7 @@ class SecuritySystem(BaseSystem):
 			from SimpleCV import Camera
 
 			if self._camera == None:
-				self._camera = Camera()
+				self._camera = Camera(threaded=False)
 			return self._camera.getImage()
 		except Exception as e:
 			Logger.log("debug", str(e))

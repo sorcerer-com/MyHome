@@ -147,11 +147,11 @@ def sensorsContent(sensorsSystem):
 		result += "<summary>%s</summary>\n" % sensorsSystem.sensorTypes[i]
 		data = {key: value[i] for (key, value) in sensorsSystem._data.items() if (datetime.now() - key).days < 1}
 		if len(data) > 0 and type(data[data.keys()[0]]) is tuple:
-			temp = {key: value[0] for (key, value) in data.items()}
+			temp = {key: value[0] for (key, value) in data.items() if value is not None}
 			result += chart("canvas0" + str(i), 300, 150, temp, True, False) + "<br/>"
-			data = {key: value[1] for (key, value) in data.items()}
+			data = {key: value[1] for (key, value) in data.items() if value is not None}
 		else:
-			data = {key: value for (key, value) in data.items()}
+			data = {key: value for (key, value) in data.items() if value is not None}
 		result += chart("canvas1" + str(i), 300, 150, data, True, False) + "<br/>"
 		result += "</details>\n"
 	result += "<details>\n"
@@ -160,21 +160,21 @@ def sensorsContent(sensorsSystem):
 		result += "%s - 10 days<br/>\n" % sensorsSystem.sensorTypes[i]
 		data = {key: value[i] for (key, value) in sensorsSystem._data.items() if (datetime.now() - key).days >= 1 and (datetime.now() - key).days <= 10}
 		if len(data) > 0 and type(data[data.keys()[0]]) is tuple:
-			temp = {key: value[0] for (key, value) in data.items()}
+			temp = {key: value[0] for (key, value) in data.items() if value is not None}
 			result += chart("canvas2" + str(i), 300, 150, temp, False, True) + "<br/>"
-			data = {key: value[1] for (key, value) in data.items()}
+			data = {key: value[1] for (key, value) in data.items() if value is not None}
 		else:
-			data = {key: value for (key, value) in data.items()}
+			data = {key: value for (key, value) in data.items() if value is not None}
 		result += chart("canvas3" + str(i), 300, 150, data, False, True) + "<br/>"
 	for i in range(0, len(sensorsSystem.sensorTypes)):
 		result += "%s - Older<br/>\n" % sensorsSystem.sensorTypes[i]
 		data = {key: value[i] for (key, value) in sensorsSystem._data.items() if (datetime.now() - key).days > 10}
 		if len(data) > 0 and type(data[data.keys()[0]]) is tuple:
-			temp = {key: value[0] for (key, value) in data.items()}
+			temp = {key: value[0] for (key, value) in data.items() if value is not None}
 			result += chart("canvas4" + str(i), 300, 150, temp, False, True) + "<br/>"
-			data = {key: value[1] for (key, value) in data.items()}
+			data = {key: value[1] for (key, value) in data.items() if value is not None}
 		else:
-			data = {key: value for (key, value) in data.items()}
+			data = {key: value for (key, value) in data.items() if value is not None}
 		result += chart("canvas5" + str(i), 300, 150, data, False, True) + "<br/>"
 	result += "</details>\n"
 	

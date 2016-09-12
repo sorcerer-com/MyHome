@@ -53,7 +53,7 @@ class MediaPlayerSystem(BaseSystem):
 		self._process = PCControlService.openMedia(path, wait=False)
 		if (self._process is not None) and (self._process.poll() is None):
 			# adjust volume
-			time.sleep(1)
+			time.sleep(2)
 			for i in range(0, self.volume):
 				self._process.stdin.write("+")
 				time.sleep(0.1)
