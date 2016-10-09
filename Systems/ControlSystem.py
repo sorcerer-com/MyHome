@@ -40,10 +40,8 @@ class ControlSystem(BaseSystem):
 			else:
 				command = msg.get_payload()
 			if "." in command:
-				name = command.split(".")[0]
-				if name == "MyHome":
-					command = command.replace(name + ".", "self._owner.")
-				elif name in self._owner.systems:
+				command = command.replace("MyHome.", "self._owner.")
+				for name in self._owner.systems.keys():
 					command = command.replace(name + ".", "self._owner.systems['%s']." % name)
 			self._owner.event(self, "CommandReceived", command)
 			

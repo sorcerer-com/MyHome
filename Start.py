@@ -9,7 +9,15 @@ def killProc():
 	global proc
 	if (proc is not None) and (proc.poll() is None):
 		proc.terminate()
-		proc.kill()
+		# check one second for exit
+		for i in range(0, 10):
+			time.sleep(0.1)
+			if proc.poll() is not None:
+				break
+		
+		if proc.poll() is None:
+			proc.kill()
+			time.sleep(1)
 		proc = None
 
 def signal_handler(signal, frame):
@@ -39,6 +47,7 @@ while True:
 			except Exception as e:
 				print "Restart My Home: cannot open the web page"
 				killProc()
+		print ""
 	except (KeyboardInterrupt, SystemExit) as e:
 		killProc()
 		break

@@ -67,7 +67,7 @@ def indexContent(myHome):
 def logContent():
 	result = "<p>\n"
 	#with open(Config.LogFileName, "r") as file:
-	for line in Logger.data:
+	for line in reversed(Logger.data):
 		if line.endswith("\n"):
 			line = line[:-1]
 		if "\terror\t" in line:

@@ -102,7 +102,7 @@ class SensorsSystem(BaseSystem):
 				newValue = []
 				for i in range(0, len(values)):
 					if self.sensorTypes[i] == "Motion":
-						newValue.append(len([v for v in values[i] if v]) >= len(values[i]) / 2) # if True values are more then False
+						newValue.append(len([v for v in values[i] if v]) >= float(len(values[i])) / 2) # if True values are more then False
 					elif self.sensorTypes[i] == "TempHum":
 						newValue.append(tuple([sum(v) / len(values[i]) for v in zip(*values[i])])) # avarage value for the tuple
 				for t in times:

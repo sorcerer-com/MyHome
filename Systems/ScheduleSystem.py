@@ -89,10 +89,8 @@ class ScheduleSystem(BaseSystem):
 			if datetime.now() > item["Time"]:
 				command = item["Execute"]
 				if "." in command:
-					name = command.split(".")[0]
-					if name == "MyHome":
-						command = command.replace(name + ".", "self._owner.")
-					elif name in self._owner.systems:
+					command = command.replace("MyHome.", "self._owner.")
+					for name in self._owner.systems.keys():
 						command = command.replace(name + ".", "self._owner.systems['%s']." % name)
 				
 				try:
