@@ -13,6 +13,7 @@ class SensorsSystem(BaseSystem):
 		self.sensorTypes = ["Motion", "TempHum"]
 		self.sensorPins = ["7", "4"]
 		self.checkInterval = 15
+		self.fireAlarmTempreture = 50
 		
 		self._init = self._initSensors()
 		self._nextTime = datetime.now()
@@ -72,6 +73,7 @@ class SensorsSystem(BaseSystem):
 		if None not in self._data[self._nextTime]:
 			if self._nextTime.minute <= self.checkInterval:
 				self._archiveData()
+			self._checkData()
 			self._owner.systemChanged = True
 			self._nextTime += timedelta(minutes=self.checkInterval)
 			
@@ -111,6 +113,21 @@ class SensorsSystem(BaseSystem):
 				idx += len(times)
 			else:
 				idx += 1
+				
+	def _checkData(self):
+		data = self.getLatestData()
+		for i in range(0, len(self.sensorTypes)):
+			# fire check: if some temperature is higher than set value
+			if self.sensorTypes[i] == "TempHum" and data[i][0] > self.fireAlarmTempreture:
+				self._owner.sendAlert("Fire Alarm Activated!")
+				break
+				
+	def getLatestData(self):
+		if len(self._data) == 0:
+			return None
+			
+		keys = sorted(self._data.keys())
+		return self._data[keys[-1]]
 		
 	def _initSensors(self):
 		try:

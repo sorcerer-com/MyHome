@@ -50,11 +50,12 @@ class MHome(object):
 		if MHome._UpdateTime > 0:
 			Timer(MHome._UpdateTime, self.update).start()
 			
-	def test(self):
-		Logger.log("info", "My Home: test")
+	def sendAlert(self, msg):
+		Logger.log("info", "My Home: send alert '%s'" % msg)
 		PCControlService.captureImage("test.jpg", "640x480", 1, 4)
-		InternetService.sendSMS(Config.GSMNumber, "Test", "telenor")
-		InternetService.sendEMail([Config.EMail], "My Home", "Test", ["test.jpg"])
+		msg += "\n%s" % self.systems[SensorsSystem.Name].getLatestData()
+		InternetService.sendSMS(Config.GSMNumber, "telenor", msg)
+		InternetService.sendEMail([Config.EMail], "My Home", msg, ["test.jpg"])
 		if os.path.isfile("test.jpg"):
 			os.remove("test.jpg")
 

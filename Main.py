@@ -65,7 +65,7 @@ def log():
 def test():
 	if ("password" not in session) or (session["password"] != Config.Password):
 		return redirect("/login")
-	myHome.test()
+	myHome.sendAlert("Test")
 	return redirect("/")
     
 @app.route("/config", methods=["GET", "POST"])

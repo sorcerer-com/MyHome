@@ -90,7 +90,7 @@ class InternetService:
 		return InternetService.sendMail([number + "@sms.telenor.bg"], "", msg)
 		
 	@staticmethod
-	def sendSMS(number, msg, operator):
+	def sendSMS(number, operator, msg):
 		Logger.log("info", "Internet Service: send SMS '%s' to %s" % (msg, number))
 		if number == "":
 			Logger.log("error", "Internet Service: cannot send sms - invalid number")
