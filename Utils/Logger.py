@@ -26,7 +26,7 @@ class Logger:
 		
 	@staticmethod
 	def backup():
-		# if log file exists and its size is greate than set maximum rename it
+		# if log file exists and its size is greater than set maximum backup it
 		if os.path.isfile(Config.LogFileName) and os.stat(Config.LogFileName).st_size > Config.LogMaxSize:
 			Logger.logger.removeHandler(Logger.logger.handlers[0])
 			if os.path.isfile(Config.LogFileName + ".bak"):

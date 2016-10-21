@@ -1,14 +1,10 @@
 from Utils.Utils import *
 
-def template(content, title, autorefresh = None):
+def template(content, title):
 	result = ""
 	with open("../Page.html") as file:
 		result = file.read()
 		
-	head = ""
-	if autorefresh != None:
-		head += "<meta http-equiv='Refresh' content='%s'>\n" % autorefresh
-	result = result.replace("<head/>", head)
 	if title != None:
 		content = "<h2 class='title'>" + title + "</h2>\n" + content
 	result = result.replace("<content/>", content)
@@ -65,7 +61,8 @@ def indexContent(myHome):
 	return result
 	
 def logContent():
-	result = "<p>\n"
+	result = "<a class='button' href='/'>Back</a>\n"
+	result += "<pre>\n"
 	#with open(Config.LogFileName, "r") as file:
 	for line in reversed(Logger.data):
 		if line.endswith("\n"):
@@ -73,9 +70,8 @@ def logContent():
 		if "\terror\t" in line:
 			result += "<div class='red'>%s</div>\n" % line
 		else:
-			result += "%s<br/>\n" % line
-	result += "</p>\n"
-	result += "<a class='button' href='/'>Back</a>\n"
+			result += "%s\n" % line
+	result += "</pre>\n"
 	return result
 	
 def settingsContent(system):

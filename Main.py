@@ -18,7 +18,7 @@ def favicon():
 	return send_from_directory("..", "MyHome.ico")
 
 @app.before_request
-def func():
+def beforeRequest():
 	session.modified = True
 	
 @app.route("/login", methods=["GET", "POST"])
@@ -53,13 +53,13 @@ def index():
 			myHome.systems[arg].enabled = value
 		return redirect("/")
 		
-	return template(indexContent(myHome), None, None) # disable auto refresh for now
+	return template(indexContent(myHome), None)
 	
 @app.route("/log")
 def log():
 	if ("password" not in session) or (session["password"] != Config.Password):
 		return redirect("/login")
-	return template(logContent(), "Log", 10) # refresh every 10 seconds
+	return template(logContent(), "Log")
 	
 @app.route("/test")
 def test():
@@ -128,7 +128,7 @@ def mediaPlayer():
 			myHome.systemChanged = True
 		return redirect("/settings/MediaPlayer")
 		
-	return template(mediaPlayerContent(mediaPlayerSystem), "Media Player", None) # disable auto refresh for now, causing selection problem
+	return template(mediaPlayerContent(mediaPlayerSystem), "Media Player")
 
 @app.route("/settings/Schedule", methods=["GET", "POST"])
 def schedule():

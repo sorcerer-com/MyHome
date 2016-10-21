@@ -114,6 +114,16 @@
 		</style>
 
 		<script type='text/javascript'>
+			function request(method, url, func, postData) {
+				if (!window.XMLHttpRequest)
+					return;
+					
+				var xhttp = new XMLHttpRequest();
+				xhttp.onreadystatechange = func;
+				xhttp.open(method, url, true);
+				xhttp.send(postData);
+			}
+		
 			function submitForm(formId) {
 				document.getElementById(formId).submit()
 			}
@@ -243,6 +253,22 @@
 	</head>
 
 	<body>
+		<script>
+			// refresh when something get changed
+			var current = ""
+			function onTimer() {
+				request("GET", location.href, function() { 
+					if (this.readyState == 4 && this.status == 200) {
+						if (current != "" && current != this.responseText)
+							location.reload();
+						current = this.responseText;
+					}
+				})
+			}
+			
+			var timer = setInterval(onTimer, 1000);
+			onTimer();
+		</script>
 
 		<div class='title'>
 			<img src='/favicon.ico'/>
