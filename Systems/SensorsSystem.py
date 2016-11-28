@@ -84,7 +84,7 @@ class SensorsSystem(BaseSystem):
 			times = []
 			if (self._nextTime - keys[idx]).days > 365: # for older then 365 days, delete it
 				del self._data[keys[idx]]
-			elif (self._nextTime - keys[idx]).days > 10: # for older then 10 days, save only 1 per day
+			elif (self._nextTime - keys[idx]).days > 5: # for older then 5 days, save only 1 per day
 				for j in range(idx, len(keys)):
 					if keys[j].day == keys[idx].day and (keys[j] - keys[idx]).days < 1:
 						times.append(keys[j])

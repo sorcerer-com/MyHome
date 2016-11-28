@@ -153,8 +153,8 @@ def sensorsContent(sensorsSystem):
 	result += "<details>\n"
 	result += "<summary>Archive</summary>\n"
 	for i in range(0, len(sensorsSystem.sensorTypes)):
-		result += "%s - 10 days<br/>\n" % sensorsSystem.sensorTypes[i]
-		data = {key: value[i] for (key, value) in sensorsSystem._data.items() if (datetime.now() - key).days >= 1 and (datetime.now() - key).days <= 10}
+		result += "%s - 5 days<br/>\n" % sensorsSystem.sensorTypes[i]
+		data = {key: value[i] for (key, value) in sensorsSystem._data.items() if (datetime.now() - key).days >= 1 and (datetime.now() - key).days <= 5}
 		if len(data) > 0 and type(data[data.keys()[0]]) is tuple:
 			temp = {key: value[0] for (key, value) in data.items() if value is not None}
 			result += chart("canvas2" + str(i), 300, 150, temp, False, True) + "<br/>"
@@ -164,7 +164,7 @@ def sensorsContent(sensorsSystem):
 		result += chart("canvas3" + str(i), 300, 150, data, False, True) + "<br/>"
 	for i in range(0, len(sensorsSystem.sensorTypes)):
 		result += "%s - Older<br/>\n" % sensorsSystem.sensorTypes[i]
-		data = {key: value[i] for (key, value) in sensorsSystem._data.items() if (datetime.now() - key).days > 10}
+		data = {key: value[i] for (key, value) in sensorsSystem._data.items() if (datetime.now() - key).days > 5}
 		if len(data) > 0 and type(data[data.keys()[0]]) is tuple:
 			temp = {key: value[0] for (key, value) in data.items() if value is not None}
 			result += chart("canvas4" + str(i), 300, 150, temp, False, True) + "<br/>"

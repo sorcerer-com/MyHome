@@ -43,13 +43,12 @@ while True:
 			# open page
 			try:
 				br = External.mechanize.Browser()
-				br.open("http://localhost:5000", timeout=10)
+				br.open("http://localhost:5000", timeout=30)
 			except Exception as e:
-				print "Restart My Home: cannot open the web page"
-				killProc()
+				print "Error: Cannot open the web page restart My Home"
+				break
 		print ""
 	except (KeyboardInterrupt, SystemExit) as e:
-		killProc()
 		break
 	except:
 		time.sleep(60) # wait a minute
