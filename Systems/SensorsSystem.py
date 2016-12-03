@@ -20,14 +20,12 @@ class SensorsSystem(BaseSystem):
 		self._nextTime = datetime.now()
 		self._nextTime = self._nextTime.replace(minute=int(self._nextTime.minute / self.checkInterval) * self.checkInterval, second=0, microsecond=0) # the exact self.checkInterval minute in the hour
 		self._data = {}
-		self._cameras = []
-		self._initCameras()
+		self._cameras = {}
 		
 	def loadSettings(self, configParser, data):
 		BaseSystem.loadSettings(self, configParser, data)
 		if self._init:
 			self._initSensors()
-		self._initCameras()
 		if len(data) ==  0:
 			return
 		self._data = {}
@@ -53,6 +51,14 @@ class SensorsSystem(BaseSystem):
 	def update(self):
 		BaseSystem.update(self)
 		
+		# clean cameras
+		if len(self._cameras) > 0: 
+			for key in self._cameras.keys():
+				if datetime.now() - self._cameras[key][1] > timedelta(minutes=5):
+					self._cameras[key][0].stop()
+					del self._cameras[key]
+					Logger.log("info", "Sensors System: stop camera %d" % key);
+				
 		if not self._init or datetime.now() < self._nextTime:
 			return
 		if self._nextTime.minute % self.checkInterval != 0: # if checkInterval is changed
@@ -147,23 +153,6 @@ class SensorsSystem(BaseSystem):
 			return True
 		except:
 			return False
-			
-	def _initCameras(self):
-		for cam in self._cameras:
-			if cam != None:
-				cam.stop()
-				cam = None
-		self._cameras = []
-		try:
-			from SimpleCV import Camera
-			
-			for i in range(0, self.camerasCount):
-				self._cameras.append(Camera(camera_index=i, threaded=False))
-				if not hasattr(self._cameras[i], "threaded"): # check if camera is really created
-					self._cameras[i] = None
-		except Exception as e:
-			Logger.log("warning", "Sensors System: cannot init cameras")
-			Logger.log("debug", str(e))
 
 	def countSensors(self, type):
 		count = 0
@@ -277,13 +266,23 @@ class SensorsSystem(BaseSystem):
 			Logger.log("debug", str(e))
 			return None
 
-	def getImage(self, cameraIndex=0, size=(640, 480), stamp=False):
+	def getImage(self, cameraIndex=0, size=(640, 480), stamp=True):
 		if cameraIndex >= self.camerasCount:
 			return None
-		if self._cameras[cameraIndex] == None:
+		
+		try:
+			from SimpleCV import Camera
+			if cameraIndex not in self._cameras:
+				self._cameras[cameraIndex] = (Camera(camera_index=cameraIndex, threaded=False), datetime.now())
+				if not hasattr(self._cameras[cameraIndex][0], "threaded"): # check if camera is really created
+					return None
+				Logger.log("info", "Sensors System: init camera %d" % cameraIndex);
+		except Exception as e:
+			Logger.log("warning", "Sensors System: cannot init cameras")
+			Logger.log("debug", str(e))
 			return None
 		
-		img = self._cameras[cameraIndex].getImage()
+		img = self._cameras[cameraIndex][0].getImage()
 		img = img.resize(size[0], size[1])
 		if stamp:
 			from SimpleCV import Color

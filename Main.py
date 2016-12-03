@@ -40,6 +40,24 @@ def login():
 		invalid = False
 		
 	return template(loginContent(invalid), "LogIn")
+	
+@app.route("/cameras", methods=["GET"])
+def cameras():
+	content = "<!-- %s -->\n" % datetime.now()
+	system = myHome.systems[SensorsSystem.Name]
+	for i in range(0, system.camerasCount):
+		img = system.getImage(i, (320, 240))
+		if img == None:
+			continue
+		img.save("camera%d.jpg" % i)
+		content += "<summary>Camera %d</summary>\n" % i
+		content += "<img src='/cameras/camera%d.jpg'/>\n" % i
+	return template(content, "Cameras")
+
+@app.route("/cameras/<cameraName>", methods=["GET"])
+def camerasImage(cameraName):
+	return send_from_directory(".", cameraName)
+
 
 @app.route("/")
 def index():

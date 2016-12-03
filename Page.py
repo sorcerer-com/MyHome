@@ -6,7 +6,7 @@ def template(content, title):
 		result = file.read()
 		
 	if title != None:
-		content = "<h2 class='title'>" + title + "</h2>\n" + content
+		content = "<h2 class='title'>" + title + "</h2>\n\n" + content
 	result = result.replace("<content/>", content)
 	return result
 

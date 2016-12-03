@@ -35,7 +35,7 @@ class SecuritySystem(BaseSystem):
 			if self._activated or self._imageCount != 0:
 				images = []
 				for i in range(0, self._imageCount):
-					images.append("camera%02d.jpg" % i)
+					images.append("image%02d.jpg" % i)
 				try:
 					msg = "Security Alarm Activated!\n%s" % self._owner.systems[SensorsSystem.Name].getLatestData()
 					if not InternetService.sendSMS(Config.GSMNumber, "telenor", msg):
@@ -58,20 +58,20 @@ class SecuritySystem(BaseSystem):
 			self._owner.systems[SensorsSystem.Name].detectAnyMotion()
 		
 		if self._activated:
-			img = self._owner.systems[SensorsSystem.Name].getImage(stamp=True)
+			img = self._owner.systems[SensorsSystem.Name].getImage()
 			if img == None:
-				PCControlService.captureImage("camera%02d.jpg" % self._imageCount, "640x480", 1, 4)				
+				PCControlService.captureImage("image%02d.jpg" % self._imageCount, "640x480", 1, 4)				
 			if elapsed > (self.sendInterval / self.numImages) * (self._imageCount % (self.numImages + 1)) or self.findMotion(self._prevImg, img):
 				self._prevImg = img
 				if img != None:
-					img.save("camera%02d.jpg" % self._imageCount)
-					Logger.log("info", "Security System: capture image to 'camera%02d.jpg'" % self._imageCount)
+					img.save("image%02d.jpg" % self._imageCount)
+					Logger.log("info", "Security System: capture image to 'image%02d.jpg'" % self._imageCount)
 				self._imageCount += 1
 
 	def clearImages(self):
 		for i in range(0, self._imageCount):
-			if os.path.isfile("camera%02d.jpg" % i):
-				os.remove("camera%02d.jpg" % i)
+			if os.path.isfile("image%02d.jpg" % i):
+				os.remove("image%02d.jpg" % i)
 		self._imageCount = 0
 	
 	
