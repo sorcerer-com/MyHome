@@ -13,17 +13,21 @@ class SensorsSystem(BaseSystem):
 		self.sensorTypes = ["Motion", "TempHum"]
 		self.sensorPins = ["7", "4"]
 		self.checkInterval = 15
+		self.camerasCount = 1
 		self.fireAlarmTempreture = 50
 		
 		self._init = self._initSensors()
 		self._nextTime = datetime.now()
 		self._nextTime = self._nextTime.replace(minute=int(self._nextTime.minute / self.checkInterval) * self.checkInterval, second=0, microsecond=0) # the exact self.checkInterval minute in the hour
 		self._data = {}
+		self._cameras = []
+		self._initCameras()
 		
 	def loadSettings(self, configParser, data):
 		BaseSystem.loadSettings(self, configParser, data)
 		if self._init:
 			self._initSensors()
+		self._initCameras()
 		if len(data) ==  0:
 			return
 		self._data = {}
@@ -143,7 +147,24 @@ class SensorsSystem(BaseSystem):
 			return True
 		except:
 			return False
-	
+			
+	def _initCameras(self):
+		for cam in self._cameras:
+			if cam != None:
+				cam.stop()
+				cam = None
+		self._cameras = []
+		try:
+			from SimpleCV import Camera
+			
+			for i in range(0, self.camerasCount):
+				self._cameras.append(Camera(camera_index=i, threaded=False))
+				if not hasattr(self._cameras[i], "threaded"): # check if camera is really created
+					self._cameras[i] = None
+		except Exception as e:
+			Logger.log("warning", "Sensors System: cannot init cameras")
+			Logger.log("debug", str(e))
+
 	def countSensors(self, type):
 		count = 0
 		for sensorType in self.sensorTypes:
@@ -255,3 +276,16 @@ class SensorsSystem(BaseSystem):
 			Logger.log("error", "Sensors System: cannot get temperature and humidity")
 			Logger.log("debug", str(e))
 			return None
+
+	def getImage(self, cameraIndex=0, size=(640, 480), stamp=False):
+		if cameraIndex >= self.camerasCount:
+			return None
+		if self._cameras[cameraIndex] == None:
+			return None
+		
+		img = self._cameras[cameraIndex].getImage()
+		img = img.resize(size[0], size[1])
+		if stamp:
+			from SimpleCV import Color
+			img.drawText(time.strftime("%d/%m/%Y %H:%M:%S"), 5, 5, Color.WHITE)
+		return img

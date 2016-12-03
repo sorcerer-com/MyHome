@@ -41,7 +41,7 @@ class ScheduleSystem(BaseSystem):
 		
 		self._schedule.append({})
 		self._schedule[-1]["Name"] = "test My Home every 30 days at 20:00"
-		self._schedule[-1]["Time"] = temp.replace(month=temp.month+1, day=1, hour=20, minute=0, second=0, microsecond=0)
+		self._schedule[-1]["Time"] = temp.replace(month=temp.month%12+1, day=1, hour=20, minute=0, second=0, microsecond=0)
 		self._schedule[-1]["Repeat"] = timedelta(hours=24*30)
 		self._schedule[-1]["Execute"] = "MyHome.test()"
 		self._schedule[-1]["Color"] = "rgba(0, 0, 255, 0.3)"

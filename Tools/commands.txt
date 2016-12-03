@@ -14,6 +14,7 @@ sudo apt-get install pure-ftpd
 #http://elinux.org/RPi_Chromium
 sudo apt-get install chromium-browser
 sudo apt-get install ttf-mscorefonts-installer
+#sudo apt-get install midori
 
 #http://elinux.org/R-Pi_NAS
 sudo apt-get install samba samba-common-bin

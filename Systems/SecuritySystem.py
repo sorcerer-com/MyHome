@@ -18,17 +18,13 @@ class SecuritySystem(BaseSystem):
 		self._activated = False
 		self._imageCount = 0
 		self._lastSendTime = datetime.now()
-		self._camera = None
 		self._prevImg = None
 
 	def _onEnabledChanged(self):
 		BaseSystem._onEnabledChanged(self)
 		self._activated = False
-		self.clearImages()
 		self._lastSendTime = datetime.now() + self.startDelay
-		if self._camera != None:
-			self._camera.stop()
-			self._camera = None
+		self.clearImages()
 		self._prevImg = None
 
 	def update(self):
@@ -62,38 +58,21 @@ class SecuritySystem(BaseSystem):
 			self._owner.systems[SensorsSystem.Name].detectAnyMotion()
 		
 		if self._activated:
-			img = self.captureImage()
+			img = self._owner.systems[SensorsSystem.Name].getImage(stamp=True)
+			if img == None:
+				PCControlService.captureImage("camera%02d.jpg" % self._imageCount, "640x480", 1, 4)				
 			if elapsed > (self.sendInterval / self.numImages) * (self._imageCount % (self.numImages + 1)) or self.findMotion(self._prevImg, img):
 				self._prevImg = img
 				if img != None:
-					from SimpleCV import Color
-					Logger.log("info", "Security System: capture image to 'camera%02d.jpg'" % self._imageCount)
-					img = img.resize(640, 480)
-					img.drawText(time.strftime("%d/%m/%Y %H:%M:%S"), 5, 5, Color.WHITE)
 					img.save("camera%02d.jpg" % self._imageCount)
+					Logger.log("info", "Security System: capture image to 'camera%02d.jpg'" % self._imageCount)
 				self._imageCount += 1
-		else:
-			if self._camera != None:
-				self._camera.stop()
-				self._camera = None
 
 	def clearImages(self):
 		for i in range(0, self._imageCount):
 			if os.path.isfile("camera%02d.jpg" % i):
 				os.remove("camera%02d.jpg" % i)
 		self._imageCount = 0
-	
-	def captureImage(self):
-		try:
-			from SimpleCV import Camera
-
-			if self._camera == None:
-				self._camera = Camera(threaded=False)
-			return self._camera.getImage()
-		except Exception as e:
-			Logger.log("debug", str(e))
-			PCControlService.captureImage("camera%02d.jpg" % self._imageCount, "640x480", 1, 4)
-			return None
 	
 	
 	@staticmethod
