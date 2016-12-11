@@ -19,6 +19,15 @@ def favicon():
 
 @app.before_request
 def beforeRequest():
+	isLocalIP = request.remote_addr == "127.0.0.1";
+	for ip in Config.InternalIPs:
+		isLocalIP |= request.remote_addr.startswith(ip)
+	if not isLocalIP:
+		if request.endpoint == "login":
+			Logger.log("warning", "Request: external request from " + request.remote_addr)
+		elif request.endpoint != "favicon" and request.endpoint != "cameras" and request.endpoint != "camerasImage":
+			return template("", "External Request")
+	
 	session.modified = True
 	
 @app.route("/login", methods=["GET", "POST"])
@@ -43,6 +52,9 @@ def login():
 	
 @app.route("/cameras", methods=["GET"])
 def cameras():
+	if ("password" not in session) or (session["password"] != Config.Password):
+		abort(404)
+
 	content = "<!-- %s -->\n" % datetime.now()
 	system = myHome.systems[SensorsSystem.Name]
 	for i in range(0, system.camerasCount):
@@ -56,6 +68,8 @@ def cameras():
 
 @app.route("/cameras/<cameraName>", methods=["GET"])
 def camerasImage(cameraName):
+	if ("password" not in session) or (session["password"] != Config.Password):
+		abort(404)
 	return send_from_directory(".", cameraName)
 
 
@@ -178,7 +192,7 @@ def schedule():
 
 def start():
 	app.secret_key = u"\xf2N\x8a 8\xb1\xd9(&\xa6\x90\x12R\xf0\\\xe8\x1e\xf92\xa6AN\xed\xb3"
-	app.permanent_session_lifetime = timedelta(minutes=30)
+	app.permanent_session_lifetime = timedelta(minutes=15)
 	app.run(debug=False, host='0.0.0.0')
 
 if __name__ == "__main__":

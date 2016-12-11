@@ -6,9 +6,10 @@ class Config:
 	ConfigFileName = "config.ini"
 	DataFileName = "data.dat"
 	LogFileName = "log.log"
-	LogMaxSize = 100000
+	LogMaxSize = 1000000
 	PrintLog = True
 	Password = ""
+	InternalIPs = ["192.168.0.1", "78.90.127.249"]
 	
 	GSMNumber = ""
 	MyTelenorPassword = ""
