@@ -193,7 +193,7 @@ def property(name, value, item = False):
 		result += "</div>\n"
 	else:
 		result += "<li>\n"
-		result += "<h3>%s: </h3>\n" % name
+		result += "<h3>%s: </h3>\n" % (name if not item else name[:-2])
 		result += "<input type='text' name='%s' value='%s' title ='%s'/>\n" % (name, string(value), string(value))
 		if item:
 			result += "<a class='button' href='javascript:;' onclick='removeItem(this)'>-</a>\n"

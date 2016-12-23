@@ -5,7 +5,7 @@ from Services.PCControlService import *
 
 class MediaPlayerSystem(BaseSystem):
 	Name = "MediaPlayer"
-	_Formats = [".mkv", ".avi", ".mov", ".wmv", ".mp4", ".mpg", ".mpeg", ".m4v", ".3gp"]
+	_Formats = [".mkv", ".avi", ".mov", ".wmv", ".mp4", ".mpg", ".mpeg", ".m4v", ".3gp", ".mp3"]
 
 	def __init__(self, owner):
 		BaseSystem.__init__(self, owner)
@@ -50,7 +50,7 @@ class MediaPlayerSystem(BaseSystem):
 			return
 		if path in self.radios:
 			self._playing = path
-			self._process = PCControlService.openMedia(path, "local", int(self.volume * 300 * 1.5), False)
+			self._process = PCControlService.openMedia(path, "local", int(self.volume * 300 * 1.75), False)
 		else:
 			# mark as watched
 			dirPath = os.path.dirname(os.path.join(self.rootPath, path))

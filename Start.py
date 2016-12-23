@@ -8,10 +8,13 @@ proc = None
 def killProc():
 	global proc
 	if (proc is not None) and (proc.poll() is None):
-		proc.terminate()
+		# send interrupt signal
+		proc.send_signal(signal.SIGINT)
 		# check one second for exit
-		for i in range(0, 10):
+		for i in range(0, 20):
 			time.sleep(0.1)
+			if i == 10: # if process isn't closed in half of the time, call terminate
+				proc.terminate()
 			if proc.poll() is not None:
 				break
 		
@@ -24,6 +27,7 @@ def signal_handler(signal, frame):
 	global proc
 	killProc()
 	sys.exit(0)
+signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 		
 while True:
@@ -49,6 +53,7 @@ while True:
 				break
 		print ""
 	except (KeyboardInterrupt, SystemExit) as e:
+		killProc()
 		break
 	except:
 		time.sleep(60) # wait a minute

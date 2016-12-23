@@ -22,10 +22,11 @@ def beforeRequest():
 	isLocalIP = request.remote_addr == "127.0.0.1";
 	for ip in Config.InternalIPs:
 		isLocalIP |= request.remote_addr.startswith(ip)
-	if not isLocalIP:
-		if request.endpoint == "login":
+	if not isLocalIP and request.endpoint != "favicon":
+		if ("password" not in session) or (session["password"] != Config.Password):
 			Logger.log("warning", "Request: external request from " + request.remote_addr)
-		elif request.endpoint != "favicon" and request.endpoint != "cameras" and request.endpoint != "camerasImage":
+			return login()
+		elif request.endpoint != "cameras" and request.endpoint != "camerasImage":
 			return template("", "External Request")
 	
 	session.modified = True

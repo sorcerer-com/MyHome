@@ -34,7 +34,7 @@ do_start () {
 }
 do_stop () {
     log_daemon_msg "Stopping system $DAEMON_NAME daemon"
-    start-stop-daemon --stop --pidfile $PIDFILE --retry 10
+    start-stop-daemon --stop --pidfile $PIDFILE --retry INT/1/TERM/3/KILL/5
     log_end_msg $?
 }
 
@@ -46,7 +46,6 @@ case "$1" in
 
     restart|reload|force-reload)
         do_stop
-        sleep 5s
         do_start
         ;;
 
