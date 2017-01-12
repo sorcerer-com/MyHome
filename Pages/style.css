@@ -1,0 +1,238 @@
+body
+{
+	background: #C0A166;
+	max-width: 360px;
+	margin: 0 auto;
+	text-align: center;
+	font-size: 14px;
+}
+
+a
+{
+	text-decoration: none;
+}
+
+canvas
+{
+	background-color: rgba(255, 255, 255, 0.3);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	margin: 5px
+}
+
+input
+{
+    padding: 3px 5px;
+    border: 1px solid #666;
+    border-radius: 5px;
+	box-sizing: border-box;
+	width: 140px;
+}
+
+select
+{
+    padding: 3px 5px;
+    border-radius: 5px;
+	width: 90%;
+}
+
+
+#tooltip
+{
+	background-color: rgba(255, 255, 255, 0.6);
+	visibility: collapse;
+	position: absolute;
+	padding: 3px;
+}
+
+/* generic */
+.left
+{
+	float: left !important;
+}
+
+.right
+{
+	float: right !important;
+}
+
+.green
+{
+	background-color: rgba(0, 128, 0, 0.2) !important;
+	border: 2px solid #008000 !important;
+}
+
+.red
+{
+	background-color: rgba(128, 0, 0, 0.2) !important;
+	border: 2px solid #800000 !important;
+}
+
+.hidden
+{
+	visibility: hidden;
+}
+
+/* title */
+.title
+{
+	display: table;
+	margin: 0 auto;
+}
+
+.title img
+{
+	display: table-cell;
+	width: 48px;
+	height: 48px;
+	padding: 10px;
+}
+
+.title h1
+{
+	display: table-cell;
+	vertical-align: middle;
+}
+
+/* login */
+.login
+{
+	font-size: 34px;
+	font-weight: bold;
+	display: inline-block;
+	margin: 5px;
+	padding: 0px 5px;
+	background-color: rgba(192, 192, 192, 0.4);
+	border: 2px solid #808080;
+	border-radius: 5px;
+}
+
+.login div
+{
+	padding: 5px 10px;
+	margin: 10px 5px;
+}
+
+/* system */
+.system
+{
+	display: inline-block;
+	width: 130px;
+	height: 130px;
+	padding: 10px;
+	margin: 10px;
+	text-align: center;
+	
+	background-color: rgba(128, 128, 128, 0.4);
+	border: 2px solid #808080;
+	border-radius: 5px;
+	color: black;
+}
+
+.system img
+{
+	width: 64px;
+	height: 64px;
+	margin-top: 10px;
+}
+
+/* settings */
+.settings
+{
+	padding: 5px;
+}
+
+.settings details
+{
+	background-color: rgba(192, 192, 192, 0.4);
+	border: 2px solid #808080;
+	border-radius: 5px;
+	margin: 3px 0px;
+}
+
+.settings details summary
+{
+	background-color: rgba(128, 128, 128, 0.3);
+	padding: 3px;
+	outline: none;
+	user-select: none;
+	cursor: pointer;
+}
+
+.settings details[open] summary
+{
+	background-color: rgba(128, 128, 128, 0.6);
+	border-color: #808080;
+	border-width: 0 0 2px 0;
+	border-style: solid;
+}
+
+.settings ul
+{
+	list-style-type: none;
+	padding: 3px;
+	margin: 0px;
+	text-align: left;
+}
+
+.settings h3
+{
+	display: inline-block;
+	vertical-align: middle;
+	width: 160px;
+	margin: 3px 0px;
+	text-align: right;
+}
+
+.settings .buttonContainer
+{
+	text-align: center;
+}
+
+/* log */
+ul.log
+{
+	list-style-type: none;
+	padding: 3px;
+	text-align: left;
+}
+
+ul.log li
+{
+	white-space: pre;
+    font-family: monospace;
+}
+
+ul.log li:nth-child(odd)
+{
+    color: #666;
+}
+
+ul.log li.redText
+{
+	color: #a00;
+}
+
+ul.log li.redText:nth-child(odd)
+{
+	color: #d00;
+}
+
+/* button */
+.buttonContainer
+{
+	margin: 5px;
+	margin-bottom: 15px;
+}
+
+a.button
+{
+	vertical-align: middle;
+	padding: 3px 8px;
+	color: black;
+	background: rgba(221, 221, 221, 0.9);
+	border-color: #888;
+	border-width: 2px;
+	border-style: solid;
+	border-radius: 5px;
+	margin: 3px;
+}

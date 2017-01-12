@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+		<div class='buttonContainer'>
+			<a class='button left hidden' href='/'>back</a>
+		{% if enabled == True %}
+			<a class='button right green' href='?enabled=False'>enabled</a>
+		{% else %}
+			<a class='button right red' href='?enabled=True'>disabled</a>
+		{% endif %}
+			<h2 class='title'>Schedule</h2>
+		</div>
+		
+		<form id='form' action='' method='post' class='settings'>
+		{% for item in items %}
+			<details onclick="toggleDetails(this)">
+				<summary style='background-color: {{ item["Color"] }}' title='{{ item["Time"] }} ({{ item["Repeat"] }})'>
+					{{ item["Name"] }}
+					<a class='button' href='javascript:;' onclick="removeItem(this, 2)">-</a>
+				</summary>
+				<ul>
+				{% for key, value in item.iteritems() %}
+					<li>
+						<h3>{{ key }}: </h3>
+						<input type='text' name='{{ key }}' value='{{ value }}' title='{{ value }}'/>
+					</li>
+				{% endfor %}
+				</ul>
+			</details>
+		{% endfor %}
+		
+			<div class='buttonContainer'>
+				<a class='button' href='javascript:;' onclick='addItem(this)'>+</a>
+			</div>
+			
+			<div class='buttonContainer'>
+				<a class='button' href='javascript:;' onclick='submitForm("form");'>Save</a>
+				<a class='button' href='/'>Cancel</a>
+			</div>
+		</form>
+{% endblock %}

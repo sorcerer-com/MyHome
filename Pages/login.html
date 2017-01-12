@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+		<h2 class='title'>LogIn</h2>
+		
+		<form id='form' action='' method='post' class='login'>
+		{% if invalid == False %}
+			<input type='password' name='password' autofocus/>
+		{% else %}
+			<input type='password' name='password' class='red' autofocus/>
+		{% endif %}
+			<div class='buttonContainer'>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>1</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>2</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>3</a>
+			</div>
+			<div class='buttonContainer'>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>4</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>5</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>6</a>
+			</div>
+			<div class='buttonContainer'>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>7</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>8</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>9</a>
+			</div>
+			<div class='buttonContainer'>
+				<a class='button' href='javascript:;' onclick='removeText("form", "password", 1)'><</a>
+				<a class='button' href='javascript:;' onclick='addText("form", "password", this)'>0</a>
+				<a class='button' href='javascript:;' onclick='submitForm("form")'>></a>
+			</div>
+		</form>
+{% endblock %}

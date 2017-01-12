@@ -4,21 +4,22 @@ sys.path.append(os.path.join(os.getcwd(), "External"))
 os.chdir("bin")
 
 from External.flask import *
-from Page import *
 from MyHome import *
 
 logging.getLogger().info("")
-app = Flask(__name__)
+template_dir = os.path.abspath("../Pages")
+app = Flask(__name__, template_folder=template_dir)
 myHome = MHome()
 
 
 # autostart: http://blog.scphillips.com/posts/2013/07/getting-a-python-script-to-run-in-the-background-as-a-service-on-boot/
-@app.route('/favicon.ico')
-def favicon():
-	return send_from_directory("..", "MyHome.ico")
 
 @app.before_request
 def beforeRequest():
+	if request.endpoint == "robots" or request.endpoint == "favicon" or request.endpoint == "images" or \
+		request.endpoint == "style" or request.endpoint == "scripts":
+		return
+		
 	isLocalIP = request.remote_addr == "127.0.0.1";
 	for ip in Config.InternalIPs:
 		isLocalIP |= request.remote_addr.startswith(ip)
@@ -27,10 +28,39 @@ def beforeRequest():
 			Logger.log("warning", "Request: external request from " + request.remote_addr)
 			return login()
 		elif request.endpoint != "cameras" and request.endpoint != "camerasImage":
-			return template("", "External Request")
+			return render_template("base.html", content="<h2 class='title'>External Request</h2>\n")
+		else:
+			Logger.log("warning", "Request: external request to cameras from " + request.remote_addr)
+	
+	if ("password" not in session) or (session["password"] != Config.Password):
+		if request.endpoint == "cameras" or request.endpoint == "camerasImage":
+			abort(404)
+		if request.endpoint != "login":
+			return redirect("/login")
 	
 	session.modified = True
 	
+@app.route("/robots.txt")
+def robots():
+	return "User-agent: *\nDisallow: /";
+
+@app.route("/favicon.ico")
+def favicon():
+	return send_from_directory(os.path.join(template_dir, "Images"), "MyHome.ico")
+
+
+@app.route("/Images/<image>")
+def images(image):
+	return send_from_directory(os.path.join(template_dir, "Images"), image)
+
+@app.route("/style.css")
+def style():
+	return send_from_directory(template_dir, "style.css")
+
+@app.route("/scripts.js")
+def scripts():
+	return send_from_directory(template_dir, "scripts.js")
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
 	if Config.Password == "":
@@ -49,104 +79,39 @@ def login():
 	else:
 		invalid = False
 		
-	return template(loginContent(invalid), "LogIn")
-	
+	return render_template("login.html", invalid=invalid)
+		
 @app.route("/cameras", methods=["GET"])
 def cameras():
-	if ("password" not in session) or (session["password"] != Config.Password):
-		abort(404)
-
-	content = "<!-- %s -->\n" % datetime.now()
 	system = myHome.systems[SensorsSystem.Name]
 	for i in range(0, system.camerasCount):
 		img = system.getImage(i, (320, 240))
 		if img == None:
 			continue
 		img.save("camera%d.jpg" % i)
-		content += "<summary>Camera %d</summary>\n" % i
-		content += "<img src='/cameras/camera%d.jpg'/>\n" % i
-	return template(content, "Cameras")
+	return render_template("cameras.html", time=datetime.now(), camerasCount=system.camerasCount)
 
 @app.route("/cameras/<cameraName>", methods=["GET"])
 def camerasImage(cameraName):
-	if ("password" not in session) or (session["password"] != Config.Password):
-		abort(404)
 	return send_from_directory(".", cameraName)
 
 
 @app.route("/")
 def index():
-	if ("password" not in session) or (session["password"] != Config.Password):
-		return redirect("/login")
-		
-	data = request.form if request.method == "POST" else request.args
-	if len(data) > 0:
-		for arg in data:
-			value = data[arg] == "True"
-			myHome.systems[arg].enabled = value
-		return redirect("/")
-		
-	return template(indexContent(myHome), None)
-	
-@app.route("/log")
-def log():
-	if ("password" not in session) or (session["password"] != Config.Password):
-		return redirect("/login")
-	return template(logContent(), "Log")
-	
-@app.route("/test")
-def test():
-	if ("password" not in session) or (session["password"] != Config.Password):
-		return redirect("/login")
-	myHome.sendAlert("Test")
-	return redirect("/")
-    
-@app.route("/config", methods=["GET", "POST"])
-def config():
-	return settings("Config")
-	
-@app.route("/restart")
-def restart():
-	func = request.environ.get('werkzeug.server.shutdown')
-	if func is not None:
-		func()
-	return redirect("/")
+	infos = [(name, myHome.systems[name].enabled) for name in sorted(myHome.systems.keys())]
+	infos.append(("Settings", None))
+	infos.append(("Log", None))
+	return render_template("index.html", infos=infos)
 
-@app.route("/settings/<systemName>", methods=["GET", "POST"])
-def settings(systemName):
-	if ("password" not in session) or (session["password"] != Config.Password):
-		return redirect("/login")
-		
-	system = myHome.systems[systemName] if systemName <> "Config" else Config
-	data = request.form if request.method == "POST" else request.args
-	if len(data) > 0:
-		for arg in data:
-			if arg.endswith("[]"):
-				value = str(data.getlist(arg))
-				arg = arg[:-2]
-			else:
-				value = str(data[arg])
-				
-			if hasattr(system, arg):
-				attrType = type(getattr(system, arg))
-				setattr(system, arg, parse(value, attrType))
-		myHome.systemChanged = True
-		return redirect("/")
-		
-	title = "Config" if system == Config else system.Name + " Settings"
-	content = ""
-	if type(system) is SensorsSystem:
-		content = sensorsContent(system)
-	else:
-		content = settingsContent(system)
-	return template(content, title)
+@app.route("/<systemName>")
+def system(systemName):
+	if systemName in myHome.systems:
+		myHome.systems[systemName].enabled = not myHome.systems[systemName].enabled
+	return redirect("/")
 	
-@app.route("/settings/MediaPlayer", methods=["GET", "POST"])
-def mediaPlayer():
-	if ("password" not in session) or (session["password"] != Config.Password):
-		return redirect("/login")
-		
-	mediaPlayerSystem = myHome.systems["MediaPlayer"]
+@app.route("/MediaPlayer", methods=["GET", "POST"])
+def MediaPlayer():
+	mediaPlayerSystem = myHome.systems[MediaPlayerSystem.Name]
 	data = request.form if request.method == "POST" else request.args
 	if len(data) > 0:
 		if "play" in data:
@@ -159,18 +124,19 @@ def mediaPlayer():
 		if "rootPath" in data:
 			mediaPlayerSystem.rootPath = str(data["rootPath"])
 			myHome.systemChanged = True
-		return redirect("/settings/MediaPlayer")
-		
-	return template(mediaPlayerContent(mediaPlayerSystem), "Media Player")
+		return redirect("/MediaPlayer")
+	
+	return render_template("MediaPlayer.html", list=mediaPlayerSystem._list, selected=mediaPlayerSystem.getPlaying())
 
-@app.route("/settings/Schedule", methods=["GET", "POST"])
-def schedule():
-	if ("password" not in session) or (session["password"] != Config.Password):
-		return redirect("/login")
-		
-	scheduleSystem = myHome.systems["Schedule"]
+@app.route("/Schedule", methods=["GET", "POST"])
+def Schedule():
+	scheduleSystem = myHome.systems[ScheduleSystem.Name]
 	data = request.form if request.method == "POST" else request.args
-	if len(data) > 0:
+	if len(data) == 1:
+		value = data["enabled"] == "True"
+		scheduleSystem.enabled = value
+		return redirect("/Schedule")
+	elif len(data) > 1:
 		scheduleSystem._schedule = []
 		for arg in data:
 			temp = data.getlist(arg)
@@ -189,12 +155,84 @@ def schedule():
 		myHome.systemChanged = True
 		return redirect("/")
 		
-	return template(scheduleContent(scheduleSystem), "Schedule")
+	items = []
+	for item in scheduleSystem._schedule:
+		items.append({key: string(value) for (key, value) in item.items()})
+	return render_template("Schedule.html", items=items, enabled=scheduleSystem.enabled)
+
+@app.route("/Sensors")
+def Sensors():
+	sensorsSystem = myHome.systems[SensorsSystem.Name]
+	data = request.form if request.method == "POST" else request.args
+	if len(data) == 1:
+		value = data["enabled"] == "True"
+		sensorsSystem.enabled = value
+		return redirect("/Sensors")
+
+	data1 = [[key for key in sorted(sensorsSystem._data.keys()) if None not in sensorsSystem._data[key] and (datetime.now() - key).days < 1]]
+	data2 = [[key for key in sorted(sensorsSystem._data.keys()) if None not in sensorsSystem._data[key] and (datetime.now() - key).days >= 1 and (datetime.now() - key).days <= 5]]
+	data3 = [[key for key in sorted(sensorsSystem._data.keys()) if None not in sensorsSystem._data[key] and (datetime.now() - key).days > 5]]
+	for i in range(0, len(sensorsSystem.sensorTypes)):
+		data1.append([sensorsSystem._data[key][i] for key in data1[0]])
+		data2.append([sensorsSystem._data[key][i] for key in data2[0]])
+		data3.append([sensorsSystem._data[key][i] for key in data3[0]])
+	return render_template("Sensors.html", types = sensorsSystem.sensorTypes, data1=data1, data2=data2, data3=data3, enabled=sensorsSystem.enabled)
+
+@app.route("/Settings", methods=["GET", "POST"])
+def settings():
+	data = request.form if request.method == "POST" else request.args
+	if len(data) > 0:
+		for arg in data:
+			if arg.endswith("[]"):
+				value = str(data.getlist(arg))
+				arg = arg[:-2]
+			else:
+				value = str(data[arg])
+			
+			systemName, prop = arg.split(":")
+			systemName = systemName.replace(" System", "")
+			system = myHome.systems[systemName] if "Config" not in systemName else Config
+			
+			if hasattr(system, prop):
+				attrType = type(getattr(system, prop))
+				setattr(system, prop, parse(value, attrType))
+		myHome.systemChanged = True
+		return redirect("/")
+
+	items = {}
+	for name, system in myHome.systems.iteritems():
+		items[name + " System"] = {prop: getattr(system, prop) for prop in getProperties(system)}
+	items[" Config "] = {prop: getattr(Config, prop) for prop in Config.list()}
+	# to string values
+	for name, props in items.iteritems():
+		for key, value in props.iteritems():
+			if type(value) is not list:
+				items[name][key] = string(value)
+			else:
+				items[name][key] = [string(v) for v in value]
+	return render_template("settings.html", items=items)
+
+@app.route("/Log")
+def log():
+	return render_template("log.html", log=reversed(Logger.data))
+	
+@app.route("/test")
+def test():
+	myHome.sendAlert("Test")
+	return redirect("/")
+	
+@app.route("/restart")
+def restart():
+	func = request.environ.get('werkzeug.server.shutdown')
+	if func is not None:
+		func()
+	return redirect("/")
+
 
 def start():
 	app.secret_key = u"\xf2N\x8a 8\xb1\xd9(&\xa6\x90\x12R\xf0\\\xe8\x1e\xf92\xa6AN\xed\xb3"
 	app.permanent_session_lifetime = timedelta(minutes=15)
-	app.run(debug=False, host='0.0.0.0')
+	app.run(debug=False, host="0.0.0.0")
 
 if __name__ == "__main__":
 	if len(sys.argv) > 1 and sys.argv[1] == "-service":

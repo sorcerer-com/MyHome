@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+		<div class='buttonContainer'>
+			<a class='button left' href='/'>back</a>
+		{% if enabled == True %}
+			<a class='button right green' href='?enabled=False'>enabled</a>
+		{% else %}
+			<a class='button right red' href='?enabled=True'>disabled</a>
+		{% endif %}
+			<h2 class='title'>Sensors</h2>
+		</div>
+		
+	{% macro charts(data, drawValues, drawAxis, subTitle="", idx=0) -%}
+		{% for i in range(types|count) %}
+		<div>{{ types[i] }}{{ subTitle }}</div>
+		{% if data[i+1]|count > 0 and (data[i+1][0] is not sequence or data[i+1][0] is string) %}
+		<canvas id='canvas{{ i }}{{ idx }}' width='300' height='150'></canvas>
+		<script type='text/javascript'>
+			// {{ data[i+1]|count }}
+			var values = [{% for v in data[i+1] %}{{ v|int }}, {% endfor %}]
+			var names = [{% for v in data[0] %}'{{ v }}', {% endfor %}]
+			drawLineChart('canvas{{ i }}{{ idx }}', values, names, {{ drawValues|lower }}, {{ drawAxis|lower }});
+		</script>
+		{% elif data[i+1]|count > 0 %}
+		{% for j in range(data[i+1][0]|count) %}
+		<canvas id='canvas{{ i }}{{ idx }}{{ j }}' width='300' height='150'></canvas>
+		<script type='text/javascript'>
+			// {{ data[i+1]|count }}
+			var values = [{% for v in data[i+1] %}{{ v[j]|int }}, {% endfor %}]
+			var names = [{% for v in data[0] %}'{{ v }}', {% endfor %}]
+			drawLineChart('canvas{{ i }}{{ idx }}{{ j }}', values, names, {{ drawValues|lower }}, {{ drawAxis|lower }});
+		</script>
+		{% endfor %}
+		{% endif %}
+		{% endfor %}
+	{% endmacro %}
+		
+		{{ charts(data1, True, False) }}
+		
+		<div class='settings'>
+			<details>
+				<summary>Archive</summary>
+				<br/>
+				{{ charts(data2, False, True, " - 5 days", 1) }}
+				<br/><br/>
+				{{ charts(data3, False, True, " - Older", 2) }}
+				<br/><br/>
+			</details>
+		</div>
+		<br/>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+		<div class='buttonContainer'>
+			<a class='button left' href='/'>back</a>
+			<a class='button right hidden'>enabled</a>
+			<h2 class='title'>Cameras</h2>
+		</div>
+		
+		<!-- {{ time }} -->
+		{% for i in range(camerasCount) %}
+		<summary>Camera {{ i }}</summary>
+		<img src='/cameras/camera{{ i }}.jpg'/>
+		{% endfor %}
+{% endblock %}

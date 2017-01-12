@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+	{% for name, enabled in infos %}
+		<a href='/{{ name }}'>
+		{% if enabled == True %}
+			<div class='system green'>
+		{% elif enabled == False %}
+			<div class='system red'>
+		{% else %}
+			<div class='system'>
+		{% endif %}
+				<img src='Images/{{ name }}.png'/>
+				<h2>{{ name }}</h2>
+			</div>
+		</a>
+	{% endfor %}
+		
+		<div class='buttonContainer'>
+			<a class='button' href='/test'>Test</a>
+			<a class='button' href='/restart'>Restart</a>
+		</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+		<div class='buttonContainer'>
+			<a class='button left' href='/'>back</a>
+			<a class='button right hidden'>enabled</a>
+			<h2 class='title'>Media Player</h2>
+		</div>
+		
+		<form id='form' action='' method='post'>
+			<select name='play' size='10' autofocus>
+			{% for item in list %}
+				{% if item == selected or (selected == "" and item == list[0]) %}
+				<option value='{{ item }}' title='{{ item }}' selected>{{ item }}</option>
+				{% else %}
+				<option value='{{ item }}' title='{{ item }}'>{{ item }}</option>
+				{% endif %}
+			{% endfor %}
+			</select>
+			<div class='buttonContainer'>
+			{% if selected == "" %}
+				<a class='button' href='javascript:;' onclick='submitForm("form");'>Play</a>
+			{% else %}
+				<a class='button' href='?action=stop'>Stop</a>
+			{% endif %}
+				<a class='button' href='?action=pause'>||</a>
+				<a class='button' href='?action=volumeDown'>-</a>
+				<a class='button' href='?action=volumeUp'>+</a>
+				<a class='button' href='?action=seekBack'><</a>
+				<a class='button' href='?action=seekForward'>></a>
+				<a class='button' href='?action=seekBackFast'><<</a>
+				<a class='button' href='?action=seekForwardFast'>>></a>
+			</div>
+		</form>
+{% endblock %}

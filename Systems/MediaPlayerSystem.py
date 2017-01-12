@@ -9,6 +9,7 @@ class MediaPlayerSystem(BaseSystem):
 
 	def __init__(self, owner):
 		BaseSystem.__init__(self, owner)
+		self._enabled = None
 		
 		self.rootPath = "~/Public"
 		self.volume = 0
