@@ -52,7 +52,7 @@ class SecuritySystem(BaseSystem):
 		if not self._activated and elapsed > timedelta(): # if not _activated and after delay start - check for motion
 			self._activated = self._owner.systems[SensorsSystem.Name].detectAnyMotion()
 			if self._activated:
-				Logger.log("info", "Security System: Activated")
+				Logger.log("info", "Security System: Alarm Activated")
 			self._lastSendTime = datetime.now()
 		elif not self._activated:
 			self._owner.systems[SensorsSystem.Name].detectAnyMotion()

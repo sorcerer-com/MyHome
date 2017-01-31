@@ -21,7 +21,7 @@ class ControlSystem(BaseSystem):
 		
 		try:
 			res = InternetService.receiveEMails(date = self.prevDate)
-		except:
+		except: # timeout
 			res = False
 		if res == False or len(res) == 0:
 			return

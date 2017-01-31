@@ -89,7 +89,7 @@ def cameras():
 		if img == None:
 			continue
 		img.save("camera%d.jpg" % i)
-	return render_template("cameras.html", time=datetime.now(), camerasCount=system.camerasCount)
+	return render_template("cameras.html", time=datetime.now(), camerasCount=system.camerasCount, sensorsData=system.getLatestData())
 
 @app.route("/cameras/<cameraName>", methods=["GET"])
 def camerasImage(cameraName):

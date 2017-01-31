@@ -44,11 +44,19 @@ while True:
 			if (proc is None) or (proc.poll() is not None):
 				break
 			
-			# open page
-			try:
-				br = External.mechanize.Browser()
-				br.open("http://localhost:5000", timeout=30)
-			except Exception as e:
+			# try open page 3 times
+			kill = True
+			for i in range(0, 3):
+				try:
+					br = External.mechanize.Browser()
+					br.set_handle_robots(False)
+					br.open("http://localhost:5000", timeout=30)
+					kill = False
+					break
+				except Exception as e:
+					print e
+					time.sleep(10)
+			if kill:
 				print "Error: Cannot open the web page restart My Home"
 				break
 		print ""

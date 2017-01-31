@@ -50,7 +50,7 @@ class InternetService:
 			return False
 			
 	@staticmethod
-	@timeout(10, use_signals=False)
+	@timeout(20, use_signals=False)
 	def receiveEMails(send_from = None, subject = None, date = None, maxResult = 10):
 		#Logger.log("info", "Internet Service: receive emails")
 	

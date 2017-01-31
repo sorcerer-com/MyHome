@@ -116,7 +116,7 @@ class SensorsSystem(BaseSystem):
 					if self.sensorTypes[i] == "Motion":
 						newValue.append(len([v for v in values[i] if v]) >= float(len(values[i])) / 2) # if True values are more then False
 					elif self.sensorTypes[i] == "TempHum":
-						newValue.append(tuple([sum(v) / len(values[i]) for v in zip(*values[i])])) # avarage value for the tuple
+						newValue.append(tuple([int(round(sum(v) / float(len(values[i])))) for v in zip(*values[i])])) # avarage value for the tuple
 				for t in times:
 					del self._data[t]
 				self._data[times[0].replace(minute=0, second=0, microsecond=0)] = newValue
@@ -195,7 +195,7 @@ class SensorsSystem(BaseSystem):
 	# https://github.com/netikras/r-pi_DHT11
 	def _getTemperatureAndHumidity(self, pin):
 		def bin2dec(string_num):
-			return str(int(string_num, 2))
+			return int(string_num, 2)
 		
 		try:
 			data = []
@@ -257,8 +257,10 @@ class SensorsSystem(BaseSystem):
 			Humidity = bin2dec(HumidityBit)
 			Temperature = bin2dec(TemperatureBit)
 
-			if int(Humidity) + int(Temperature) == int(bin2dec(crc)) and int(bin2dec(crc)) != 0:
-				return (int(Temperature), int(Humidity))
+			if Humidity + Temperature == bin2dec(crc) and bin2dec(crc) != 0:
+				import math
+				humCorrect = int(round(math.sqrt(Humidity) * 10))
+				return (Temperature, humCorrect)
 			else:
 				return None
 		except Exception as e:
@@ -275,6 +277,7 @@ class SensorsSystem(BaseSystem):
 			if cameraIndex not in self._cameras:
 				self._cameras[cameraIndex] = (Camera(camera_index=cameraIndex, threaded=False), datetime.now())
 				if not hasattr(self._cameras[cameraIndex][0], "threaded"): # check if camera is really created
+					del self._cameras[cameraIndex]
 					return None
 				Logger.log("info", "Sensors System: init camera %d" % cameraIndex);
 		except Exception as e:

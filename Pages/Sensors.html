@@ -32,6 +32,8 @@
 			drawLineChart('canvas{{ i }}{{ idx }}{{ j }}', values, names, {{ drawValues|lower }}, {{ drawAxis|lower }});
 		</script>
 		{% endfor %}
+		{% else %}
+		<canvas id='canvas{{ i }}{{ idx }}' width='300' height='150'></canvas>
 		{% endif %}
 		{% endfor %}
 	{% endmacro %}

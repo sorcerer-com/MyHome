@@ -8,8 +8,14 @@
 		</div>
 		
 		<!-- {{ time }} -->
+		<summary><b>Sensors Data</b></summary>
+		{% for data in sensorsData %}
+			{{ data }}
+		{% endfor %}
+		<br/><br/>
+		
 		{% for i in range(camerasCount) %}
-		<summary>Camera {{ i }}</summary>
+		<summary><b>Camera {{ i }}</b></summary>
 		<img src='/cameras/camera{{ i }}.jpg'/>
 		{% endfor %}
 {% endblock %}
