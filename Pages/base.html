@@ -16,12 +16,16 @@
 					if (this.readyState == 4 && this.status == 200) {
 						if (current != "" && current != this.responseText)
 							location.reload();
-						current = this.responseText;
+						else if (current == "") {
+							current = this.responseText;
+							setTimeout(onTimer, 1000);
+						}
+						else
+							setTimeout(onTimer, 3000);
 					}
 				})
 			}
 			
-			var timer = setInterval(onTimer, 1000);
 			onTimer();
 		</script>
 		

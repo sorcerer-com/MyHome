@@ -89,7 +89,12 @@ def cameras():
 		if img == None:
 			continue
 		img.save("camera%d.jpg" % i)
-	return render_template("cameras.html", time=datetime.now(), camerasCount=system.camerasCount, sensorsData=system.getLatestData())
+	
+	data = request.form if request.method == "POST" else request.args
+	autorefresh = True
+	if "autorefresh" in data:
+		autorefresh = data["autorefresh"] == "True"
+	return render_template("cameras.html", time=datetime.now(), camerasCount=system.camerasCount, sensorsData=system.getLatestData(), autorefresh=autorefresh)
 
 @app.route("/cameras/<cameraName>", methods=["GET"])
 def camerasImage(cameraName):

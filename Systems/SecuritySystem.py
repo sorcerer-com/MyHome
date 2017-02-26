@@ -53,6 +53,7 @@ class SecuritySystem(BaseSystem):
 			self._activated = self._owner.systems[SensorsSystem.Name].detectAnyMotion()
 			if self._activated:
 				Logger.log("info", "Security System: Alarm Activated")
+				self._owner.event(self, "AlarmActivated")
 			self._lastSendTime = datetime.now()
 		elif not self._activated:
 			self._owner.systems[SensorsSystem.Name].detectAnyMotion()

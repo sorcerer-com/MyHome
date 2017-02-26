@@ -3,11 +3,17 @@
 {% block content %}
 		<div class='buttonContainer'>
 			<a class='button left' href='/'>back</a>
-			<a class='button right hidden'>enabled</a>
+		{% if autorefresh == True %}
+			<a class='button right green' href='?autorefresh=False'>autorefresh</a>
+		{% else %}
+			<a class='button right red' href='?autorefresh=True'>autorefresh</a>
+		{% endif %}
 			<h2 class='title'>Cameras</h2>
 		</div>
 		
+		{% if autorefresh == True %}
 		<!-- {{ time }} -->
+		{% endif %}
 		<summary><b>Sensors Data</b></summary>
 		{% for data in sensorsData %}
 			{{ data }}
