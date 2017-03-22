@@ -1,6 +1,4 @@
-import logging
-import time
-import os
+import logging, time, os
 from Config import *
 
 class Logger:		

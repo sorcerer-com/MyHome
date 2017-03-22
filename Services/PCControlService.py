@@ -41,7 +41,8 @@ class PCControlService:
 		
 	@staticmethod
 	def openMedia(path, audioOutput="hdmi", volume=0, wait=True):
-		Logger.log("info", "PCControl Service: open media '%s'" % path)
+		if not path.endswith("say.mp3"):
+			Logger.log("info", "PCControl Service: open media '%s'" % path)
 		if (path == "") or (audioOutput not in ["hdmi", "local"]):
 			Logger.log("error", "PCControl Service: cannot open media - invalid parameters")
 			return None

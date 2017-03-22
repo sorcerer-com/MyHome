@@ -1,19 +1,25 @@
 #!/usr/bin/env python
 import subprocess, signal, time, sys, os
 sys.path.append(os.path.join(os.getcwd(), "External"))
+os.chdir("bin")
 
 import External.mechanize
+from Utils.Logger import *
+os.chdir("..")
 
 proc = None
 def killProc():
 	global proc
 	if (proc is not None) and (proc.poll() is None):
+		time.sleep(0.5)
 		# send interrupt signal
-		proc.send_signal(signal.SIGINT)
+		if sys.platform != "win32":
+			proc.send_signal(signal.SIGINT)
 		# check one second for exit
-		for i in range(0, 20):
+		waitSeconds = 2
+		for i in range(0, waitSeconds * 10):
 			time.sleep(0.1)
-			if i == 10: # if process isn't closed in half of the time, call terminate
+			if i == waitSeconds * 10 / 2: # if process isn't closed in half of the time, call terminate
 				proc.terminate()
 			if proc.poll() is not None:
 				break
@@ -22,6 +28,7 @@ def killProc():
 			proc.kill()
 			time.sleep(1)
 		proc = None
+		time.sleep(0.5)
 
 def signal_handler(signal, frame):
 	global proc
@@ -59,10 +66,11 @@ while True:
 			if kill:
 				Logger.log("error", "Cannot open the web page restart My Home")
 				break
-		Logger.log("info", "")
+		print ""
 	except (KeyboardInterrupt, SystemExit) as e:
 		killProc()
 		break
-	except:
+	except Exception as e:
+		Logger.log("debug", str(e))
 		time.sleep(60) # wait a minute
 		pass

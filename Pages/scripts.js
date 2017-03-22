@@ -3,8 +3,10 @@ function request(method, url, func, postData) {
 		return;
 		
 	var xhttp = new XMLHttpRequest();
+	xhttp.timeout = 4000; // Set timeout to 4 seconds (4000 milliseconds)
 	xhttp.onreadystatechange = func;
 	xhttp.open(method, url, true);
+	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 	xhttp.send(postData);
 }
 

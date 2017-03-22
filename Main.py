@@ -183,6 +183,19 @@ def Sensors():
 		data3.append([sensorsSystem._data[key][i] for key in data3[0]])
 	return render_template("Sensors.html", types = sensorsSystem.sensorTypes, data1=data1, data2=data2, data3=data3, enabled=sensorsSystem.enabled)
 
+@app.route("/AI", methods=["GET", "POST"])
+def AI():
+	aiSystem = myHome.systems[AISystem.Name]
+	data = request.form if request.method == "POST" else request.args
+	if len(data) == 1:
+		value = data["enabled"] == "True"
+		aiSystem.enabled = value
+		return redirect("/AI")
+	if len(data) > 1:
+		return aiSystem.processVoiceCommand(data["transcript"].strip().lower(), float(data["confidence"]))
+		
+	return render_template("AI.html", enabled=aiSystem.enabled)
+	
 @app.route("/Settings", methods=["GET", "POST"])
 def settings():
 	data = request.form if request.method == "POST" else request.args

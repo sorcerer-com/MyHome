@@ -23,6 +23,8 @@
 						else
 							setTimeout(onTimer, 3000);
 					}
+					else if (this.readyState == 4 && this.status == 0)
+						setTimeout(onTimer, 1000);
 				})
 			}
 			

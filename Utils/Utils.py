@@ -1,8 +1,5 @@
 import re
-from datetime import *
-from functools import wraps
-from multiprocessing import Process, Queue
-from Logger import *
+from datetime import datetime, timedelta
 
 def getProperties(obj, baseProps = False):
 	result = []
@@ -24,6 +21,7 @@ def getProperties(obj, baseProps = False):
 	return result
 	
 def string(value):
+	from Logger import Logger
 	try:
 		valueType = type(value)
 		if valueType is datetime:
@@ -47,6 +45,7 @@ def string(value):
 	return str(value)
 		
 def parse(value, valueType):
+	from Logger import Logger
 	try:
 		if valueType is bool:
 			return value == "True"
