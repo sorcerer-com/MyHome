@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+
 import logging
 
-from _response import response_seek_wrapper
-from _urllib2_fork import BaseHandler
+from ._response import response_seek_wrapper
+from ._urllib2_fork import BaseHandler
 
 
 class HTTPResponseDebugProcessor(BaseHandler):
@@ -20,7 +22,9 @@ class HTTPResponseDebugProcessor(BaseHandler):
 
     https_response = http_response
 
+
 class HTTPRedirectDebugProcessor(BaseHandler):
+
     def http_request(self, request):
         if hasattr(request, "redirect_dict"):
             info = logging.getLogger("mechanize.http_redirects").info

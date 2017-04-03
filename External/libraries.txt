@@ -1,15 +1,19 @@
-Flask - micro web framework
-	Jinja2 - template engine
-		MarkupSafe - unicode subclass that supports HTML strings
+Flask(0.12) - micro web framework
+	Jinja2(2.9.6) - template engine
+		MarkupSafe(1.0) - unicode subclass that supports HTML strings
 
-	Werkzeug - WSGI utility library
-	itsdangerous - helpers to pass trusted data to untrusted environments and back
+	Werkzeug(0.12.1) - WSGI utility library
+	itsdangerous(0.24) - helpers to pass trusted data to untrusted environments and back
 
-gTTS - Google Text to Speech
-	gTTS-token - calculates a token to run the Google Translate text to speech
-	requests - Non-GMO HTTP library
+gTTS(1.1.8) - Google Text to Speech
+	gTTS-token(1.1.1) - calculates a token to run the Google Translate text to speech
+	requests(2.13.0) - Non-GMO HTTP library
 
-Mechanize - stateful programmatic web browsing
+Mechanize(0.3.1) - stateful programmatic web browsing
+	click(6.7) - A simple wrapper around optparse for powerful command line utilities
+	html5lib(0.999) - HTML parser based on the WHATWG HTML specification
+	six(1.10.0) - Python 2 and 3 compatibility utilities
+	webencodings(0.5) - Character encoding aliases for legacy web content
 
 SimpleCV - computer vision library
 	CV - computer vision library
