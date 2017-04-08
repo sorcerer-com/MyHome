@@ -10,14 +10,17 @@ class Logger:
 
 	@staticmethod
 	def log(type, msg):
-		formatted = Logger.format(type, msg)
-		getattr(Logger.logger, type)(formatted)
-		if type <> "debug":
-			Logger.data.append(formatted)
-		if Config.PrintLog and type <> "debug":
-			print formatted
-		Logger.backup()
-		
+		try:
+			formatted = Logger.format(type, msg)
+			getattr(Logger.logger, type)(formatted)
+			if type <> "debug":
+				Logger.data.append(formatted)
+			if Config.PrintLog and type <> "debug":
+				print formatted
+			Logger.backup()
+		except Exception as e:
+			print str(e)
+
 	@staticmethod
 	def format(type, msg):
 		return time.strftime("%d/%m/%Y %H:%M:%S") + "\t" + type + "\t" + msg

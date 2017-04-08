@@ -80,6 +80,7 @@ class InternetService:
 		
 		return result
 		
+	
 	@staticmethod
 	def sendSMSByEMail(number, msg):
 		Logger.log("info", "Internet Service: send SMS '%s' to %s" % (msg, number))
@@ -126,3 +127,44 @@ class InternetService:
 			Logger.log("error", "Internet Service: cannot send SMS '%s' to %s" % (msg, number))
 			Logger.log("debug", str(e))
 			return False
+			
+	@staticmethod
+	def getWeather():
+		def getNumberOnly(str):
+			temp = "".join([s for s in str if s.isdigit() or s == '.'])
+			return float(temp) if temp.find('.') > -1 else int(temp)
+		def getDayWeather(elem):
+			result = {}
+			temp = elem.find("./span[@class='wfNonCurrentTemp']")
+			result["minTemp"] = getNumberOnly(temp.text.strip().lower())
+			temp = elem.find("./span[@class='wfNonCurrentTemp']/span")
+			result["maxTemp"] = getNumberOnly(temp.text.strip().lower())
+			temp = elem.find("./strong[@class='wfNonCurrentCond']")
+			result["condition"] = temp.text.strip().lower()
+			temp = elem.find("./span[@class='wfNonCurrentBottom']")
+			result["wind"] = temp[0].get("title").strip().lower()
+			result["rainProb"] = getNumberOnly(temp[1].text.strip().lower())
+			result["rainAmount"] = getNumberOnly(temp[2].text.strip().lower())
+			result["stormProb"] = getNumberOnly(temp[3].text.strip().lower())
+			result["cloudiness"] = getNumberOnly(temp[4].text.strip().lower())
+			return result
+	
+		Logger.log("info", "Internet Service: get weather")
+		
+		result = []
+		try:
+			br = External.mechanize.Browser()
+			br.open("https://www.sinoptik.bg/sofia-bulgaria-100727011")
+			data = br.response().get_data()
+			
+			html = External.mechanize._html.content_parser(data)
+			# today
+			result.append(getDayWeather(html.find(".//a[@class='wfTodayContent wfNonCurrentContent']")))
+			# tomorrow
+			result.append(getDayWeather(html.find(".//a[@class='wfTomorrowContent wfNonCurrentContent']")))
+		except Exception as e:
+			Logger.log("error", "Internet Service: cannot get weather")
+			Logger.log("debug", str(e))
+			return False
+			
+		return result

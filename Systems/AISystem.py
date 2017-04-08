@@ -3,11 +3,12 @@ import warnings, threading, random
 from gtts import gTTS
 from BaseSystem import *
 from Services.PCControlService import *
+from Services.InternetService import *
 from Utils.Utils import *
 
 class AISystem(BaseSystem):
 	Name = "AI"
-	VoiceVolume = 0
+	VoiceVolume = -3
 
 	def __init__(self, owner):
 		BaseSystem.__init__(self, owner)
@@ -19,9 +20,19 @@ class AISystem(BaseSystem):
 		self._commands = []
 		self._voiceCommands = {}
 		
-		self._commands.append(u"result = u'%s и %s' % (datetime.now().hour, datetime.now().minute)")
+		self._commands.append([u"result = u'%s и %s' % (datetime.now().hour % 12, datetime.now().minute)"])
+		self._commands.append([u"weather = InternetService.getWeather()[0]", "{3}"])
+		self._commands.append([u"weather = InternetService.getWeather()[1]", "{3}"])
+		self._commands.append([u"result  = u'Времето ще е %s. ' % weather['condition'].replace(u', ', u' с ')",
+							   u"result += u'Минималната температура ще е %s градуса, максималната %s. ' % (weather['minTemp'], weather['maxTemp'])",
+							   u"result += u'Вятарът ще е %s от %s. ' % (weather['wind'].split(u', ')[1], weather['wind'].split(u', ')[0])",
+							   u"if weather['rainProb'] > 30: result += u'Има %s процента вероятност за дъжд с интензитет %s мм. ' % (weather['rainProb'], weather['rainAmount'])",
+							   u"if weather['stormProb'] > 30: result += u'Вероятността за буря е %s процента. ' % weather['stormProb']",
+							   u"result += u'Oблачността ще е %s процента. ' % weather['cloudiness']"])
 		
 		self._voiceCommands[u"колко е часа"] = 0
+		self._voiceCommands[u"какво ще е времето днес"] = 1
+		self._voiceCommands[u"какво ще е времето утре"] = 2
 		
 	def loadSettings(self, configParser, data):
 		BaseSystem.loadSettings(self, configParser, data)
@@ -55,21 +66,33 @@ class AISystem(BaseSystem):
 		# execute command
 		else:
 			try:
-				command = self._commands[self._voiceCommands[transcript]]
+				command = self._getCommand(self._voiceCommands[transcript])
 				exec(command)
-				Logger.log("info", "AI System: execute command '%s'" % command)
+				Logger.log("info", "AI System: execute command '%s'" % command.replace("\n", "\\n"))
 				self._owner.event(self, "CommandExecuted", command)
 			except Exception as e:
-				Logger.log("error", "Control System: cannot execute '%s'" % transcript)
+				Logger.log("error", u"Control System: cannot execute '%s'" % transcript)
 				Logger.log("debug", str(e))
 		
 		if result != None:
 			AISystem.say(result)
 		return result
+		
+	def _getCommand(self, index):
+		command = self._commands[index]
+		i = 0
+		while i < len(command):
+			if command[i].startswith("{") and command[i].endswith("}"):
+				idx = int(command[i][1:-1])
+				command = command[:i] + self._commands[idx] + command[i+1:]
+			else:
+				i += 1
+		return "\n".join(command)
 	
 	
 	@staticmethod
 	def _say(text):
+		text = AISystem.symbolsToText(text)
 		text = AISystem.digitToText(text)
 		text = AISystem.cyrToLat(text)
 		text = "bee eep %s bee eep" % text
@@ -99,7 +122,7 @@ class AISystem(BaseSystem):
 		
 		specialChars = {
 			u"ж": u"zh",
-			u"ц": u"ts",
+			u"ц": u"c",
 			u"ч": u"ch",
 			u"ш": u"sh",
 			u"щ": u"sht",
@@ -121,8 +144,8 @@ class AISystem(BaseSystem):
 		
 	@staticmethod
 	def digitToText(text):
-		ints = [int(s) for s in text.split() if s.isdigit()]
-		for i in ints:
+		ints = [int(s) for s in text.split() if s.isdigit()] # TODO: doubles
+		for i in sorted(ints, reverse=True):
 			s = u""
 			if i < 0:
 				s += u"минус "
@@ -133,12 +156,24 @@ class AISystem(BaseSystem):
 				s += temp[int(i / 10) - 2]
 				if (i % 10) != 0:
 					s += u" и "
-			if i >= 0 and (i % 10) != 0:
+			if i >= 0 and (i == 10 or i % 10 != 0):
 				temp = [u"едно", u"две", u"три", u"четири", u"пет", u"шест", u"седем", u"осем", u"девет", u"десет", 
 					u"единайсет", u"дванайсет", u"тринайсет", u"четиринайсет", u"петнайсет", u"шестнайсет", u"седемнайсет", u"осемнайсет", u"деветнайсет"]
-				s += temp[int(i % 10) - 1]
+				if i < 20:
+					s += temp[int(i % 20) - 1]
+				else:
+					s += temp[int(i % 10) - 1]
 			if i == 0:
 				s += u"нула"
 			text = text.replace(str(i), s)
 		
+		return text
+		
+	@staticmethod
+	def symbolsToText(text):
+		symbols = { u"%": u" процента", u"°": u" градуса" }
+		
+		for (key, value) in symbols.items():
+			text = text.replace(key, value)
+			
 		return text

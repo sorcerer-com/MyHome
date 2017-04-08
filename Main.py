@@ -28,7 +28,11 @@ def beforeRequest():
 			Logger.log("warning", "Request: external request from " + request.remote_addr)
 			return login()
 		elif request.endpoint != "cameras" and request.endpoint != "camerasImage":
-			return render_template("base.html", content="<h2 class='title'>External Request</h2>\n")
+			infos = [(name, myHome.systems[name].enabled) for name in sorted(myHome.systems.keys())]
+			content = "<h2 class='title'>External Request</h2>\n"
+			for info in infos:
+				content += "%s %s<br/>\n" % (info[0], info[1])
+			return render_template("base.html", content=content)
 		else:
 			Logger.log("warning", "Request: external request to cameras from " + request.remote_addr)
 	
@@ -211,6 +215,9 @@ def settings():
 			systemName = systemName.replace(" System", "")
 			system = myHome.systems[systemName] if "Config" not in systemName else Config
 			
+			if hasattr(type(system), prop):
+				attrType = type(getattr(type(system), prop))
+				setattr(type(system), prop, parse(value, attrType))
 			if hasattr(system, prop):
 				attrType = type(getattr(system, prop))
 				setattr(system, prop, parse(value, attrType))
