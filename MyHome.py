@@ -27,6 +27,7 @@ class MHome(object):
 		self.systems[SensorsSystem.Name] = SensorsSystem(self)
 		self.systemChanged = False
 		
+		self._lastBackupSettings = datetime.now()
 		self.loadSettings()
 		self.update()
 		
@@ -69,7 +70,8 @@ class MHome(object):
 		data = []
 		if os.path.isfile(Config.DataFileName):
 			with open(Config.DataFileName, 'r') as f:
-				data = f.read().split("\n")
+				data = f.read().decode("utf8").split("\n")
+		self._lastBackupSettings = parse(data[0], datetime)
 			
 		Config.load(configParser)
 		
@@ -81,7 +83,7 @@ class MHome(object):
 				systemData = data[data.index("[%s]" % key)+1:]
 				for i in range(1, len(systemData)):
 					if systemData[i].startswith("["):
-						systemData = systemData[:i]
+						systemData = systemData[:i-1]
 						break
 						
 			self.systems[key].loadSettings(configParser, systemData)
@@ -91,6 +93,13 @@ class MHome(object):
 		
 	def saveSettings(self):
 		Logger.log("info", "My Home: save settings")
+		# backup config and data file every day
+		if (datetime.now() - self._lastBackupSettings) > timedelta(days=1):
+			from shutil import copyfile
+			self._lastBackupSettings = datetime.now()
+			copyfile(Config.ConfigFileName, Config.ConfigFileName + ".bak")
+			copyfile(Config.DataFileName, Config.DataFileName + ".bak")
+		
 		configParser = ConfigParser.RawConfigParser()
 		configParser.optionxform = str
 		
@@ -112,7 +121,8 @@ class MHome(object):
 			configParser.write(configFile)
 			
 		with open(Config.DataFileName, 'w') as dataFile:
+			dataFile.write("%s\n" % string(self._lastBackupSettings))
 			for item in data:
-				dataFile.write("%s\n" % item)
+				dataFile.write("%s\n" % unicode(item).encode("utf8"))
 		
 		self.event(self, "SettingsSaved")

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*- 
-import warnings, threading, random
+import warnings, threading, random, re
 from gtts import gTTS
 from BaseSystem import *
 from Services.PCControlService import *
@@ -23,12 +23,14 @@ class AISystem(BaseSystem):
 		self._commands.append([u"result = u'%s и %s' % (datetime.now().hour % 12, datetime.now().minute)"])
 		self._commands.append([u"weather = InternetService.getWeather()[0]", "{3}"])
 		self._commands.append([u"weather = InternetService.getWeather()[1]", "{3}"])
-		self._commands.append([u"result  = u'Времето ще е %s. ' % weather['condition'].replace(u', ', u' с ')",
-							   u"result += u'Минималната температура ще е %s градуса, максималната %s. ' % (weather['minTemp'], weather['maxTemp'])",
-							   u"result += u'Вятарът ще е %s от %s. ' % (weather['wind'].split(u', ')[1], weather['wind'].split(u', ')[0])",
-							   u"if weather['rainProb'] > 30: result += u'Има %s процента вероятност за дъжд с интензитет %s мм. ' % (weather['rainProb'], weather['rainAmount'])",
-							   u"if weather['stormProb'] > 30: result += u'Вероятността за буря е %s процента. ' % weather['stormProb']",
-							   u"result += u'Oблачността ще е %s процента. ' % weather['cloudiness']"])
+		self._commands.append([u"if weather == False: result = u'В момента не мога да кажа какво ще е времето'",
+							   u"else:",
+							   u"	result  = u'Времето ще е %s. ' % weather['condition'].replace(u', ', u' с ')",
+							   u"	result += u'Минималната температура ще е %s градуса, максималната %s. ' % (weather['minTemp'], weather['maxTemp'])",
+							   u"	result += u'Вятарът ще е %s от %s. ' % (weather['wind'].split(u', ')[1], weather['wind'].split(u', ')[0])",
+							   u"	if weather['rainProb'] > 30: result += u'Има %s процента вероятност за дъжд с интензитет %s мм. ' % (weather['rainProb'], weather['rainAmount'])",
+							   u"	if weather['stormProb'] > 30: result += u'Вероятността за буря е %s процента. ' % weather['stormProb']",
+							   u"	result += u'Oблачността ще е %s процента. ' % weather['cloudiness']"])
 		
 		self._voiceCommands[u"колко е часа"] = 0
 		self._voiceCommands[u"какво ще е времето днес"] = 1
@@ -36,9 +38,41 @@ class AISystem(BaseSystem):
 		
 	def loadSettings(self, configParser, data):
 		BaseSystem.loadSettings(self, configParser, data)
+		if len(data) == 0:
+			return
+		self._commands = []
+		self._voiceCommands = {}
+		
+		ptr = 0
+		count = int(data[ptr])
+		ptr += 1
+		for i in range(0, count):
+			self._commands.append([])
+			count2 = int(data[ptr])
+			ptr += 1
+			for j in range(0, count2):
+				self._commands[i].append(data[ptr])
+				ptr += 1
+				
+		count = int(data[ptr])
+		ptr += 1
+		for i in range(0, count):
+			self._voiceCommands[data[ptr]] = int(data[ptr + 1])
+			ptr += 2
 
 	def saveSettings(self, configParser, data):
 		BaseSystem.saveSettings(self, configParser, data)
+		
+		data.append(len(self._commands))
+		for command in self._commands:
+			data.append(len(command))
+			for cmd in command:
+				data.append(cmd)
+				
+		data.append(len(self._voiceCommands))
+		for (key, value) in self._voiceCommands.items():
+			data.append(key)
+			data.append(value)
 
 	def _onEnabledChanged(self):
 		BaseSystem._onEnabledChanged(self)
@@ -144,7 +178,7 @@ class AISystem(BaseSystem):
 		
 	@staticmethod
 	def digitToText(text):
-		ints = [int(s) for s in text.split() if s.isdigit()] # TODO: doubles
+		ints = [int(s) for s in re.findall(r"[-+]?\d*\.\d+|\d+", text) if s.isdigit()] # TODO: doubles
 		for i in sorted(ints, reverse=True):
 			s = u""
 			if i < 0:

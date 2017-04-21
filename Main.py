@@ -257,6 +257,7 @@ def restart():
 def start():
 	app.secret_key = u"\xf2N\x8a 8\xb1\xd9(&\xa6\x90\x12R\xf0\\\xe8\x1e\xf92\xa6AN\xed\xb3"
 	app.permanent_session_lifetime = timedelta(minutes=15)
+	app.config['TEMPLATES_AUTO_RELOAD']=True
 	app.run(debug=False, host="0.0.0.0")
 
 if __name__ == "__main__":

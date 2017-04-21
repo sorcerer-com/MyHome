@@ -34,7 +34,8 @@ class BaseSystem(object):
 		for (name, value) in items:
 			if hasattr(type(self), name):
 				propType = type(getattr(type(self), name))
-				setattr(type(self), name, parse(value, propType))
+				if propType is not property:
+					setattr(type(self), name, parse(value, propType))
 			if hasattr(self, name):
 				propType = type(getattr(self, name))
 				setattr(self, name, parse(value, propType))
