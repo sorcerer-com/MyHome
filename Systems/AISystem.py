@@ -9,6 +9,8 @@ from Utils.Utils import *
 class AISystem(BaseSystem):
 	Name = "AI"
 	VoiceVolume = -3
+	_LowConfidenceResponses = [u"Моля", u"Не ви чух", u"Може ли да повторите"]
+	_UnknownVoiceCommandResponses = [u"Не ви разбирам", u"Не знам какво значи това", u"Какво значи това"]
 
 	def __init__(self, owner):
 		BaseSystem.__init__(self, owner)
@@ -19,6 +21,7 @@ class AISystem(BaseSystem):
 		
 		self._commands = []
 		self._voiceCommands = {}
+		self._lastVoiceCommand = (u"", u"")
 		
 		self._commands.append([u"result = u'%s и %s' % (datetime.now().hour % 12, datetime.now().minute)"])
 		self._commands.append([u"weather = InternetService.getWeather()[0]", "{3}"])
@@ -82,21 +85,38 @@ class AISystem(BaseSystem):
 		
 		
 	def _onEventReceived(self, sender, event, data):
-		if self._enabled:
-			Logger.log("debug", "AI System: %s %s %s" % (sender.Name, event, data))
+		if not self._enabled:
+			return
+		Logger.log("debug", "AI System: %s %s %s" % (sender.Name, event, data))
+		
+		text = ""
+		if event == "AlarmActivated":
+			text = u"Кой е там?"
+			
+		if text != "":
+			self._lastVoiceCommand = (u"", text)
+			AISystem.say(text)
+			Logger.log("debug", "AI System: " + text)
 		
 	def processVoiceCommand(self, transcript, confidence):
 		Logger.log("debug", "AI System: " + transcript + " " + str(confidence))
 		
-		result = None
+		result = ""
 		# too low confidence
 		if confidence < 0.5:
-			temp = [u"Моля", u"Не ви чух", u"Може ли да повторите"]
-			result = temp[random.randint(0, len(temp)-1)]
+			result = random.choice(AISystem._LowConfidenceResponses)
 		# unknown command
 		elif transcript not in self._voiceCommands.keys():
-			temp = [u"Не ви разбирам", u"Не знам какво значи това", u"Какво значи това"]
-			result = temp[random.randint(0, len(temp)-1)]
+			explanation = False
+			if self._lastVoiceCommand[1] in AISystem._UnknownVoiceCommandResponses and transcript.startswith(u"това е като "):
+				vCommand = transcript[len(u"това е като "):]
+				if vCommand in self._voiceCommands.keys(): # found explanation
+					self._voiceCommands[self._lastVoiceCommand[0]] = self._voiceCommands[vCommand]
+					result = u"Разбирам"
+					self._owner.systemChanged = True
+					explanation = True
+			if not explanation:
+				result = random.choice(AISystem._UnknownVoiceCommandResponses)
 		# execute command
 		else:
 			try:
@@ -108,8 +128,10 @@ class AISystem(BaseSystem):
 				Logger.log("error", u"Control System: cannot execute '%s'" % transcript)
 				Logger.log("debug", str(e))
 		
-		if result != None:
+		self._lastVoiceCommand = (transcript, result)
+		if result != "":
 			AISystem.say(result)
+			Logger.log("debug", "AI System: " + result)
 		return result
 		
 	def _getCommand(self, index):
@@ -178,28 +200,32 @@ class AISystem(BaseSystem):
 		
 	@staticmethod
 	def digitToText(text):
-		ints = [int(s) for s in re.findall(r"[-+]?\d*\.\d+|\d+", text) if s.isdigit()] # TODO: doubles
-		for i in sorted(ints, reverse=True):
+		nums = [s for s in re.findall(ur"[-+]?\d*\.?\d+", text)]
+		for num in sorted(nums, reverse=True):
 			s = u""
-			if i < 0:
-				s += u"минус "
-			if i >= 100:
-				continue
-			if i >= 20:
-				temp = [u"двайсет", u"трийсет", u"четиресет", u"педесет", u"шейсет", u"седемдесет", u"осемдесет", u"деведесет"]
-				s += temp[int(i / 10) - 2]
-				if (i % 10) != 0:
-					s += u" и "
-			if i >= 0 and (i == 10 or i % 10 != 0):
-				temp = [u"едно", u"две", u"три", u"четири", u"пет", u"шест", u"седем", u"осем", u"девет", u"десет", 
-					u"единайсет", u"дванайсет", u"тринайсет", u"четиринайсет", u"петнайсет", u"шестнайсет", u"седемнайсет", u"осемнайсет", u"деветнайсет"]
-				if i < 20:
-					s += temp[int(i % 20) - 1]
-				else:
-					s += temp[int(i % 10) - 1]
-			if i == 0:
-				s += u"нула"
-			text = text.replace(str(i), s)
+			for n in num.split('.'):
+				if len(s) > 0:
+					s += u" цяло и "
+				if float(n) < 0:
+					s += u"минус "
+				absNum = abs(float(n))
+				if absNum >= 100:
+					continue
+				if absNum >= 20:
+					temp = [u"двайсет", u"трийсет", u"четиресет", u"педесет", u"шейсет", u"седемдесет", u"осемдесет", u"деведесет"]
+					s += temp[int(absNum / 10) - 2]
+					if (absNum % 10) != 0:
+						s += u" и "
+				if absNum >= 0 and (absNum == 10 or absNum % 10 != 0):
+					temp = [u"едно", u"две", u"три", u"четири", u"пет", u"шест", u"седем", u"осем", u"девет", u"десет", 
+						u"единайсет", u"дванайсет", u"тринайсет", u"четиринайсет", u"петнайсет", u"шестнайсет", u"седемнайсет", u"осемнайсет", u"деветнайсет"]
+					if absNum < 20:
+						s += temp[int(absNum % 20) - 1]
+					else:
+						s += temp[int(absNum % 10) - 1]
+				if absNum == 0:
+					s += u"нула"
+			text = text.replace(str(num), s)
 		
 		return text
 		

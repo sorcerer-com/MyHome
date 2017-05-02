@@ -131,7 +131,7 @@ class InternetService:
 	@staticmethod
 	def getWeather():
 		def getNumberOnly(str):
-			temp = "".join([s for s in str if s.isdigit() or s == '.'])
+			temp = "".join([s for s in str if s.isdigit() or s == '.' or s == '-'])
 			return float(temp) if temp.find('.') > -1 else int(temp)
 		def getDayWeather(elem):
 			result = {}
