@@ -12,8 +12,8 @@
 		</div>
 		
 	{% macro charts(data, drawValues, drawAxis, subTitle="", idx=0) -%}
-		{% for i in range(types|count) %}
-		<div>{{ types[i] }}{{ subTitle }}</div>
+		{% for i in range(names|count) %}
+		<div>{{ names[i] }}{{ subTitle }}</div>
 		{% if data[i+1]|count > 0 and (data[i+1][0] is not sequence or data[i+1][0] is string) %}
 		<canvas id='canvas{{ i }}{{ idx }}' width='300' height='150'></canvas>
 		<script type='text/javascript'>

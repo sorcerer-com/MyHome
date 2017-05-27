@@ -2,6 +2,7 @@
 import warnings, threading, random, re
 from gtts import gTTS
 from BaseSystem import *
+from SecuritySystem import *
 from Services.PCControlService import *
 from Services.InternetService import *
 from Utils.Utils import *
@@ -107,15 +108,18 @@ class AISystem(BaseSystem):
 			result = random.choice(AISystem._LowConfidenceResponses)
 		# unknown command
 		elif transcript not in self._voiceCommands.keys():
-			explanation = False
 			if self._lastVoiceCommand[1] in AISystem._UnknownVoiceCommandResponses and transcript.startswith(u"това е като "):
 				vCommand = transcript[len(u"това е като "):]
 				if vCommand in self._voiceCommands.keys(): # found explanation
 					self._voiceCommands[self._lastVoiceCommand[0]] = self._voiceCommands[vCommand]
-					result = u"Разбирам"
 					self._owner.systemChanged = True
-					explanation = True
-			if not explanation:
+					result = u"Разбирам"
+			if self._lastVoiceCommand[1] == u"Кой е там?" and (transcript == u"ние сме" or transcript == u"аз съм"):
+				self._owner.systems[SecuritySystem.Name].enabled = False
+				result = u"Добре"
+				unknown = False
+			
+			if result == "":
 				result = random.choice(AISystem._UnknownVoiceCommandResponses)
 		# execute command
 		else:
@@ -125,7 +129,7 @@ class AISystem(BaseSystem):
 				Logger.log("info", "AI System: execute command '%s'" % command.replace("\n", "\\n"))
 				self._owner.event(self, "CommandExecuted", command)
 			except Exception as e:
-				Logger.log("error", u"Control System: cannot execute '%s'" % transcript)
+				Logger.log("error", u"AI System: cannot execute '%s'" % transcript)
 				Logger.log("debug", str(e))
 		
 		self._lastVoiceCommand = (transcript, result)

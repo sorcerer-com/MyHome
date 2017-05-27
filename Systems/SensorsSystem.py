@@ -12,6 +12,7 @@ class SensorsSystem(BaseSystem):
 		
 		self.sensorTypes = ["Motion", "TempHum"]
 		self.sensorPins = ["7", "4"]
+		self.sensorNames = ["LivingRoom", "LivingRoom"]
 		self.checkInterval = 15
 		self.camerasCount = 1
 		self.fireAlarmTempreture = 50

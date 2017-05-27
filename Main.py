@@ -85,24 +85,26 @@ def login():
 		
 	return render_template("login.html", invalid=invalid)
 		
-@app.route("/cameras", methods=["GET"])
+@app.route("/cameras")
 def cameras():
-	system = myHome.systems[SensorsSystem.Name]
-	for i in range(0, system.camerasCount):
-		img = system.getImage(i, (320, 240))
-		if img == None:
-			continue
-		img.save("camera%d.jpg" % i)
-	
-	data = request.form if request.method == "POST" else request.args
-	autorefresh = True
-	if "autorefresh" in data:
-		autorefresh = data["autorefresh"] == "True"
-	return render_template("cameras.html", time=datetime.now(), camerasCount=system.camerasCount, sensorsData=system.getLatestData(), autorefresh=autorefresh)
+	sensorsSystem = myHome.systems[SensorsSystem.Name]
+	return render_template("cameras.html", camerasCount=sensorsSystem.camerasCount, sensorsData=sensorsSystem.getLatestData())
 
-@app.route("/cameras/<cameraName>", methods=["GET"])
-def camerasImage(cameraName):
-	return send_from_directory(".", cameraName)
+@app.route("/cameras/<cameraIndex>")
+def camerasImage(cameraIndex):
+	def gen():
+		import StringIO
+		sensorsSystem = myHome.systems[SensorsSystem.Name]
+		while True:
+			img = sensorsSystem.getImage(int(cameraIndex), (320, 240))
+			if img == None:
+				continue
+			frame = StringIO.StringIO()
+			img.save(frame, "jpeg")
+			yield (b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + frame.getvalue() + b"\r\n")
+			time.sleep(0.1)
+			
+	return Response(gen(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route("/")
@@ -185,7 +187,8 @@ def Sensors():
 		data1.append([sensorsSystem._data[key][i] for key in data1[0]])
 		data2.append([sensorsSystem._data[key][i] for key in data2[0]])
 		data3.append([sensorsSystem._data[key][i] for key in data3[0]])
-	return render_template("Sensors.html", types = sensorsSystem.sensorTypes, data1=data1, data2=data2, data3=data3, enabled=sensorsSystem.enabled)
+	names = [sensorsSystem.sensorNames[i] + " " + sensorsSystem.sensorTypes[i] for i in range(0, len(sensorsSystem.sensorTypes))] 
+	return render_template("Sensors.html", names=names, data1=data1, data2=data2, data3=data3, enabled=sensorsSystem.enabled)
 
 @app.route("/AI", methods=["GET", "POST"])
 def AI():
@@ -269,7 +272,7 @@ if __name__ == "__main__":
 		t.start()
 
 		try:
-			subprocess.call(["sensible-browser", "localhost:5000"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			subprocess.call(["sensible-browser", "localhost:5000"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
 		except:
 			t.join()
 			

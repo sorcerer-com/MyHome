@@ -19,7 +19,7 @@
 			if ("webkitSpeechRecognition" in window{% if enabled != True %} && false{% endif %}) {
 				var recognition = new webkitSpeechRecognition();
 				recognition.continuous = true;
-				recognition.interimResults = true;
+				recognition.interimResults = !navigator.userAgent.match(/Android/i);
 		
 				recognition.onerror = function(event) {
 					setTimeout(function() { recognition.start(); }, 100);
