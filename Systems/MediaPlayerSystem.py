@@ -67,6 +67,11 @@ class MediaPlayerSystem(BaseSystem):
 			self._process = PCControlService.openMedia(path, volume=self.volume*300, wait=False)
 		if (self._process is not None) and (self._process.poll() is None):
 			self._owner.event(self, "MediaPlayed", self._playing)
+			
+	def command(self, cmd):
+		if (self._process is not None) and (self._process.poll() is None):
+			self._process.stdin.write(cmd)
+			self._owner.event(self, "MediaCommand", cmd)
 		
 	def stop(self):
 		if (self._process is not None) and (self._process.poll() is None):

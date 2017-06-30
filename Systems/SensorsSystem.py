@@ -276,7 +276,7 @@ class SensorsSystem(BaseSystem):
 		try:
 			from SimpleCV import Camera
 			if cameraIndex not in self._cameras:
-				self._cameras[cameraIndex] = (Camera(camera_index=cameraIndex, threaded=False), datetime.now())
+				self._cameras[cameraIndex] = [Camera(camera_index=cameraIndex, threaded=False), datetime.now()]
 				if not hasattr(self._cameras[cameraIndex][0], "threaded"): # check if camera is really created
 					del self._cameras[cameraIndex]
 					return None
@@ -286,9 +286,15 @@ class SensorsSystem(BaseSystem):
 			Logger.log("debug", str(e))
 			return None
 		
-		img = self._cameras[cameraIndex][0].getImage()
-		img = img.resize(size[0], size[1])
-		if stamp:
-			from SimpleCV import Color
-			img.drawText(time.strftime("%d/%m/%Y %H:%M:%S"), 5, 5, Color.WHITE)
-		return img
+		try:
+			img = self._cameras[cameraIndex][0].getImage()
+			self._cameras[cameraIndex][1] = datetime.now()
+			img = img.resize(size[0], size[1])
+			if stamp:
+				from SimpleCV import Color
+				img.drawText(time.strftime("%d/%m/%Y %H:%M:%S"), 5, 5, Color.WHITE)
+			return img
+		except Exception as e:
+			Logger.log("error", "Sensors System: cannot get image")
+			Logger.log("debug", str(e))
+			return None

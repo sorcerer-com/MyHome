@@ -7,6 +7,12 @@
 			<h2 class='title'>Media Player</h2>
 		</div>
 		
+		<script>
+			document.onkeypress = function(e) {
+				window.location.href = "?command=" + e.key;
+			};
+		</script>
+		
 		<form id='form' action='' method='post'>
 			<select name='play' size='10' autofocus>
 			{% for item in list %}

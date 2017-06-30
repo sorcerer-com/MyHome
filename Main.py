@@ -19,15 +19,20 @@ def beforeRequest():
 	if request.endpoint == "robots" or request.endpoint == "favicon" or request.endpoint == "images" or \
 		request.endpoint == "style" or request.endpoint == "scripts":
 		return
+	
+	if ("password" not in session) or (session["password"] != Config.Password): # pass only login
+		if request.endpoint == "index":
+			return redirect("/login")
+		elif request.endpoint == "login":
+			return login()
+		else:
+			abort(404)
 		
 	isLocalIP = request.remote_addr == "127.0.0.1";
 	for ip in Config.InternalIPs:
 		isLocalIP |= request.remote_addr.startswith(ip)
-	if not isLocalIP and request.endpoint != "favicon":
-		if ("password" not in session) or (session["password"] != Config.Password):
-			Logger.log("warning", "Request: external request from " + request.remote_addr)
-			return login()
-		elif request.endpoint != "cameras" and request.endpoint != "camerasImage":
+	if not isLocalIP:
+		if request.endpoint != "cameras" and request.endpoint != "camerasImage":
 			infos = [(name, myHome.systems[name].enabled) for name in sorted(myHome.systems.keys())]
 			content = "<h2 class='title'>External Request</h2>\n"
 			for info in infos:
@@ -35,12 +40,6 @@ def beforeRequest():
 			return render_template("base.html", content=content)
 		else:
 			Logger.log("warning", "Request: external request to cameras from " + request.remote_addr)
-	
-	if ("password" not in session) or (session["password"] != Config.Password):
-		if request.endpoint == "cameras" or request.endpoint == "camerasImage":
-			abort(404)
-		if request.endpoint != "login":
-			return redirect("/login")
 	
 	session.modified = True
 	
@@ -129,6 +128,8 @@ def MediaPlayer():
 			mediaPlayerSystem.play(data["play"])
 		if "action" in data and hasattr(mediaPlayerSystem, data["action"]):
 			getattr(mediaPlayerSystem, data["action"])() # call function with set action name
+		if "command" in data:
+			mediaPlayerSystem.command(data["command"])
 		if "volume" in data:
 			mediaPlayerSystem.volume = int(data["volume"])
 			myHome.systemChanged = True

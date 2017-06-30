@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>My Kitchen</title>
+		<!--<link rel="icon" href="http://icons.veryicon.com/ico/System/Icons8%20Metro%20Style/Kitchen%20Cooker.ico" />-->
+		<link rel="icon" href="http://icons.iconarchive.com/icons/sirea/virtual-kitchen/128/Pot-icon.png" />
+		<meta name='viewport' content='initial-scale=1.0, width=device-width'/>
+		<meta charset="utf-8">
+		
+		<style>
+			body {
+				background: #C0A166;
+				max-width: 300px;
+				margin: 0 auto;
+				text-align: center;
+				font-size: 14px;
+			}
+			
+			header h1 img {
+				width:48px;
+				height:48px;
+				vertical-align: middle;
+			}
+			
+			h2 { margin: 15px 10px 10px 10px; }
+			
+			summary h2 { display: inline-block;	}
+			
+			ul {
+				margin: 5px 30px;
+				padding: 0px;
+				text-align: left;
+				list-style-type: none;
+			}
+			
+			footer { padding: 5px; }
+			
+			button { cursor: pointer; }
+			
+			ul#suggestionsList li {
+				display: inline-block;
+				padding: 3px 7px;
+				margin: 5px;
+				background: #999;
+				border-radius: 5px;
+				cursor: pointer;
+			}
+			
+			ul#dishesList { text-align: center; }
+			//ul#dishesList li, ul#historyList li { margin: 0px 20px; };
+			
+			ul#historyList li {
+				white-space: pre;
+				font-family: monospace;
+			}
+			
+			ul#historyList li:nth-child(odd) { color: #555; }
+		</style>
+	</head>
+	
+	<script>
+		function addCooked(dish) {
+			if (dishes.indexOf(dish) == -1) {
+				dishes.push(dish);
+				dishes.sort();
+			}
+			historyDishes.push({ name: dish, date: (new Date()).valueOf() });
+			refreshLists();
+		}
+	
+		function enterCooked(e) {
+			if (e.keyCode != 13)
+				return true;
+			
+			addCooked(e.srcElement.value);
+			e.srcElement.value = "";
+			return true;
+		}
+		
+		function refreshLists() {
+			refreshSuggestions();
+			
+			var dishesList = document.getElementById("dishesList");
+			while (dishesList.lastChild) // clear children
+				dishesList.removeChild(dishesList.lastChild);
+			for (i = 0; i < dishes.length; i++) {
+				var li = document.createElement("li");
+				li.innerHTML = dishes[i];
+				dishesList.appendChild(li);
+			}
+
+			var dishesDatalist = document.getElementById("dishesDatalist");
+			while (dishesDatalist.lastChild) // clear children
+				dishesDatalist.removeChild(dishesDatalist.lastChild);
+			for (i = 0; i < dishes.length; i++) {
+				var option = document.createElement("option");
+				option.innerHTML = dishes[i];
+				dishesDatalist.appendChild(option);
+			}
+			
+			var temp = historyDishes.slice().reverse();
+			var historyList = document.getElementById("historyList");
+			while (historyList.lastChild) // clear children
+				historyList.removeChild(historyList.lastChild);
+			for (i = 0; i < temp.length; i++) {
+				var li = document.createElement("li");
+				var date = new Date(temp[i].date);
+				li.innerHTML = date.toLocaleDateString() + ": " + temp[i].name;
+				historyList.appendChild(li);
+			}
+			
+			saveLists();
+		}
+		
+		function refreshSuggestions() {
+			var temp = [];
+			for (i = 0; i < dishes.length; i++) {
+				temp.push({ name: dishes[i], date: 0 });
+				
+				for (j = 0; j < historyDishes.length; j++) {
+					if (temp[i].name == historyDishes[j].name && 
+						temp[i].date < historyDishes[j].date)
+						temp[i].date = historyDishes[j].date;
+				}
+			}
+			temp.sort(function(a, b) { return a.date - b.date; });
+		
+			suggestions = [];
+			for (i = 0; i < Math.min(MAX_SUGGESTIONS, temp.length); i++)
+				suggestions.push(temp[i].name);
+			
+			var suggestionsList = document.getElementById("suggestionsList");
+			while (suggestionsList.lastChild) // clear children
+				suggestionsList.removeChild(suggestionsList.lastChild);
+			for (i = 0; i < suggestions.length; i++) {
+				var li = document.createElement("li");
+				li.innerHTML = suggestions[i];
+				li.onclick = function(e) { addCooked(e.srcElement.innerHTML); };
+				suggestionsList.appendChild(li);
+			}
+		}
+		
+		function saveLists() {
+			localStorage.setItem("dishes", JSON.stringify(dishes));
+			localStorage.setItem("historyDishes", JSON.stringify(historyDishes));
+		}
+		
+		function loadLists() {
+			dishes = JSON.parse(localStorage.getItem("dishes"));
+			historyDishes = JSON.parse(localStorage.getItem("historyDishes"));
+		}
+		
+		function clearLists(silent=false) {
+			if (!silent && !confirm("Are you sure?"))
+				return;
+		
+			dishes = [];
+			historyDishes = [];
+			suggestions = [];
+			localStorage.clear();
+			
+			refreshLists();
+		}
+		
+		function saveFile() {
+			var content = JSON.stringify([dishes, historyDishes])
+			var a = document.createElement("a");
+			var file = new Blob(content, {type: "text/plain"});
+			a.href = URL.createObjectURL(file);
+			a.download = "MyKitchen.json";
+			a.click();
+		}
+		
+		function loadFile() {
+			var input = document.createElement("input");
+			input.type = "file";
+			input.addEventListener('change', function(e) {
+				var file = e.target.files[0];
+				var reader = new FileReader();
+				reader.onload = function(evt) {
+					clearLists(true);
+					var content = JSON.parse(evt.target.result);
+					dishes = content[0];
+					historyDishes = content[1];
+					refreshLists();
+				}
+				reader.readAsText(file)
+			}, false);
+			input.click();
+		}
+	</script>
+	
+	<script>
+		const MAX_SUGGESTIONS = 10;
+		
+		var dishes = [];
+		var historyDishes = [];
+		var suggestions = [];
+		
+		loadLists();
+		window.onload = function() {
+			refreshLists();
+		}
+	</script>
+
+	<body>
+		<header>
+			<h1>
+				<img src="http://icons.iconarchive.com/icons/sirea/virtual-kitchen/128/Pot-icon.png"/>
+				My Kitchen
+			</h1>
+		</header>
+		
+		<section>
+			<h2>Suggestions</h2>
+			<ul id="suggestionsList"></ul>
+		</section>
+		
+		<section>
+			<h2>Cooked</h2>
+			<input id="cooked" type="text" list="dishesDatalist" placeholder="Type what you cooked" onkeypress="return enterCooked(event)">
+			<button onclick="addCooked(document.getElementById('cooked').value); document.getElementById('cooked').value='';">></button>
+			<datalist id="dishesDatalist"></datalist>
+		</section>
+		
+		<details open>
+			<summary><h2>All Dishes</h2></summary>
+			<ul id="dishesList"></ul>
+		</details>
+		
+		<details>
+			<summary><h2>History</h2></summary>
+			<ul id="historyList"></ul>
+		</details>
+		
+		<footer>
+			<button onclick="saveFile()">Save</button>
+			<button onclick="loadFile()">Load</button>
+			<button onclick="clearLists()">Clear</button>
+		</footer>
+	</body>
+</html>
