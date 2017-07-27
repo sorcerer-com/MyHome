@@ -165,7 +165,7 @@
 		function saveFile() {
 			var content = JSON.stringify([dishes, historyDishes])
 			var a = document.createElement("a");
-			var file = new Blob(content, {type: "text/plain"});
+			var file = new Blob([content], {type: "text/plain"});
 			a.href = URL.createObjectURL(file);
 			a.download = "MyKitchen.json";
 			a.click();

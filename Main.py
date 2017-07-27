@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys, os, threading, subprocess
-sys.path.append(os.path.join(os.getcwd(), "External"))
+sys.path.insert(0, os.path.join(os.getcwd(), "External"))
 os.chdir("bin")
 
 from External.flask import *
@@ -180,16 +180,24 @@ def Sensors():
 		value = data["enabled"] == "True"
 		sensorsSystem.enabled = value
 		return redirect("/Sensors")
-
-	data1 = [[key for key in sorted(sensorsSystem._data.keys()) if None not in sensorsSystem._data[key] and (datetime.now() - key).days < 1]]
-	data2 = [[key for key in sorted(sensorsSystem._data.keys()) if None not in sensorsSystem._data[key] and (datetime.now() - key).days >= 1 and (datetime.now() - key).days <= 5]]
-	data3 = [[key for key in sorted(sensorsSystem._data.keys()) if None not in sensorsSystem._data[key] and (datetime.now() - key).days > 5]]
-	for i in range(0, len(sensorsSystem.sensorTypes)):
-		data1.append([sensorsSystem._data[key][i] for key in data1[0]])
-		data2.append([sensorsSystem._data[key][i] for key in data2[0]])
-		data3.append([sensorsSystem._data[key][i] for key in data3[0]])
-	names = [sensorsSystem.sensorNames[i] + " " + sensorsSystem.sensorTypes[i] for i in range(0, len(sensorsSystem.sensorTypes))] 
-	return render_template("Sensors.html", names=names, data1=data1, data2=data2, data3=data3, enabled=sensorsSystem.enabled)
+		
+	data = {}
+	for i in range(0, len(sensorsSystem._data)):
+		name = sensorsSystem.sensorNames[i]
+		temp = []
+		temp.append({key: value for (key, value) in sensorsSystem._data[i].items() if (datetime.now() - key).days < 1})
+		temp.append({key: value for (key, value) in sensorsSystem._data[i].items() if (datetime.now() - key).days >= 1 and (datetime.now() - key).days <= 5})
+		temp.append({key: value for (key, value) in sensorsSystem._data[i].items() if (datetime.now() - key).days > 5})
+		data[name] = [[], [], []]
+		for j in range(0, len(temp)):
+			for (key, value) in temp[j].items():
+				for i in range(0, len(value)):
+					if len(data[name][j]) <= i:
+						data[name][j].append({})
+					data[name][j][i][key] = round(value[i], 2)
+	
+	names = ["Motion", "Temperature", "Humidity", "Smoke", "Lighting"]
+	return render_template("Sensors.html", names=names, data=data, enabled=sensorsSystem.enabled)
 
 @app.route("/AI", methods=["GET", "POST"])
 def AI():

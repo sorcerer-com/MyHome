@@ -50,6 +50,25 @@ function toggleDetails(sender) {
 			details[i].removeAttribute("open");
 }
 
+
+function openTab(sender) {
+	var tabContainer = sender.parentElement;
+	var idx = Array.prototype.indexOf.call(tabContainer.children, sender);
+	
+	var tabButtons = tabContainer.getElementsByTagName("button");
+    for (i = 0; i < tabButtons.length; i++) {
+        tabButtons[i].className = tabButtons[i].className.replace("active", "");
+    }
+	sender.className += " active";
+	
+	var tabContents = tabContainer.getElementsByClassName("tabContent");
+    for (i = 0; i < tabContents.length; i++) {
+        tabContents[i].className = tabContents[i].className.replace(" active", "");
+		if (i == idx)
+			tabContents[i].className += " active";
+    }
+}
+
 			
 function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 	var axisStyle = '#000000';
@@ -69,7 +88,7 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 	var canvas = document.getElementById(canvasId);
 	var context = canvas.getContext("2d");
 	var withEps = (canvas.width - 20) / (values.length - 1);
-	var heightEps = (canvas.height - 40) / Math.max(maxValue - minValue, 1);
+	var heightEps = (canvas.height - 40) / Math.max(maxValue - minValue, 0.01);
 	var start = {x: 10, y: canvas.height - 20};
 	
 	if (drawAxis) {					
@@ -84,7 +103,7 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 		context.strokeStyle = axisStyle;
 		context.stroke();
 		
-		for (i = minValue; i <= maxValue; i++) {
+		for (i = Math.round(minValue); i <= maxValue; i++) {
 			if (i % Math.max(Math.round(textHeight / heightEps), 1) != 0)
 				continue;
 			// draw horizontal line

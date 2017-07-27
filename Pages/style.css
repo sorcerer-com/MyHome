@@ -236,3 +236,33 @@ a.button
 	border-radius: 5px;
 	margin: 3px;
 }
+
+/* tab */
+div.tabContainer button
+{
+    background-color: rgba(255, 255, 255, 0.4);
+	float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 10px 10px 4px 10px;
+    transition: 0.5s;
+}
+
+div.tabContainer button:hover {
+    background-color: rgba(128, 128, 128, 0.4);
+}
+
+div.tabContainer button.active {
+    background-color: rgba(64, 64, 64, 0.3);rgba(128, 128, 128, 0.4);
+}
+
+div.tabContent {
+	clear: both;
+	padding: 10px 0px 0px 0px;
+	display: none;
+}
+
+div.tabContent.active {
+	display: block;
+}

@@ -29,27 +29,32 @@ class MHome(object):
 		
 		self._lastBackupSettings = datetime.now()
 		self.loadSettings()
-		self.update()
+		
+		t = threading.Thread(target=self.update)
+		t.daemon = True
+		t.start()
 		
 	def __del__(self):
 		Logger.log("info", "Stop My Home")
 		MHome._UpdateTime = 0
 		self.saveSettings();
+		for key in self.systems.keys():
+			del self.systems[key]
 
 	def update(self):
-		#start = datetime.now()
-		# update systems
-		for system in self.systems.values():
-			if system.enabled:
-				system.update()
-				
-		if self.systemChanged:
-			self.saveSettings();
-			self.systemChanged = False
-		#Logger.log("info", str(datetime.now() - start))
-				
-		if MHome._UpdateTime > 0:
-			Timer(MHome._UpdateTime, self.update).start()
+		while(MHome._UpdateTime > 0):
+			#start = datetime.now()
+			# update systems
+			for system in self.systems.values():
+				if system.enabled:
+					system.update()
+					
+			if self.systemChanged:
+				self.saveSettings();
+				self.systemChanged = False
+			#Logger.log("info", str(datetime.now() - start))
+			
+			time.sleep(MHome._UpdateTime)
 			
 	def sendAlert(self, msg):
 		Logger.log("info", "My Home: send alert '%s'" % msg)
@@ -71,7 +76,7 @@ class MHome(object):
 		if os.path.isfile(Config.DataFileName):
 			with open(Config.DataFileName, 'r') as f:
 				data = f.read().decode("utf8").split("\n")
-		self._lastBackupSettings = parse(data[0], datetime)
+			self._lastBackupSettings = parse(data[0], datetime)
 			
 		Config.load(configParser)
 		

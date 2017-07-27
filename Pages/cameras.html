@@ -8,13 +8,13 @@
 		</div>
 		
 		<summary><b>Sensors Data</b></summary>
-		{% for data in sensorsData %}
-			{{ data }}<br/>
+		{% for key, value in sensorsData.iteritems() %}
+			{{ key }}: {{ value }}<br/>
 		{% endfor %}
 		<br/><br/>
 		
-		{% for i in range(camerasCount) %}
+	{% for i in range(camerasCount) %}
 		<summary><b>Camera {{ i }}</b></summary>
 		<img src='/cameras/{{ i }}'/>
-		{% endfor %}
+	{% endfor %}
 {% endblock %}
