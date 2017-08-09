@@ -36,7 +36,7 @@ import sys
 import termios
 
 import serial
-from serial.serialutil import SerialBase, SerialException, to_bytes, \
+from .serialutil import SerialBase, SerialException, to_bytes, \
     portNotOpenError, writeTimeoutError, Timeout
 
 

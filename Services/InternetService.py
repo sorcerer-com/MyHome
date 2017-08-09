@@ -102,6 +102,7 @@ class InternetService:
 				if number.startswith("359"):
 					number = "0" + number[3:]
 				br = External.mechanize.Browser()
+				br.set_handle_robots(False)
 				# login
 				br.open("http://my.telenor.bg")
 				br.select_form(nr=0)

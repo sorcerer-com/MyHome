@@ -32,3 +32,6 @@ sudo apt-get install python-xlib
 #https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md
 
 sudo apt-get install git
+
+sudo apt-get install python-opencv
+sudo apt-get install libopencv-photo2.4

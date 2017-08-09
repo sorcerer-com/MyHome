@@ -19,16 +19,16 @@ currently just identical to the port name.
 import glob
 import sys
 import os
-from serial.tools import list_ports_common
+from . import list_ports_common
 
 # try to detect the OS so that a device can be selected...
 plat = sys.platform.lower()
 
 if plat[:5] == 'linux':    # Linux (confirmed)  # noqa
-    from serial.tools.list_ports_linux import comports
+    from .list_ports_linux import comports
 
 elif plat[:6] == 'darwin':   # OS X (confirmed)
-    from serial.tools.list_ports_osx import comports
+    from .list_ports_osx import comports
 
 elif plat == 'cygwin':       # cygwin/win32
     # cygwin accepts /dev/com* in many contexts

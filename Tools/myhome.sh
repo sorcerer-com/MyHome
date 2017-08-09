@@ -11,7 +11,7 @@
 ### END INIT INFO
 
 # Change the next 3 lines to suit where you install your script and what you want to call it
-DIR=/home/pi/Documents/MyHome
+DIR=/home/pi/MyHome
 DAEMON=$DIR/Start.py
 DAEMON_NAME=MyHome
 

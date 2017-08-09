@@ -27,3 +27,5 @@ PyKeyboard - module for keyboard control
 PyMouse - module for mouse control
 
 timeout-decorator - function decorator(attribute) for timeout
+
+serial - Python Serial Port Extension

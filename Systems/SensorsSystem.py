@@ -96,7 +96,7 @@ class SensorsSystem(BaseSystem):
 		self._checkForNewDevice()
 		
 		# ask for data
-		sendCommand = len(self._serials) > 0
+		sendCommand = True
 		for serial in self._serials:
 			try:
 				serial.write("getdata")
@@ -119,7 +119,7 @@ class SensorsSystem(BaseSystem):
 		openedPorts = [serial.port for serial in self._serials]
 		ports = list(External.serial.tools.list_ports.comports())
 		for p in ports:
-			if p.device not in openedPorts and p.name.startswith("ttyUSB") and p.description != "n/a":
+			if p.device not in openedPorts and p.name != None and p.name.startswith("ttyUSB") and p.description != "n/a":
 				serial = None
 				try:
 					serial = Serial(p.device, baudrate=9600, timeout=2) # open serial port

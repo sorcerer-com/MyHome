@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys, os, threading, subprocess
-sys.path.insert(0, os.path.join(os.getcwd(), "External"))
+sys.path.append(os.path.join(os.getcwd(), "External"))
 os.chdir("bin")
 
 from External.flask import *
@@ -97,6 +97,7 @@ def camerasImage(cameraIndex):
 		while True:
 			img = sensorsSystem.getImage(int(cameraIndex), (320, 240))
 			if img == None:
+				time.sleep(1)
 				continue
 			frame = StringIO.StringIO()
 			img.save(frame, "jpeg")
