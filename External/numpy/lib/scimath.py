@@ -15,8 +15,9 @@ Similarly, `sqrt`, other base logarithms, `power` and trig functions are
 correctly handled.  See their respective docstrings for specific examples.
 
 """
+from __future__ import division, absolute_import, print_function
 
-__all__ = ['sqrt', 'log', 'log2', 'logn','log10', 'power', 'arccos',
+__all__ = ['sqrt', 'log', 'log2', 'logn', 'log10', 'power', 'arccos',
            'arcsin', 'arctanh']
 
 import numpy.core.numeric as nx
@@ -83,7 +84,7 @@ def _tocomplex(arr):
     array([ 1.+0.j,  2.+0.j,  3.+0.j], dtype=complex64)
     """
     if issubclass(arr.dtype.type, (nt.single, nt.byte, nt.short, nt.ubyte,
-                                   nt.ushort,nt.csingle)):
+                                   nt.ushort, nt.csingle)):
         return arr.astype(nt.csingle)
     else:
         return arr.astype(nt.cdouble)

@@ -1,3 +1,5 @@
+from __future__ import division, absolute_import, print_function
+
 __all__ = ['matrix', 'bmat', 'mat', 'asmatrix']
 
 import sys
@@ -17,7 +19,12 @@ if sys.version_info[0] >= 3:
                 return None
     _table = _NumCharTable()
     def _eval(astr):
-        return eval(astr.translate(_table))
+        str_ = astr.translate(_table)
+        if not str_:
+            raise TypeError("Invalid data string supplied: " + astr)
+        else:
+            return eval(str_)
+
 else:
     _table = [None]*256
     for k in range(256):
@@ -32,7 +39,11 @@ else:
     del k
 
     def _eval(astr):
-        return eval(astr.translate(_table,_todelete))
+        str_ = astr.translate(_table, _todelete)
+        if not str_:
+            raise TypeError("Invalid data string supplied: " + astr)
+        else:
+            return eval(str_)
 
 def _convert_from_string(data):
     rows = data.split(';')
@@ -43,11 +54,11 @@ def _convert_from_string(data):
         newrow = []
         for col in trow:
             temp = col.split()
-            newrow.extend(map(_eval,temp))
+            newrow.extend(map(_eval, temp))
         if count == 0:
             Ncols = len(newrow)
         elif len(newrow) != Ncols:
-            raise ValueError, "Rows not the same size."
+            raise ValueError("Rows not the same size.")
         count += 1
         newdata.append(newrow)
     return newdata
@@ -84,7 +95,7 @@ def asmatrix(data, dtype=None):
     """
     return matrix(data, dtype=dtype, copy=False)
 
-def matrix_power(M,n):
+def matrix_power(M, n):
     """
     Raise a square matrix to the (integer) power `n`.
 
@@ -158,7 +169,7 @@ def matrix_power(M,n):
     M = asanyarray(M)
     if len(M.shape) != 2 or M.shape[0] != M.shape[1]:
         raise ValueError("input must be a square array")
-    if not issubdtype(type(n),int):
+    if not issubdtype(type(n), int):
         raise TypeError("exponent must be an integer")
 
     from numpy.linalg import inv
@@ -174,21 +185,21 @@ def matrix_power(M,n):
     result = M
     if n <= 3:
         for _ in range(n-1):
-            result=N.dot(result,M)
+            result=N.dot(result, M)
         return result
 
     # binary decomposition to reduce the number of Matrix
     # multiplications for n > 3.
     beta = binary_repr(n)
-    Z,q,t = M,0,len(beta)
+    Z, q, t = M, 0, len(beta)
     while beta[t-q-1] == '0':
-        Z = N.dot(Z,Z)
+        Z = N.dot(Z, Z)
         q += 1
     result = Z
-    for k in range(q+1,t):
-        Z = N.dot(Z,Z)
+    for k in range(q+1, t):
+        Z = N.dot(Z, Z)
         if beta[t-k-1] == '1':
-            result = N.dot(result,Z)
+            result = N.dot(result, Z)
     return result
 
 
@@ -258,11 +269,11 @@ class matrix(N.ndarray):
         ndim = arr.ndim
         shape = arr.shape
         if (ndim > 2):
-            raise ValueError, "matrix must be 2-dimensional"
+            raise ValueError("matrix must be 2-dimensional")
         elif ndim == 0:
-            shape = (1,1)
+            shape = (1, 1)
         elif ndim == 1:
-            shape = (1,shape[0])
+            shape = (1, shape[0])
 
         order = False
         if (ndim == 2) and arr.flags.fortran:
@@ -289,13 +300,13 @@ class matrix(N.ndarray):
                 self.shape = newshape
                 return
             elif (ndim > 2):
-                raise ValueError, "shape too large to be a matrix."
+                raise ValueError("shape too large to be a matrix.")
         else:
             newshape = self.shape
         if ndim == 0:
-            self.shape = (1,1)
+            self.shape = (1, 1)
         elif ndim == 1:
-            self.shape = (1,newshape[0])
+            self.shape = (1, newshape[0])
         return
 
     def __getitem__(self, index):
@@ -319,13 +330,13 @@ class matrix(N.ndarray):
             except:
                 n = 0
             if n > 1 and isscalar(index[1]):
-                out.shape = (sh,1)
+                out.shape = (sh, 1)
             else:
-                out.shape = (1,sh)
+                out.shape = (1, sh)
         return out
 
     def __mul__(self, other):
-        if isinstance(other,(N.ndarray, list, tuple)) :
+        if isinstance(other, (N.ndarray, list, tuple)) :
             # This promotes 1-D vectors to row vectors
             return N.dot(self, asmatrix(other))
         if isscalar(other) or not hasattr(other, '__rmul__') :
@@ -367,13 +378,22 @@ class matrix(N.ndarray):
         orientation.
         """
         if axis is None:
-            return self[0,0]
+            return self[0, 0]
         elif axis==0:
             return self
         elif axis==1:
             return self.transpose()
         else:
-            raise ValueError, "unsupported axis"
+            raise ValueError("unsupported axis")
+
+    def _collapse(self, axis):
+        """A convenience function for operations that want to collapse
+        to a scalar like _align, but are using keepdims=True
+        """
+        if axis is None:
+            return self[0, 0]
+        else:
+            return self
 
     # Necessary because base-class tolist expects dimension
     #  reduction by x[0]
@@ -432,7 +452,7 @@ class matrix(N.ndarray):
                 [ 7.]])
 
         """
-        return N.ndarray.sum(self, axis, dtype, out)._align(axis)
+        return N.ndarray.sum(self, axis, dtype, out, keepdims=True)._collapse(axis)
 
     def mean(self, axis=None, dtype=None, out=None):
         """
@@ -466,7 +486,7 @@ class matrix(N.ndarray):
                 [ 9.5]])
 
         """
-        return N.ndarray.mean(self, axis, dtype, out)._align(axis)
+        return N.ndarray.mean(self, axis, dtype, out, keepdims=True)._collapse(axis)
 
     def std(self, axis=None, dtype=None, out=None, ddof=0):
         """
@@ -500,7 +520,7 @@ class matrix(N.ndarray):
                 [ 1.11803399]])
 
         """
-        return N.ndarray.std(self, axis, dtype, out, ddof)._align(axis)
+        return N.ndarray.std(self, axis, dtype, out, ddof, keepdims=True)._collapse(axis)
 
     def var(self, axis=None, dtype=None, out=None, ddof=0):
         """
@@ -534,7 +554,7 @@ class matrix(N.ndarray):
                 [ 1.25]])
 
         """
-        return N.ndarray.var(self, axis, dtype, out, ddof)._align(axis)
+        return N.ndarray.var(self, axis, dtype, out, ddof, keepdims=True)._collapse(axis)
 
     def prod(self, axis=None, dtype=None, out=None):
         """
@@ -567,7 +587,7 @@ class matrix(N.ndarray):
                 [7920]])
 
         """
-        return N.ndarray.prod(self, axis, dtype, out)._align(axis)
+        return N.ndarray.prod(self, axis, dtype, out, keepdims=True)._collapse(axis)
 
     def any(self, axis=None, out=None):
         """
@@ -577,9 +597,9 @@ class matrix(N.ndarray):
 
         Parameters
         ----------
-        axis: int, optional
+        axis : int, optional
             Axis along which logical OR is performed
-        out: ndarray, optional
+        out : ndarray, optional
             Output to existing array instead of creating new one, must have
             same shape as expected output
 
@@ -590,7 +610,7 @@ class matrix(N.ndarray):
                 returns `ndarray`
 
         """
-        return N.ndarray.any(self, axis, out)._align(axis)
+        return N.ndarray.any(self, axis, out, keepdims=True)._collapse(axis)
 
     def all(self, axis=None, out=None):
         """
@@ -630,7 +650,7 @@ class matrix(N.ndarray):
                 [False]], dtype=bool)
 
         """
-        return N.ndarray.all(self, axis, out)._align(axis)
+        return N.ndarray.all(self, axis, out, keepdims=True)._collapse(axis)
 
     def max(self, axis=None, out=None):
         """
@@ -665,7 +685,7 @@ class matrix(N.ndarray):
                 [11]])
 
         """
-        return N.ndarray.max(self, axis, out)._align(axis)
+        return N.ndarray.max(self, axis, out, keepdims=True)._collapse(axis)
 
     def argmax(self, axis=None, out=None):
         """
@@ -735,7 +755,7 @@ class matrix(N.ndarray):
                 [-11]])
 
         """
-        return N.ndarray.min(self, axis, out)._align(axis)
+        return N.ndarray.min(self, axis, out, keepdims=True)._collapse(axis)
 
     def argmin(self, axis=None, out=None):
         """
@@ -822,7 +842,7 @@ class matrix(N.ndarray):
 
         Raises
         ------
-        numpy.linalg.linalg.LinAlgError: Singular matrix
+        numpy.linalg.LinAlgError: Singular matrix
             If `self` is singular.
 
         See Also
@@ -842,7 +862,7 @@ class matrix(N.ndarray):
                 [ 0.,  1.]])
 
         """
-        M,N = self.shape
+        M, N = self.shape
         if M == N:
             from numpy.dual import inv as func
         else:
@@ -977,7 +997,7 @@ class matrix(N.ndarray):
     H = property(getH, None, doc="hermitian (conjugate) transpose")
     I = property(getI, None, doc="inverse")
 
-def _from_string(str,gdict,ldict):
+def _from_string(str, gdict, ldict):
     rows = str.split(';')
     rowtup = []
     for row in rows:
@@ -995,11 +1015,11 @@ def _from_string(str,gdict,ldict):
                 try:
                     thismat = gdict[col]
                 except KeyError:
-                    raise KeyError, "%s not found" % (col,)
+                    raise KeyError("%s not found" % (col,))
 
             coltup.append(thismat)
-        rowtup.append(concatenate(coltup,axis=-1))
-    return concatenate(rowtup,axis=0)
+        rowtup.append(concatenate(coltup, axis=-1))
+    return concatenate(rowtup, axis=0)
 
 
 def bmat(obj, ldict=None, gdict=None):
@@ -1064,10 +1084,10 @@ def bmat(obj, ldict=None, gdict=None):
         arr_rows = []
         for row in obj:
             if isinstance(row, N.ndarray):  # not 2-d
-                return matrix(concatenate(obj,axis=-1))
+                return matrix(concatenate(obj, axis=-1))
             else:
-                arr_rows.append(concatenate(row,axis=-1))
-        return matrix(concatenate(arr_rows,axis=0))
+                arr_rows.append(concatenate(row, axis=-1))
+        return matrix(concatenate(arr_rows, axis=0))
     if isinstance(obj, N.ndarray):
         return matrix(obj)
 

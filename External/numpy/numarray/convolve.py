@@ -1,3 +1,5 @@
+from __future__ import division, absolute_import, print_function
+
 try:
     from stsci.convolve import *
 except ImportError:

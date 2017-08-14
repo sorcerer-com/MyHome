@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 import sys, os, threading, subprocess
-sys.path.append(os.path.join(os.getcwd(), "External"))
+sys.path.insert(0, os.path.join(os.getcwd(), "External"))
 os.chdir("bin")
 
 from External.flask import *
@@ -19,18 +19,19 @@ def beforeRequest():
 	if request.endpoint == "robots" or request.endpoint == "favicon" or request.endpoint == "images" or \
 		request.endpoint == "style" or request.endpoint == "scripts":
 		return
-	
-	if ("password" not in session) or (session["password"] != Config.Password): # pass only login
-		if request.endpoint == "index":
-			return redirect("/login")
-		elif request.endpoint == "login":
-			return login()
-		else:
-			abort(404)
-		
+
 	isLocalIP = request.remote_addr == "127.0.0.1";
 	for ip in Config.InternalIPs:
 		isLocalIP |= request.remote_addr.startswith(ip)
+	
+	if ("password" not in session) or (session["password"] != Config.Password): # pass only login
+		if request.endpoint == "login":
+			return login()
+		elif not isLocalIP:
+			abort(404)
+		else:
+			return redirect("/login")
+		
 	if not isLocalIP:
 		if request.endpoint != "cameras" and request.endpoint != "camerasImage":
 			infos = [(name, myHome.systems[name].enabled) for name in sorted(myHome.systems.keys())]

@@ -3,7 +3,9 @@
 We use this instead of upstream because upstream inspect is slow to import, and
 significanly contributes to numpy import times. Importing this copy has almost
 no overhead.
+
 """
+from __future__ import division, absolute_import, print_function
 
 import types
 
@@ -125,11 +127,11 @@ def getargspec(func):
     """
 
     if ismethod(func):
-        func = func.im_func
+        func = func.__func__
     if not isfunction(func):
         raise TypeError('arg is not a Python function')
-    args, varargs, varkw = getargs(func.func_code)
-    return args, varargs, varkw, func.func_defaults
+    args, varargs, varkw = getargs(func.__code__)
+    return args, varargs, varkw, func.__defaults__
 
 def getargvalues(frame):
     """Get information about arguments passed into a particular frame.
@@ -149,8 +151,8 @@ def joinseq(seq):
 
 def strseq(object, convert, join=joinseq):
     """Recursively walk a sequence, stringifying each element."""
-    if type(object) in [types.ListType, types.TupleType]:
-        return join(map(lambda o, c=convert, j=join: strseq(o, c, j), object))
+    if type(object) in [list, tuple]:
+        return join([strseq(_o, convert, join) for _o in object])
     else:
         return convert(object)
 
@@ -209,11 +211,11 @@ if __name__ == '__main__':
     def foo(x, y, z=None):
         return None
 
-    print inspect.getargs(foo.func_code)
-    print getargs(foo.func_code)
+    print(inspect.getargs(foo.__code__))
+    print(getargs(foo.__code__))
 
-    print inspect.getargspec(foo)
-    print getargspec(foo)
+    print(inspect.getargspec(foo))
+    print(getargspec(foo))
 
-    print inspect.formatargspec(*inspect.getargspec(foo))
-    print formatargspec(*getargspec(foo))
+    print(inspect.formatargspec(*inspect.getargspec(foo)))
+    print(formatargspec(*getargspec(foo)))

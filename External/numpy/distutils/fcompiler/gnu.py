@@ -1,3 +1,5 @@
+from __future__ import division, absolute_import, print_function
+
 import re
 import os
 import sys
@@ -33,13 +35,13 @@ class GnuFCompiler(FCompiler):
 
     def gnu_version_match(self, version_string):
         """Handle the different versions of GNU fortran compilers"""
-        m = re.match(r'GNU Fortran', version_string)
+        m = re.search(r'GNU Fortran', version_string)
         if not m:
             return None
-        m = re.match(r'GNU Fortran\s+95.*?([0-9-.]+)', version_string)
+        m = re.search(r'GNU Fortran\s+95.*?([0-9-.]+)', version_string)
         if m:
             return ('gfortran', m.group(1))
-        m = re.match(r'GNU Fortran.*?([0-9-.]+)', version_string)
+        m = re.search(r'GNU Fortran.*?\-?([0-9-.]+)', version_string)
         if m:
             v = m.group(1)
             if v.startswith('0') or v.startswith('2') or v.startswith('3'):
@@ -168,7 +170,7 @@ class GnuFCompiler(FCompiler):
         if d is not None:
             g2c = self.g2c + '-pic'
             f = self.static_lib_format % (g2c, self.static_lib_extension)
-            if not os.path.isfile(os.path.join(d,f)):
+            if not os.path.isfile(os.path.join(d, f)):
                 g2c = self.g2c
         else:
             g2c = self.g2c
@@ -251,7 +253,7 @@ class Gnu95FCompiler(GnuFCompiler):
     executables = {
         'version_cmd'  : ["<F90>", "--version"],
         'compiler_f77' : [None, "-Wall", "-ffixed-form",
-		"-fno-second-underscore"] + _EXTRAFLAGS,
+                          "-fno-second-underscore"] + _EXTRAFLAGS,
         'compiler_f90' : [None, "-Wall", "-fno-second-underscore"] + _EXTRAFLAGS,
         'compiler_fix' : [None, "-Wall", "-ffixed-form",
                           "-fno-second-underscore"] + _EXTRAFLAGS,
@@ -370,10 +372,11 @@ def _can_target(cmd, arch):
 if __name__ == '__main__':
     from distutils import log
     log.set_verbosity(2)
+
     compiler = GnuFCompiler()
     compiler.customize()
     print(compiler.get_version())
-    raw_input('Press ENTER to continue...')
+
     try:
         compiler = Gnu95FCompiler()
         compiler.customize()
@@ -381,4 +384,3 @@ if __name__ == '__main__':
     except Exception:
         msg = get_exception()
         print(msg)
-    raw_input('Press ENTER to continue...')

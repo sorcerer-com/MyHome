@@ -6,11 +6,11 @@ typedef int (*UFUNC)(long, long, long, void **, long*);
 /* typedef void (*CFUNC_2ARG)(long, void *, void *); */
 /* typedef void (*CFUNC_3ARG)(long, void *, void *, void *); */
 typedef int (*CFUNCfromPyValue)(PyObject *, void *);
-typedef int (*CFUNC_STRIDE_CONV_FUNC)(long, long, maybelong *, 
+typedef int (*CFUNC_STRIDE_CONV_FUNC)(long, long, maybelong *,
 	      void *, long, maybelong*, void *, long, maybelong *);
 
-typedef int (*CFUNC_STRIDED_FUNC)(PyObject *, long, PyArrayObject **, 
-				  char **data); 
+typedef int (*CFUNC_STRIDED_FUNC)(PyObject *, long, PyArrayObject **,
+				  char **data);
 
 #define MAXARRAYS 16
 
@@ -75,4 +75,3 @@ typedef struct {
    CFUNC_DESCR(name, CFUNC_NSTRIDING, 0, 2, 1, 0, 0, 0, 0, 0, 0)
 
 #endif
-

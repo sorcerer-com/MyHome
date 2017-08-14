@@ -1,12 +1,11 @@
+from __future__ import division, absolute_import, print_function
+
 r''' Test the .npy file format.
 
 Set up:
 
     >>> import sys
-    >>> if sys.version_info[0] >= 3:
-    ...     from io import BytesIO as StringIO
-    ... else:
-    ...     from cStringIO import StringIO
+    >>> from io import BytesIO
     >>> from numpy.lib import format
     >>>
     >>> scalars = [
@@ -99,19 +98,19 @@ Test the magic string writing.
 
 Test the magic string reading.
 
-    >>> format.read_magic(StringIO(format.magic(1, 0)))
+    >>> format.read_magic(BytesIO(format.magic(1, 0)))
     (1, 0)
-    >>> format.read_magic(StringIO(format.magic(0, 0)))
+    >>> format.read_magic(BytesIO(format.magic(0, 0)))
     (0, 0)
-    >>> format.read_magic(StringIO(format.magic(255, 255)))
+    >>> format.read_magic(BytesIO(format.magic(255, 255)))
     (255, 255)
-    >>> format.read_magic(StringIO(format.magic(2, 5)))
+    >>> format.read_magic(BytesIO(format.magic(2, 5)))
     (2, 5)
 
 Test the header writing.
 
     >>> for arr in basic_arrays + record_arrays:
-    ...     f = StringIO()
+    ...     f = BytesIO()
     ...     format.write_array_header_1_0(f, arr)   # XXX: arr is not a dict, items gets called on it
     ...     print repr(f.getvalue())
     ...
@@ -259,40 +258,33 @@ Test the header writing.
     "F\x00{'descr': '>c16', 'fortran_order': False, 'shape': (3, 5)}           \n"
     "F\x00{'descr': '>c16', 'fortran_order': True, 'shape': (5, 3)}            \n"
     "F\x00{'descr': '>c16', 'fortran_order': False, 'shape': (3, 3)}           \n"
-    "F\x00{'descr': '|O4', 'fortran_order': False, 'shape': (0,)}              \n"
-    "F\x00{'descr': '|O4', 'fortran_order': False, 'shape': ()}                \n"
-    "F\x00{'descr': '|O4', 'fortran_order': False, 'shape': (15,)}             \n"
-    "F\x00{'descr': '|O4', 'fortran_order': False, 'shape': (3, 5)}            \n"
-    "F\x00{'descr': '|O4', 'fortran_order': True, 'shape': (5, 3)}             \n"
-    "F\x00{'descr': '|O4', 'fortran_order': False, 'shape': (3, 3)}            \n"
-    "F\x00{'descr': '|O4', 'fortran_order': False, 'shape': (0,)}              \n"
-    "F\x00{'descr': '|O4', 'fortran_order': False, 'shape': ()}                \n"
-    "F\x00{'descr': '|O4', 'fortran_order': False, 'shape': (15,)}             \n"
-    "F\x00{'descr': '|O4', 'fortran_order': False, 'shape': (3, 5)}            \n"
-    "F\x00{'descr': '|O4', 'fortran_order': True, 'shape': (5, 3)}             \n"
-    "F\x00{'descr': '|O4', 'fortran_order': False, 'shape': (3, 3)}            \n"
+    "F\x00{'descr': 'O', 'fortran_order': False, 'shape': (0,)}              \n"
+    "F\x00{'descr': 'O', 'fortran_order': False, 'shape': ()}                \n"
+    "F\x00{'descr': 'O', 'fortran_order': False, 'shape': (15,)}             \n"
+    "F\x00{'descr': 'O', 'fortran_order': False, 'shape': (3, 5)}            \n"
+    "F\x00{'descr': 'O', 'fortran_order': True, 'shape': (5, 3)}             \n"
+    "F\x00{'descr': 'O', 'fortran_order': False, 'shape': (3, 3)}            \n"
+    "F\x00{'descr': 'O', 'fortran_order': False, 'shape': (0,)}              \n"
+    "F\x00{'descr': 'O', 'fortran_order': False, 'shape': ()}                \n"
+    "F\x00{'descr': 'O', 'fortran_order': False, 'shape': (15,)}             \n"
+    "F\x00{'descr': 'O', 'fortran_order': False, 'shape': (3, 5)}            \n"
+    "F\x00{'descr': 'O', 'fortran_order': True, 'shape': (5, 3)}             \n"
+    "F\x00{'descr': 'O', 'fortran_order': False, 'shape': (3, 3)}            \n"
     "v\x00{'descr': [('x', '<i4', (2,)), ('y', '<f8', (2, 2)), ('z', '|u1')],\n 'fortran_order': False,\n 'shape': (2,)}         \n"
     "\x16\x02{'descr': [('x', '<i4', (2,)),\n           ('Info',\n            [('value', '<c16'),\n             ('y2', '<f8'),\n             ('Info2',\n              [('name', '|S2'),\n               ('value', '<c16', (2,)),\n               ('y3', '<f8', (2,)),\n               ('z3', '<u4', (2,))]),\n             ('name', '|S2'),\n             ('z2', '|b1')]),\n           ('color', '|S2'),\n           ('info', [('Name', '<U8'), ('Value', '<c16')]),\n           ('y', '<f8', (2, 2)),\n           ('z', '|u1')],\n 'fortran_order': False,\n 'shape': (2,)}      \n"
     "v\x00{'descr': [('x', '>i4', (2,)), ('y', '>f8', (2, 2)), ('z', '|u1')],\n 'fortran_order': False,\n 'shape': (2,)}         \n"
     "\x16\x02{'descr': [('x', '>i4', (2,)),\n           ('Info',\n            [('value', '>c16'),\n             ('y2', '>f8'),\n             ('Info2',\n              [('name', '|S2'),\n               ('value', '>c16', (2,)),\n               ('y3', '>f8', (2,)),\n               ('z3', '>u4', (2,))]),\n             ('name', '|S2'),\n             ('z2', '|b1')]),\n           ('color', '|S2'),\n           ('info', [('Name', '>U8'), ('Value', '>c16')]),\n           ('y', '>f8', (2, 2)),\n           ('z', '|u1')],\n 'fortran_order': False,\n 'shape': (2,)}      \n"
 '''
 
-
 import sys
 import os
 import shutil
 import tempfile
-
-if sys.version_info[0] >= 3:
-    from io import BytesIO as StringIO
-else:
-    from cStringIO import StringIO
+from io import BytesIO
 
 import numpy as np
 from numpy.testing import *
-
 from numpy.lib import format
-
 from numpy.compat import asbytes, asbytes_nested
 
 
@@ -339,11 +331,11 @@ for scalar in scalars:
             # 1-D
             basic,
             # 2-D C-contiguous
-            basic.reshape((3,5)),
+            basic.reshape((3, 5)),
             # 2-D F-contiguous
-            basic.reshape((3,5)).T,
+            basic.reshape((3, 5)).T,
             # 2-D non-contiguous
-            basic.reshape((3,5))[::-1,::2],
+            basic.reshape((3, 5))[::-1, ::2],
         ])
 
 # More complicated record arrays.
@@ -362,8 +354,8 @@ Pdescr = [
 # A plain list of tuples with values for testing:
 PbufferT = [
     # x     y                  z
-    ([3,2], [[6.,4.],[6.,4.]], 8),
-    ([4,3], [[7.,5.],[7.,5.]], 9),
+    ([3, 2], [[6., 4.], [6., 4.]], 8),
+    ([4, 3], [[7., 5.], [7., 5.]], 9),
     ]
 
 
@@ -402,8 +394,8 @@ NbufferT = [
     # x     Info                                                color info        y                  z
     #       value y2 Info2                            name z2         Name Value
     #                name   value    y3       z3
-    ([3,2], (6j, 6., ('nn', [6j,4j], [6.,4.], [1,2]), 'NN', True), 'cc', ('NN', 6j), [[6.,4.],[6.,4.]], 8),
-    ([4,3], (7j, 7., ('oo', [7j,5j], [7.,5.], [2,1]), 'OO', False), 'dd', ('OO', 7j), [[7.,5.],[7.,5.]], 9),
+    ([3, 2], (6j, 6., ('nn', [6j, 4j], [6., 4.], [1, 2]), 'NN', True), 'cc', ('NN', 6j), [[6., 4.], [6., 4.]], 8),
+    ([4, 3], (7j, 7., ('oo', [7j, 5j], [7., 5.], [2, 1]), 'OO', False), 'dd', ('OO', 7j), [[7., 5.], [7., 5.]], 9),
     ]
 
 record_arrays = [
@@ -413,21 +405,68 @@ record_arrays = [
     np.array(NbufferT, dtype=np.dtype(Ndescr).newbyteorder('>')),
 ]
 
+
+#BytesIO that reads a random number of bytes at a time
+class BytesIOSRandomSize(BytesIO):
+    def read(self, size=None):
+        import random
+        size = random.randint(1, size)
+        return super(BytesIOSRandomSize, self).read(size)
+
+
 def roundtrip(arr):
-    f = StringIO()
+    f = BytesIO()
     format.write_array(f, arr)
-    f2 = StringIO(f.getvalue())
+    f2 = BytesIO(f.getvalue())
     arr2 = format.read_array(f2)
     return arr2
 
+
+def roundtrip_randsize(arr):
+    f = BytesIO()
+    format.write_array(f, arr)
+    f2 = BytesIOSRandomSize(f.getvalue())
+    arr2 = format.read_array(f2)
+    return arr2
+
+
+def roundtrip_truncated(arr):
+    f = BytesIO()
+    format.write_array(f, arr)
+    #BytesIO is one byte short
+    f2 = BytesIO(f.getvalue()[0:-1])
+    arr2 = format.read_array(f2)
+    return arr2
+
+
 def assert_equal(o1, o2):
-    assert o1 == o2
+    assert_(o1 == o2)
 
 
 def test_roundtrip():
     for arr in basic_arrays + record_arrays:
         arr2 = roundtrip(arr)
         yield assert_array_equal, arr, arr2
+
+
+def test_roundtrip_randsize():
+    for arr in basic_arrays + record_arrays:
+        if arr.dtype != object:
+            arr2 = roundtrip_randsize(arr)
+            yield assert_array_equal, arr, arr2
+
+
+def test_roundtrip_truncated():
+    for arr in basic_arrays:
+        if arr.dtype != object:
+            yield assert_raises, ValueError, roundtrip_truncated, arr
+
+
+def test_long_str():
+    # check items larger than internal buffer size, gh-4027
+    long_str_arr = np.ones(1, dtype=np.dtype((str, format.BUFFER_SIZE + 1)))
+    long_str_arr2 = roundtrip(long_str_arr)
+    assert_array_equal(long_str_arr, long_str_arr2)
 
 def test_memmap_roundtrip():
     # XXX: test crashes nose on windows. Fix this
@@ -466,8 +505,16 @@ def test_memmap_roundtrip():
             del ma
 
 
+def test_compressed_roundtrip():
+    arr = np.random.rand(200, 200)
+    npz_file = os.path.join(tempdir, 'compressed.npz')
+    np.savez_compressed(npz_file, arr=arr)
+    arr1 = np.load(npz_file)['arr']
+    assert_array_equal(arr, arr1)
+
+
 def test_write_version_1_0():
-    f = StringIO()
+    f = BytesIO()
     arr = np.arange(1)
     # These should pass.
     format.write_array(f, arr, version=(1, 0))
@@ -511,12 +558,12 @@ malformed_magic = asbytes_nested([
 
 def test_read_magic_bad_magic():
     for magic in malformed_magic:
-        f = StringIO(magic)
+        f = BytesIO(magic)
         yield raises(ValueError)(format.read_magic), f
 
 def test_read_version_1_0_bad_magic():
     for magic in bad_version_magic + malformed_magic:
-        f = StringIO(magic)
+        f = BytesIO(magic)
         yield raises(ValueError)(format.read_array), f
 
 def test_bad_magic_args():
@@ -526,39 +573,66 @@ def test_bad_magic_args():
     assert_raises(ValueError, format.magic, 1, 256)
 
 def test_large_header():
-    s = StringIO()
+    s = BytesIO()
     d = {'a':1,'b':2}
-    format.write_array_header_1_0(s,d)
+    format.write_array_header_1_0(s, d)
 
-    s = StringIO()
+    s = BytesIO()
     d = {'a':1,'b':2,'c':'x'*256*256}
     assert_raises(ValueError, format.write_array_header_1_0, s, d)
 
 def test_bad_header():
     # header of length less than 2 should fail
-    s = StringIO()
+    s = BytesIO()
     assert_raises(ValueError, format.read_array_header_1_0, s)
-    s = StringIO(asbytes('1'))
+    s = BytesIO(asbytes('1'))
     assert_raises(ValueError, format.read_array_header_1_0, s)
 
     # header shorter than indicated size should fail
-    s = StringIO(asbytes('\x01\x00'))
+    s = BytesIO(asbytes('\x01\x00'))
     assert_raises(ValueError, format.read_array_header_1_0, s)
 
     # headers without the exact keys required should fail
-    d = {"shape":(1,2),
+    d = {"shape":(1, 2),
          "descr":"x"}
-    s = StringIO()
-    format.write_array_header_1_0(s,d)
+    s = BytesIO()
+    format.write_array_header_1_0(s, d)
     assert_raises(ValueError, format.read_array_header_1_0, s)
 
-    d = {"shape":(1,2),
+    d = {"shape":(1, 2),
          "fortran_order":False,
          "descr":"x",
          "extrakey":-1}
-    s = StringIO()
-    format.write_array_header_1_0(s,d)
+    s = BytesIO()
+    format.write_array_header_1_0(s, d)
     assert_raises(ValueError, format.read_array_header_1_0, s)
+
+
+def test_large_file_support():
+    from nose import SkipTest
+    # try creating a large sparse file
+    with tempfile.NamedTemporaryFile() as tf:
+        try:
+            # seek past end would work too, but linux truncate somewhat
+            # increases the chances that we have a sparse filesystem and can
+            # avoid actually writing 5GB
+            import subprocess as sp
+            sp.check_call(["truncate", "-s", "5368709120", tf.name])
+        except:
+            raise SkipTest("Could not create 5GB large file")
+        # write a small array to the end
+        f = open(tf.name, "wb")
+        f.seek(5368709120)
+        d = np.arange(5)
+        np.save(f, d)
+        f.close()
+        # read it back
+        f = open(tf.name, "rb")
+        f.seek(5368709120)
+        r = np.load(f)
+        f.close()
+        assert_array_equal(r, d)
+
 
 if __name__ == "__main__":
     run_module_suite()

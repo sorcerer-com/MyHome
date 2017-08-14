@@ -1,19 +1,13 @@
-import sys
-if sys.version_info[0] >= 3:
-    from io import BytesIO
-    def StringIO(s=""):
-        return BytesIO(asbytes(s))
-else:
-    from StringIO import StringIO
+from __future__ import division, absolute_import, print_function
 
-from datetime import date
+import sys
 import time
+from datetime import date
 
 import numpy as np
 from numpy.lib._iotools import LineSplitter, NameValidator, StringConverter, \
                                has_nested_fields, easy_dtype, flatten_dtype
 from numpy.testing import *
-
 from numpy.compat import asbytes, asbytes_nested
 
 class TestLineSplitter(TestCase):
@@ -125,7 +119,7 @@ class TestNameValidator(TestCase):
         "Test validate no names"
         namelist = None
         validator = NameValidator()
-        assert(validator(namelist) is None)
+        assert_(validator(namelist) is None)
         assert_equal(validator(namelist, nbfields=3), ['f0', 'f1', 'f2'])
 
 
@@ -181,17 +175,17 @@ class TestStringConverter(TestCase):
         StringConverter.upgrade_mapper(dateparser, date(2000, 1, 1))
         convert = StringConverter(dateparser, date(2000, 1, 1))
         test = convert(asbytes('2001-01-01'))
-        assert_equal(test, date(2001, 01, 01))
+        assert_equal(test, date(2001, 1, 1))
         test = convert(asbytes('2009-01-01'))
-        assert_equal(test, date(2009, 01, 01))
+        assert_equal(test, date(2009, 1, 1))
         test = convert(asbytes(''))
-        assert_equal(test, date(2000, 01, 01))
+        assert_equal(test, date(2000, 1, 1))
     #
     def test_string_to_object(self):
         "Make sure that string-to-object functions are properly recognized"
         conv = StringConverter(_bytes_to_date)
         assert_equal(conv._mapper[-2][0](0), 0j)
-        assert(hasattr(conv, 'default'))
+        assert_(hasattr(conv, 'default'))
     #
     def test_keep_default(self):
         "Make sure we don't lose an explicit default"

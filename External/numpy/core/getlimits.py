@@ -1,12 +1,14 @@
-""" Machine limits for Float32 and Float64 and (long double) if available...
+"""Machine limits for Float32 and Float64 and (long double) if available...
+
 """
+from __future__ import division, absolute_import, print_function
 
-__all__ = ['finfo','iinfo']
+__all__ = ['finfo', 'iinfo']
 
-from machar import MachAr
-import numeric
-import numerictypes as ntypes
-from numeric import array
+from .machar import MachAr
+from . import numeric
+from . import numerictypes as ntypes
+from .numeric import array
 
 def _frz(a):
     """fix rank-0 --> rank-1"""
@@ -95,7 +97,7 @@ class finfo(object):
             # In case a float instance was given
             dtype = numeric.dtype(type(dtype))
 
-        obj = cls._finfo_cache.get(dtype,None)
+        obj = cls._finfo_cache.get(dtype, None)
         if obj is not None:
             return obj
         dtypes = [dtype]
@@ -104,8 +106,8 @@ class finfo(object):
             dtypes.append(newdtype)
             dtype = newdtype
         if not issubclass(dtype, numeric.inexact):
-            raise ValueError, "data type %r not inexact" % (dtype)
-        obj = cls._finfo_cache.get(dtype,None)
+            raise ValueError("data type %r not inexact" % (dtype))
+        obj = cls._finfo_cache.get(dtype, None)
         if obj is not None:
             return obj
         if not issubclass(dtype, numeric.floating):
@@ -113,7 +115,7 @@ class finfo(object):
             if newdtype is not dtype:
                 dtypes.append(newdtype)
                 dtype = newdtype
-        obj = cls._finfo_cache.get(dtype,None)
+        obj = cls._finfo_cache.get(dtype, None)
         if obj is not None:
             return obj
         obj = object.__new__(cls)._init(dtype)
@@ -140,7 +142,7 @@ class finfo(object):
             fmt = '%12.5e'
             precname = 'half'
         else:
-            raise ValueError, repr(dtype)
+            raise ValueError(repr(dtype))
 
         machar = MachAr(lambda v:array([v], dtype),
                         lambda v:_frz(v.astype(itype))[0],
@@ -149,11 +151,11 @@ class finfo(object):
                         'numpy %s precision floating point number' % precname)
 
         for word in ['precision', 'iexp',
-                     'maxexp','minexp','negep',
+                     'maxexp', 'minexp', 'negep',
                      'machep']:
-            setattr(self,word,getattr(machar, word))
-        for word in ['tiny','resolution','epsneg']:
-            setattr(self,word,getattr(machar, word).flat[0])
+            setattr(self, word, getattr(machar, word))
+        for word in ['tiny', 'resolution', 'epsneg']:
+            setattr(self, word, getattr(machar, word).flat[0])
         self.max = machar.huge.flat[0]
         self.min = -self.max
         self.eps = machar.eps.flat[0]
@@ -180,8 +182,16 @@ nexp  =%(nexp)6s   min=        -max
 ---------------------------------------------------------------------
 ''' % self.__dict__
 
+    def __repr__(self):
+        c = self.__class__.__name__
+        d = self.__dict__.copy()
+        d['klass'] = c
+        return ("%(klass)s(resolution=%(resolution)s, min=-%(_str_max)s," \
+               + " max=%(_str_max)s, dtype=%(dtype)s)") \
+                % d
 
-class iinfo:
+
+class iinfo(object):
     """
     iinfo(type)
 
@@ -250,7 +260,7 @@ class iinfo:
             try:
                 val = iinfo._min_vals[self.key]
             except KeyError:
-                val = int(-(1L << (self.bits-1)))
+                val = int(-(1 << (self.bits-1)))
                 iinfo._min_vals[self.key] = val
             return val
 
@@ -262,9 +272,9 @@ class iinfo:
             val = iinfo._max_vals[self.key]
         except KeyError:
             if self.kind == 'u':
-                val = int((1L << self.bits) - 1)
+                val = int((1 << self.bits) - 1)
             else:
-                val = int((1L << (self.bits-1)) - 1)
+                val = int((1 << (self.bits-1)) - 1)
             iinfo._max_vals[self.key] = val
         return val
 
@@ -280,14 +290,17 @@ max = %(max)s
 ---------------------------------------------------------------------
 ''' % {'dtype': self.dtype, 'min': self.min, 'max': self.max}
 
+    def __repr__(self):
+        return "%s(min=%s, max=%s, dtype=%s)" % (self.__class__.__name__,
+                                    self.min, self.max, self.dtype)
 
 if __name__ == '__main__':
     f = finfo(ntypes.single)
-    print 'single epsilon:',f.eps
-    print 'single tiny:',f.tiny
+    print('single epsilon:', f.eps)
+    print('single tiny:', f.tiny)
     f = finfo(ntypes.float)
-    print 'float epsilon:',f.eps
-    print 'float tiny:',f.tiny
+    print('float epsilon:', f.eps)
+    print('float tiny:', f.tiny)
     f = finfo(ntypes.longfloat)
-    print 'longfloat epsilon:',f.eps
-    print 'longfloat tiny:',f.tiny
+    print('longfloat epsilon:', f.eps)
+    print('longfloat tiny:', f.tiny)

@@ -1,5 +1,7 @@
-# Functions that already have the correct syntax or miscellaneous functions
+"""Functions that already have the correct syntax or miscellaneous functions
 
+"""
+from __future__ import division, absolute_import, print_function
 
 __all__ = ['sort', 'copy_reg', 'clip', 'rank',
            'sign', 'shape', 'types', 'allclose', 'size',
@@ -12,18 +14,17 @@ __all__ = ['sort', 'copy_reg', 'clip', 'rank',
            'dot', 'outerproduct', 'innerproduct', 'insert']
 
 import types
-import StringIO
 import pickle
 import math
 import copy
-import copy_reg
-
 import sys
+
 if sys.version_info[0] >= 3:
-    import copyreg
-    import io
-    StringIO = io.BytesIO
-    copy_reg = copyreg
+    import copyreg as copy_reg
+    from io import BytesIO as StringIO
+else:
+    import copy_reg
+    from StringIO import StringIO
 
 from numpy import sort, clip, rank, sign, shape, putmask, allclose, size,\
      choose, swapaxes, array_str, array_repr, e, pi, put, \
@@ -33,4 +34,4 @@ from numpy import sort, clip, rank, sign, shape, putmask, allclose, size,\
      correlate as cross_correlate, \
      place as insert
 
-from array_printer import array2string
+from .array_printer import array2string

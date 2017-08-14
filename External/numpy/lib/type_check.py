@@ -1,15 +1,17 @@
-## Automatically adapted for numpy Sep 19, 2005 by convertcode.py
+"""Automatically adapted for numpy Sep 19, 2005 by convertcode.py
 
-__all__ = ['iscomplexobj','isrealobj','imag','iscomplex',
-           'isreal','nan_to_num','real','real_if_close',
-           'typename','asfarray','mintypecode','asscalar',
-           'common_type', 'datetime_data']
+"""
+from __future__ import division, absolute_import, print_function
+
+__all__ = ['iscomplexobj', 'isrealobj', 'imag', 'iscomplex',
+           'isreal', 'nan_to_num', 'real', 'real_if_close',
+           'typename', 'asfarray', 'mintypecode', 'asscalar',
+           'common_type']
 
 import numpy.core.numeric as _nx
 from numpy.core.numeric import asarray, asanyarray, array, isnan, \
                 obj2sctype, zeros
-from numpy.core.multiarray import METADATA_DTSTR
-from ufunclike import isneginf, isposinf
+from .ufunclike import isneginf, isposinf
 
 _typecodes_by_elsize = 'GDFgdfQqLlIiHhBb?'
 
@@ -56,7 +58,7 @@ def mintypecode(typechars,typeset='GDFgdf',default='d'):
     'G'
 
     """
-    typecodes = [(type(t) is type('') and t) or asarray(t).dtype.char\
+    typecodes = [(isinstance(t, str) and t) or asarray(t).dtype.char\
                  for t in typechars]
     intersection = [t for t in typecodes if t in typeset]
     if not intersection:
@@ -66,7 +68,7 @@ def mintypecode(typechars,typeset='GDFgdf',default='d'):
     l = []
     for t in intersection:
         i = _typecodes_by_elsize.index(t)
-        l.append((i,t))
+        l.append((i, t))
     l.sort()
     return l[0][1]
 
@@ -100,7 +102,7 @@ def asfarray(a, dtype=_nx.float_):
     dtype = _nx.obj2sctype(dtype)
     if not issubclass(dtype, _nx.inexact):
         dtype = _nx.float_
-    return asarray(a,dtype=dtype)
+    return asarray(a, dtype=dtype)
 
 def real(val):
     """
@@ -234,11 +236,10 @@ def isreal(x):
 
 def iscomplexobj(x):
     """
-    Return True if x is a complex type or an array of complex numbers.
+    Check for a complex type or an array of complex numbers.
 
-    The type of the input is checked, not the value. So even if the input
-    has an imaginary part equal to zero, `iscomplexobj` evaluates to True
-    if the data type is complex.
+    The type of the input is checked, not the value. Even if the input
+    has an imaginary part equal to zero, `iscomplexobj` evaluates to True.
 
     Parameters
     ----------
@@ -247,8 +248,9 @@ def iscomplexobj(x):
 
     Returns
     -------
-    y : bool
-        The return value, True if `x` is of a complex type.
+    iscomplexobj : bool
+        The return value, True if `x` is of a complex type or has at least
+        one complex element.
 
     See Also
     --------
@@ -449,7 +451,8 @@ def asscalar(a):
     Returns
     -------
     out : scalar
-        Scalar representation of `a`. The input data type is preserved.
+        Scalar representation of `a`. The output data type is the same type
+        returned by the input's `item` method.
 
     Examples
     --------
@@ -600,49 +603,3 @@ def common_type(*arrays):
         return array_type[1][precision]
     else:
         return array_type[0][precision]
-
-def datetime_data(dtype):
-    """Return (unit, numerator, denominator, events) from a datetime dtype
-    """
-    try:
-        import ctypes
-    except ImportError:
-        raise RuntimeError, "Cannot access date-time internals without ctypes installed"
-
-    if dtype.kind not in ['m','M']:
-        raise ValueError, "Not a date-time dtype"
-
-    obj = dtype.metadata[METADATA_DTSTR]
-    class DATETIMEMETA(ctypes.Structure):
-        _fields_ = [('base', ctypes.c_int),
-                    ('num', ctypes.c_int),
-                    ('den', ctypes.c_int),
-                    ('events', ctypes.c_int)]
-
-    import sys
-    if sys.version_info[:2] >= (3, 0):
-        func = ctypes.pythonapi.PyCapsule_GetPointer
-        func.argtypes = [ctypes.py_object, ctypes.c_char_p]
-        func.restype = ctypes.c_void_p
-        result = func(ctypes.py_object(obj), ctypes.c_char_p(None))
-    else:
-        func = ctypes.pythonapi.PyCObject_AsVoidPtr
-        func.argtypes = [ctypes.py_object]
-        func.restype = ctypes.c_void_p
-        result = func(ctypes.py_object(obj))
-    result = ctypes.cast(ctypes.c_void_p(result), ctypes.POINTER(DATETIMEMETA))
-
-    struct = result[0]
-    base = struct.base
-
-    # FIXME: This needs to be kept consistent with enum in ndarrayobject.h
-    from numpy.core.multiarray import DATETIMEUNITS
-    obj = ctypes.py_object(DATETIMEUNITS)
-    if sys.version_info[:2] >= (2,7):
-        result = func(obj, ctypes.c_char_p(None))
-    else:
-        result = func(obj)
-    _unitnum2name = ctypes.cast(ctypes.c_void_p(result), ctypes.POINTER(ctypes.c_char_p))
-
-    return (_unitnum2name[base], struct.num, struct.den, struct.events)
-

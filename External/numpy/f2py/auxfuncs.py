@@ -12,16 +12,19 @@ terms of the NumPy (BSD style) LICENSE.
 NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 $Date: 2005/07/24 19:01:55 $
 Pearu Peterson
-"""
-__version__ = "$Revision: 1.65 $"[10:-1]
 
-import __version__
-f2py_version = __version__.version
+"""
+from __future__ import division, absolute_import, print_function
 
 import pprint
 import sys
 import types
-import cfuncs
+from functools import reduce
+
+from . import __version__
+from . import cfuncs
+
+f2py_version = __version__.version
 
 
 errmess=sys.stderr.write
@@ -32,11 +35,9 @@ options={}
 debugoptions=[]
 wrapfuncs = 1
 
-if sys.version_info[0] >= 3:
-    from functools import reduce
 
 def outmess(t):
-    if options.get('verbose',1):
+    if options.get('verbose', 1):
         sys.stdout.write(t)
 
 def debugcapi(var):
@@ -67,7 +68,7 @@ def isscalar(var):
     return not (isarray(var) or isstring(var) or isexternal(var))
 
 def iscomplex(var):
-    return isscalar(var) and var.get('typespec') in ['complex','double complex']
+    return isscalar(var) and var.get('typespec') in ['complex', 'double complex']
 
 def islogical(var):
     return isscalar(var) and var.get('typespec')=='logical'
@@ -90,7 +91,7 @@ def get_kind(var):
 def islong_long(var):
     if not isscalar(var):
         return 0
-    if var.get('typespec') not in ['integer','logical']:
+    if var.get('typespec') not in ['integer', 'logical']:
         return 0
     return get_kind(var)=='8'
 
@@ -142,7 +143,7 @@ def islong_complex(var):
     return get_kind(var)=='32'
 
 def iscomplexarray(var):
-    return isarray(var) and var.get('typespec') in ['complex','double complex']
+    return isarray(var) and var.get('typespec') in ['complex', 'double complex']
 
 def isint1array(var):
     return isarray(var) and var.get('typespec')=='integer' \
@@ -215,7 +216,7 @@ def hasassumedshape(rout):
     if rout.get('hasassumedshape'):
         return True
     for a in rout['args']:
-        for d in rout['vars'].get(a,{}).get('dimension',[]):
+        for d in rout['vars'].get(a, {}).get('dimension', []):
             if d==':':
                 rout['hasassumedshape'] = True
                 return True
@@ -331,53 +332,53 @@ def isintent_inout(var):
     return 'intent' in var and ('inout' in var['intent'] or 'outin' in var['intent']) and 'in' not in var['intent'] and 'hide' not in var['intent'] and 'inplace' not in var['intent']
 
 def isintent_out(var):
-    return 'out' in var.get('intent',[])
+    return 'out' in var.get('intent', [])
 
 def isintent_hide(var):
-    return ('intent' in var and ('hide' in var['intent'] or ('out' in var['intent'] and 'in' not in var['intent'] and (not l_or(isintent_inout,isintent_inplace)(var)))))
+    return ('intent' in var and ('hide' in var['intent'] or ('out' in var['intent'] and 'in' not in var['intent'] and (not l_or(isintent_inout, isintent_inplace)(var)))))
 
 def isintent_nothide(var):
     return not isintent_hide(var)
 
 def isintent_c(var):
-    return 'c' in var.get('intent',[])
+    return 'c' in var.get('intent', [])
 
 # def isintent_f(var):
 #     return not isintent_c(var)
 
 def isintent_cache(var):
-    return 'cache' in var.get('intent',[])
+    return 'cache' in var.get('intent', [])
 
 def isintent_copy(var):
-    return 'copy' in var.get('intent',[])
+    return 'copy' in var.get('intent', [])
 
 def isintent_overwrite(var):
-    return 'overwrite' in var.get('intent',[])
+    return 'overwrite' in var.get('intent', [])
 
 def isintent_callback(var):
-    return 'callback' in var.get('intent',[])
+    return 'callback' in var.get('intent', [])
 
 def isintent_inplace(var):
-    return 'inplace' in var.get('intent',[])
+    return 'inplace' in var.get('intent', [])
 
 def isintent_aux(var):
-    return 'aux' in var.get('intent',[])
+    return 'aux' in var.get('intent', [])
 
 def isintent_aligned4(var):
-    return 'aligned4' in var.get('intent',[])
+    return 'aligned4' in var.get('intent', [])
 def isintent_aligned8(var):
-    return 'aligned8' in var.get('intent',[])
+    return 'aligned8' in var.get('intent', [])
 def isintent_aligned16(var):
-    return 'aligned16' in var.get('intent',[])
+    return 'aligned16' in var.get('intent', [])
 
-isintent_dict = {isintent_in:'INTENT_IN',isintent_inout:'INTENT_INOUT',
-                 isintent_out:'INTENT_OUT',isintent_hide:'INTENT_HIDE',
-                 isintent_cache:'INTENT_CACHE',
-                 isintent_c:'INTENT_C',isoptional:'OPTIONAL',
-                 isintent_inplace:'INTENT_INPLACE',
-                 isintent_aligned4:'INTENT_ALIGNED4',
-                 isintent_aligned8:'INTENT_ALIGNED8',
-                 isintent_aligned16:'INTENT_ALIGNED16',
+isintent_dict = {isintent_in: 'INTENT_IN', isintent_inout: 'INTENT_INOUT',
+                 isintent_out: 'INTENT_OUT', isintent_hide: 'INTENT_HIDE',
+                 isintent_cache: 'INTENT_CACHE',
+                 isintent_c: 'INTENT_C', isoptional: 'OPTIONAL',
+                 isintent_inplace: 'INTENT_INPLACE',
+                 isintent_aligned4: 'INTENT_ALIGNED4',
+                 isintent_aligned8: 'INTENT_ALIGNED8',
+                 isintent_aligned16: 'INTENT_ALIGNED16',
                  }
 
 def isprivate(var):
@@ -389,7 +390,7 @@ def hasinitvalue(var):
 def hasinitvalueasstring(var):
     if not hasinitvalue(var):
         return 0
-    return var['='][0] in ['"',"'"]
+    return var['='][0] in ['"', "'"]
 
 def hasnote(var):
     return 'note' in var
@@ -443,25 +444,25 @@ class F2PYError(Exception):
     pass
 
 class throw_error:
-    def __init__(self,mess):
+    def __init__(self, mess):
         self.mess = mess
-    def __call__(self,var):
-        mess = '\n\n  var = %s\n  Message: %s\n' % (var,self.mess)
-        raise F2PYError,mess
+    def __call__(self, var):
+        mess = '\n\n  var = %s\n  Message: %s\n' % (var, self.mess)
+        raise F2PYError(mess)
 
 def l_and(*f):
-    l,l2='lambda v',[]
+    l, l2='lambda v', []
     for i in range(len(f)):
-        l='%s,f%d=f[%d]'%(l,i,i)
+        l='%s,f%d=f[%d]'%(l, i, i)
         l2.append('f%d(v)'%(i))
-    return eval('%s:%s'%(l,' and '.join(l2)))
+    return eval('%s:%s'%(l, ' and '.join(l2)))
 
 def l_or(*f):
-    l,l2='lambda v',[]
+    l, l2='lambda v', []
     for i in range(len(f)):
-        l='%s,f%d=f[%d]'%(l,i,i)
+        l='%s,f%d=f[%d]'%(l, i, i)
         l2.append('f%d(v)'%(i))
-    return eval('%s:%s'%(l,' or '.join(l2)))
+    return eval('%s:%s'%(l, ' or '.join(l2)))
 
 def l_not(f):
     return eval('lambda v,f=f:not f(v)')
@@ -490,39 +491,39 @@ def getmultilineblock(rout,blockname,comment=1,counter=0):
     except KeyError:
         return
     if not r: return
-    if counter>0 and type(r) is type(''):
+    if counter > 0 and isinstance(r, str):
         return
-    if type(r) is type([]):
+    if isinstance(r, list):
         if counter>=len(r): return
         r = r[counter]
     if r[:3]=="'''":
         if comment:
-            r = '\t/* start ' + blockname + ' multiline ('+`counter`+') */\n' + r[3:]
+            r = '\t/* start ' + blockname + ' multiline ('+repr(counter)+') */\n' + r[3:]
         else:
             r = r[3:]
         if r[-3:]=="'''":
             if comment:
-                r = r[:-3] + '\n\t/* end multiline ('+`counter`+')*/'
+                r = r[:-3] + '\n\t/* end multiline ('+repr(counter)+')*/'
             else:
                 r = r[:-3]
         else:
             errmess("%s multiline block should end with `'''`: %s\n" \
-                    % (blockname,repr(r)))
+                    % (blockname, repr(r)))
     return r
 
 def getcallstatement(rout):
-    return getmultilineblock(rout,'callstatement')
+    return getmultilineblock(rout, 'callstatement')
 
 def getcallprotoargument(rout,cb_map={}):
-    r = getmultilineblock(rout,'callprotoargument',comment=0)
+    r = getmultilineblock(rout, 'callprotoargument', comment=0)
     if r: return r
     if hascallstatement(rout):
         outmess('warning: callstatement is defined without callprotoargument\n')
         return
-    from capi_maps import getctype
-    arg_types,arg_types2 = [],[]
-    if l_and(isstringfunction,l_not(isfunction_wrap))(rout):
-        arg_types.extend(['char*','size_t'])
+    from .capi_maps import getctype
+    arg_types, arg_types2 = [], []
+    if l_and(isstringfunction, l_not(isfunction_wrap))(rout):
+        arg_types.extend(['char*', 'size_t'])
     for n in rout['args']:
         var = rout['vars'][n]
         if isintent_callback(var):
@@ -531,7 +532,7 @@ def getcallprotoargument(rout,cb_map={}):
             ctype = cb_map[n]+'_typedef'
         else:
             ctype = getctype(var)
-            if l_and(isintent_c,l_or(isscalar,iscomplex))(var):
+            if l_and(isintent_c, l_or(isscalar, iscomplex))(var):
                 pass
             elif isstring(var):
                 pass
@@ -549,16 +550,16 @@ def getcallprotoargument(rout,cb_map={}):
     return proto_args
 
 def getusercode(rout):
-    return getmultilineblock(rout,'usercode')
+    return getmultilineblock(rout, 'usercode')
 
 def getusercode1(rout):
-    return getmultilineblock(rout,'usercode',counter=1)
+    return getmultilineblock(rout, 'usercode', counter=1)
 
 def getpymethoddef(rout):
-    return getmultilineblock(rout,'pymethoddef')
+    return getmultilineblock(rout, 'pymethoddef')
 
 def getargs(rout):
-    sortargs,args=[],[]
+    sortargs, args=[], []
     if 'args' in rout:
         args=rout['args']
         if 'sortvars' in rout:
@@ -568,10 +569,10 @@ def getargs(rout):
                 if a not in sortargs:
                     sortargs.append(a)
         else: sortargs=rout['args']
-    return args,sortargs
+    return args, sortargs
 
 def getargs2(rout):
-    sortargs,args=[],rout.get('args',[])
+    sortargs, args=[], rout.get('args', [])
     auxvars = [a for a in rout['vars'].keys() if isintent_aux(rout['vars'][a])\
                and a not in args]
     args = auxvars + args
@@ -582,23 +583,23 @@ def getargs2(rout):
             if a not in sortargs:
                 sortargs.append(a)
     else: sortargs=auxvars + rout['args']
-    return args,sortargs
+    return args, sortargs
 
 def getrestdoc(rout):
     if 'f2pymultilines' not in rout:
         return None
     k = None
     if rout['block']=='python module':
-        k = rout['block'],rout['name']
-    return rout['f2pymultilines'].get(k,None)
+        k = rout['block'], rout['name']
+    return rout['f2pymultilines'].get(k, None)
 
 def gentitle(name):
     l=(80-len(name)-6)//2
-    return '/*%s %s %s*/'%(l*'*',name,l*'*')
+    return '/*%s %s %s*/'%(l*'*', name, l*'*')
 
 def flatlist(l):
-    if type(l)==types.ListType:
-        return reduce(lambda x,y,f=flatlist:x+f(y),l,[])
+    if isinstance(l, list):
+        return reduce(lambda x,y,f=flatlist:x+f(y), l, [])
     return [l]
 
 def stripcomma(s):
@@ -606,103 +607,103 @@ def stripcomma(s):
     return s
 
 def replace(str,d,defaultsep=''):
-    if type(d)==types.ListType:
-        return map(lambda d,f=replace,sep=defaultsep,s=str:f(s,d,sep),d)
-    if type(str)==types.ListType:
-        return map(lambda s,f=replace,sep=defaultsep,d=d:f(s,d,sep),str)
-    for k in 2*d.keys():
+    if isinstance(d, list):
+        return [replace(str, _m, defaultsep) for _m in d]
+    if isinstance(str, list):
+        return [replace(_m, d, defaultsep) for _m in str]
+    for k in 2*list(d.keys()):
         if k=='separatorsfor':
             continue
         if 'separatorsfor' in d and k in d['separatorsfor']:
             sep=d['separatorsfor'][k]
         else:
             sep=defaultsep
-        if type(d[k])==types.ListType:
-            str=str.replace('#%s#'%(k),sep.join(flatlist(d[k])))
+        if isinstance(d[k], list):
+            str=str.replace('#%s#'%(k), sep.join(flatlist(d[k])))
         else:
-            str=str.replace('#%s#'%(k),d[k])
+            str=str.replace('#%s#'%(k), d[k])
     return str
 
-def dictappend(rd,ar):
-    if type(ar)==types.ListType:
+def dictappend(rd, ar):
+    if isinstance(ar, list):
         for a in ar:
-            rd=dictappend(rd,a)
+            rd=dictappend(rd, a)
         return rd
     for k in ar.keys():
         if k[0]=='_':
             continue
         if k in rd:
-            if type(rd[k])==str:
+            if isinstance(rd[k], str):
                 rd[k]=[rd[k]]
-            if type(rd[k])==types.ListType:
-                if type(ar[k])==types.ListType:
+            if isinstance(rd[k], list):
+                if isinstance(ar[k], list):
                     rd[k]=rd[k]+ar[k]
                 else:
                     rd[k].append(ar[k])
-            elif type(rd[k])==types.DictType:
-                if type(ar[k])==types.DictType:
+            elif isinstance(rd[k], dict):
+                if isinstance(ar[k], dict):
                     if k=='separatorsfor':
                         for k1 in ar[k].keys():
                             if k1 not in rd[k]:
                                 rd[k][k1]=ar[k][k1]
                     else:
-                        rd[k]=dictappend(rd[k],ar[k])
+                        rd[k]=dictappend(rd[k], ar[k])
         else:
             rd[k]=ar[k]
     return rd
 
 def applyrules(rules,d,var={}):
     ret={}
-    if type(rules)==types.ListType:
+    if isinstance(rules, list):
         for r in rules:
-            rr=applyrules(r,d,var)
-            ret=dictappend(ret,rr)
+            rr=applyrules(r, d, var)
+            ret=dictappend(ret, rr)
             if '_break' in rr:
                 break
         return ret
     if '_check' in rules and (not rules['_check'](var)):
         return ret
     if 'need' in rules:
-        res = applyrules({'needs':rules['need']},d,var)
+        res = applyrules({'needs':rules['need']}, d, var)
         if 'needs' in res:
             cfuncs.append_needs(res['needs'])
 
     for k in rules.keys():
         if k=='separatorsfor':
             ret[k]=rules[k]; continue
-        if type(rules[k])==str:
-            ret[k]=replace(rules[k],d)
-        elif type(rules[k])==types.ListType:
+        if isinstance(rules[k], str):
+            ret[k]=replace(rules[k], d)
+        elif isinstance(rules[k], list):
             ret[k]=[]
             for i in rules[k]:
-                ar=applyrules({k:i},d,var)
+                ar=applyrules({k:i}, d, var)
                 if k in ar:
                     ret[k].append(ar[k])
         elif k[0]=='_':
             continue
-        elif type(rules[k])==types.DictType:
+        elif isinstance(rules[k], dict):
             ret[k]=[]
             for k1 in rules[k].keys():
-                if type(k1)==types.FunctionType and k1(var):
-                    if type(rules[k][k1])==types.ListType:
+                if isinstance(k1, types.FunctionType) and k1(var):
+                    if isinstance(rules[k][k1], list):
                         for i in rules[k][k1]:
-                            if type(i)==types.DictType:
-                                res=applyrules({'supertext':i},d,var)
+                            if isinstance(i, dict):
+                                res=applyrules({'supertext':i}, d, var)
                                 if 'supertext' in res:
                                     i=res['supertext']
                                 else: i=''
-                            ret[k].append(replace(i,d))
+                            ret[k].append(replace(i, d))
                     else:
                         i=rules[k][k1]
-                        if type(i)==types.DictType:
-                            res=applyrules({'supertext':i},d)
+                        if isinstance(i, dict):
+                            res=applyrules({'supertext':i}, d)
                             if 'supertext' in res:
                                 i=res['supertext']
                             else: i=''
-                        ret[k].append(replace(i,d))
+                        ret[k].append(replace(i, d))
         else:
-            errmess('applyrules: ignoring rule %s.\n'%`rules[k]`)
-        if type(ret[k])==types.ListType:
+            errmess('applyrules: ignoring rule %s.\n'%repr(rules[k]))
+        if isinstance(ret[k], list):
             if len(ret[k])==1:
                 ret[k]=ret[k][0]
             if ret[k]==[]:

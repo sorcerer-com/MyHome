@@ -1,7 +1,9 @@
+from __future__ import division, absolute_import, print_function
+
 __all__ = ['logspace', 'linspace']
 
-import numeric as _nx
-from numeric import array
+from . import numeric as _nx
+from .numeric import array
 
 def linspace(start, stop, num=50, endpoint=True, retstep=False):
     """
@@ -42,7 +44,7 @@ def linspace(start, stop, num=50, endpoint=True, retstep=False):
 
     See Also
     --------
-    arange : Similiar to `linspace`, but uses a step size (instead of the
+    arange : Similar to `linspace`, but uses a step size (instead of the
              number of samples).
     logspace : Samples uniformly distributed in log space.
 
@@ -72,6 +74,11 @@ def linspace(start, stop, num=50, endpoint=True, retstep=False):
 
     """
     num = int(num)
+
+    # Convert float/complex array scalars to float, gh-3504 
+    start = start * 1.
+    stop = stop * 1.
+
     if num <= 0:
         return array([], float)
     if endpoint:
@@ -122,7 +129,7 @@ def logspace(start,stop,num=50,endpoint=True,base=10.0):
 
     See Also
     --------
-    arange : Similiar to linspace, with the step size specified instead of the
+    arange : Similar to linspace, with the step size specified instead of the
              number of samples. Note that, when used with a float endpoint, the
              endpoint may or may not be included.
     linspace : Similar to logspace, but with the samples uniformly distributed
@@ -162,6 +169,5 @@ def logspace(start,stop,num=50,endpoint=True,base=10.0):
     >>> plt.show()
 
     """
-    y = linspace(start,stop,num=num,endpoint=endpoint)
-    return _nx.power(base,y)
-
+    y = linspace(start, stop, num=num, endpoint=endpoint)
+    return _nx.power(base, y)

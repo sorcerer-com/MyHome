@@ -435,7 +435,7 @@ NPY_NO_EXPORT int PyArray_Sort \
 NPY_NO_EXPORT PyObject * PyArray_ArgSort \
        (PyArrayObject *, int, NPY_SORTKIND);
 NPY_NO_EXPORT PyObject * PyArray_SearchSorted \
-       (PyArrayObject *, PyObject *, NPY_SEARCHSIDE);
+       (PyArrayObject *, PyObject *, NPY_SEARCHSIDE, PyObject *);
 NPY_NO_EXPORT PyObject * PyArray_ArgMax \
        (PyArrayObject *, int, PyArrayObject *);
 NPY_NO_EXPORT PyObject * PyArray_ArgMin \
@@ -754,6 +754,48 @@ NPY_NO_EXPORT int PyArray_ConvertClipmodeSequence \
        (PyObject *, NPY_CLIPMODE *, int);
 NPY_NO_EXPORT PyObject * PyArray_MatrixProduct2 \
        (PyObject *, PyObject *, PyArrayObject*);
+NPY_NO_EXPORT npy_bool NpyIter_IsFirstVisit \
+       (NpyIter *, int);
+NPY_NO_EXPORT int PyArray_SetBaseObject \
+       (PyArrayObject *, PyObject *);
+NPY_NO_EXPORT void PyArray_CreateSortedStridePerm \
+       (int, npy_intp *, npy_stride_sort_item *);
+NPY_NO_EXPORT void PyArray_RemoveAxesInPlace \
+       (PyArrayObject *, npy_bool *);
+NPY_NO_EXPORT void PyArray_DebugPrint \
+       (PyArrayObject *);
+NPY_NO_EXPORT int PyArray_FailUnlessWriteable \
+       (PyArrayObject *, const char *);
+NPY_NO_EXPORT int PyArray_SetUpdateIfCopyBase \
+       (PyArrayObject *, PyArrayObject *);
+NPY_NO_EXPORT void * PyDataMem_NEW \
+       (size_t);
+NPY_NO_EXPORT void PyDataMem_FREE \
+       (void *);
+NPY_NO_EXPORT void * PyDataMem_RENEW \
+       (void *, size_t);
+NPY_NO_EXPORT PyDataMem_EventHookFunc * PyDataMem_SetEventHook \
+       (PyDataMem_EventHookFunc *, void *, void **);
+#ifdef NPY_ENABLE_SEPARATE_COMPILATION
+    extern NPY_NO_EXPORT NPY_CASTING NPY_DEFAULT_ASSIGN_CASTING;
+#else
+    NPY_NO_EXPORT NPY_CASTING NPY_DEFAULT_ASSIGN_CASTING;
+#endif
+
+NPY_NO_EXPORT void PyArray_MapIterSwapAxes \
+       (PyArrayMapIterObject *, PyArrayObject **, int);
+NPY_NO_EXPORT PyObject * PyArray_MapIterArray \
+       (PyArrayObject *, PyObject *);
+NPY_NO_EXPORT void PyArray_MapIterNext \
+       (PyArrayMapIterObject *);
+NPY_NO_EXPORT int PyArray_Partition \
+       (PyArrayObject *, PyArrayObject *, int, NPY_SELECTKIND);
+NPY_NO_EXPORT PyObject * PyArray_ArgPartition \
+       (PyArrayObject *, PyArrayObject *, int, NPY_SELECTKIND);
+NPY_NO_EXPORT int PyArray_SelectkindConverter \
+       (PyObject *, NPY_SELECTKIND *);
+NPY_NO_EXPORT void * PyDataMem_NEW_ZEROED \
+       (size_t, size_t);
 
 #else
 
@@ -1087,7 +1129,7 @@ static void **PyArray_API=NULL;
         (*(PyObject * (*)(PyArrayObject *, int, NPY_SORTKIND)) \
          PyArray_API[130])
 #define PyArray_SearchSorted \
-        (*(PyObject * (*)(PyArrayObject *, PyObject *, NPY_SEARCHSIDE)) \
+        (*(PyObject * (*)(PyArrayObject *, PyObject *, NPY_SEARCHSIDE, PyObject *)) \
          PyArray_API[131])
 #define PyArray_ArgMax \
         (*(PyObject * (*)(PyArrayObject *, int, PyArrayObject *)) \
@@ -1526,6 +1568,61 @@ static void **PyArray_API=NULL;
 #define PyArray_MatrixProduct2 \
         (*(PyObject * (*)(PyObject *, PyObject *, PyArrayObject*)) \
          PyArray_API[280])
+#define NpyIter_IsFirstVisit \
+        (*(npy_bool (*)(NpyIter *, int)) \
+         PyArray_API[281])
+#define PyArray_SetBaseObject \
+        (*(int (*)(PyArrayObject *, PyObject *)) \
+         PyArray_API[282])
+#define PyArray_CreateSortedStridePerm \
+        (*(void (*)(int, npy_intp *, npy_stride_sort_item *)) \
+         PyArray_API[283])
+#define PyArray_RemoveAxesInPlace \
+        (*(void (*)(PyArrayObject *, npy_bool *)) \
+         PyArray_API[284])
+#define PyArray_DebugPrint \
+        (*(void (*)(PyArrayObject *)) \
+         PyArray_API[285])
+#define PyArray_FailUnlessWriteable \
+        (*(int (*)(PyArrayObject *, const char *)) \
+         PyArray_API[286])
+#define PyArray_SetUpdateIfCopyBase \
+        (*(int (*)(PyArrayObject *, PyArrayObject *)) \
+         PyArray_API[287])
+#define PyDataMem_NEW \
+        (*(void * (*)(size_t)) \
+         PyArray_API[288])
+#define PyDataMem_FREE \
+        (*(void (*)(void *)) \
+         PyArray_API[289])
+#define PyDataMem_RENEW \
+        (*(void * (*)(void *, size_t)) \
+         PyArray_API[290])
+#define PyDataMem_SetEventHook \
+        (*(PyDataMem_EventHookFunc * (*)(PyDataMem_EventHookFunc *, void *, void **)) \
+         PyArray_API[291])
+#define NPY_DEFAULT_ASSIGN_CASTING (*(NPY_CASTING *)PyArray_API[292])
+#define PyArray_MapIterSwapAxes \
+        (*(void (*)(PyArrayMapIterObject *, PyArrayObject **, int)) \
+         PyArray_API[293])
+#define PyArray_MapIterArray \
+        (*(PyObject * (*)(PyArrayObject *, PyObject *)) \
+         PyArray_API[294])
+#define PyArray_MapIterNext \
+        (*(void (*)(PyArrayMapIterObject *)) \
+         PyArray_API[295])
+#define PyArray_Partition \
+        (*(int (*)(PyArrayObject *, PyArrayObject *, int, NPY_SELECTKIND)) \
+         PyArray_API[296])
+#define PyArray_ArgPartition \
+        (*(PyObject * (*)(PyArrayObject *, PyArrayObject *, int, NPY_SELECTKIND)) \
+         PyArray_API[297])
+#define PyArray_SelectkindConverter \
+        (*(int (*)(PyObject *, NPY_SELECTKIND *)) \
+         PyArray_API[298])
+#define PyDataMem_NEW_ZEROED \
+        (*(void * (*)(size_t, size_t)) \
+         PyArray_API[299])
 
 #if !defined(NO_IMPORT_ARRAY) && !defined(NO_IMPORT)
 static int

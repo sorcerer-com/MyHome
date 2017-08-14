@@ -1,9 +1,9 @@
 
 # THIS FILE IS GENERATED FROM NUMPY SETUP.PY
-short_version = '1.6.2'
-version = '1.6.2'
-full_version = '1.6.2'
-git_revision = 'ca07bce202ae26b6f0a73870eb2ef0b88e0210c5'
+short_version = '1.8.2'
+version = '1.8.2'
+full_version = '1.8.2'
+git_revision = '4563730a2d036307f1b67b2856d749aabdd8d546'
 release = True
 
 if not release:

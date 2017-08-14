@@ -72,6 +72,7 @@ Saved modules are re-imported at load time but any "state" in the module
 which is not restored by a simple import is lost.
 
 """
+from __future__ import division, absolute_import, print_function
 
 __all__ = ['load', 'save']
 
@@ -118,15 +119,15 @@ def _callers_modules():
     global namespace."""
     g = _callers_globals()
     mods = []
-    for k,v in g.items():
-        if type(v) == type(sys):
-            mods.append(getattr(v,"__name__"))
+    for k, v in g.items():
+        if isinstance(v, type(sys)):
+            mods.append(getattr(v, "__name__"))
     return mods
 
 def _errout(*args):
     for a in args:
-        print >>sys.stderr, a,
-    print >>sys.stderr
+        print(a, end=' ', file=sys.stderr)
+    print(file=sys.stderr)
 
 def _verbose(*args):
     if VERBOSE:
@@ -153,7 +154,7 @@ class _ModuleProxy(object):
             try:
                 self = _loadmodule(name)
             except ImportError:
-                _errout("warning: module", name,"import failed.")
+                _errout("warning: module", name, "import failed.")
         return self
 
     def __getnewargs__(self):
@@ -168,7 +169,7 @@ def _loadmodule(module):
         s = ""
         for i in range(len(modules)):
             s = ".".join(modules[:i+1])
-            exec "import " + s
+            exec("import " + s)
     return sys.modules[module]
 
 class _ObjectProxy(object):
@@ -191,13 +192,13 @@ class _ObjectProxy(object):
             except (ImportError, KeyError):
                 _errout("warning: loading object proxy", module + "." + name,
                         "module import failed.")
-                return _ProxyingFailure(module,name,_type2)
+                return _ProxyingFailure(module, name, _type2)
             try:
                 self = getattr(m, name)
             except AttributeError:
                 _errout("warning: object proxy", module + "." + name,
                         "wouldn't reload from", m)
-                return _ProxyingFailure(module,name,_type2)
+                return _ProxyingFailure(module, name, _type2)
         return self
 
     def __getnewargs__(self):
@@ -233,7 +234,7 @@ def _locate(modules, object):
     for mname in modules:
         m = sys.modules[mname]
         if m:
-            for k,v in m.__dict__.items():
+            for k, v in m.__dict__.items():
                 if v is object:
                     return m.__name__, k
     else:
@@ -267,15 +268,15 @@ def save(variables=None, file=SAVEFILE, dictionary=None, verbose=False):
         dictionary = _callers_globals()
 
     if variables is None:
-        keys = dictionary.keys()
+        keys = list(dictionary.keys())
     else:
         keys = variables.split(",")
 
-    source_modules = _callers_modules() + sys.modules.keys()
+    source_modules = _callers_modules() + list(sys.modules.keys())
 
     p = pickle.Pickler(file, protocol=2)
 
-    _verbose("variables:",keys)
+    _verbose("variables:", keys)
     for k in keys:
         v = dictionary[k]
         _verbose("saving", k, type(v))
@@ -290,7 +291,7 @@ def save(variables=None, file=SAVEFILE, dictionary=None, verbose=False):
                 try:
                     module, name = _locate(source_modules, v)
                 except ObjectNotFound:
-                    _errout("warning: couldn't find object",k,
+                    _errout("warning: couldn't find object", k,
                             "in any module... skipping.")
                     continue
                 else:
@@ -325,13 +326,13 @@ def load(variables=None, file=SAVEFILE, dictionary=None, verbose=False):
         dictionary = _callers_globals()
     values = []
     p = pickle.Unpickler(file)
-    while 1:
+    while True:
         o = p.load()
         if isinstance(o, _SaveSession):
             session = dict(zip(o.keys, values))
             _verbose("updating dictionary with session variables.")
             if variables is None:
-                keys = session.keys()
+                keys = list(session.keys())
             else:
                 keys = variables.split(",")
             for k in keys:

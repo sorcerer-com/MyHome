@@ -5,6 +5,8 @@ An explanation of strides can be found in the "ndarray.rst" file in the
 NumPy reference guide.
 
 """
+from __future__ import division, absolute_import, print_function
+
 import numpy as np
 
 __all__ = ['broadcast_arrays']
@@ -25,7 +27,11 @@ def as_strided(x, shape=None, strides=None):
         interface['shape'] = tuple(shape)
     if strides is not None:
         interface['strides'] = tuple(strides)
-    return np.asarray(DummyArray(interface, base=x))
+    array = np.asarray(DummyArray(interface, base=x))
+    # Make sure dtype is correct in case of custom dtype
+    if array.dtype.kind == 'V':
+        array.dtype = x.dtype
+    return array
 
 def broadcast_arrays(*args):
     """
@@ -58,7 +64,7 @@ def broadcast_arrays(*args):
     Here is a useful idiom for getting contiguous copies instead of
     non-contiguous views.
 
-    >>> map(np.array, np.broadcast_arrays(x, y))
+    >>> [np.array(a) for a in np.broadcast_arrays(x, y)]
     [array([[1, 2, 3],
            [1, 2, 3],
            [1, 2, 3]]), array([[1, 1, 1],
@@ -66,7 +72,7 @@ def broadcast_arrays(*args):
            [3, 3, 3]])]
 
     """
-    args = map(np.asarray, args)
+    args = [np.asarray(_m) for _m in args]
     shapes = [x.shape for x in args]
     if len(set(shapes)) == 1:
         # Common case where nothing needs to be broadcasted.
@@ -110,6 +116,6 @@ def broadcast_arrays(*args):
             common_shape.append(1)
 
     # Construct the new arrays.
-    broadcasted = [as_strided(x, shape=sh, strides=st) for (x,sh,st) in
+    broadcasted = [as_strided(x, shape=sh, strides=st) for (x, sh, st) in
         zip(args, shapes, strides)]
     return broadcasted

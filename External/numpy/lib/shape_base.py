@@ -1,5 +1,7 @@
-__all__ = ['column_stack','row_stack', 'dstack','array_split','split','hsplit',
-           'vsplit','dsplit','apply_over_axes','expand_dims',
+from __future__ import division, absolute_import, print_function
+
+__all__ = ['column_stack', 'row_stack', 'dstack', 'array_split', 'split', 'hsplit',
+           'vsplit', 'dsplit', 'apply_over_axes', 'expand_dims',
            'apply_along_axis', 'kron', 'tile', 'get_array_wrap']
 
 import numpy.core.numeric as _nx
@@ -29,7 +31,7 @@ def apply_along_axis(func1d,axis,arr,*args):
 
     Returns
     -------
-    outarr : ndarray
+    apply_along_axis : ndarray
         The output array. The shape of `outarr` is identical to the shape of
         `arr`, except along the `axis` dimension, where the length of `outarr`
         is equal to the size of the return value of `func1d`.  If `func1d`
@@ -53,14 +55,11 @@ def apply_along_axis(func1d,axis,arr,*args):
     For a function that doesn't return a scalar, the number of dimensions in
     `outarr` is the same as `arr`.
 
-    >>> def new_func(a):
-    ...     \"\"\"Divide elements of a by 2.\"\"\"
-    ...     return a * 0.5
-    >>> b = np.array([[1,2,3], [4,5,6], [7,8,9]])
-    >>> np.apply_along_axis(new_func, 0, b)
-    array([[ 0.5,  1. ,  1.5],
-           [ 2. ,  2.5,  3. ],
-           [ 3.5,  4. ,  4.5]])
+    >>> b = np.array([[8,1,7], [4,3,9], [5,2,6]])
+    >>> np.apply_along_axis(sorted, 1, b)
+    array([[1, 7, 8],
+           [3, 4, 9],
+           [2, 5, 6]])
 
     """
     arr = asarray(arr)
@@ -69,18 +68,18 @@ def apply_along_axis(func1d,axis,arr,*args):
         axis += nd
     if (axis >= nd):
         raise ValueError("axis must be less than arr.ndim; axis=%d, rank=%d."
-            % (axis,nd))
+            % (axis, nd))
     ind = [0]*(nd-1)
-    i = zeros(nd,'O')
-    indlist = range(nd)
+    i = zeros(nd, 'O')
+    indlist = list(range(nd))
     indlist.remove(axis)
-    i[axis] = slice(None,None)
+    i[axis] = slice(None, None)
     outshape = asarray(arr.shape).take(indlist)
     i.put(indlist, ind)
     res = func1d(arr[tuple(i.tolist())],*args)
     #  if res is a number, then we have a smaller output array
     if isscalar(res):
-        outarr = zeros(outshape,asarray(res).dtype)
+        outarr = zeros(outshape, asarray(res).dtype)
         outarr[tuple(ind)] = res
         Ntot = product(outshape)
         k = 1
@@ -92,7 +91,7 @@ def apply_along_axis(func1d,axis,arr,*args):
                 ind[n-1] += 1
                 ind[n] = 0
                 n -= 1
-            i.put(indlist,ind)
+            i.put(indlist, ind)
             res = func1d(arr[tuple(i.tolist())],*args)
             outarr[tuple(ind)] = res
             k += 1
@@ -102,7 +101,7 @@ def apply_along_axis(func1d,axis,arr,*args):
         holdshape = outshape
         outshape = list(arr.shape)
         outshape[axis] = len(res)
-        outarr = zeros(outshape,asarray(res).dtype)
+        outarr = zeros(outshape, asarray(res).dtype)
         outarr[tuple(i.tolist())] = res
         k = 1
         while k < Ntot:
@@ -142,7 +141,7 @@ def apply_over_axes(func, a, axes):
 
     Returns
     -------
-    val : ndarray
+    apply_over_axis : ndarray
         The output array.  The number of dimensions is the same as `a`,
         but the shape can be different.  This depends on whether `func`
         changes the shape of its output with respect to its input.
@@ -183,12 +182,12 @@ def apply_over_axes(func, a, axes):
         if res.ndim == val.ndim:
             val = res
         else:
-            res = expand_dims(res,axis)
+            res = expand_dims(res, axis)
             if res.ndim == val.ndim:
                 val = res
             else:
-                raise ValueError, "function is not returning"\
-                      " an array of correct shape"
+                raise ValueError("function is not returning "
+                        "an array of the correct shape")
     return val
 
 def expand_dims(a, axis):
@@ -289,11 +288,11 @@ def column_stack(tup):
     """
     arrays = []
     for v in tup:
-        arr = array(v,copy=False,subok=True)
+        arr = array(v, copy=False, subok=True)
         if arr.ndim < 2:
-            arr = array(arr,copy=False,subok=True,ndmin=2).T
+            arr = array(arr, copy=False, subok=True, ndmin=2).T
         arrays.append(arr)
-    return _nx.concatenate(arrays,1)
+    return _nx.concatenate(arrays, 1)
 
 def dstack(tup):
     """
@@ -343,19 +342,19 @@ def dstack(tup):
            [[3, 4]]])
 
     """
-    return _nx.concatenate(map(atleast_3d,tup),2)
+    return _nx.concatenate([atleast_3d(_m) for _m in tup], 2)
 
 def _replace_zero_by_x_arrays(sub_arys):
     for i in range(len(sub_arys)):
         if len(_nx.shape(sub_arys[i])) == 0:
             sub_arys[i] = _nx.array([])
-        elif _nx.sometrue(_nx.equal(_nx.shape(sub_arys[i]),0)):
+        elif _nx.sometrue(_nx.equal(_nx.shape(sub_arys[i]), 0)):
             sub_arys[i] = _nx.array([])
     return sub_arys
 
 def array_split(ary,indices_or_sections,axis = 0):
     """
-    Split an array into multiple sub-arrays of equal or near-equal size.
+    Split an array into multiple sub-arrays.
 
     Please refer to the ``split`` documentation.  The only difference
     between these functions is that ``array_split`` allows
@@ -383,30 +382,30 @@ def array_split(ary,indices_or_sections,axis = 0):
     except TypeError: #indices_or_sections is a scalar, not an array.
         Nsections = int(indices_or_sections)
         if Nsections <= 0:
-            raise ValueError, 'number sections must be larger than 0.'
-        Neach_section,extras = divmod(Ntotal,Nsections)
+            raise ValueError('number sections must be larger than 0.')
+        Neach_section, extras = divmod(Ntotal, Nsections)
         section_sizes = [0] + \
                         extras * [Neach_section+1] + \
                         (Nsections-extras) * [Neach_section]
         div_points = _nx.array(section_sizes).cumsum()
 
     sub_arys = []
-    sary = _nx.swapaxes(ary,axis,0)
+    sary = _nx.swapaxes(ary, axis, 0)
     for i in range(Nsections):
         st = div_points[i]; end = div_points[i+1]
-        sub_arys.append(_nx.swapaxes(sary[st:end],axis,0))
+        sub_arys.append(_nx.swapaxes(sary[st:end], axis, 0))
 
-    # there is a wierd issue with array slicing that allows
-    # 0x10 arrays and other such things.  The following cluge is needed
+    # there is a weird issue with array slicing that allows
+    # 0x10 arrays and other such things. The following kludge is needed
     # to get around this issue.
     sub_arys = _replace_zero_by_x_arrays(sub_arys)
-    # end cluge.
+    # end kludge.
 
     return sub_arys
 
 def split(ary,indices_or_sections,axis=0):
     """
-    Split an array into multiple sub-arrays of equal size.
+    Split an array into multiple sub-arrays.
 
     Parameters
     ----------
@@ -474,11 +473,11 @@ def split(ary,indices_or_sections,axis=0):
         sections = indices_or_sections
         N = ary.shape[axis]
         if N % sections:
-            raise ValueError, 'array split does not result in an equal division'
-    res = array_split(ary,indices_or_sections,axis)
+            raise ValueError('array split does not result in an equal division')
+    res = array_split(ary, indices_or_sections, axis)
     return res
 
-def hsplit(ary,indices_or_sections):
+def hsplit(ary, indices_or_sections):
     """
     Split an array into multiple sub-arrays horizontally (column-wise).
 
@@ -534,13 +533,13 @@ def hsplit(ary,indices_or_sections):
 
     """
     if len(_nx.shape(ary)) == 0:
-        raise ValueError, 'hsplit only works on arrays of 1 or more dimensions'
+        raise ValueError('hsplit only works on arrays of 1 or more dimensions')
     if len(ary.shape) > 1:
-        return split(ary,indices_or_sections,1)
+        return split(ary, indices_or_sections, 1)
     else:
-        return split(ary,indices_or_sections,0)
+        return split(ary, indices_or_sections, 0)
 
-def vsplit(ary,indices_or_sections):
+def vsplit(ary, indices_or_sections):
     """
     Split an array into multiple sub-arrays vertically (row-wise).
 
@@ -588,10 +587,10 @@ def vsplit(ary,indices_or_sections):
 
     """
     if len(_nx.shape(ary)) < 2:
-        raise ValueError, 'vsplit only works on arrays of 2 or more dimensions'
-    return split(ary,indices_or_sections,0)
+        raise ValueError('vsplit only works on arrays of 2 or more dimensions')
+    return split(ary, indices_or_sections, 0)
 
-def dsplit(ary,indices_or_sections):
+def dsplit(ary, indices_or_sections):
     """
     Split array into multiple sub-arrays along the 3rd axis (depth).
 
@@ -633,18 +632,17 @@ def dsplit(ary,indices_or_sections):
 
     """
     if len(_nx.shape(ary)) < 3:
-        raise ValueError, 'vsplit only works on arrays of 3 or more dimensions'
-    return split(ary,indices_or_sections,2)
+        raise ValueError('vsplit only works on arrays of 3 or more dimensions')
+    return split(ary, indices_or_sections, 2)
 
 def get_array_prepare(*args):
     """Find the wrapper for the array with the highest priority.
 
     In case of ties, leftmost wins. If no wrapper is found, return None
     """
-    wrappers = [(getattr(x, '__array_priority__', 0), -i,
+    wrappers = sorted((getattr(x, '__array_priority__', 0), -i,
                  x.__array_prepare__) for i, x in enumerate(args)
-                                   if hasattr(x, '__array_prepare__')]
-    wrappers.sort()
+                                   if hasattr(x, '__array_prepare__'))
     if wrappers:
         return wrappers[-1][-1]
     return None
@@ -654,15 +652,14 @@ def get_array_wrap(*args):
 
     In case of ties, leftmost wins. If no wrapper is found, return None
     """
-    wrappers = [(getattr(x, '__array_priority__', 0), -i,
+    wrappers = sorted((getattr(x, '__array_priority__', 0), -i,
                  x.__array_wrap__) for i, x in enumerate(args)
-                                   if hasattr(x, '__array_wrap__')]
-    wrappers.sort()
+                                   if hasattr(x, '__array_wrap__'))
     if wrappers:
         return wrappers[-1][-1]
     return None
 
-def kron(a,b):
+def kron(a, b):
     """
     Kronecker product of two arrays.
 
@@ -679,12 +676,10 @@ def kron(a,b):
 
     See Also
     --------
-
     outer : The outer product
 
     Notes
     -----
-
     The function assumes that the number of dimenensions of `a` and `b`
     are the same, if necessary prepending the smallest with ones.
     If `a.shape = (r0,r1,..,rN)` and `b.shape = (s0,s1,...,sN)`,
@@ -733,10 +728,10 @@ def kron(a,b):
 
     """
     b = asanyarray(b)
-    a = array(a,copy=False,subok=True,ndmin=b.ndim)
+    a = array(a, copy=False, subok=True, ndmin=b.ndim)
     ndb, nda = b.ndim, a.ndim
     if (nda == 0 or ndb == 0):
-        return _nx.multiply(a,b)
+        return _nx.multiply(a, b)
     as_ = a.shape
     bs = b.shape
     if not a.flags.contiguous:
@@ -750,9 +745,9 @@ def kron(a,b):
         else:
             bs = (1,)*(nda-ndb) + bs
             nd = nda
-    result = outer(a,b).reshape(as_+bs)
+    result = outer(a, b).reshape(as_+bs)
     axis = nd-1
-    for _ in xrange(nd):
+    for _ in range(nd):
         result = concatenate(result, axis=axis)
     wrapper = get_array_prepare(a, b)
     if wrapper is not None:
@@ -824,16 +819,16 @@ def tile(A, reps):
     except TypeError:
         tup = (reps,)
     d = len(tup)
-    c = _nx.array(A,copy=False,subok=True,ndmin=d)
+    c = _nx.array(A, copy=False, subok=True, ndmin=d)
     shape = list(c.shape)
-    n = max(c.size,1)
+    n = max(c.size, 1)
     if (d < c.ndim):
         tup = (1,)*(c.ndim-d) + tup
     for i, nrep in enumerate(tup):
         if nrep!=1:
-            c = c.reshape(-1,n).repeat(nrep,0)
+            c = c.reshape(-1, n).repeat(nrep, 0)
         dim_in = shape[i]
         dim_out = dim_in*nrep
         shape[i] = dim_out
-        n /= max(dim_in,1)
+        n //= max(dim_in, 1)
     return c.reshape(shape)

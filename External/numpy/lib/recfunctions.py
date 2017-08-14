@@ -4,8 +4,8 @@ Collection of utilities to manipulate structured arrays.
 Most of these functions were initially implemented by John Hunter for matplotlib.
 They have been rewritten and extended for convenience.
 
-
 """
+from __future__ import division, absolute_import, print_function
 
 import sys
 import itertools
@@ -15,6 +15,10 @@ from numpy import ndarray, recarray
 from numpy.ma import MaskedArray
 from numpy.ma.mrecords import MaskedRecords
 from numpy.lib._iotools import _is_string_like
+from numpy.compat import basestring
+
+if sys.version_info[0] < 3:
+    from future_builtins import zip
 
 _check_fill_value = np.ma.core._check_fill_value
 
@@ -287,7 +291,7 @@ def izip_records(seqarrays, fill_value=None, flatten=True):
         zipfunc = _izip_fields
     #
     try:
-        for tup in itertools.izip(*iters):
+        for tup in zip(*iters):
             yield tuple(zipfunc(tup))
     except IndexError:
         pass
@@ -317,7 +321,7 @@ def _fix_defaults(output, defaults=None):
     """
     names = output.dtype.names
     (data, mask, fill_value) = (output.data, output.mask, output.fill_value)
-    for (k, v) in (defaults or {}).iteritems():
+    for (k, v) in (defaults or {}).items():
         if k in names:
             fill_value[k] = v
             data[k][mask[k]] = v
@@ -401,7 +405,7 @@ def merge_arrays(seqarrays,
             seqarrays = (seqarrays,)
     else:
         # Make sure we have arrays in the input sequence
-        seqarrays = map(np.asanyarray, seqarrays)
+        seqarrays = [np.asanyarray(_m) for _m in seqarrays]
     # Find the sizes of the inputs and their maximum
     sizes = tuple(a.size for a in seqarrays)
     maxlength = max(sizes)
@@ -412,7 +416,7 @@ def merge_arrays(seqarrays,
     seqmask = []
     # If we expect some kind of MaskedArray, make a special loop.
     if usemask:
-        for (a, n) in itertools.izip(seqarrays, sizes):
+        for (a, n) in zip(seqarrays, sizes):
             nbmissing = (maxlength - n)
             # Get the data and mask
             data = a.ravel().__array__()
@@ -441,7 +445,7 @@ def merge_arrays(seqarrays,
             output = output.view(MaskedRecords)
     else:
         # Same as before, without the mask we don't need...
-        for (a, n) in itertools.izip(seqarrays, sizes):
+        for (a, n) in zip(seqarrays, sizes):
             nbmissing = (maxlength - n)
             data = a.ravel().__array__()
             if nbmissing:
@@ -895,6 +899,13 @@ def join_by(key, r1, r2, jointype='inner', r1postfix='1', r2postfix='2',
     (nb1, nb2) = (len(r1), len(r2))
     (r1names, r2names) = (r1.dtype.names, r2.dtype.names)
 
+    # Check the names for collision
+    if (set.intersection(set(r1names), set(r2names)).difference(key) and
+            not (r1postfix or r2postfix)):
+        msg = "r1 and r2 contain common names, r1postfix and r2postfix "
+        msg += "can't be empty"
+        raise ValueError(msg)
+
     # Make temporary arrays of just the keys
     r1k = drop_fields(r1, [n for n in r1names if n not in key])
     r2k = drop_fields(r2, [n for n in r2names if n not in key])
@@ -937,7 +948,7 @@ def join_by(key, r1, r2, jointype='inner', r1postfix='1', r2postfix='2',
         name = desc[0]
         # Have we seen the current name already ?
         if name in names:
-            nameidx = names.index(name)
+            nameidx = ndtype.index(desc)
             current = ndtype[nameidx]
             # The current field is part of the key: take the largest dtype
             if name in key:
@@ -960,7 +971,7 @@ def join_by(key, r1, r2, jointype='inner', r1postfix='1', r2postfix='2',
     names = output.dtype.names
     for f in r1names:
         selected = s1[f]
-        if f not in names:
+        if f not in names or (f in r2names and not r2postfix and not f in key):
             f += r1postfix
         current = output[f]
         current[:r1cmn] = selected[:r1cmn]
@@ -968,7 +979,7 @@ def join_by(key, r1, r2, jointype='inner', r1postfix='1', r2postfix='2',
             current[cmn:cmn + r1spc] = selected[r1cmn:]
     for f in r2names:
         selected = s2[f]
-        if f not in names:
+        if f not in names or (f in r1names and not r1postfix and f not in key):
             f += r2postfix
         current = output[f]
         current[:r2cmn] = selected[:r2cmn]

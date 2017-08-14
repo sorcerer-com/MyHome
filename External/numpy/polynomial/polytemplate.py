@@ -9,19 +9,16 @@ creating additional specific polynomial classes (e.g., Legendre, Jacobi,
 etc.) in the future, such that all these classes will have a common API.
 
 """
+from __future__ import division, absolute_import, print_function
+
 import string
 import sys
 
-if sys.version_info[0] >= 3:
-    rel_import = "from . import"
-else:
-    rel_import = "import"
-
 polytemplate = string.Template('''
-from __future__ import division
+from __future__ import division, absolute_import, print_function
 import numpy as np
 import warnings
-REL_IMPORT polyutils as pu
+from . import polyutils as pu
 
 class $name(pu.PolyBase) :
     """A $name series class.
@@ -46,11 +43,11 @@ class $name(pu.PolyBase) :
 
     Attributes
     ----------
-    coef : (N,) array
+    coef : (N,) ndarray
         $name coefficients, from low to high.
-    domain : (2,) array
+    domain : (2,) ndarray
         Domain that is mapped to ``window``.
-    window : (2,) array
+    window : (2,) ndarray
         Window that ``domain`` is mapped to.
 
     Class Attributes
@@ -81,7 +78,9 @@ class $name(pu.PolyBase) :
     # Default window
     window = np.array($domain)
     # Don't let participate in array operations. Value doesn't matter.
-    __array_priority__ = 0
+    __array_priority__ = 1000
+    # Not hashable
+    __hash__ = None
 
     def has_samecoef(self, other):
         """Check if coefficients match.
@@ -577,7 +576,7 @@ class $name(pu.PolyBase) :
         applied to the input arguments before the series is evaluated. The
         map depends on the ``domain`` and ``window``; if the current
         ``domain`` is equal to the ``window`` the resulting map is the
-        identity.  If the coeffients of the ``$name`` instance are to be
+        identity.  If the coefficients of the ``$name`` instance are to be
         used by themselves outside this class, then the linear function
         must be substituted for the ``x`` in the standard representation of
         the base polynomials.
@@ -681,14 +680,19 @@ class $name(pu.PolyBase) :
     def linspace(self, n=100, domain=None):
         """Return x,y values at equally spaced points in domain.
 
-        Returns x, y values at `n` equally spaced points across domain.
-        Here y is the value of the polynomial at the points x.  This is
-        intended as a plotting aid.
+        Returns x, y values at `n` linearly spaced points across domain.
+        Here y is the value of the polynomial at the points x. By default
+        the domain is the same as that of the $name instance.  This method
+        is intended mostly as a plotting aid.
 
         Parameters
         ----------
         n : int, optional
             Number of point pairs to return. The default value is 100.
+        domain : {None, array_like}
+            If not None, the specified domain is used instead of that of
+            the calling instance. It should be of the form ``[beg,end]``.
+            The default is None.
 
         Returns
         -------
@@ -715,8 +719,9 @@ class $name(pu.PolyBase) :
         Return a `$name` instance that is the least squares fit to the data
         `y` sampled at `x`. Unlike `${nick}fit`, the domain of the returned
         instance can be specified and this will often result in a superior
-        fit with less chance of ill conditioning. See `${nick}fit` for full
-        documentation of the implementation.
+        fit with less chance of ill conditioning. Support for NA was added
+        in version 1.7.0. See `${nick}fit` for full documentation of the
+        implementation.
 
         Parameters
         ----------
@@ -764,7 +769,7 @@ class $name(pu.PolyBase) :
             has the domain specified in the call.
 
         [residuals, rank, singular_values, rcond] : only if `full` = True
-            Residuals of the least-squares fit, the effective rank of the
+            Residuals of the least squares fit, the effective rank of the
             scaled Vandermonde matrix and its singular values, and the
             specified value of `rcond`. For more details, see
             `linalg.lstsq`.
@@ -803,10 +808,17 @@ class $name(pu.PolyBase) :
         ----------
         roots : array_like
             List of roots.
+        domain : {array_like, None}, optional
+            Domain for the resulting instance of $name. If none the domain
+            is the interval from the smallest root to the largest. The
+            default is $domain.
+        window : array_like, optional
+            Window for the resulting instance of $name. The default value
+            is $domain.
 
         Returns
         -------
-        object : $name
+        object : $name instance
             Series with the specified roots.
 
         See Also
@@ -814,10 +826,13 @@ class $name(pu.PolyBase) :
         ${nick}fromroots : equivalent function
 
         """
+        [roots] = pu.as_series([roots], trim=False)
         if domain is None :
             domain = pu.getdomain(roots)
-        rnew = pu.mapdomain(roots, domain, window)
-        coef = ${nick}fromroots(rnew)
+        deg = len(roots)
+        off, scl = pu.mapparms(domain, window)
+        rnew = off + scl*roots
+        coef = ${nick}fromroots(rnew) / scl**deg
         return $name(coef, domain=domain, window=window)
 
     @staticmethod
@@ -830,7 +845,7 @@ class $name(pu.PolyBase) :
         Parameters
         ----------
         domain : array_like
-            The resulting array must be if the form ``[beg, end]``, where
+            The resulting array must be of the form ``[beg, end]``, where
             ``beg`` and ``end`` are the endpoints of the domain.
         window : array_like
             The resulting array must be if the form ``[beg, end]``, where
@@ -838,10 +853,76 @@ class $name(pu.PolyBase) :
 
         Returns
         -------
-        identity : $name object
+        identity : $name instance
 
         """
         off, scl = pu.mapparms(window, domain)
         coef = ${nick}line(off, scl)
         return $name(coef, domain, window)
-'''.replace('REL_IMPORT', rel_import))
+
+    @staticmethod
+    def basis(deg, domain=$domain, window=$domain):
+        """$name polynomial of degree `deg`.
+
+        Returns an instance of the $name polynomial of degree `d`.
+
+        Parameters
+        ----------
+        deg : int
+            Degree of the $name polynomial. Must be >= 0.
+        domain : array_like
+            The resulting array must be of the form ``[beg, end]``, where
+            ``beg`` and ``end`` are the endpoints of the domain.
+        window : array_like
+            The resulting array must be if the form ``[beg, end]``, where
+            ``beg`` and ``end`` are the endpoints of the window.
+
+        Returns
+        p : $name instance
+
+        Notes
+        -----
+        .. versionadded:: 1.7.0
+
+        """
+        ideg = int(deg)
+        if ideg != deg or ideg < 0:
+            raise ValueError("deg must be non-negative integer")
+        return $name([0]*ideg + [1], domain, window)
+
+    @staticmethod
+    def cast(series, domain=$domain, window=$domain):
+        """Convert instance to equivalent $name series.
+
+        The `series` is expected to be an instance of some polynomial
+        series of one of the types supported by by the numpy.polynomial
+        module, but could be some other class that supports the convert
+        method.
+
+        Parameters
+        ----------
+        series : series
+            The instance series to be converted.
+        domain : array_like
+            The resulting array must be of the form ``[beg, end]``, where
+            ``beg`` and ``end`` are the endpoints of the domain.
+        window : array_like
+            The resulting array must be if the form ``[beg, end]``, where
+            ``beg`` and ``end`` are the endpoints of the window.
+
+        Returns
+        p : $name instance
+            A $name series equal to the `poly` series.
+
+        See Also
+        --------
+        convert -- similar instance method
+
+        Notes
+        -----
+        .. versionadded:: 1.7.0
+
+        """
+        return series.convert(domain, $name, window)
+
+''')

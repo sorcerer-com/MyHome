@@ -1,3 +1,5 @@
+from __future__ import division, absolute_import, print_function
+
 import os
 import sys
 from distutils.command.build import build as old_build
@@ -17,7 +19,7 @@ class build(old_build):
         ]
 
     help_options = old_build.help_options + [
-        ('help-fcompiler',None, "list available Fortran compilers",
+        ('help-fcompiler', None, "list available Fortran compilers",
          show_fortran_compilers),
         ]
 

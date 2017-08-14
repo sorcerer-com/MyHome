@@ -82,6 +82,7 @@ set_state            Set state of generator.
 ==================== =========================================================
 
 """
+from __future__ import division, absolute_import, print_function
 
 depends = ['core']
 

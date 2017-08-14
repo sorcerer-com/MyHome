@@ -20,6 +20,25 @@ Released for unlimited redistribution.
 
 """
 # pylint: disable-msg=E1002
+from __future__ import division, absolute_import, print_function
+
+import sys
+import warnings
+from functools import reduce
+
+import numpy as np
+import numpy.core.umath as umath
+import numpy.core.numerictypes as ntypes
+from numpy import ndarray, amax, amin, iscomplexobj, bool_
+from numpy import array as narray
+from numpy.lib.function_base import angle
+from numpy.compat import getargspec, formatargspec, long, basestring
+from numpy import expand_dims as n_expand_dims
+
+if sys.version_info[0] >= 3:
+    import pickle
+else:
+    import cPickle as pickle
 
 __author__ = "Pierre GF Gerard-Marchant"
 __docformat__ = "restructuredtext en"
@@ -27,7 +46,7 @@ __docformat__ = "restructuredtext en"
 __all__ = ['MAError', 'MaskError', 'MaskType', 'MaskedArray',
            'bool_',
            'abs', 'absolute', 'add', 'all', 'allclose', 'allequal', 'alltrue',
-           'amax', 'amin', 'anom', 'anomalies', 'any', 'arange',
+           'amax', 'amin', 'angle', 'anom', 'anomalies', 'any', 'arange',
            'arccos', 'arccosh', 'arcsin', 'arcsinh', 'arctan', 'arctan2',
            'arctanh', 'argmax', 'argmin', 'argsort', 'around',
            'array', 'asarray', 'asanyarray',
@@ -67,22 +86,6 @@ __all__ = ['MAError', 'MaskError', 'MaskType', 'MaskedArray',
            'var', 'where',
            'zeros']
 
-import cPickle
-
-import numpy as np
-from numpy import ndarray, amax, amin, iscomplexobj, bool_
-from numpy import array as narray
-
-import numpy.core.umath as umath
-import numpy.core.numerictypes as ntypes
-from numpy.compat import getargspec, formatargspec
-from numpy import expand_dims as n_expand_dims
-import warnings
-
-import sys
-if sys.version_info[0] >= 3:
-    from functools import reduce
-
 MaskType = np.bool_
 nomask = MaskType(0)
 
@@ -109,7 +112,7 @@ def get_object_signature(obj):
     """
     try:
         sig = formatargspec(*getargspec(obj))
-    except TypeError, errmsg:
+    except TypeError as errmsg:
         sig = ''
 #        msg = "Unable to retrieve the signature of %s '%s'\n"\
 #              "(Initial error message: %s)"
@@ -143,6 +146,8 @@ default_filler = {'b': True,
                   'u' : 999999,
                   'V' : '???',
                   'U' : 'N/A',
+                  'M8[D]' : np.datetime64('NaT', 'D'),
+                  'M8[us]' : np.datetime64('NaT', 'us')
                   }
 max_filler = ntypes._minvals
 max_filler.update([(k, -np.inf) for k in [np.float32, np.float64]])
@@ -198,6 +203,8 @@ def default_fill_value(obj):
     elif isinstance(obj, np.dtype):
         if obj.subdtype:
             defval = default_filler.get(obj.subdtype[0].kind, '?')
+        elif obj.kind == 'M':
+            defval = default_filler.get(obj.str[1:], '?')
         else:
             defval = default_filler.get(obj.kind, '?')
     elif isinstance(obj, float):
@@ -409,7 +416,7 @@ def _check_fill_value(fill_value, ndtype):
             fill_value = np.array(_recursive_set_fill_value(fill_value, descr),
                                   dtype=ndtype)
     else:
-        if isinstance(fill_value, basestring) and (ndtype.char not in 'SV'):
+        if isinstance(fill_value, basestring) and (ndtype.char not in 'SVU'):
             fill_value = default_fill_value(ndtype)
         else:
             # In case we want to convert 1e+20 to int...
@@ -623,7 +630,6 @@ def getdata(a, subok=True):
 
     Examples
     --------
-
     >>> import numpy.ma as ma
     >>> a = ma.masked_equal([[1,2],[3,4]], 2)
     >>> a
@@ -832,13 +838,9 @@ class _MaskedUnaryOperation:
         d = getdata(a)
         # Case 1.1. : Domained function
         if self.domain is not None:
-            # Save the error status
-            err_status_ini = np.geterr()
-            try:
+            with np.errstate():
                 np.seterr(divide='ignore', invalid='ignore')
                 result = self.f(d, *args, **kwargs)
-            finally:
-                np.seterr(**err_status_ini)
             # Make a mask
             m = ~umath.isfinite(result)
             m |= self.domain(d)
@@ -860,7 +862,7 @@ class _MaskedUnaryOperation:
         if m is not nomask:
             # In case result has a lower dtype than the inputs (as in equal)
             try:
-                np.putmask(result, m, d)
+                np.copyto(result, d, where=m)
             except TypeError:
                 pass
         # Transform to
@@ -925,12 +927,12 @@ class _MaskedBinaryOperation:
         else:
             m = umath.logical_or(ma, mb)
         # Get the result
-        err_status_ini = np.geterr()
-        try:
+        with np.errstate():
             np.seterr(divide='ignore', invalid='ignore')
             result = self.f(da, db, *args, **kwargs)
-        finally:
-            np.seterr(**err_status_ini)
+        # check it worked
+        if result is NotImplemented:
+            return NotImplemented
         # Case 1. : scalar
         if not result.ndim:
             if m:
@@ -939,7 +941,7 @@ class _MaskedBinaryOperation:
         # Case 2. : array
         # Revert result to da where masked
         if m.any():
-            np.putmask(result, m, 0)
+            np.copyto(result, 0, casting='unsafe', where=m)
             # This only makes sense if the operation preserved the dtype
             if result.dtype == da.dtype:
                 result += m * da
@@ -1000,8 +1002,11 @@ class _MaskedBinaryOperation:
             return masked
         (da, db) = (getdata(a), getdata(b))
         d = self.f.outer(da, db)
+        # check it worked
+        if d is NotImplemented:
+            return NotImplemented
         if m is not nomask:
-            np.putmask(d, m, da)
+            np.copyto(d, da, where=m)
         if d.shape:
             d = d.view(get_masked_subclass(a, b))
             d._mask = m
@@ -1063,12 +1068,12 @@ class _DomainedBinaryOperation:
         (da, db) = (getdata(a, subok=False), getdata(b, subok=False))
         (ma, mb) = (getmask(a), getmask(b))
         # Get the result
-        err_status_ini = np.geterr()
-        try:
+        with np.errstate():
             np.seterr(divide='ignore', invalid='ignore')
             result = self.f(da, db, *args, **kwargs)
-        finally:
-            np.seterr(**err_status_ini)
+        # check it worked
+        if result is NotImplemented:
+            return NotImplemented
         # Get the mask as a combination of ma, mb and invalid
         m = ~umath.isfinite(result)
         m |= ma
@@ -1084,7 +1089,7 @@ class _DomainedBinaryOperation:
             else:
                 return result
         # When the mask is True, put back da
-        np.putmask(result, m, 0)
+        np.copyto(result, 0, casting='unsafe', where=m)
         result += m * da
         result = result.view(get_masked_subclass(a, b))
         result._mask = m
@@ -1113,6 +1118,7 @@ sinh = _MaskedUnaryOperation(umath.sinh)
 cosh = _MaskedUnaryOperation(umath.cosh)
 tanh = _MaskedUnaryOperation(umath.tanh)
 abs = absolute = _MaskedUnaryOperation(umath.absolute)
+angle = _MaskedUnaryOperation(angle) # from numpy.lib.function_base
 fabs = _MaskedUnaryOperation(umath.fabs)
 negative = _MaskedUnaryOperation(umath.negative)
 floor = _MaskedUnaryOperation(umath.floor)
@@ -1255,7 +1261,6 @@ def getmask(a):
 
     Examples
     --------
-
     >>> import numpy.ma as ma
     >>> a = ma.masked_equal([[1,2],[3,4]], 2)
     >>> a
@@ -1317,7 +1322,6 @@ def getmaskarray(arr):
 
     Examples
     --------
-
     >>> import numpy.ma as ma
     >>> a = ma.masked_equal([[1,2],[3,4]], 2)
     >>> a
@@ -1525,7 +1529,7 @@ def make_mask_none(newshape, dtype=None):
     ----------
     newshape : tuple
         A tuple indicating the shape of the mask.
-    dtype: {None, dtype}, optional
+    dtype : {None, dtype}, optional
         If None, use a MaskType instance. Otherwise, use a new datatype with
         the same fields as `dtype`, converted to boolean types.
 
@@ -1798,7 +1802,7 @@ def masked_where(condition, a, copy=True):
 
     (cshape, ashape) = (cond.shape, a.shape)
     if cshape and cshape != ashape:
-        raise IndexError("Inconsistant shape between the condition and the input"\
+        raise IndexError("Inconsistant shape between the condition and the input"
                          " (got %s and %s)" % (cshape, ashape))
     if hasattr(a, '_mask'):
         cond = mask_or(cond, a._mask)
@@ -2289,7 +2293,7 @@ def _recursive_printoption(result, mask, printopt):
         if curdata.dtype.names:
             _recursive_printoption(curdata, curmask, printopt)
         else:
-            np.putmask(curdata, curmask, printopt)
+            np.copyto(curdata, printopt, where=curmask)
     return
 
 _print_templates = dict(long_std="""\
@@ -2334,7 +2338,7 @@ def _recursive_filled(a, mask, fill_value):
         if current.dtype.names:
             _recursive_filled(current, mask[name], fill_value[name])
         else:
-            np.putmask(current, mask[name], fill_value[name])
+            np.copyto(current, fill_value[name], where=mask[name])
 
 
 
@@ -2535,7 +2539,7 @@ class MaskedIterator(object):
         if self.maskiter is not None:
             self.maskiter[index] = getmaskarray(value)
 
-    def next(self):
+    def __next__(self):
         """
         Return the next value, or raise StopIteration.
 
@@ -2557,12 +2561,12 @@ class MaskedIterator(object):
         StopIteration
 
         """
-        d = self.dataiter.next()
-        if self.maskiter is not None and self.maskiter.next():
+        d = next(self.dataiter)
+        if self.maskiter is not None and next(self.maskiter):
             d = masked
         return d
 
-
+    next = __next__
 
 
 class MaskedArray(ndarray):
@@ -2703,7 +2707,7 @@ class MaskedArray(ndarray):
                 else:
                     msg = "Mask and data not compatible: data size is %i, " + \
                           "mask size is %i."
-                    raise MaskError, msg % (nd, nm)
+                    raise MaskError(msg % (nd, nm))
                 copy = True
             # Set the mask to the new value
             if _data._mask is nomask:
@@ -2828,7 +2832,7 @@ class MaskedArray(ndarray):
                     # Domain not recognized, use fill_value instead
                     fill_value = self.fill_value
                 result = result.copy()
-                np.putmask(result, d, fill_value)
+                np.copyto(result, fill_value, where=d)
                 # Update the mask
                 if m is nomask:
                     if d is not nomask:
@@ -2846,7 +2850,54 @@ class MaskedArray(ndarray):
         return result
 
 
-    def view(self, dtype=None, type=None):
+    def view(self, dtype=None, type=None, fill_value=None):
+        """
+        Return a view of the MaskedArray data
+
+        Parameters
+        ----------
+        dtype : data-type or ndarray sub-class, optional
+            Data-type descriptor of the returned view, e.g., float32 or int16.
+            The default, None, results in the view having the same data-type
+            as `a`. As with ``ndarray.view``, dtype can also be specified as
+            an ndarray sub-class, which then specifies the type of the
+            returned object (this is equivalent to setting the ``type``
+            parameter).
+        type : Python type, optional
+            Type of the returned view, e.g., ndarray or matrix.  Again, the
+            default None results in type preservation.
+
+        Notes
+        -----
+
+        ``a.view()`` is used two different ways:
+
+        ``a.view(some_dtype)`` or ``a.view(dtype=some_dtype)`` constructs a view
+        of the array's memory with a different data-type.  This can cause a
+        reinterpretation of the bytes of memory.
+
+        ``a.view(ndarray_subclass)`` or ``a.view(type=ndarray_subclass)`` just
+        returns an instance of `ndarray_subclass` that looks at the same array
+        (same shape, dtype, etc.)  This does not cause a reinterpretation of the
+        memory.
+
+        If `fill_value` is not specified, but `dtype` is specified (and is not
+        an ndarray sub-class), the `fill_value` of the MaskedArray will be
+        reset. If neither `fill_value` nor `dtype` are specified (or if
+        `dtype` is an ndarray sub-class), then the fill value is preserved.
+        Finally, if `fill_value` is specified, but `dtype` is not, the fill
+        value is set to the specified value.
+
+        For ``a.view(some_dtype)``, if ``some_dtype`` has a different number of
+        bytes per entry than the previous dtype (for example, converting a
+        regular array to a structured array), then the behavior of the view
+        cannot be predicted just from the superficial appearance of ``a`` (shown
+        by ``print(a)``). It also depends on exactly how ``a`` is stored in
+        memory. Therefore if ``a`` is C-ordered versus fortran-ordered, versus
+        defined as a slice or transpose, etc., the view may give different
+        results.
+        """
+
         if dtype is None:
             if type is None:
                 output = ndarray.view(self)
@@ -2876,7 +2927,13 @@ class MaskedArray(ndarray):
                 pass
         # Make sure to reset the _fill_value if needed
         if getattr(output, '_fill_value', None) is not None:
-            output._fill_value = None
+            if fill_value is None:
+                if dtype is None:
+                    pass # leave _fill_value as is
+                else:
+                    output._fill_value = None
+            else:
+                output.fill_value = fill_value
         return output
     view.__doc__ = ndarray.view.__doc__
 
@@ -2930,7 +2987,7 @@ class MaskedArray(ndarray):
         # This test is useful, but we should keep things light...
 #        if getmask(indx) is not nomask:
 #            msg = "Masked arrays must be filled before they can be used as indices!"
-#            raise IndexError, msg
+#            raise IndexError(msg)
         _data = ndarray.view(self, ndarray)
         dout = ndarray.__getitem__(_data, indx)
         # We could directly use ndarray.__getitem__ on self...
@@ -2942,12 +2999,10 @@ class MaskedArray(ndarray):
             # A record ................
             if isinstance(dout, np.void):
                 mask = _mask[indx]
-# If we can make mvoid a subclass of np.void, that'd be what we'd need
-#                return mvoid(dout, mask=mask)
-                if flatten_mask(mask).any():
-                    dout = mvoid(dout, mask=mask)
-                else:
-                    return dout
+                # We should always re-cast to mvoid, otherwise users can
+                # change masks on rows that already have masked values, but not
+                # on rows that have no masked values, which is inconsistent.
+                dout = mvoid(dout, mask=mask, hardmask=self._hardmask)
             # Just a scalar............
             elif _mask is not nomask and _mask[indx]:
                 return masked
@@ -2976,11 +3031,11 @@ class MaskedArray(ndarray):
 
         """
         if self is masked:
-            raise MaskError, 'Cannot alter the masked element.'
+            raise MaskError('Cannot alter the masked element.')
         # This test is useful, but we should keep things light...
 #        if getmask(indx) is not nomask:
 #            msg = "Masked arrays must be filled before they can be used as indices!"
-#            raise IndexError, msg
+#            raise IndexError(msg)
         _data = ndarray.view(self, ndarray.__getattribute__(self, '_baseclass'))
         _mask = ndarray.__getattribute__(self, '_mask')
         if isinstance(indx, basestring):
@@ -3036,7 +3091,7 @@ class MaskedArray(ndarray):
             mindx = mask_or(_mask[indx], mval, copy=True)
             dindx = self._data[indx]
             if dindx.size > 1:
-                dindx[~mindx] = dval
+                np.copyto(dindx, dval, where=~mindx)
             elif mindx is nomask:
                 dindx = dval
             ndarray.__setitem__(_data, indx, dindx)
@@ -3083,6 +3138,11 @@ class MaskedArray(ndarray):
             if self._hardmask:
                 current_mask |= mask
             # Softmask: set everything to False
+            # If it's obviously a compatible scalar, use a quick update
+            # method...
+            elif isinstance(mask, (int, float, np.bool_, np.number)):
+                current_mask[...] = mask
+            # ...otherwise fall back to the slower, general purpose way.
             else:
                 current_mask.flat = mask
         # Named fields w/ ............
@@ -3112,6 +3172,11 @@ class MaskedArray(ndarray):
                 for n in idtype.names:
                     current_mask[n] |= mask[n]
             # Softmask: set everything to False
+            # If it's obviously a compatible scalar, use a quick update
+            # method...
+            elif isinstance(mask, (int, float, np.bool_, np.number)):
+                current_mask[...] = mask
+            # ...otherwise fall back to the slower, general purpose way.
             else:
                 current_mask.flat = mask
         # Reshape if needed
@@ -3382,14 +3447,14 @@ class MaskedArray(ndarray):
             return np.asanyarray(fill_value)
         #
         if m.dtype.names:
-            result = self._data.copy()
+            result = self._data.copy('K')
             _recursive_filled(result, self._mask, fill_value)
         elif not m.any():
             return self._data
         else:
-            result = self._data.copy()
+            result = self._data.copy('K')
             try:
-                np.putmask(result, m, fill_value)
+                np.copyto(result, fill_value, where=m)
             except (TypeError, AttributeError):
                 fill_value = narray(fill_value, dtype=object)
                 d = result.astype(object)
@@ -3516,7 +3581,7 @@ class MaskedArray(ndarray):
                         m = m.view((bool, len(m.dtype)))
                         if m.any():
                             r = np.array(self._data.tolist(), dtype=object)
-                            np.putmask(r, m, f)
+                            np.copyto(r, f, where=m)
                             return str(tuple(r))
                         else:
                             return str(self._data)
@@ -3527,10 +3592,10 @@ class MaskedArray(ndarray):
                 # convert to object array to make filled work
                 names = self.dtype.names
                 if names is None:
-                    res = self._data.astype("|O8")
+                    res = self._data.astype("O")
                     res[m] = f
                 else:
-                    rdtype = _recursive_make_descr(self.dtype, "|O8")
+                    rdtype = _recursive_make_descr(self.dtype, "O")
                     res = self._data.astype(rdtype)
                     _recursive_printoption(res, m, f)
         else:
@@ -3759,19 +3824,16 @@ class MaskedArray(ndarray):
         "Raise self to the power other, in place."
         other_data = getdata(other)
         other_mask = getmask(other)
-        err_status = np.geterr()
-        try:
+        with np.errstate():
             np.seterr(divide='ignore', invalid='ignore')
             ndarray.__ipow__(self._data, np.where(self._mask, 1, other_data))
-        finally:
-            np.seterr(**err_status)
         invalid = np.logical_not(np.isfinite(self._data))
         if invalid.any():
             if self._mask is not nomask:
                 self._mask |= invalid
             else:
                 self._mask = invalid
-            np.putmask(self._data, invalid, self.fill_value)
+            np.copyto(self._data, self.fill_value, where=invalid)
         new_mask = mask_or(other_mask, invalid)
         self._mask = mask_or(self._mask, new_mask)
         return self
@@ -3779,7 +3841,7 @@ class MaskedArray(ndarray):
     def __float__(self):
         "Convert to float."
         if self.size > 1:
-            raise TypeError("Only length-1 arrays can be converted "\
+            raise TypeError("Only length-1 arrays can be converted "
                             "to Python scalars")
         elif self._mask:
             warnings.warn("Warning: converting a masked element to nan.")
@@ -3789,10 +3851,10 @@ class MaskedArray(ndarray):
     def __int__(self):
         "Convert to int."
         if self.size > 1:
-            raise TypeError("Only length-1 arrays can be converted "\
+            raise TypeError("Only length-1 arrays can be converted "
                             "to Python scalars")
         elif self._mask:
-            raise MaskError, 'Cannot convert masked element to a Python int.'
+            raise MaskError('Cannot convert masked element to a Python int.')
         return int(self.item())
 
 
@@ -4745,6 +4807,7 @@ class MaskedArray(ndarray):
             dvar = masked
             if out is not None:
                 if isinstance(out, MaskedArray):
+                    out.flat = 0
                     out.__setmask__(True)
                 elif out.dtype.kind in 'biu':
                     errmsg = "Masked data information would be lost in one or "\
@@ -4769,10 +4832,10 @@ class MaskedArray(ndarray):
         ""
         dvar = self.var(axis=axis, dtype=dtype, out=out, ddof=ddof)
         if dvar is not masked:
-            dvar = sqrt(dvar)
             if out is not None:
-                out **= 0.5
+                np.power(out, 0.5, out=out, casting='unsafe')
                 return out
+            dvar = sqrt(dvar)
         return dvar
     std.__doc__ = np.std.__doc__
 
@@ -5059,7 +5122,7 @@ class MaskedArray(ndarray):
                 result.__setmask__(newmask)
                 # Get rid of Infs
                 if newmask.ndim:
-                    np.putmask(result, newmask, result.fill_value)
+                    np.copyto(result, result.fill_value, where=newmask)
             elif newmask:
                 result = masked
             return result
@@ -5075,7 +5138,7 @@ class MaskedArray(ndarray):
                 errmsg = "Masked data information would be lost in one or more"\
                          " location."
                 raise MaskError(errmsg)
-            np.putmask(out, newmask, np.nan)
+            np.copyto(out, np.nan, where=newmask)
         return out
 
     def mini(self, axis=None):
@@ -5158,7 +5221,7 @@ class MaskedArray(ndarray):
                 result.__setmask__(newmask)
                 # Get rid of Infs
                 if newmask.ndim:
-                    np.putmask(result, newmask, result.fill_value)
+                    np.copyto(result, result.fill_value, where=newmask)
             elif newmask:
                 result = masked
             return result
@@ -5175,7 +5238,7 @@ class MaskedArray(ndarray):
                 errmsg = "Masked data information would be lost in one or more"\
                          " location."
                 raise MaskError(errmsg)
-            np.putmask(out, newmask, np.nan)
+            np.copyto(out, np.nan, where=newmask)
         return out
 
     def ptp(self, axis=None, out=None, fill_value=None):
@@ -5207,7 +5270,8 @@ class MaskedArray(ndarray):
             result -= self.min(axis=axis, fill_value=fill_value)
             return result
         out.flat = self.max(axis=axis, out=out, fill_value=fill_value)
-        out -= self.min(axis=axis, fill_value=fill_value)
+        min_value = self.min(axis=axis, fill_value=fill_value)
+        np.subtract(out, min_value, out=out, casting='unsafe')
         return out
 
     def take(self, indices, axis=None, out=None, mode='raise'):
@@ -5478,7 +5542,7 @@ class MaskedArray(ndarray):
         if memo is None:
             memo = {}
         memo[id(self)] = copied
-        for (k, v) in self.__dict__.iteritems():
+        for (k, v) in self.__dict__.items():
             copied.__dict__[k] = deepcopy(v, memo)
         return copied
 
@@ -5502,11 +5566,12 @@ class mvoid(MaskedArray):
     Fake a 'void' object to use for masked array with structured dtypes.
     """
     #
-    def __new__(self, data, mask=nomask, dtype=None, fill_value=None):
+    def __new__(self, data, mask=nomask, dtype=None, fill_value=None,
+                hardmask=False):
         dtype = dtype or data.dtype
-        _data = ndarray((), dtype=dtype)
-        _data[()] = data
+        _data = np.array(data, dtype=dtype)
         _data = _data.view(self)
+        _data._hardmask = hardmask
         if mask is not nomask:
             if isinstance(mask, np.void):
                 _data._mask = mask
@@ -5536,7 +5601,10 @@ class mvoid(MaskedArray):
 
     def __setitem__(self, indx, value):
         self._data[indx] = value
-        self._mask[indx] |= getattr(value, "_mask", False)
+        if self._hardmask:
+            self._mask[indx] |= getattr(value, "_mask", False)
+        else:
+            self._mask[indx] = getattr(value, "_mask", False)
 
     def __str__(self):
         m = self._mask
@@ -5581,6 +5649,9 @@ class mvoid(MaskedArray):
                 else:
                     yield d
 
+    def __len__(self):
+        return self._data.__len__()
+
     def filled(self, fill_value=None):
         """
         Return a copy with masked fields filled with a given value.
@@ -5593,7 +5664,7 @@ class mvoid(MaskedArray):
 
         Returns
         -------
-        filled_void:
+        filled_void
             A `np.void` object
 
         See Also
@@ -5710,6 +5781,12 @@ class MaskedConstant(MaskedArray):
     #
     def flatten(self):
         return masked_array([self._data], dtype=float, mask=[True])
+
+    def __reduce__(self):
+        """Override of MaskedArray's __reduce__.
+        """
+        return (self.__class__, ())
+
 
 masked = masked_singleton = MaskedConstant()
 
@@ -5874,7 +5951,7 @@ def min(obj, axis=None, out=None, fill_value=None):
     try:
         return obj.min(axis=axis, fill_value=fill_value, out=out)
     except (AttributeError, TypeError):
-        # If obj doesn't have a max method,
+        # If obj doesn't have a min method,
         # ...or if the method doesn't accept a fill_value argument
         return asanyarray(obj).min(axis=axis, fill_value=fill_value, out=out)
 min.__doc__ = MaskedArray.min.__doc__
@@ -5893,7 +5970,7 @@ def ptp(obj, axis=None, out=None, fill_value=None):
     try:
         return obj.ptp(axis, out=out, fill_value=fill_value)
     except (AttributeError, TypeError):
-        # If obj doesn't have a max method,
+        # If obj doesn't have a ptp method,
         # ...or if the method doesn't accept a fill_value argument
         return asanyarray(obj).ptp(axis=axis, fill_value=fill_value, out=out)
 ptp.__doc__ = MaskedArray.ptp.__doc__
@@ -5912,9 +5989,10 @@ class _frommethod:
         Name of the method to transform.
 
     """
-    def __init__(self, methodname):
+    def __init__(self, methodname, reversed=False):
         self.__name__ = methodname
         self.__doc__ = self.getdoc()
+        self.reversed = reversed
     #
     def getdoc(self):
         "Return the doc of the function (from the doc of the method)."
@@ -5926,6 +6004,11 @@ class _frommethod:
             return doc
     #
     def __call__(self, a, *args, **params):
+        if self.reversed:
+            args = list(args)
+            arr = args[0]
+            args[0] = a
+            a = arr
         # Get the method from the array (if possible)
         method_name = self.__name__
         method = getattr(a, method_name, None)
@@ -5942,7 +6025,7 @@ class _frommethod:
 all = _frommethod('all')
 anomalies = anom = _frommethod('anom')
 any = _frommethod('any')
-compress = _frommethod('compress')
+compress = _frommethod('compress', reversed=True)
 cumprod = _frommethod('cumprod')
 cumsum = _frommethod('cumsum')
 copy = _frommethod('copy')
@@ -5992,7 +6075,7 @@ def power(a, b, third=None):
 
     """
     if third is not None:
-        raise MaskError, "3-argument power not supported."
+        raise MaskError("3-argument power not supported.")
     # Get the masks
     ma = getmask(a)
     mb = getmask(b)
@@ -6006,12 +6089,9 @@ def power(a, b, third=None):
     else:
         basetype = MaskedArray
     # Get the result and view it as a (subclass of) MaskedArray
-    err_status = np.geterr()
-    try:
+    with np.errstate():
         np.seterr(divide='ignore', invalid='ignore')
         result = np.where(m, fa, umath.power(fa, fb)).view(basetype)
-    finally:
-        np.seterr(**err_status)
     result._update_from(a)
     # Find where we're in trouble w/ NaNs and Infs
     invalid = np.logical_not(np.isfinite(result.view(ndarray)))
@@ -6039,7 +6119,7 @@ def power(a, b, third=None):
 #        if m.all():
 #            fa.flat = 1
 #        else:
-#            np.putmask(fa,m,1)
+#            np.copyto(fa, 1, where=m)
 #        return masked_array(umath.power(fa, fb), m)
 
 #..............................................................................
@@ -6332,17 +6412,17 @@ def putmask(a, mask, values): #, mode='raise'):
         if valmask is not nomask:
             a._sharedmask = True
             a._mask = make_mask_none(a.shape, a.dtype)
-            np.putmask(a._mask, mask, valmask)
+            np.copyto(a._mask, valmask, where=mask)
     elif a._hardmask:
         if valmask is not nomask:
             m = a._mask.copy()
-            np.putmask(m, mask, valmask)
+            np.copyto(m, valmask, where=mask)
             a.mask |= m
     else:
         if valmask is nomask:
             valmask = getmaskarray(values)
-        np.putmask(a._mask, mask, valmask)
-    np.putmask(a._data, mask, valdata)
+        np.copyto(a._mask, valmask, where=mask)
+    np.copyto(a._data, valdata, where=mask)
     return
 
 def transpose(a, axes=None):
@@ -6536,7 +6616,7 @@ def where (condition, x=None, y=None):
     if x is None and y is None:
         return filled(condition, 0).nonzero()
     elif x is None or y is None:
-        raise ValueError, "Either both or neither x and y should be given."
+        raise ValueError("Either both or neither x and y should be given.")
     # Get the condition ...............
     fc = filled(condition, 0).astype(MaskType)
     notfc = np.logical_not(fc)
@@ -6552,12 +6632,12 @@ def where (condition, x=None, y=None):
     # Construct an empty array and fill it
     d = np.empty(fc.shape, dtype=ndtype).view(MaskedArray)
     _data = d._data
-    np.putmask(_data, fc, xv.astype(ndtype))
-    np.putmask(_data, notfc, yv.astype(ndtype))
+    np.copyto(_data, xv.astype(ndtype), where=fc)
+    np.copyto(_data, yv.astype(ndtype), where=notfc)
     # Create an empty mask and fill it
     _mask = d._mask = np.zeros(fc.shape, dtype=MaskType)
-    np.putmask(_mask, fc, getmask(x))
-    np.putmask(_mask, notfc, getmask(y))
+    np.copyto(_mask, getmask(x), where=fc)
+    np.copyto(_mask, getmask(y), where=notfc)
     _mask |= getmaskarray(condition)
     if not _mask.any():
         d._mask = nomask
@@ -6974,7 +7054,7 @@ def dump(a, F):
     """
     if not hasattr(F, 'readline'):
         F = open(F, 'w')
-    return cPickle.dump(a, F)
+    return pickle.dump(a, F)
 
 def dumps(a):
     """
@@ -6989,7 +7069,7 @@ def dumps(a):
         returned.
 
     """
-    return cPickle.dumps(a)
+    return pickle.dumps(a)
 
 def load(F):
     """
@@ -7013,7 +7093,7 @@ def load(F):
     """
     if not hasattr(F, 'readline'):
         F = open(F, 'r')
-    return cPickle.load(F)
+    return pickle.load(F)
 
 def loads(strg):
     """
@@ -7031,7 +7111,7 @@ def loads(strg):
     dumps : Return a string corresponding to the pickling of a masked array.
 
     """
-    return cPickle.loads(strg)
+    return pickle.loads(strg)
 
 ################################################################################
 def fromfile(file, dtype=float, count= -1, sep=''):

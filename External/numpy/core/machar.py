@@ -1,14 +1,16 @@
 """
 Machine arithmetics - determine the parameters of the
 floating-point arithmetic system
-"""
-# Author: Pearu Peterson, September 2003
 
+Author: Pearu Peterson, September 2003
+
+"""
+from __future__ import division, absolute_import, print_function
 
 __all__ = ['MachAr']
 
 from numpy.core.fromnumeric import any
-from numpy.core.numeric import seterr
+from numpy.core.numeric import errstate
 
 # Need to speed this up...especially for longfloat
 
@@ -105,11 +107,8 @@ class MachAr(object):
         """
         # We ignore all errors here because we are purposely triggering
         # underflow to detect the properties of the runninng arch.
-        saverrstate = seterr(under='ignore')
-        try:
+        with errstate(under='ignore'):
             self._do_init(float_conv, int_conv, float_to_float, float_to_str, title)
-        finally:
-            seterr(**saverrstate)
 
     def _do_init(self, float_conv, int_conv, float_to_float, float_to_str, title):
         max_iterN = 10000
@@ -121,30 +120,30 @@ class MachAr(object):
         # Do we really need to do this?  Aren't they 2 and 2.0?
         # Determine ibeta and beta
         a = one
-        for _ in xrange(max_iterN):
+        for _ in range(max_iterN):
             a = a + a
             temp = a + one
             temp1 = temp - a
             if any(temp1 - one != zero):
                 break
         else:
-            raise RuntimeError, msg % (_, one.dtype)
+            raise RuntimeError(msg % (_, one.dtype))
         b = one
-        for _ in xrange(max_iterN):
+        for _ in range(max_iterN):
             b = b + b
             temp = a + b
             itemp = int_conv(temp-a)
             if any(itemp != 0):
                 break
         else:
-            raise RuntimeError, msg % (_, one.dtype)
+            raise RuntimeError(msg % (_, one.dtype))
         ibeta = itemp
         beta = float_conv(ibeta)
 
         # Determine it and irnd
         it = -1
         b = one
-        for _ in xrange(max_iterN):
+        for _ in range(max_iterN):
             it = it + 1
             b = b * beta
             temp = b + one
@@ -152,18 +151,18 @@ class MachAr(object):
             if any(temp1 - one != zero):
                 break
         else:
-            raise RuntimeError, msg % (_, one.dtype)
+            raise RuntimeError(msg % (_, one.dtype))
 
         betah = beta / two
         a = one
-        for _ in xrange(max_iterN):
+        for _ in range(max_iterN):
             a = a + a
             temp = a + one
             temp1 = temp - a
             if any(temp1 - one != zero):
                 break
         else:
-            raise RuntimeError, msg % (_, one.dtype)
+            raise RuntimeError(msg % (_, one.dtype))
         temp = a + betah
         irnd = 0
         if any(temp-a != zero):
@@ -180,7 +179,7 @@ class MachAr(object):
         for i in range(negep):
             a = a * betain
         b = a
-        for _ in xrange(max_iterN):
+        for _ in range(max_iterN):
             temp = one - a
             if any(temp-one != zero):
                 break
@@ -188,10 +187,10 @@ class MachAr(object):
             negep = negep - 1
             # Prevent infinite loop on PPC with gcc 4.0:
             if negep < 0:
-                raise RuntimeError, "could not determine machine tolerance " \
-                                    "for 'negep', locals() -> %s" % (locals())
+                raise RuntimeError("could not determine machine tolerance "
+                        "for 'negep', locals() -> %s" % (locals()))
         else:
-            raise RuntimeError, msg % (_, one.dtype)
+            raise RuntimeError(msg % (_, one.dtype))
         negep = -negep
         epsneg = a
 
@@ -199,14 +198,14 @@ class MachAr(object):
         machep = - it - 3
         a = b
 
-        for _ in xrange(max_iterN):
+        for _ in range(max_iterN):
             temp = one + a
             if any(temp-one != zero):
                 break
             a = a * beta
             machep = machep + 1
         else:
-            raise RuntimeError, msg % (_, one.dtype)
+            raise RuntimeError(msg % (_, one.dtype))
         eps = a
 
         # Determine ngrd
@@ -221,7 +220,7 @@ class MachAr(object):
         z = betain
         t = one + eps
         nxres = 0
-        for _ in xrange(max_iterN):
+        for _ in range(max_iterN):
             y = z
             z = y*y
             a = z*one # Check here for underflow
@@ -234,7 +233,7 @@ class MachAr(object):
             i = i + 1
             k = k + k
         else:
-            raise RuntimeError, msg % (_, one.dtype)
+            raise RuntimeError(msg % (_, one.dtype))
         if ibeta != 10:
             iexp = i + 1
             mx = k + k
@@ -247,7 +246,7 @@ class MachAr(object):
             mx = iz + iz - 1
 
         # Determine minexp and xmin
-        for _ in xrange(max_iterN):
+        for _ in range(max_iterN):
             xmin = y
             y = y * betain
             a = y * one
@@ -262,7 +261,7 @@ class MachAr(object):
             else:
                 break
         else:
-            raise RuntimeError, msg % (_, one.dtype)
+            raise RuntimeError(msg % (_, one.dtype))
         minexp = -k
 
         # Determine maxexp, xmax
@@ -336,4 +335,4 @@ maxexp=%(maxexp)s    xmax=%(_str_xmax)s ((1-epsneg)*beta**maxexp == huge)
 
 
 if __name__ == '__main__':
-    print MachAr()
+    print(MachAr())

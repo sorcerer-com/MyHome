@@ -10,6 +10,10 @@ random               Uniformly distributed values of a given shape.
 bytes                Uniformly distributed random bytes.
 random_integers      Uniformly distributed integers in a given range.
 random_sample        Uniformly distributed floats in a given range.
+random               Alias for random_sample
+ranf                 Alias for random_sample
+sample               Alias for random_sample
+choice               Generate a weighted random sample from a given array-like
 permutation          Randomly permute a sequence / generate a random sequence.
 shuffle              Randomly permute a sequence in place.
 seed                 Seed the random number generator.
@@ -82,13 +86,21 @@ set_state            Set state of generator.
 ==================== =========================================================
 
 """
+from __future__ import division, absolute_import, print_function
+
+import warnings
+
 # To get sub-modules
-from info import __doc__, __all__
-from mtrand import *
+from .info import __doc__, __all__
+
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", message="numpy.ndarray size changed")
+    from .mtrand import *
 
 # Some aliases:
 ranf = random = sample = random_sample
-__all__.extend(['ranf','random','sample'])
+__all__.extend(['ranf', 'random', 'sample'])
 
 def __RandomState_ctor():
     """Return a RandomState instance.

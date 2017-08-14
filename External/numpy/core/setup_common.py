@@ -1,4 +1,6 @@
-# Code shared by distutils and scons builds
+from __future__ import division, absolute_import, print_function
+
+# Code common to build tools
 import sys
 from os.path import join
 import warnings
@@ -29,7 +31,10 @@ C_ABI_VERSION = 0x01000009
 # without breaking binary compatibility.  In this case, only the C_API_VERSION
 # (*not* C_ABI_VERSION) would be increased.  Whenever binary compatibility is
 # broken, both C_API_VERSION and C_ABI_VERSION should be increased.
-C_API_VERSION = 0x00000006
+#
+# 0x00000008 - 1.7.x
+# 0x00000009 - 1.8.x
+C_API_VERSION = 0x00000009
 
 class MismatchCAPIWarning(Warning):
     pass
@@ -93,11 +98,38 @@ MANDATORY_FUNCS = ["sin", "cos", "tan", "sinh", "cosh", "tanh", "fabs",
 # replacement implementation. Note that some of these are C99 functions.
 OPTIONAL_STDFUNCS = ["expm1", "log1p", "acosh", "asinh", "atanh",
         "rint", "trunc", "exp2", "log2", "hypot", "atan2", "pow",
-        "copysign", "nextafter"]
+        "copysign", "nextafter", "ftello", "fseeko"]
+
+
+OPTIONAL_HEADERS = [
+# sse headers only enabled automatically on amd64/x32 builds
+                "xmmintrin.h", # SSE
+                "emmintrin.h", # SSE2
+]
+
+# optional gcc compiler builtins and their call arguments and optional a
+# required header
+# call arguments are required as the compiler will do strict signature checking
+OPTIONAL_INTRINSICS = [("__builtin_isnan", '5.'),
+                       ("__builtin_isinf", '5.'),
+                       ("__builtin_isfinite", '5.'),
+                       ("__builtin_bswap32", '5u'),
+                       ("__builtin_bswap64", '5u'),
+                       ("__builtin_expect", '5, 0'),
+                       ("_mm_load_ps", '(float*)0', "xmmintrin.h"), # SSE
+                       ("_mm_load_pd", '(double*)0', "emmintrin.h"), # SSE2
+                       ]
+
+# gcc function attributes
+# (attribute as understood by gcc, function name),
+# function name will be converted to HAVE_<upper-case-name> preprocessor macro
+OPTIONAL_GCC_ATTRIBUTES = [('__attribute__((optimize("unroll-loops")))',
+                            'attribute_optimize_unroll_loops'),
+                          ]
 
 # Subset of OPTIONAL_STDFUNCS which may alreay have HAVE_* defined by Python.h
 OPTIONAL_STDFUNCS_MAYBE = ["expm1", "log1p", "acosh", "atanh", "asinh", "hypot",
-        "copysign"]
+        "copysign", "ftello", "fseeko"]
 
 # C99 functions: float and long double versions
 C99_FUNCS = ["sin", "cos", "tan", "sinh", "cosh", "tanh", "fabs", "floor",
@@ -161,13 +193,14 @@ def pyod(filename):
 
     Parameters
     ----------
-    filename: str
+    filename : str
         name of the file to get the dump from.
 
     Returns
     -------
-    out: seq
+    out : seq
         list of lines of od output
+
     Note
     ----
     We only implement enough to get the necessary information for long double
@@ -206,9 +239,9 @@ def pyod(filename):
     else:
         return _pyod3()
 
-_BEFORE_SEQ = ['000','000','000','000','000','000','000','000',
-              '001','043','105','147','211','253','315','357']
-_AFTER_SEQ = ['376', '334','272','230','166','124','062','020']
+_BEFORE_SEQ = ['000', '000', '000', '000', '000', '000', '000', '000',
+              '001', '043', '105', '147', '211', '253', '315', '357']
+_AFTER_SEQ = ['376', '334', '272', '230', '166', '124', '062', '020']
 
 _IEEE_DOUBLE_BE = ['301', '235', '157', '064', '124', '000', '000', '000']
 _IEEE_DOUBLE_LE = _IEEE_DOUBLE_BE[::-1]
@@ -222,6 +255,8 @@ _IEEE_QUAD_PREC_BE = ['300', '031', '326', '363', '105', '100', '000', '000',
                       '000', '000', '000', '000', '000', '000', '000', '000']
 _IEEE_QUAD_PREC_LE = _IEEE_QUAD_PREC_BE[::-1]
 _DOUBLE_DOUBLE_BE = ['301', '235', '157', '064', '124', '000', '000', '000'] + \
+                    ['000'] * 8
+_DOUBLE_DOUBLE_LE = ['000', '000', '000', '124', '064', '157', '235', '301'] + \
                     ['000'] * 8
 
 def long_double_representation(lines):
@@ -262,6 +297,8 @@ def long_double_representation(lines):
                         return 'IEEE_QUAD_LE'
                     elif read[8:-8] == _DOUBLE_DOUBLE_BE:
                         return 'DOUBLE_DOUBLE_BE'
+                    elif read[8:-8] == _DOUBLE_DOUBLE_LE:
+                        return 'DOUBLE_DOUBLE_LE'
                 elif read[:16] == _BEFORE_SEQ:
                     if read[16:-8] == _IEEE_DOUBLE_LE:
                         return 'IEEE_DOUBLE_LE'

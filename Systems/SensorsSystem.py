@@ -142,6 +142,9 @@ class SensorsSystem(BaseSystem):
 	
 	def _processSerialData(self, data):
 		print data # TODO: remove
+		for i in range(0, len(data)):
+			if data[i] == "nan":
+				data[i] = "0.0"
 		sensorID = int(data[0])
 		if data[1] == "data" and len(data) == 7:
 			import math

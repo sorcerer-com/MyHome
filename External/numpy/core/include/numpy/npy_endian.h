@@ -25,8 +25,10 @@
             || defined(NPY_CPU_IA64)    \
             || defined(NPY_CPU_ALPHA)   \
             || defined(NPY_CPU_ARMEL)   \
+            || defined(NPY_CPU_AARCH64) \
             || defined(NPY_CPU_SH_LE)   \
-            || defined(NPY_CPU_MIPSEL)
+            || defined(NPY_CPU_MIPSEL)  \
+            || defined(NPY_CPU_PPC64LE)
         #define NPY_BYTE_ORDER NPY_LITTLE_ENDIAN
     #elif defined(NPY_CPU_PPC)          \
             || defined(NPY_CPU_SPARC)   \

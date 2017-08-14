@@ -30,12 +30,14 @@ The underlying code for these functions is an f2c-translated and modified
 version of the FFTPACK routines.
 
 """
-__all__ = ['fft','ifft', 'rfft', 'irfft', 'hfft', 'ihfft', 'rfftn',
+from __future__ import division, absolute_import, print_function
+
+__all__ = ['fft', 'ifft', 'rfft', 'irfft', 'hfft', 'ihfft', 'rfftn',
            'irfftn', 'rfft2', 'irfft2', 'fft2', 'ifft2', 'fftn', 'ifftn']
 
 from numpy.core import asarray, zeros, swapaxes, shape, conjugate, \
      take
-import fftpack_lite as fftpack
+from . import fftpack_lite as fftpack
 
 _fft_cache = {}
 _real_fft_cache = {}
@@ -51,20 +53,22 @@ def _raw_fft(a, n=None, axis=-1, init_function=fftpack.cffti,
         raise ValueError("Invalid number of FFT data points (%d) specified." % n)
 
     try:
-        wsave = fft_cache[n]
-    except(KeyError):
+        # Thread-safety note: We rely on list.pop() here to atomically
+        # retrieve-and-remove a wsave from the cache.  This ensures that no
+        # other thread can get the same wsave while we're using it.
+        wsave = fft_cache.setdefault(n, []).pop()
+    except (IndexError):
         wsave = init_function(n)
-        fft_cache[n] = wsave
 
     if a.shape[axis] != n:
         s = list(a.shape)
         if s[axis] > n:
             index = [slice(None)]*len(s)
-            index[axis] = slice(0,n)
+            index[axis] = slice(0, n)
             a = a[index]
         else:
             index = [slice(None)]*len(s)
-            index[axis] = slice(0,s[axis])
+            index[axis] = slice(0, s[axis])
             s[axis] = n
             z = zeros(s, a.dtype.char)
             z[index] = a
@@ -75,6 +79,12 @@ def _raw_fft(a, n=None, axis=-1, init_function=fftpack.cffti,
     r = work_function(a, wsave)
     if axis != -1:
         r = swapaxes(r, axis, -1)
+
+    # As soon as we put wsave back into the cache, another thread could pick it
+    # up and start using it, so we must not do this until after we're
+    # completely done using it ourselves.
+    fft_cache[n].append(wsave)
+
     return r
 
 
@@ -271,7 +281,8 @@ def rfft(a, n=None, axis=-1):
     out : complex ndarray
         The truncated or zero-padded input, transformed along the axis
         indicated by `axis`, or the last one if `axis` is not specified.
-        The length of the transformed axis is ``n/2+1``.
+        If `n` is even, the length of the transformed axis is ``(n/2)+1``.
+        If `n` is odd, the length is ``(n+1)/2``.
 
     Raises
     ------
@@ -293,14 +304,15 @@ def rfft(a, n=None, axis=-1):
     conjugates of the corresponding positive-frequency terms, and the
     negative-frequency terms are therefore redundant.  This function does not
     compute the negative frequency terms, and the length of the transformed
-    axis of the output is therefore ``n/2+1``.
+    axis of the output is therefore ``n//2+1``.
 
-    When ``A = rfft(a)``, ``A[0]`` contains the zero-frequency term, which
-    must be purely real due to the Hermite symmetry.
+    When ``A = rfft(a)`` and fs is the sampling frequency, ``A[0]`` contains
+    the zero-frequency term 0*fs, which is real due to Hermitian symmetry.
 
-    If `n` is even, ``A[-1]`` contains the term for frequencies ``n/2`` and
-    ``-n/2``, and must also be purely real.  If `n` is odd, ``A[-1]``
-    contains the term for frequency ``A[(n-1)/2]``, and is complex in the
+    If `n` is even, ``A[-1]`` contains the term representing both positive
+    and negative Nyquist frequency (+fs/2 and -fs/2), and must also be purely
+    real. If `n` is odd, there is no term at fs/2; ``A[-1]`` contains
+    the largest positive frequency (fs/2*(n-1)/n), and is complex in the
     general case.
 
     If the input `a` contains an imaginary part, it is silently discarded.
@@ -343,7 +355,7 @@ def irfft(a, n=None, axis=-1):
         The input array.
     n : int, optional
         Length of the transformed axis of the output.
-        For `n` output points, ``n/2+1`` input points are necessary.  If the
+        For `n` output points, ``n//2+1`` input points are necessary.  If the
         input is longer than this, it is cropped.  If it is shorter than this,
         it is padded with zeros.  If `n` is not given, it is determined from
         the length of the input (along the axis specified by `axis`).
@@ -507,18 +519,18 @@ def _cook_nd_args(a, s=None, axes=None, invreal=0):
         shapeless = 0
     s = list(s)
     if axes is None:
-        axes = range(-len(s), 0)
+        axes = list(range(-len(s), 0))
     if len(s) != len(axes):
-        raise ValueError, "Shape and axes have different lengths."
+        raise ValueError("Shape and axes have different lengths.")
     if invreal and shapeless:
-        s[axes[-1]] = (s[axes[-1]] - 1) * 2
+        s[-1] = (a.shape[axes[-1]] - 1) * 2
     return s, axes
 
 
 def _raw_fftnd(a, s=None, axes=None, function=fft):
     a = asarray(a)
     s, axes = _cook_nd_args(a, s, axes)
-    itl = range(len(axes))
+    itl = list(range(len(axes)))
     itl.reverse()
     for ii in itl:
         a = function(a, n=s[ii], axis=axes[ii])
@@ -615,7 +627,7 @@ def fftn(a, s=None, axes=None):
 
     """
 
-    return _raw_fftnd(a,s,axes,fft)
+    return _raw_fftnd(a, s, axes, fft)
 
 def ifftn(a, s=None, axes=None):
     """
@@ -710,7 +722,7 @@ def ifftn(a, s=None, axes=None):
     return _raw_fftnd(a, s, axes, ifft)
 
 
-def fft2(a, s=None, axes=(-2,-1)):
+def fft2(a, s=None, axes=(-2, -1)):
     """
     Compute the 2-dimensional discrete Fourier Transform
 
@@ -788,10 +800,10 @@ def fft2(a, s=None, axes=(-2,-1)):
 
     """
 
-    return _raw_fftnd(a,s,axes,fft)
+    return _raw_fftnd(a, s, axes, fft)
 
 
-def ifft2(a, s=None, axes=(-2,-1)):
+def ifft2(a, s=None, axes=(-2, -1)):
     """
     Compute the 2-dimensional inverse discrete Fourier Transform.
 
@@ -961,7 +973,7 @@ def rfftn(a, s=None, axes=None):
         a = fft(a, s[ii], axes[ii])
     return a
 
-def rfft2(a, s=None, axes=(-2,-1)):
+def rfft2(a, s=None, axes=(-2, -1)):
     """
     Compute the 2-dimensional FFT of a real array.
 
@@ -1082,7 +1094,7 @@ def irfftn(a, s=None, axes=None):
     a = irfft(a, s[-1], axes[-1])
     return a
 
-def irfft2(a, s=None, axes=(-2,-1)):
+def irfft2(a, s=None, axes=(-2, -1)):
     """
     Compute the 2-dimensional inverse FFT of a real array.
 

@@ -12,27 +12,27 @@ terms of the NumPy License.
 NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 $Date: 2005/05/06 08:31:19 $
 Pearu Peterson
-"""
 
-import __version__
-f2py_version = __version__.version
+"""
+from __future__ import division, absolute_import, print_function
 
 import sys
 import os
 import pprint
-import types
 import re
-errmess=sys.stderr.write
+
+from . import crackfortran
+from . import rules
+from . import cb_rules
+from . import auxfuncs
+from . import cfuncs
+from . import f90mod_rules
+from . import __version__
+
+f2py_version = __version__.version
+errmess = sys.stderr.write
 #outmess=sys.stdout.write
-show=pprint.pprint
-
-import crackfortran
-import rules
-import cb_rules
-import auxfuncs
-import cfuncs
-import f90mod_rules
-
+show = pprint.pprint
 outmess = auxfuncs.outmess
 
 try:
@@ -91,7 +91,7 @@ Options:
                    --lower is assumed with -h key, and --no-lower without -h key.
 
   --build-dir <dirname>  All f2py generated files are created in <dirname>.
-                   Default is tempfile.mktemp().
+                   Default is tempfile.mkdtemp().
 
   --overwrite-signature  Overwrite existing signature file.
 
@@ -173,8 +173,8 @@ Copyright 1999 - 2011 Pearu Peterson all rights reserved.
 http://cens.ioc.ee/projects/f2py2e/"""%(f2py_version, numpy_version)
 
 def scaninputline(inputline):
-    files,funcs,skipfuncs,onlyfuncs,debug=[],[],[],[],[]
-    f,f2,f3,f4,f5,f6,f7,f8,f9=1,0,0,0,0,0,0,0,0
+    files, funcs, skipfuncs, onlyfuncs, debug=[], [], [], [], []
+    f, f2, f3, f4, f5, f6, f7, f8, f9=1, 0, 0, 0, 0, 0, 0, 0, 0
     verbose = 1
     dolc=-1
     dolatexdoc = 0
@@ -182,7 +182,7 @@ def scaninputline(inputline):
     wrapfuncs = 1
     buildpath = '.'
     include_paths = []
-    signsfile,modulename=None,None
+    signsfile, modulename=None, None
     options = {'buildpath':buildpath,
                'coutput': None,
                'f2py_wrapper_output': None}
@@ -210,7 +210,7 @@ def scaninputline(inputline):
         elif l=='-h': f2=1
         elif l=='-m': f3=1
         elif l[:2]=='-v':
-            print f2py_version
+            print(f2py_version)
             sys.exit()
         elif l=='--show-compilers':
             f5=1
@@ -223,7 +223,7 @@ def scaninputline(inputline):
         elif l[:15] in '--include-paths':
             f7=1
         elif l[0]=='-':
-            errmess('Unknown option %s\n'%`l`)
+            errmess('Unknown option %s\n'%repr(l))
             sys.exit()
         elif f2: f2=0;signsfile=l
         elif f3: f3=0;modulename=l
@@ -235,19 +235,19 @@ def scaninputline(inputline):
             try:
                 open(l).close()
                 files.append(l)
-            except IOError,detail:
-                errmess('IOError: %s. Skipping file "%s".\n'%(str(detail),l))
+            except IOError as detail:
+                errmess('IOError: %s. Skipping file "%s".\n'%(str(detail), l))
         elif f==-1: skipfuncs.append(l)
         elif f==0: onlyfuncs.append(l)
     if not f5 and not files and not modulename:
-        print __usage__
+        print(__usage__)
         sys.exit()
     if not os.path.isdir(buildpath):
         if not verbose:
             outmess('Creating build directory %s'%(buildpath))
         os.mkdir(buildpath)
     if signsfile:
-        signsfile = os.path.join(buildpath,signsfile)
+        signsfile = os.path.join(buildpath, signsfile)
     if signsfile and os.path.isfile(signsfile) and 'h-overwrite' not in options:
         errmess('Signature file "%s" exists!!! Use --overwrite-signature to overwrite.\n'%(signsfile))
         sys.exit()
@@ -265,9 +265,9 @@ def scaninputline(inputline):
     options['wrapfuncs'] = wrapfuncs
     options['buildpath']=buildpath
     options['include_paths']=include_paths
-    return files,options
+    return files, options
 
-def callcrackfortran(files,options):
+def callcrackfortran(files, options):
     rules.options=options
     funcs=[]
     crackfortran.debug=options['debug']
@@ -287,7 +287,7 @@ def callcrackfortran(files,options):
         if options['signsfile'][-6:]=='stdout':
             sys.stdout.write(pyf)
         else:
-            f=open(options['signsfile'],'w')
+            f=open(options['signsfile'], 'w')
             f.write(pyf)
             f.close()
     if options["coutput"] is None:
@@ -307,7 +307,7 @@ def callcrackfortran(files,options):
 def buildmodules(lst):
     cfuncs.buildcfuncs()
     outmess('Building modules...\n')
-    modules,mnames,isusedby=[],[],{}
+    modules, mnames, isusedby=[], [], {}
     for i in range(len(lst)):
         if '__user__' in lst[i]['name']:
             cb_rules.buildcallbacks(lst[i])
@@ -322,7 +322,7 @@ def buildmodules(lst):
     ret = {}
     for i in range(len(mnames)):
         if mnames[i] in isusedby:
-            outmess('\tSkipping module "%s" which is used by %s.\n'%(mnames[i],','.join(map(lambda s:'"%s"'%s,isusedby[mnames[i]]))))
+            outmess('\tSkipping module "%s" which is used by %s.\n'%(mnames[i], ','.join(['"%s"'%s for s in isusedby[mnames[i]]])))
         else:
             um=[]
             if 'use' in modules[i]:
@@ -330,16 +330,16 @@ def buildmodules(lst):
                     if u in isusedby and u in mnames:
                         um.append(modules[mnames.index(u)])
                     else:
-                        outmess('\tModule "%s" uses nonexisting "%s" which will be ignored.\n'%(mnames[i],u))
+                        outmess('\tModule "%s" uses nonexisting "%s" which will be ignored.\n'%(mnames[i], u))
             ret[mnames[i]] = {}
-            dict_append(ret[mnames[i]],rules.buildmodule(modules[i],um))
+            dict_append(ret[mnames[i]], rules.buildmodule(modules[i], um))
     return ret
 
-def dict_append(d_out,d_in):
-    for (k,v) in d_in.items():
+def dict_append(d_out, d_in):
+    for (k, v) in d_in.items():
         if k not in d_out:
             d_out[k] = []
-        if type(v) is types.ListType:
+        if isinstance(v, list):
             d_out[k] = d_out[k] + v
         else:
             d_out[k].append(v)
@@ -354,11 +354,11 @@ def run_main(comline_list):
     else:
         reload(crackfortran)
     f2pydir=os.path.dirname(os.path.abspath(cfuncs.__file__))
-    fobjhsrc = os.path.join(f2pydir,'src','fortranobject.h')
-    fobjcsrc = os.path.join(f2pydir,'src','fortranobject.c')
-    files,options=scaninputline(comline_list)
+    fobjhsrc = os.path.join(f2pydir, 'src', 'fortranobject.h')
+    fobjcsrc = os.path.join(f2pydir, 'src', 'fortranobject.c')
+    files, options=scaninputline(comline_list)
     auxfuncs.options=options
-    postlist=callcrackfortran(files,options)
+    postlist=callcrackfortran(files, options)
     isusedby={}
     for i in range(len(postlist)):
         if 'use' in postlist[i]:
@@ -370,17 +370,17 @@ def run_main(comline_list):
         if postlist[i]['block']=='python module' and '__user__' in postlist[i]['name']:
             if postlist[i]['name'] in isusedby:
                 #if not quiet:
-                outmess('Skipping Makefile build for module "%s" which is used by %s\n'%(postlist[i]['name'],','.join(map(lambda s:'"%s"'%s,isusedby[postlist[i]['name']]))))
+                outmess('Skipping Makefile build for module "%s" which is used by %s\n'%(postlist[i]['name'], ','.join(['"%s"'%s for s in isusedby[postlist[i]['name']]])))
     if 'signsfile' in options:
         if options['verbose']>1:
             outmess('Stopping. Edit the signature file and then run f2py on the signature file: ')
-            outmess('%s %s\n'%(os.path.basename(sys.argv[0]),options['signsfile']))
+            outmess('%s %s\n'%(os.path.basename(sys.argv[0]), options['signsfile']))
         return
     for i in range(len(postlist)):
         if postlist[i]['block']!='python module':
             if 'python module' not in options:
                 errmess('Tip: If your original code is Fortran source then you must use -m option.\n')
-            raise TypeError,'All blocks must be python module blocks but got %s'%(`postlist[i]['block']`)
+            raise TypeError('All blocks must be python module blocks but got %s'%(repr(postlist[i]['block'])))
     auxfuncs.debugoptions=options['debug']
     f90mod_rules.options=options
     auxfuncs.wrapfuncs=options['wrapfuncs']
@@ -388,14 +388,14 @@ def run_main(comline_list):
     ret=buildmodules(postlist)
 
     for mn in ret.keys():
-        dict_append(ret[mn],{'csrc':fobjcsrc,'h':fobjhsrc})
+        dict_append(ret[mn], {'csrc':fobjcsrc,'h':fobjhsrc})
     return ret
 
 def filter_files(prefix,suffix,files,remove_prefix=None):
     """
     Filter files by prefix and suffix.
     """
-    filtered,rest = [],[]
+    filtered, rest = [], []
     match = re.compile(prefix+r'.*'+suffix+r'\Z').match
     if remove_prefix:
         ind = len(prefix)
@@ -404,7 +404,7 @@ def filter_files(prefix,suffix,files,remove_prefix=None):
     for file in [x.strip() for x in files]:
         if match(file): filtered.append(file[ind:])
         else: rest.append(file)
-    return filtered,rest
+    return filtered, rest
 
 def get_prefix(module):
     p = os.path.dirname(os.path.dirname(module.__file__))
@@ -428,19 +428,21 @@ def run_compile():
         del sys.argv[i]
     else:
         remove_build_dir = 1
-        build_dir = os.path.join(tempfile.mktemp())
+        build_dir = tempfile.mkdtemp()
 
-    sysinfo_flags = filter(re.compile(r'[-][-]link[-]').match,sys.argv[1:])
-    sys.argv = filter(lambda a,flags=sysinfo_flags:a not in flags,sys.argv)
+    _reg1 = re.compile(r'[-][-]link[-]')
+    sysinfo_flags = [_m for _m in sys.argv[1:] if _reg1.match(_m)]
+    sys.argv = [_m for _m in sys.argv if _m not in sysinfo_flags]
     if sysinfo_flags:
         sysinfo_flags = [f[7:] for f in sysinfo_flags]
 
-    f2py_flags = filter(re.compile(r'[-][-]((no[-]|)(wrap[-]functions|lower)|debug[-]capi|quiet)|[-]include').match,sys.argv[1:])
-    sys.argv = filter(lambda a,flags=f2py_flags:a not in flags,sys.argv)
+    _reg2 = re.compile(r'[-][-]((no[-]|)(wrap[-]functions|lower)|debug[-]capi|quiet)|[-]include')
+    f2py_flags = [_m for _m in sys.argv[1:] if _reg2.match(_m)]
+    sys.argv = [_m for _m in sys.argv if _m not in f2py_flags]
     f2py_flags2 = []
     fl = 0
     for a in sys.argv[1:]:
-        if a in ['only:','skip:']:
+        if a in ['only:', 'skip:']:
             fl = 1
         elif a==':':
             fl = 0
@@ -450,12 +452,13 @@ def run_compile():
         f2py_flags2.append(':')
     f2py_flags.extend(f2py_flags2)
 
-    sys.argv = filter(lambda a,flags=f2py_flags2:a not in flags,sys.argv)
-
-    flib_flags = filter(re.compile(r'[-][-]((f(90)?compiler([-]exec|)|compiler)=|help[-]compiler)').match,sys.argv[1:])
-    sys.argv = filter(lambda a,flags=flib_flags:a not in flags,sys.argv)
-    fc_flags = filter(re.compile(r'[-][-]((f(77|90)(flags|exec)|opt|arch)=|(debug|noopt|noarch|help[-]fcompiler))').match,sys.argv[1:])
-    sys.argv = filter(lambda a,flags=fc_flags:a not in flags,sys.argv)
+    sys.argv = [_m for _m in sys.argv if _m not in f2py_flags2]
+    _reg3 = re.compile(r'[-][-]((f(90)?compiler([-]exec|)|compiler)=|help[-]compiler)')
+    flib_flags = [_m for _m in sys.argv[1:] if _reg3.match(_m)]
+    sys.argv = [_m for _m in sys.argv if _m not in flib_flags]
+    _reg4 = re.compile(r'[-][-]((f(77|90)(flags|exec)|opt|arch)=|(debug|noopt|noarch|help[-]fcompiler))')
+    fc_flags = [_m for _m in sys.argv[1:] if _reg4.match(_m)]
+    sys.argv = [_m for _m in sys.argv if _m not in fc_flags]
 
     if 1:
         del_list = []
@@ -464,7 +467,7 @@ def run_compile():
             if s[:len(v)]==v:
                 from numpy.distutils import fcompiler
                 fcompiler.load_all_fcompiler_classes()
-                allowed_keys = fcompiler.fcompiler_class.keys()
+                allowed_keys = list(fcompiler.fcompiler_class.keys())
                 nv = ov = s[len(v):].lower()
                 if ov not in allowed_keys:
                     vmap = {} # XXX
@@ -472,7 +475,7 @@ def run_compile():
                         nv = vmap[ov]
                     except KeyError:
                         if ov not in vmap.values():
-                            print 'Unknown vendor: "%s"' % (s[len(v):])
+                            print('Unknown vendor: "%s"' % (s[len(v):]))
                     nv = ov
                 i = flib_flags.index(s)
                 flib_flags[i] = '--fcompiler=' + nv
@@ -480,9 +483,12 @@ def run_compile():
         for s in del_list:
             i = flib_flags.index(s)
             del flib_flags[i]
-        assert len(flib_flags)<=2,`flib_flags`
-    setup_flags = filter(re.compile(r'[-][-](verbose)').match,sys.argv[1:])
-    sys.argv = filter(lambda a,flags=setup_flags:a not in flags,sys.argv)
+        assert len(flib_flags)<=2, repr(flib_flags)
+
+    _reg5 = re.compile(r'[-][-](verbose)')
+    setup_flags = [_m for _m in sys.argv[1:] if _reg5.match(_m)]
+    sys.argv = [_m for _m in sys.argv if _m not in setup_flags]
+
     if '--quiet' in f2py_flags:
         setup_flags.append('--quiet')
 
@@ -493,39 +499,39 @@ def run_compile():
         if optname in sys.argv:
             i = sys.argv.index (optname)
             f2py_flags.extend (sys.argv[i:i+2])
-            del sys.argv[i+1],sys.argv[i]
+            del sys.argv[i+1], sys.argv[i]
             sources = sys.argv[1:]
 
     if '-m' in sys.argv:
         i = sys.argv.index('-m')
         modulename = sys.argv[i+1]
-        del sys.argv[i+1],sys.argv[i]
+        del sys.argv[i+1], sys.argv[i]
         sources = sys.argv[1:]
     else:
         from numpy.distutils.command.build_src import get_f2py_modulename
-        pyf_files,sources = filter_files('','[.]pyf([.]src|)',sources)
+        pyf_files, sources = filter_files('', '[.]pyf([.]src|)', sources)
         sources = pyf_files + sources
         for f in pyf_files:
             modulename = get_f2py_modulename(f)
             if modulename:
                 break
 
-    extra_objects, sources = filter_files('','[.](o|a|so)',sources)
-    include_dirs, sources = filter_files('-I','',sources,remove_prefix=1)
-    library_dirs, sources = filter_files('-L','',sources,remove_prefix=1)
-    libraries, sources = filter_files('-l','',sources,remove_prefix=1)
-    undef_macros, sources = filter_files('-U','',sources,remove_prefix=1)
-    define_macros, sources = filter_files('-D','',sources,remove_prefix=1)
+    extra_objects, sources = filter_files('', '[.](o|a|so)', sources)
+    include_dirs, sources = filter_files('-I', '', sources, remove_prefix=1)
+    library_dirs, sources = filter_files('-L', '', sources, remove_prefix=1)
+    libraries, sources = filter_files('-l', '', sources, remove_prefix=1)
+    undef_macros, sources = filter_files('-U', '', sources, remove_prefix=1)
+    define_macros, sources = filter_files('-D', '', sources, remove_prefix=1)
     using_numarray = 0
     using_numeric = 0
     for i in range(len(define_macros)):
-        name_value = define_macros[i].split('=',1)
+        name_value = define_macros[i].split('=', 1)
         if len(name_value)==1:
             name_value.append(None)
         if len(name_value)==2:
             define_macros[i] = tuple(name_value)
         else:
-            print 'Invalid use of -D:',name_value
+            print('Invalid use of -D:', name_value)
 
     from numpy.distutils.system_info import get_info
 
@@ -538,10 +544,10 @@ def run_compile():
     #num_info = {'include_dirs': get_numpy_include_dirs()}
 
     if num_info:
-        include_dirs.extend(num_info.get('include_dirs',[]))
+        include_dirs.extend(num_info.get('include_dirs', []))
 
-    from numpy.distutils.core import setup,Extension
-    ext_args = {'name':modulename,'sources':sources,
+    from numpy.distutils.core import setup, Extension
+    ext_args = {'name': modulename, 'sources': sources,
                 'include_dirs': include_dirs,
                 'library_dirs': library_dirs,
                 'libraries': libraries,
@@ -557,15 +563,15 @@ def run_compile():
             i = get_info(n)
             if not i:
                 outmess('No %s resources found in system'\
-                        ' (try `f2py --help-link`)\n' % (`n`))
+                        ' (try `f2py --help-link`)\n' % (repr(n)))
             dict_append(ext_args,**i)
 
     ext = Extension(**ext_args)
     sys.argv = [sys.argv[0]] + setup_flags
     sys.argv.extend(['build',
-                     '--build-temp',build_dir,
-                     '--build-base',build_dir,
-                     '--build-platlib','.'])
+                     '--build-temp', build_dir,
+                     '--build-base', build_dir,
+                     '--build-platlib', '.'])
     if fc_flags:
         sys.argv.extend(['config_fc']+fc_flags)
     if flib_flags:

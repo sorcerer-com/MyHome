@@ -1,15 +1,21 @@
+from __future__ import division, absolute_import, print_function
+
 import os
+import sys
+import numpy.lib._datasource as datasource
 from tempfile import mkdtemp, mkstemp, NamedTemporaryFile
 from shutil import rmtree
-from urlparse import urlparse
-from urllib2 import URLError
-import urllib2
-
+from numpy.compat import asbytes
 from numpy.testing import *
 
-from numpy.compat import asbytes
-
-import numpy.lib._datasource as datasource
+if sys.version_info[0] >= 3:
+    import urllib.request as urllib_request
+    from urllib.parse import urlparse
+    from urllib.error import URLError
+else:
+    import urllib2 as urllib_request
+    from urlparse import urlparse
+    from urllib2 import URLError
 
 def urlopen_stub(url, data=None):
     '''Stub to replace urlopen for testing.'''
@@ -19,14 +25,17 @@ def urlopen_stub(url, data=None):
     else:
         raise URLError('Name or service not known')
 
+# setup and teardown
 old_urlopen = None
+
 def setup():
     global old_urlopen
-    old_urlopen = urllib2.urlopen
-    urllib2.urlopen = urlopen_stub
+
+    old_urlopen = urllib_request.urlopen
+    urllib_request.urlopen = urlopen_stub
 
 def teardown():
-    urllib2.urlopen = old_urlopen
+    urllib_request.urlopen = old_urlopen
 
 # A valid website for more robust testing
 http_path = 'http://www.google.com/'
@@ -92,7 +101,7 @@ class TestDataSourceOpen(TestCase):
         self.assertRaises(IOError, self.ds.open, url)
         try:
             self.ds.open(url)
-        except IOError, e:
+        except IOError as e:
             # Regression test for bug fixed in r4342.
             assert_(e.errno is None)
 
@@ -300,7 +309,7 @@ class TestRepositoryExists(TestCase):
         # would do.
         scheme, netloc, upath, pms, qry, frg = urlparse(localfile)
         local_path = os.path.join(self.repos._destpath, netloc)
-        os.mkdir(local_path, 0700)
+        os.mkdir(local_path, 0o0700)
         tmpfile = valid_textfile(local_path)
         assert_(self.repos.exists(tmpfile))
 

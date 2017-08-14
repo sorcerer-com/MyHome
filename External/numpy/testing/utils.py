@@ -1,24 +1,34 @@
 """
 Utility function to facilitate testing.
+
 """
+from __future__ import division, absolute_import, print_function
 
 import os
 import sys
 import re
 import operator
-import types
 import warnings
-from nosetester import import_nose
+from .nosetester import import_nose
+from numpy.core import float32, empty, arange
 
-__all__ = ['assert_equal', 'assert_almost_equal','assert_approx_equal',
+if sys.version_info[0] >= 3:
+    from io import StringIO
+else:
+    from StringIO import StringIO
+
+__all__ = ['assert_equal', 'assert_almost_equal', 'assert_approx_equal',
            'assert_array_equal', 'assert_array_less', 'assert_string_equal',
            'assert_array_almost_equal', 'assert_raises', 'build_err_msg',
            'decorate_methods', 'jiffies', 'memusage', 'print_assert_equal',
            'raises', 'rand', 'rundocs', 'runstring', 'verbose', 'measure',
            'assert_', 'assert_array_almost_equal_nulp',
-           'assert_array_max_ulp', 'assert_warns', 'assert_allclose']
+           'assert_array_max_ulp', 'assert_warns', 'assert_no_warnings',
+           'assert_allclose', 'IgnoreException']
+
 
 verbose = 0
+
 
 def assert_(val, msg='') :
     """
@@ -46,7 +56,7 @@ def gisnan(x):
     This should be removed once this problem is solved at the Ufunc level."""
     from numpy.core import isnan
     st = isnan(x)
-    if isinstance(st, types.NotImplementedType):
+    if isinstance(st, type(NotImplemented)):
         raise TypeError("isnan not supported for this type")
     return st
 
@@ -61,14 +71,11 @@ def gisfinite(x):
     exception is always raised.
 
     This should be removed once this problem is solved at the Ufunc level."""
-    from numpy.core import isfinite, seterr
-    err = seterr(invalid='ignore')
-    try:
+    from numpy.core import isfinite, errstate
+    with errstate(invalid='ignore'):
         st = isfinite(x)
-        if isinstance(st, types.NotImplementedType):
+        if isinstance(st, type(NotImplemented)):
             raise TypeError("isfinite not supported for this type")
-    finally:
-        seterr(**err)
     return st
 
 def gisinf(x):
@@ -82,14 +89,11 @@ def gisinf(x):
     exception is always raised.
 
     This should be removed once this problem is solved at the Ufunc level."""
-    from numpy.core import isinf, seterr
-    err = seterr(invalid='ignore')
-    try:
+    from numpy.core import isinf, errstate
+    with errstate(invalid='ignore'):
         st = isinf(x)
-        if isinstance(st, types.NotImplementedType):
+        if isinstance(st, type(NotImplemented)):
             raise TypeError("isinf not supported for this type")
-    finally:
-        seterr(**err)
     return st
 
 def rand(*args):
@@ -114,7 +118,7 @@ if sys.platform[:5]=='linux':
         if not _load_time:
             _load_time.append(time.time())
         try:
-            f=open(_proc_pid_stat,'r')
+            f=open(_proc_pid_stat, 'r')
             l = f.readline().split(' ')
             f.close()
             return int(l[13])
@@ -125,7 +129,7 @@ if sys.platform[:5]=='linux':
         """ Return virtual memory size in bytes of the running python.
         """
         try:
-            f=open(_proc_pid_stat,'r')
+            f=open(_proc_pid_stat, 'r')
             l = f.readline().split(' ')
             f.close()
             return int(l[22])
@@ -160,7 +164,7 @@ if os.name=='nt' and sys.version[:3] > '2.3':
         # the CPU to 100%, but the above makes more sense :)
         import win32pdh
         if format is None: format = win32pdh.PDH_FMT_LONG
-        path = win32pdh.MakeCounterPath( (machine,object,instance, None, inum,counter) )
+        path = win32pdh.MakeCounterPath( (machine, object, instance, None, inum, counter) )
         hq = win32pdh.OpenQuery()
         try:
             hc = win32pdh.AddCounter(hq, path)
@@ -239,16 +243,16 @@ def assert_equal(actual,desired,err_msg='',verbose=True):
     if isinstance(desired, dict):
         if not isinstance(actual, dict) :
             raise AssertionError(repr(type(actual)))
-        assert_equal(len(actual),len(desired),err_msg,verbose)
-        for k,i in desired.items():
+        assert_equal(len(actual), len(desired), err_msg, verbose)
+        for k, i in desired.items():
             if k not in actual :
                 raise AssertionError(repr(k))
-            assert_equal(actual[k], desired[k], 'key=%r\n%s' % (k,err_msg), verbose)
+            assert_equal(actual[k], desired[k], 'key=%r\n%s' % (k, err_msg), verbose)
         return
-    if isinstance(desired, (list,tuple)) and isinstance(actual, (list,tuple)):
-        assert_equal(len(actual),len(desired),err_msg,verbose)
+    if isinstance(desired, (list, tuple)) and isinstance(actual, (list, tuple)):
+        assert_equal(len(actual), len(desired), err_msg, verbose)
         for k in range(len(desired)):
-            assert_equal(actual[k], desired[k], 'item=%r\n%s' % (k,err_msg), verbose)
+            assert_equal(actual[k], desired[k], 'item=%r\n%s' % (k, err_msg), verbose)
         return
     from numpy.core import ndarray, isscalar, signbit
     from numpy.lib import iscomplexobj, real, imag
@@ -312,7 +316,7 @@ def assert_equal(actual,desired,err_msg='',verbose=True):
     if desired != actual :
         raise AssertionError(msg)
 
-def print_assert_equal(test_string,actual,desired):
+def print_assert_equal(test_string, actual, desired):
     """
     Test if two objects are equal, and print an error message if test fails.
 
@@ -341,16 +345,14 @@ def print_assert_equal(test_string,actual,desired):
 
     """
     import pprint
-    try:
-        assert(actual == desired)
-    except AssertionError:
-        import cStringIO
-        msg = cStringIO.StringIO()
+
+    if not (actual == desired):
+        msg = StringIO()
         msg.write(test_string)
         msg.write(' failed\nACTUAL: \n')
-        pprint.pprint(actual,msg)
+        pprint.pprint(actual, msg)
         msg.write('DESIRED: \n')
-        pprint.pprint(desired,msg)
+        pprint.pprint(desired, msg)
         raise AssertionError(msg.getvalue())
 
 def assert_almost_equal(actual,desired,decimal=7,err_msg='',verbose=True):
@@ -464,7 +466,7 @@ def assert_almost_equal(actual,desired,decimal=7,err_msg='',verbose=True):
             return
     except (NotImplementedError, TypeError):
         pass
-    if round(abs(desired - actual),decimal) != 0 :
+    if round(abs(desired - actual), decimal) != 0 :
         raise AssertionError(msg)
 
 
@@ -525,18 +527,15 @@ def assert_approx_equal(actual,desired,significant=7,err_msg='',verbose=True):
 
     """
     import numpy as np
-    actual, desired = map(float, (actual, desired))
+
+    (actual, desired) = map(float, (actual, desired))
     if desired==actual:
         return
     # Normalized the numbers to be in range (-10.0,10.0)
     # scale = float(pow(10,math.floor(math.log10(0.5*(abs(desired)+abs(actual))))))
-    err = np.seterr(invalid='ignore')
-    try:
+    with np.errstate(invalid='ignore'):
         scale = 0.5*(np.abs(desired) + np.abs(actual))
-        scale = np.power(10,np.floor(np.log10(scale)))
-    finally:
-        np.seterr(**err)
-
+        scale = np.power(10, np.floor(np.log10(scale)))
     try:
         sc_desired = desired/scale
     except ZeroDivisionError:
@@ -563,17 +562,17 @@ def assert_approx_equal(actual,desired,significant=7,err_msg='',verbose=True):
             return
     except (TypeError, NotImplementedError):
         pass
-    if np.abs(sc_desired - sc_actual) >= np.power(10.,-(significant-1)) :
+    if np.abs(sc_desired - sc_actual) >= np.power(10., -(significant-1)) :
         raise AssertionError(msg)
 
 def assert_array_compare(comparison, x, y, err_msg='', verbose=True,
                          header=''):
-    from numpy.core import array, isnan, isinf, any
+    from numpy.core import array, isnan, isinf, any, all, inf
     x = array(x, copy=False, subok=True)
     y = array(y, copy=False, subok=True)
 
     def isnumber(x):
-        return x.dtype.char in '?bhilqpBHILQPfdgFDG'
+        return x.dtype.char in '?bhilqpBHILQPefdgFDG'
 
     def chk_same_position(x_id, y_id, hasval='nan'):
         """Handling nan/inf: check that x and y have the nan/inf at the same
@@ -599,24 +598,33 @@ def assert_array_compare(comparison, x, y, err_msg='', verbose=True,
             if not cond :
                 raise AssertionError(msg)
 
-        if (isnumber(x) and isnumber(y)) and (any(isnan(x)) or any(isnan(y))):
-            x_id = isnan(x)
-            y_id = isnan(y)
-            chk_same_position(x_id, y_id, hasval='nan')
-            # If only one item, it was a nan, so just return
-            if x.size == y.size == 1:
+        if isnumber(x) and isnumber(y):
+            x_isnan, y_isnan = isnan(x), isnan(y)
+            x_isinf, y_isinf = isinf(x), isinf(y)
+
+            # Validate that the special values are in the same place
+            if any(x_isnan) or any(y_isnan):
+                chk_same_position(x_isnan, y_isnan, hasval='nan')
+            if any(x_isinf) or any(y_isinf):
+                # Check +inf and -inf separately, since they are different
+                chk_same_position(x == +inf, y == +inf, hasval='+inf')
+                chk_same_position(x == -inf, y == -inf, hasval='-inf')
+
+            # Combine all the special values
+            x_id, y_id = x_isnan, y_isnan
+            x_id |= x_isinf
+            y_id |= y_isinf
+
+            # Only do the comparison if actual values are left
+            if all(x_id):
                 return
-            val = comparison(x[~x_id], y[~y_id])
-        elif (isnumber(x) and isnumber(y)) and (any(isinf(x)) or any(isinf(y))):
-            x_id = isinf(x)
-            y_id = isinf(y)
-            chk_same_position(x_id, y_id, hasval='inf')
-            # If only one item, it was a inf, so just return
-            if x.size == y.size == 1:
-                return
-            val = comparison(x[~x_id], y[~y_id])
+
+            if any(x_id):
+                val = comparison(x[~x_id], y[~y_id])
+            else:
+                val = comparison(x, y)
         else:
-            val = comparison(x,y)
+            val = comparison(x, y)
 
         if isinstance(val, bool):
             cond = val
@@ -634,8 +642,11 @@ def assert_array_compare(comparison, x, y, err_msg='', verbose=True,
                                 names=('x', 'y'))
             if not cond :
                 raise AssertionError(msg)
-    except ValueError, e:
-        header = 'error during assertion:\n%s\n\n%s' % (e, header)
+    except ValueError as e:
+        import traceback
+        efmt = traceback.format_exc()
+        header = 'error during assertion:\n\n%s\n\n%s' % (efmt, header)
+
         msg = build_err_msg([x, y], err_msg, verbose=verbose, header=header,
                             names=('x', 'y'))
         raise ValueError(msg)
@@ -869,7 +880,7 @@ def assert_array_less(x, y, err_msg='', verbose=True):
                          header='Arrays are not less-ordered')
 
 def runstring(astr, dict):
-    exec astr in dict
+    exec(astr, dict)
 
 def assert_string_equal(actual, desired):
     """
@@ -901,10 +912,12 @@ def assert_string_equal(actual, desired):
     import difflib
 
     if not isinstance(actual, str) :
-        raise AssertionError(`type(actual)`)
+        raise AssertionError(repr(type(actual)))
     if not isinstance(desired, str):
-        raise AssertionError(`type(desired)`)
-    if re.match(r'\A'+desired+r'\Z', actual, re.M): return
+        raise AssertionError(repr(type(desired)))
+    if re.match(r'\A'+desired+r'\Z', actual, re.M):
+        return
+
     diff = list(difflib.Differ().compare(actual.splitlines(1), desired.splitlines(1)))
     diff_list = []
     while diff:
@@ -918,7 +931,7 @@ def assert_string_equal(actual, desired):
                 l.append(d2)
                 d2 = diff.pop(0)
             if not d2.startswith('+ ') :
-                raise AssertionError(`d2`)
+                raise AssertionError(repr(d2))
             l.append(d2)
             d3 = diff.pop(0)
             if d3.startswith('? '):
@@ -929,7 +942,7 @@ def assert_string_equal(actual, desired):
                 continue
             diff_list.extend(l)
             continue
-        raise AssertionError(`d1`)
+        raise AssertionError(repr(d1))
     if not diff_list:
         return
     msg = 'Differences in strings:\n%s' % (''.join(diff_list)).rstrip()
@@ -955,10 +968,9 @@ def rundocs(filename=None, raise_on_error=True):
     -----
     The doctests can be run by the user/developer by adding the ``doctests``
     argument to the ``test()`` call. For example, to run all tests (including
-    doctests) for `numpy.lib`::
+    doctests) for `numpy.lib`:
 
-      >>> np.lib.test(doctests=True)
-
+    >>> np.lib.test(doctests=True) #doctest: +SKIP
     """
     import doctest, imp
     if filename is None:
@@ -1039,7 +1051,7 @@ def decorate_methods(cls, decorator, testmatch=None):
     # delayed import to reduce startup time
     from inspect import isfunction
 
-    methods = filter(isfunction, cls_attr.values())
+    methods = [_m for _m in cls_attr.values() if isfunction(_m)]
     for function in methods:
         try:
             if hasattr(function, 'compat_func_name'):
@@ -1088,7 +1100,7 @@ def measure(code_str,times=1,label=None):
 
     """
     frame = sys._getframe(1)
-    locs,globs = frame.f_locals,frame.f_globals
+    locs, globs = frame.f_locals, frame.f_globals
 
     code = compile(code_str,
                    'Test name: %s ' % label,
@@ -1097,7 +1109,7 @@ def measure(code_str,times=1,label=None):
     elapsed = jiffies()
     while i < times:
         i += 1
-        exec code in globs,locs
+        exec(code, globs, locs)
     elapsed = jiffies() - elapsed
     return 0.01*elapsed
 
@@ -1115,9 +1127,9 @@ def _assert_valid_refcount(op):
 
     rc = sys.getrefcount(i)
     for j in range(15):
-        d = op(b,c)
+        d = op(b, c)
 
-    assert(sys.getrefcount(i) >= rc)
+    assert_(sys.getrefcount(i) >= rc)
 
 def assert_allclose(actual, desired, rtol=1e-7, atol=0,
                     err_msg='', verbose=True):
@@ -1127,6 +1139,8 @@ def assert_allclose(actual, desired, rtol=1e-7, atol=0,
     The test is equivalent to ``allclose(actual, desired, rtol, atol)``.
     It compares the difference between `actual` and `desired` to
     ``atol + rtol * abs(desired)``.
+
+    .. versionadded:: 1.5.0
 
     Parameters
     ----------
@@ -1162,6 +1176,7 @@ def assert_allclose(actual, desired, rtol=1e-7, atol=0,
     import numpy as np
     def compare(x, y):
         return np.allclose(x, y, rtol=rtol, atol=atol)
+
     actual, desired = np.asanyarray(actual), np.asanyarray(desired)
     header = 'Not equal to tolerance rtol=%g, atol=%g' % (rtol, atol)
     assert_array_compare(compare, actual, desired, err_msg=str(err_msg),
@@ -1285,7 +1300,7 @@ def nulp_diff(x, y, dtype=None):
 
     Returns
     -------
-    nulp: array_like
+    nulp : array_like
         number of representable floating point numbers between each item in x
         and y.
 
@@ -1355,6 +1370,8 @@ class WarningMessage(object):
     """
     Holds the result of a single showwarning() call.
 
+    Deprecated in 1.8.0
+
     Notes
     -----
     `WarningMessage` is copied from the Python 2.6 warnings module,
@@ -1380,7 +1397,7 @@ class WarningMessage(object):
                     "line : %r}" % (self.message, self._category_name,
                                     self.filename, self.lineno, self.line))
 
-class WarningManager:
+class WarningManager(object):
     """
     A context manager that copies and restores the warnings filter upon
     exiting the context.
@@ -1394,6 +1411,8 @@ class WarningManager:
     The 'module' argument is to specify an alternative module to the module
     named 'warnings' and imported under that name. This argument is only useful
     when testing the warnings module itself.
+
+    Deprecated in 1.8.0
 
     Notes
     -----
@@ -1432,6 +1451,7 @@ class WarningManager:
         self._module.filters = self._filters
         self._module.showwarning = self._showwarning
 
+
 def assert_warns(warning_class, func, *args, **kw):
     """
     Fail unless the given callable throws the specified warning.
@@ -1440,6 +1460,8 @@ def assert_warns(warning_class, func, *args, **kw):
     invoked with arguments args and keyword arguments kwargs.
     If a different type of warning is thrown, it will not be caught, and the
     test case will be deemed to have suffered an error.
+
+    .. versionadded:: 1.4.0
 
     Parameters
     ----------
@@ -1454,22 +1476,114 @@ def assert_warns(warning_class, func, *args, **kw):
 
     Returns
     -------
-    None
+    The value returned by `func`.
 
     """
-
-    # XXX: once we may depend on python >= 2.6, this can be replaced by the
-    # warnings module context manager.
-    ctx = WarningManager(record=True)
-    l = ctx.__enter__()
-    warnings.simplefilter('always')
-    try:
-        func(*args, **kw)
+    with warnings.catch_warnings(record=True) as l:
+        warnings.simplefilter('always')
+        result = func(*args, **kw)
         if not len(l) > 0:
             raise AssertionError("No warning raised when calling %s"
                     % func.__name__)
         if not l[0].category is warning_class:
             raise AssertionError("First warning for %s is not a " \
                     "%s( is %s)" % (func.__name__, warning_class, l[0]))
-    finally:
-        ctx.__exit__()
+    return result
+
+def assert_no_warnings(func, *args, **kw):
+    """
+    Fail if the given callable produces any warnings.
+
+    .. versionadded:: 1.7.0
+
+    Parameters
+    ----------
+    func : callable
+        The callable to test.
+    \\*args : Arguments
+        Arguments passed to `func`.
+    \\*\\*kwargs : Kwargs
+        Keyword arguments passed to `func`.
+
+    Returns
+    -------
+    The value returned by `func`.
+
+    """
+    with warnings.catch_warnings(record=True) as l:
+        warnings.simplefilter('always')
+        result = func(*args, **kw)
+        if len(l) > 0:
+            raise AssertionError("Got warnings when calling %s: %s"
+                    % (func.__name__, l))
+    return result
+
+
+def _gen_alignment_data(dtype=float32, type='binary', max_size=24):
+    """
+    generator producing data with different alignment and offsets
+    to test simd vectorization
+
+    Parameters
+    ----------
+    dtype : dtype
+        data type to produce
+    type : string
+        'unary': create data for unary operations, creates one input
+                 and output array
+        'binary': create data for unary operations, creates two input
+                 and output array
+    max_size : integer
+        maximum size of data to produce
+
+    Returns
+    -------
+    if type is 'unary' yields one output, one input array and a message
+    containing information on the data
+    if type is 'binary' yields one output array, two input array and a message
+    containing information on the data
+
+    """
+    ufmt = 'unary offset=(%d, %d), size=%d, dtype=%r, %s'
+    bfmt = 'binary offset=(%d, %d, %d), size=%d, dtype=%r, %s'
+    for o in range(3):
+        for s in range(o + 2, max(o + 3, max_size)):
+            if type == 'unary':
+                inp = lambda : arange(s, dtype=dtype)[o:]
+                out = empty((s,), dtype=dtype)[o:]
+                yield out, inp(), ufmt % (o, o, s, dtype, 'out of place')
+                yield inp(), inp(), ufmt % (o, o, s, dtype, 'in place')
+                yield out[1:], inp()[:-1], ufmt % \
+                    (o + 1, o, s - 1, dtype, 'out of place')
+                yield out[:-1], inp()[1:], ufmt % \
+                    (o, o + 1, s - 1, dtype, 'out of place')
+                yield inp()[:-1], inp()[1:], ufmt % \
+                    (o, o + 1, s - 1, dtype, 'aliased')
+                yield inp()[1:], inp()[:-1], ufmt % \
+                    (o + 1, o, s - 1, dtype, 'aliased')
+            if type == 'binary':
+                inp1 = lambda :arange(s, dtype=dtype)[o:]
+                inp2 = lambda :arange(s, dtype=dtype)[o:]
+                out = empty((s,), dtype=dtype)[o:]
+                yield out, inp1(), inp2(),  bfmt % \
+                    (o, o, o, s, dtype, 'out of place')
+                yield inp1(), inp1(), inp2(), bfmt % \
+                    (o, o, o, s, dtype, 'in place1')
+                yield inp2(), inp1(), inp2(), bfmt % \
+                    (o, o, o, s, dtype, 'in place2')
+                yield out[1:], inp1()[:-1], inp2()[:-1], bfmt % \
+                    (o + 1, o, o, s - 1, dtype, 'out of place')
+                yield out[:-1], inp1()[1:], inp2()[:-1], bfmt % \
+                    (o, o + 1, o, s - 1, dtype, 'out of place')
+                yield out[:-1], inp1()[:-1], inp2()[1:], bfmt % \
+                    (o, o, o + 1, s - 1, dtype, 'out of place')
+                yield inp1()[1:], inp1()[:-1], inp2()[:-1], bfmt % \
+                    (o + 1, o, o, s - 1, dtype, 'aliased')
+                yield inp1()[:-1], inp1()[1:], inp2()[:-1], bfmt % \
+                    (o, o + 1, o, s - 1, dtype, 'aliased')
+                yield inp1()[:-1], inp1()[:-1], inp2()[1:], bfmt % \
+                    (o, o, o + 1, s - 1, dtype, 'aliased')
+
+
+class IgnoreException(Exception):
+    "Ignoring this exception due to disabled feature"

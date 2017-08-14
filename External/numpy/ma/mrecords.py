@@ -6,7 +6,10 @@ Note that :class:`numpy.ma.MaskedArray` already supports structured datatypes
 and the masking of individual fields.
 
 :author: Pierre Gerard-Marchant
+
 """
+from __future__ import division, absolute_import, print_function
+
 #!!!: * We should make sure that no field is called '_mask','mask','_fieldmask',
 #!!!:   or whatever restricted keywords.
 #!!!:   An idea would be to no bother in the first place, and then rename the
@@ -17,13 +20,17 @@ and the masking of individual fields.
 __author__ = "Pierre GF Gerard-Marchant"
 
 import sys
+import warnings
 
 import numpy as np
-from numpy import bool_, dtype, \
-    ndarray, recarray, array as narray
 import numpy.core.numerictypes as ntypes
-from numpy.core.records import fromarrays as recfromarrays, \
-                               fromrecords as recfromrecords
+from numpy.compat import basestring
+from numpy import (
+        bool_, dtype, ndarray, recarray, array as narray
+        )
+from numpy.core.records import (
+        fromarrays as recfromarrays, fromrecords as recfromrecords
+        )
 
 _byteorderconv = np.core.records._byteorderconv
 _typestr = ntypes._typestr
@@ -34,7 +41,6 @@ from numpy.ma import MAError, MaskedArray, masked, nomask, masked_array, \
 
 _check_fill_value = ma.core._check_fill_value
 
-import warnings
 
 __all__ = ['MaskedRecords', 'mrecarray',
            'fromarrays', 'fromrecords', 'fromtextfile', 'addfield',
@@ -52,7 +58,7 @@ def _getformats(data):
         obj = np.asarray(obj)
         formats += _typestr[obj.dtype.type]
         if issubclass(obj.dtype.type, ntypes.flexible):
-            formats += `obj.itemsize`
+            formats += repr(obj.itemsize)
         formats += ','
     return formats[:-1]
 
@@ -71,7 +77,7 @@ If the argument `names` is not None, updates the field names to valid names.
         elif isinstance(names, str):
             new_names = names.split(',')
         else:
-            raise NameError("illegal input names %s" % `names`)
+            raise NameError("illegal input names %s" % repr(names))
         nnames = len(new_names)
         if nnames < ndescr:
             new_names += default_names[nnames:]
@@ -197,7 +203,7 @@ class MaskedRecords(MaskedArray, object):
         try:
             res = fielddict[attr][:2]
         except (TypeError, KeyError):
-            raise AttributeError, "record array has no attribute %s" % attr
+            raise AttributeError("record array has no attribute %s" % attr)
         # So far, so good...
         _localdict = ndarray.__getattribute__(self, '__dict__')
         _data = ndarray.view(self, _localdict['_baseclass'])
@@ -252,7 +258,7 @@ class MaskedRecords(MaskedArray, object):
             optinfo = ndarray.__getattribute__(self, '_optinfo') or {}
             if not (attr in fielddict or attr in optinfo):
                 exctype, value = sys.exc_info()[:2]
-                raise exctype, value
+                raise exctype(value)
         else:
             # Get the list of names ......
             fielddict = ndarray.__getattribute__(self, 'dtype').fields or {}
@@ -269,7 +275,7 @@ class MaskedRecords(MaskedArray, object):
         try:
             res = fielddict[attr][:2]
         except (TypeError, KeyError):
-            raise AttributeError, "record array has no attribute %s" % attr
+            raise AttributeError("record array has no attribute %s" % attr)
         #
         if val is masked:
             _fill_value = _localdict['_fill_value']
@@ -505,7 +511,7 @@ def fromarrays(arraylist, dtype=None, shape=None, formats=None,
                            dtype=dtype, shape=shape, formats=formats,
                            names=names, titles=titles, aligned=aligned,
                            byteorder=byteorder).view(mrecarray)
-    _array._mask.flat = zip(*masklist)
+    _array._mask.flat = list(zip(*masklist))
     if fill_value is not None:
         _array.fill_value = fill_value
     return _array
@@ -589,7 +595,7 @@ on the first line. An exception is raised if the file is 3D or more.
     if len(arr.shape) == 2 :
         arr = arr[0]
     elif len(arr.shape) > 2:
-        raise ValueError, "The array should be 2D at most!"
+        raise ValueError("The array should be 2D at most!")
     # Start the conversion loop .......
     for f in arr:
         try:
@@ -619,11 +625,12 @@ def openfile(fname):
     try:
         f = open(fname)
     except IOError:
-        raise IOError, "No such file: '%s'" % fname
+        raise IOError("No such file: '%s'" % fname)
     if f.readline()[:2] != "\\x":
         f.seek(0, 0)
         return f
-    raise NotImplementedError, "Wow, binary file"
+    f.close()
+    raise NotImplementedError("Wow, binary file")
 
 
 def fromtextfile(fname, delimitor=None, commentchar='#', missingchar='',
@@ -652,6 +659,7 @@ def fromtextfile(fname, delimitor=None, commentchar='#', missingchar='',
     Ultra simple: the varnames are in the header, one line"""
     # Try to open the file ......................
     f = openfile(fname)
+
     # Get the first non-empty line as the varnames
     while True:
         line = f.readline()
@@ -661,10 +669,13 @@ def fromtextfile(fname, delimitor=None, commentchar='#', missingchar='',
             break
     if varnames is None:
         varnames = _varnames
+
     # Get the data ..............................
     _variables = masked_array([line.strip().split(delimitor) for line in f
                                   if line[0] != commentchar and len(line) > 1])
     (_, nfields) = _variables.shape
+    f.close()
+
     # Try to guess the dtype ....................
     if vartypes is None:
         vartypes = _guessvartypes(_variables[0])
@@ -675,14 +686,17 @@ def fromtextfile(fname, delimitor=None, commentchar='#', missingchar='',
             msg += " Reverting to default."
             warnings.warn(msg % (len(vartypes), nfields))
             vartypes = _guessvartypes(_variables[0])
+
     # Construct the descriptor ..................
     mdescr = [(n, f) for (n, f) in zip(varnames, vartypes)]
     mfillv = [ma.default_fill_value(f) for f in vartypes]
+
     # Get the data and the mask .................
     # We just need a list of masked_arrays. It's easier to create it like that:
     _mask = (_variables.T == missingchar)
     _datalist = [masked_array(a, mask=m, dtype=t, fill_value=f)
                  for (a, m, t, f) in zip(_variables.T, _mask, vartypes, mfillv)]
+
     return fromarrays(_datalist, dtype=mdescr)
 
 #....................................................................

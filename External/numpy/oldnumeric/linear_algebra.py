@@ -1,10 +1,12 @@
 """Backward compatible with LinearAlgebra from Numeric
-"""
-# This module is a lite version of the linalg.py module in SciPy which contains
-# high-level Python interface to the LAPACK library.  The lite version
-# only accesses the following LAPACK functions: dgesv, zgesv, dgeev,
-# zgeev, dgesdd, zgesdd, dgelsd, zgelsd, dsyevd, zheevd, dgetrf, dpotrf.
 
+This module is a lite version of the linalg.py module in SciPy which contains
+high-level Python interface to the LAPACK library.  The lite version
+only accesses the following LAPACK functions: dgesv, zgesv, dgeev,
+zgeev, dgesdd, zgesdd, dgelsd, zgelsd, dsyevd, zheevd, dgetrf, dpotrf.
+
+"""
+from __future__ import division, absolute_import, print_function
 
 __all__ = ['LinAlgError', 'solve_linear_equations',
            'inverse', 'cholesky_decomposition', 'eigenvalues',
@@ -22,7 +24,7 @@ import numpy.linalg as linalg
 LinAlgError = linalg.LinAlgError
 
 def solve_linear_equations(a, b):
-    return linalg.solve(a,b)
+    return linalg.solve(a, b)
 
 # Matrix inversion
 
@@ -40,7 +42,7 @@ def eigenvalues(a):
     return linalg.eigvals(a)
 
 def Heigenvalues(a, UPLO='L'):
-    return linalg.eigvalsh(a,UPLO)
+    return linalg.eigvalsh(a, UPLO)
 
 # Eigenvectors
 
@@ -77,7 +79,7 @@ the number of rows, then residuals will be returned as an empty array
 otherwise resids = sum((b-dot(A,x)**2).
 Singular values less than s[0]*rcond are treated as zero.
 """
-    return linalg.lstsq(a,b,rcond)
+    return linalg.lstsq(a, b, rcond)
 
 def singular_value_decomposition(A, full_matrices=0):
     return linalg.svd(A, full_matrices)

@@ -7,16 +7,16 @@ an array object, and when iterated it will return sub-arrays with at most
 a user-specified number of elements.
 
 """
+from __future__ import division, absolute_import, print_function
 
-from __future__ import division
-
+import sys
 from operator import mul
+from functools import reduce
+
+from numpy.compat import long
 
 __all__ = ['Arrayterator']
 
-import sys
-if sys.version_info[0] >= 3:
-    from functools import reduce
 
 class Arrayterator(object):
     """
@@ -188,7 +188,7 @@ class Arrayterator(object):
         step = self.step[:]
         ndims = len(self.var.shape)
 
-        while 1:
+        while True:
             count = self.buf_size or reduce(mul, self.shape)
 
             # iterate over each dimension, looking for the

@@ -1,12 +1,21 @@
-"""A collection of functions designed to help I/O with ascii files."""
+"""A collection of functions designed to help I/O with ascii files.
+
+"""
+from __future__ import division, absolute_import, print_function
+
 __docformat__ = "restructuredtext en"
 
 import sys
 import numpy as np
 import numpy.core.numeric as nx
-from __builtin__ import bool, int, long, float, complex, object, unicode, str
+from numpy.compat import asbytes, bytes, asbytes_nested, long, basestring
 
-from numpy.compat import asbytes, bytes, asbytes_nested
+if sys.version_info[0] >= 3:
+    from builtins import bool, int, float, complex, object,  str
+    unicode = str
+else:
+    from __builtin__ import bool, int, float, complex, object, unicode, str
+
 
 if sys.version_info[0] >= 3:
     def _bytes_to_complex(s):
@@ -42,7 +51,7 @@ def _to_filehandle(fname, flag='r', return_opened=False):
     """
     Returns the filehandle corresponding to a string or a file.
     If the string ends in '.gz', the file is automatically unzipped.
-    
+
     Parameters
     ----------
     fname : string, filehandle
@@ -83,7 +92,8 @@ def has_nested_fields(ndtype):
 
     Raises
     ------
-    AttributeError : If `ndtype` does not have a `names` attribute.
+    AttributeError
+        If `ndtype` does not have a `names` attribute.
 
     Examples
     --------
@@ -142,7 +152,7 @@ def flatten_dtype(ndtype, flatten_base=False):
 
 
 
-class LineSplitter:
+class LineSplitter(object):
     """
     Object to split a string at a given delimiter or at given places.
 
@@ -203,13 +213,17 @@ class LineSplitter:
             self._handyman = _handyman
     #
     def _delimited_splitter(self, line):
-        line = line.split(self.comments)[0].strip(asbytes(" \r\n"))
+        if self.comments is not None:
+            line = line.split(self.comments)[0]
+        line = line.strip(asbytes(" \r\n"))
         if not line:
             return []
         return line.split(self.delimiter)
     #
     def _fixedwidth_splitter(self, line):
-        line = line.split(self.comments)[0].strip(asbytes("\r\n"))
+        if self.comments is not None:
+            line = line.split(self.comments)[0]
+        line = line.strip(asbytes("\r\n"))
         if not line:
             return []
         fixed = self.delimiter
@@ -217,7 +231,8 @@ class LineSplitter:
         return [line[s] for s in slices]
     #
     def _variablewidth_splitter(self, line):
-        line = line.split(self.comments)[0]
+        if self.comments is not None:
+            line = line.split(self.comments)[0]
         if not line:
             return []
         slices = self.delimiter
@@ -228,7 +243,7 @@ class LineSplitter:
 
 
 
-class NameValidator:
+class NameValidator(object):
     """
     Object to validate a list of strings to use as field names.
 
@@ -258,7 +273,7 @@ class NameValidator:
         * If 'lower', field names are converted to lower case.
 
         The default value is True.
-    replace_space: '_', optional
+    replace_space : '_', optional
         Character(s) used in replacement of white spaces.
 
     Notes
@@ -448,7 +463,7 @@ class ConversionWarning(UserWarning):
 
 
 
-class StringConverter:
+class StringConverter(object):
     """
     Factory class for function transforming a string into another object (int,
     float).
@@ -503,20 +518,35 @@ class StringConverter:
     (_defaulttype, _defaultfunc, _defaultfill) = zip(*_mapper)
     #
     @classmethod
+    def _getdtype(cls, val):
+        """Returns the dtype of the input variable."""
+        return np.array(val).dtype
+    #
+    @classmethod
     def _getsubdtype(cls, val):
         """Returns the type of the dtype of the input variable."""
         return np.array(val).dtype.type
+    #
+    # This is a bit annoying. We want to return the "general" type in most cases
+    # (ie. "string" rather than "S10"), but we want to return the specific type
+    # for datetime64 (ie. "datetime64[us]" rather than "datetime64").
+    @classmethod
+    def _dtypeortype(cls, dtype):
+        """Returns dtype for datetime64 and type of dtype otherwise."""
+        if dtype.type == np.datetime64:
+            return dtype
+        return dtype.type
     #
     @classmethod
     def upgrade_mapper(cls, func, default=None):
         """
     Upgrade the mapper of a StringConverter by adding a new function and its
     corresponding default.
-    
-    The input function (or sequence of functions) and its associated default 
+
+    The input function (or sequence of functions) and its associated default
     value (if any) is inserted in penultimate position of the mapper.
     The corresponding type is estimated from the dtype of the default value.
-    
+
     Parameters
     ----------
     func : var
@@ -561,12 +591,12 @@ class StringConverter:
             self.func = str2bool
             self._status = 0
             self.default = default or False
-            ttype = np.bool
+            dtype = np.dtype('bool')
         else:
             # Is the input a np.dtype ?
             try:
                 self.func = None
-                ttype = np.dtype(dtype_or_func).type
+                dtype = np.dtype(dtype_or_func)
             except TypeError:
                 # dtype_or_func must be a function, then
                 if not hasattr(dtype_or_func, '__call__'):
@@ -581,11 +611,11 @@ class StringConverter:
                         default = self.func(asbytes('0'))
                     except ValueError:
                         default = None
-                ttype = self._getsubdtype(default)
+                dtype = self._getdtype(default)
             # Set the status according to the dtype
             _status = -1
             for (i, (deftype, func, default_def)) in enumerate(self._mapper):
-                if np.issubdtype(ttype, deftype):
+                if np.issubdtype(dtype.type, deftype):
                     _status = i
                     if default is None:
                         self.default = default_def
@@ -603,9 +633,9 @@ class StringConverter:
             # If the status is 1 (int), change the function to
             # something more robust.
             if self.func == self._mapper[1][1]:
-                if issubclass(ttype, np.uint64):
+                if issubclass(dtype.type, np.uint64):
                     self.func = np.uint64
-                elif issubclass(ttype, np.int64):
+                elif issubclass(dtype.type, np.int64):
                     self.func = np.int64
                 else:
                     self.func = lambda x : int(float(x))
@@ -618,7 +648,7 @@ class StringConverter:
             self.missing_values = set(list(missing_values) + [asbytes('')])
         #
         self._callingfunction = self._strict_call
-        self.type = ttype
+        self.type = self._dtypeortype(dtype)
         self._checked = False
         self._initial_default = default
     #
@@ -692,7 +722,8 @@ class StringConverter:
             value = (value,)
         _strict_call = self._strict_call
         try:
-            map(_strict_call, value)
+            for _m in value:
+                _strict_call(_m)
         except ValueError:
             # Raise an exception if we locked the converter...
             if self._locked:
@@ -747,13 +778,13 @@ class StringConverter:
         # Don't reset the default to None if we can avoid it
         if default is not None:
             self.default = default
-            self.type = self._getsubdtype(default)
+            self.type = self._dtypeortype(self._getdtype(default))
         else:
             try:
                 tester = func(testing_value or asbytes('1'))
             except (TypeError, ValueError):
                 tester = None
-            self.type = self._getsubdtype(tester)
+            self.type = self._dtypeortype(self._getdtype(tester))
         # Add the missing values to the existing set
         if missing_values is not None:
             if _is_bytes_like(missing_values):
@@ -825,7 +856,7 @@ def easy_dtype(ndtype, names=None, defaultfmt="f%i", **validationargs):
             if nbtypes == 0:
                 formats = tuple([ndtype.type] * len(names))
                 names = validate(names, defaultfmt=defaultfmt)
-                ndtype = np.dtype(zip(names, formats))
+                ndtype = np.dtype(list(zip(names, formats)))
             # Structured dtype: just validate the names as needed
             else:
                 ndtype.names = validate(names, nbfields=nbtypes,
@@ -841,4 +872,3 @@ def easy_dtype(ndtype, names=None, defaultfmt="f%i", **validationargs):
             else:
                 ndtype.names = validate(ndtype.names, defaultfmt=defaultfmt)
     return ndtype
-

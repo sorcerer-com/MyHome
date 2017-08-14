@@ -1,18 +1,6 @@
+from __future__ import division, absolute_import, print_function
+
 # missing Numarray defined names (in from numarray import *)
-##__all__ = ['ClassicUnpickler', 'Complex32_fromtype',
-##           'Complex64_fromtype', 'ComplexArray', 'Error',
-##           'MAX_ALIGN', 'MAX_INT_SIZE', 'MAX_LINE_WIDTH',
-##           'NDArray', 'NewArray', 'NumArray',
-##           'NumError', 'PRECISION', 'Py2NumType',
-##           'PyINT_TYPES', 'PyLevel2Type', 'PyNUMERIC_TYPES', 'PyREAL_TYPES',
-##           'SUPPRESS_SMALL',
-##           'SuitableBuffer', 'USING_BLAS',
-##           'UsesOpPriority',
-##           'codegenerator', 'generic', 'libnumarray', 'libnumeric',
-##           'make_ufuncs', 'memory',
-##           'numarrayall', 'numarraycore', 'numinclude', 'safethread',
-##           'typecode', 'typecodes', 'typeconv', 'ufunc', 'ufuncFactory',
-##           'ieeemask']
 
 __all__ = ['asarray', 'ones', 'zeros', 'array', 'where']
 __all__ += ['vdot', 'dot', 'matrixmultiply', 'ravel', 'indices',
@@ -37,25 +25,26 @@ __all__ += ['vdot', 'dot', 'matrixmultiply', 'ravel', 'indices',
             ]
 
 import copy
-import copy_reg
 import types
 import os
 import sys
 import math
 import operator
 
+import numpy as np
 from numpy import dot as matrixmultiply, dot, vdot, ravel, concatenate, all,\
      allclose, any, argsort, array_equal, array_equiv,\
      array_str, array_repr, CLIP, RAISE, WRAP, clip, concatenate, \
      diagonal, e, pi, inner as innerproduct, nonzero, \
      outer as outerproduct, kron as kroneckerproduct, lexsort, putmask, rank, \
      resize, searchsorted, shape, size, sort, swapaxes, trace, transpose
-import numpy as np
-
-from numerictypes import typefrom
+from numpy.compat import long
+from .numerictypes import typefrom
 
 if sys.version_info[0] >= 3:
     import copyreg as copy_reg
+else:
+    import copy_reg
 
 isBigEndian = sys.byteorder != 'little'
 value = tcode = 'f'
@@ -118,7 +107,7 @@ def and_(a, b):
 
 def divide_remainder(a, b):
     a, b = asarray(a), asarray(b)
-    return (a/b,a%b)
+    return (a/b, a%b)
 
 def around(array, digits=0, output=None):
     ret = np.around(array, digits, output)
@@ -167,7 +156,7 @@ class FileSeekWarning(Warning):
     pass
 
 
-STRICT, SLOPPY, WARN = range(3)
+STRICT, SLOPPY, WARN = list(range(3))
 
 _BLOCKSIZE=1024
 
@@ -216,30 +205,30 @@ def fromfile(infile, type=None, shape=None, sizing=STRICT,
     ##file whose size may be determined before allocation, should be
     ##quick -- only one allocation will be needed.
 
-    recsize = dtype.itemsize * np.product([i for i in shape if i != -1])
-    blocksize = max(_BLOCKSIZE/recsize, 1)*recsize
+    recsize = int(dtype.itemsize * np.product([i for i in shape if i != -1]))
+    blocksize = max(_BLOCKSIZE//recsize, 1)*recsize
 
     ##try to estimate file size
     try:
         curpos=infile.tell()
-        infile.seek(0,2)
+        infile.seek(0, 2)
         endpos=infile.tell()
         infile.seek(curpos)
     except (AttributeError, IOError):
         initsize=blocksize
     else:
-        initsize=max(1,(endpos-curpos)/recsize)*recsize
+        initsize=max(1, (endpos-curpos)//recsize)*recsize
 
     buf = np.newbuffer(initsize)
 
     bytesread=0
-    while 1:
+    while True:
         data=infile.read(blocksize)
         if len(data) != blocksize: ##eof
             break
         ##do we have space?
         if len(buf) < bytesread+blocksize:
-            buf=_resizebuf(buf,len(buf)+blocksize)
+            buf=_resizebuf(buf, len(buf)+blocksize)
             ## or rather a=resizebuf(a,2*len(a)) ?
         assert len(buf) >= bytesread+blocksize
         buf[bytesread:bytesread+blocksize]=data
@@ -252,26 +241,39 @@ def fromfile(infile, type=None, shape=None, sizing=STRICT,
             _warnings.warn("Filesize does not match specified shape",
                            SizeMismatchWarning)
         try:
-            infile.seek(-(len(data) % recsize),1)
+            infile.seek(-(len(data) % recsize), 1)
         except AttributeError:
             _warnings.warn("Could not rewind (no seek support)",
                            FileSeekWarning)
         except IOError:
             _warnings.warn("Could not rewind (IOError in seek)",
                            FileSeekWarning)
-    datasize = (len(data)/recsize) * recsize
+    datasize = (len(data)//recsize) * recsize
     if len(buf) != bytesread+datasize:
-        buf=_resizebuf(buf,bytesread+datasize)
+        buf=_resizebuf(buf, bytesread+datasize)
     buf[bytesread:bytesread+datasize]=data[:datasize]
     ##deduce shape from len(buf)
     shape = list(shape)
     uidx = shape.index(-1)
-    shape[uidx]=len(buf) / recsize
+    shape[uidx]=len(buf) // recsize
 
     a = np.ndarray(shape=shape, dtype=type, buffer=buf)
     if a.dtype.char == '?':
         np.not_equal(a, 0, a)
     return a
+
+
+# this function is referenced in the code above but not defined.  adding
+# it back. - phensley
+def _resizebuf(buf, newsize):
+    "Return a copy of BUF of size NEWSIZE."
+    newbuf = np.newbuffer(newsize)
+    if newsize > len(buf):
+        newbuf[:len(buf)]=buf
+    else:
+        newbuf[:]=buf[:len(newbuf)]
+    return newbuf
+
 
 def fromstring(datastring, type=None, shape=None, typecode=None, dtype=None):
     dtype = type2dtype(typecode, type, dtype, True)
@@ -360,47 +362,47 @@ def info(obj, output=sys.stdout, numpy=0):
         nm = getattr(cls, '__name__', cls)
     else:
         nm = cls
-    print >> output, "class: ", nm
-    print >> output, "shape: ", obj.shape
+    print("class: ", nm, file=output)
+    print("shape: ", obj.shape, file=output)
     strides = obj.strides
-    print >> output, "strides: ", strides
+    print("strides: ", strides, file=output)
     if not numpy:
-        print >> output, "byteoffset: 0"
+        print("byteoffset: 0", file=output)
         if len(strides) > 0:
             bs = obj.strides[0]
         else:
             bs = obj.itemsize
-        print >> output, "bytestride: ", bs
-    print >> output, "itemsize: ", obj.itemsize
-    print >> output, "aligned: ", bp(obj.flags.aligned)
-    print >> output, "contiguous: ", bp(obj.flags.contiguous)
+        print("bytestride: ", bs, file=output)
+    print("itemsize: ", obj.itemsize, file=output)
+    print("aligned: ", bp(obj.flags.aligned), file=output)
+    print("contiguous: ", bp(obj.flags.contiguous), file=output)
     if numpy:
-        print >> output, "fortran: ", obj.flags.fortran
+        print("fortran: ", obj.flags.fortran, file=output)
     if not numpy:
-        print >> output, "buffer: ", repr(obj.data)
+        print("buffer: ", repr(obj.data), file=output)
     if not numpy:
         extra = " (DEBUG ONLY)"
         tic = "'"
     else:
         extra = ""
         tic = ""
-    print >> output, "data pointer: %s%s" % (hex(obj.ctypes._as_parameter_.value), extra)
-    print >> output, "byteorder: ",
+    print("data pointer: %s%s" % (hex(obj.ctypes._as_parameter_.value), extra), file=output)
+    print("byteorder: ", end=' ', file=output)
     endian = obj.dtype.byteorder
-    if endian in ['|','=']:
-        print >> output, "%s%s%s" % (tic, sys.byteorder, tic)
+    if endian in ['|', '=']:
+        print("%s%s%s" % (tic, sys.byteorder, tic), file=output)
         byteswap = False
     elif endian == '>':
-        print >> output, "%sbig%s" % (tic, tic)
+        print("%sbig%s" % (tic, tic), file=output)
         byteswap = sys.byteorder != "big"
     else:
-        print >> output, "%slittle%s" % (tic, tic)
+        print("%slittle%s" % (tic, tic), file=output)
         byteswap = sys.byteorder != "little"
-    print >> output, "byteswap: ", bp(byteswap)
+    print("byteswap: ", bp(byteswap), file=output)
     if not numpy:
-        print >> output, "type: ", typefrom(obj).name
+        print("type: ", typefrom(obj).name, file=output)
     else:
-        print >> output, "type: %s" % obj.dtype
+        print("type: %s" % obj.dtype, file=output)
 
 #clipmode is ignored if axis is not 0 and array is not 1d
 def put(array, indices, values, axis=0, clipmode=RAISE):
@@ -417,7 +419,7 @@ def put(array, indices, values, axis=0, clipmode=RAISE):
         work[indices] = values
         work = work.swapaxes(0, axis)
     else:
-        def_axes = range(work.ndim)
+        def_axes = list(range(work.ndim))
         for x in axis:
             def_axes.remove(x)
         axis = list(axis)+def_axes
@@ -453,7 +455,7 @@ def take(array, indices, axis=0, outarr=None, clipmode=RAISE):
             return res
         return
     else:
-        def_axes = range(array.ndim)
+        def_axes = list(range(array.ndim))
         for x in axis:
             def_axes.remove(x)
         axis = list(axis) + def_axes
@@ -470,14 +472,14 @@ def tensormultiply(a1, a2):
         raise ValueError("Unmatched dimensions")
     shape = a1.shape[:-1] + a2.shape[1:]
     return np.reshape(dot(np.reshape(a1, (-1, a1.shape[-1])),
-                          np.reshape(a2, (a2.shape[0],-1))),
+                          np.reshape(a2, (a2.shape[0], -1))),
                       shape)
 
 def cumsum(a1, axis=0, out=None, type=None, dim=0):
-    return np.asarray(a1).cumsum(axis,dtype=type,out=out)
+    return np.asarray(a1).cumsum(axis, dtype=type, out=out)
 
 def cumproduct(a1, axis=0, out=None, type=None, dim=0):
-    return np.asarray(a1).cumprod(axis,dtype=type,out=out)
+    return np.asarray(a1).cumprod(axis, dtype=type, out=out)
 
 def argmax(x, axis=-1):
     return np.argmax(x, axis)

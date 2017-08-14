@@ -1,6 +1,8 @@
 """
 unixccompiler - can handle very long argument lists for ar.
+
 """
+from __future__ import division, absolute_import, print_function
 
 import os
 
@@ -10,7 +12,7 @@ from numpy.distutils.ccompiler import replace_method
 from numpy.distutils.compat import get_exception
 
 if sys.version_info[0] < 3:
-    import log
+    from . import log
 else:
     from numpy.distutils import log
 
@@ -29,7 +31,7 @@ def UnixCCompiler__compile(self, obj, src, ext, cc_args, extra_postargs, pp_opts
         ccomp += ['-AA']
         self.compiler_so = ccomp
 
-    display = '%s: %s' % (os.path.basename(self.compiler_so[0]),src)
+    display = '%s: %s' % (os.path.basename(self.compiler_so[0]), src)
     try:
         self.spawn(self.compiler_so + cc_args + [src, '-o', obj] +
                    extra_postargs, display = display)

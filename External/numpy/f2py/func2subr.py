@@ -11,7 +11,9 @@ terms of the NumPy License.
 NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 $Date: 2004/11/26 11:13:06 $
 Pearu Peterson
+
 """
+from __future__ import division, absolute_import, print_function
 
 __version__ = "$Revision: 1.16 $"[10:-1]
 
@@ -24,7 +26,7 @@ errmess=sys.stderr.write
 outmess=sys.stdout.write
 show=pprint.pprint
 
-from auxfuncs import *
+from .auxfuncs import *
 def var2fixfortran(vars,a,fa=None,f90mode=None):
     if fa is None:
         fa = a
@@ -38,7 +40,7 @@ def var2fixfortran(vars,a,fa=None,f90mode=None):
         return ''
     vardef=vars[a]['typespec']
     if vardef=='type' and 'typename' in vars[a]:
-        vardef='%s(%s)'%(vardef,vars[a]['typename'])
+        vardef='%s(%s)'%(vardef, vars[a]['typename'])
     selector={}
     lk = ''
     if 'kindselector' in vars[a]:
@@ -49,28 +51,28 @@ def var2fixfortran(vars,a,fa=None,f90mode=None):
         lk = 'len'
     if '*' in selector:
         if f90mode:
-            if selector['*'] in ['*',':','(*)']:
+            if selector['*'] in ['*', ':', '(*)']:
                 vardef='%s(len=*)'%(vardef)
             else:
-                vardef='%s(%s=%s)'%(vardef,lk,selector['*'])
+                vardef='%s(%s=%s)'%(vardef, lk, selector['*'])
         else:
-            if selector['*'] in ['*',':']:
-                vardef='%s*(%s)'%(vardef,selector['*'])
+            if selector['*'] in ['*', ':']:
+                vardef='%s*(%s)'%(vardef, selector['*'])
             else:
-                vardef='%s*%s'%(vardef,selector['*'])
+                vardef='%s*%s'%(vardef, selector['*'])
     else:
         if 'len' in selector:
-            vardef='%s(len=%s'%(vardef,selector['len'])
+            vardef='%s(len=%s'%(vardef, selector['len'])
             if 'kind' in selector:
-                vardef='%s,kind=%s)'%(vardef,selector['kind'])
+                vardef='%s,kind=%s)'%(vardef, selector['kind'])
             else:
                 vardef='%s)'%(vardef)
         elif 'kind' in selector:
-            vardef='%s(kind=%s)'%(vardef,selector['kind'])
+            vardef='%s(kind=%s)'%(vardef, selector['kind'])
 
-    vardef='%s %s'%(vardef,fa)
+    vardef='%s %s'%(vardef, fa)
     if 'dimension' in vars[a]:
-        vardef='%s(%s)'%(vardef,','.join(vars[a]['dimension']))
+        vardef='%s(%s)'%(vardef, ','.join(vars[a]['dimension']))
     return vardef
 
 def createfuncwrapper(rout,signature=0):
@@ -80,7 +82,7 @@ def createfuncwrapper(rout,signature=0):
     vars = rout['vars']
     for a in rout['args']:
         v = rout['vars'][a]
-        for i,d in enumerate(v.get('dimension',[])):
+        for i, d in enumerate(v.get('dimension', [])):
             if d==':':
                 dn = 'f2py_%s_d%s' % (a, i)
                 dv = dict(typespec='integer', intent=['hide'])
@@ -90,10 +92,10 @@ def createfuncwrapper(rout,signature=0):
                 v['dimension'][i] = dn
     rout['args'].extend(extra_args)
     need_interface = bool(extra_args)
-    
+
     ret = ['']
     def add(line,ret=ret):
-        ret[0] = '%s\n      %s'%(ret[0],line)
+        ret[0] = '%s\n      %s'%(ret[0], line)
     name = rout['name']
     fortranname = getfortranname(rout)
     f90mode = ismoduleroutine(rout)
@@ -105,22 +107,22 @@ def createfuncwrapper(rout,signature=0):
     else:
         args = [newname]+rout['args']
 
-    l = var2fixfortran(vars,name,newname,f90mode)
+    l = var2fixfortran(vars, name, newname, f90mode)
     return_char_star = 0
     if l[:13]=='character*(*)':
         return_char_star = 1
         if f90mode: l = 'character(len=10)'+l[13:]
         else: l = 'character*10'+l[13:]
         charselect = vars[name]['charselector']
-        if charselect.get('*','')=='(*)':
+        if charselect.get('*', '')=='(*)':
             charselect['*'] = '10'
     sargs = ', '.join(args)
     if f90mode:
-        add('subroutine f2pywrap_%s_%s (%s)'%(rout['modulename'],name,sargs))
+        add('subroutine f2pywrap_%s_%s (%s)'%(rout['modulename'], name, sargs))
         if not signature:
-            add('use %s, only : %s'%(rout['modulename'],fortranname))
+            add('use %s, only : %s'%(rout['modulename'], fortranname))
     else:
-        add('subroutine f2pywrap%s (%s)'%(name,sargs))
+        add('subroutine f2pywrap%s (%s)'%(name, sargs))
         if not need_interface:
             add('external %s'%(fortranname))
             l = l + ', '+fortranname
@@ -138,17 +140,17 @@ def createfuncwrapper(rout,signature=0):
     for a in args:
         if a in dumped_args: continue
         if isscalar(vars[a]):
-            add(var2fixfortran(vars,a,f90mode=f90mode))
+            add(var2fixfortran(vars, a, f90mode=f90mode))
             dumped_args.append(a)
     for a in args:
         if a in dumped_args: continue
         if isintent_in(vars[a]):
-            add(var2fixfortran(vars,a,f90mode=f90mode))
+            add(var2fixfortran(vars, a, f90mode=f90mode))
             dumped_args.append(a)
     for a in args:
         if a in dumped_args: continue
-        add(var2fixfortran(vars,a,f90mode=f90mode))
-            
+        add(var2fixfortran(vars, a, f90mode=f90mode))
+
     add(l)
 
     if need_interface:
@@ -164,11 +166,11 @@ def createfuncwrapper(rout,signature=0):
 
     if not signature:
         if islogicalfunction(rout):
-            add('%s = .not.(.not.%s(%s))'%(newname,fortranname,sargs))
+            add('%s = .not.(.not.%s(%s))'%(newname, fortranname, sargs))
         else:
-            add('%s = %s(%s)'%(newname,fortranname,sargs))
+            add('%s = %s(%s)'%(newname, fortranname, sargs))
     if f90mode:
-        add('end subroutine f2pywrap_%s_%s'%(rout['modulename'],name))
+        add('end subroutine f2pywrap_%s_%s'%(rout['modulename'], name))
     else:
         add('end')
     #print '**'*10
@@ -183,7 +185,7 @@ def createsubrwrapper(rout,signature=0):
     vars = rout['vars']
     for a in rout['args']:
         v = rout['vars'][a]
-        for i,d in enumerate(v.get('dimension',[])):
+        for i, d in enumerate(v.get('dimension', [])):
             if d==':':
                 dn = 'f2py_%s_d%s' % (a, i)
                 dv = dict(typespec='integer', intent=['hide'])
@@ -196,7 +198,7 @@ def createsubrwrapper(rout,signature=0):
 
     ret = ['']
     def add(line,ret=ret):
-        ret[0] = '%s\n      %s'%(ret[0],line)
+        ret[0] = '%s\n      %s'%(ret[0], line)
     name = rout['name']
     fortranname = getfortranname(rout)
     f90mode = ismoduleroutine(rout)
@@ -205,11 +207,11 @@ def createsubrwrapper(rout,signature=0):
 
     sargs = ', '.join(args)
     if f90mode:
-        add('subroutine f2pywrap_%s_%s (%s)'%(rout['modulename'],name,sargs))
+        add('subroutine f2pywrap_%s_%s (%s)'%(rout['modulename'], name, sargs))
         if not signature:
-            add('use %s, only : %s'%(rout['modulename'],fortranname))
+            add('use %s, only : %s'%(rout['modulename'], fortranname))
     else:
-        add('subroutine f2pywrap%s (%s)'%(name,sargs))
+        add('subroutine f2pywrap%s (%s)'%(name, sargs))
         if not need_interface:
             add('external %s'%(fortranname))
 
@@ -226,11 +228,11 @@ def createsubrwrapper(rout,signature=0):
     for a in args:
         if a in dumped_args: continue
         if isscalar(vars[a]):
-            add(var2fixfortran(vars,a,f90mode=f90mode))
+            add(var2fixfortran(vars, a, f90mode=f90mode))
             dumped_args.append(a)
     for a in args:
         if a in dumped_args: continue
-        add(var2fixfortran(vars,a,f90mode=f90mode))
+        add(var2fixfortran(vars, a, f90mode=f90mode))
 
     if need_interface:
         if f90mode:
@@ -244,9 +246,9 @@ def createsubrwrapper(rout,signature=0):
     sargs = ', '.join([a for a in args if a not in extra_args])
 
     if not signature:
-        add('call %s(%s)'%(fortranname,sargs))
+        add('call %s(%s)'%(fortranname, sargs))
     if f90mode:
-        add('end subroutine f2pywrap_%s_%s'%(rout['modulename'],name))
+        add('end subroutine f2pywrap_%s_%s'%(rout['modulename'], name))
     else:
         add('end')
     #print '**'*10
@@ -259,7 +261,7 @@ def assubr(rout):
     if isfunction_wrap(rout):
         fortranname = getfortranname(rout)
         name = rout['name']
-        outmess('\t\tCreating wrapper for Fortran function "%s"("%s")...\n'%(name,fortranname))
+        outmess('\t\tCreating wrapper for Fortran function "%s"("%s")...\n'%(name, fortranname))
         rout = copy.copy(rout)
         fname = name
         rname = fname
@@ -279,12 +281,11 @@ def assubr(rout):
             if flag:
                 fvar['intent'].append('out=%s' % (rname))
         rout['args'][:] = [fname] + rout['args']
-        return rout,createfuncwrapper(rout)
+        return rout, createfuncwrapper(rout)
     if issubroutine_wrap(rout):
         fortranname = getfortranname(rout)
         name = rout['name']
-        outmess('\t\tCreating wrapper for Fortran subroutine "%s"("%s")...\n'%(name,fortranname))
+        outmess('\t\tCreating wrapper for Fortran subroutine "%s"("%s")...\n'%(name, fortranname))
         rout = copy.copy(rout)
-        return rout,createsubrwrapper(rout)
-    return rout,''
-
+        return rout, createsubrwrapper(rout)
+    return rout, ''

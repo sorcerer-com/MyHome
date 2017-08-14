@@ -1,11 +1,25 @@
+from __future__ import division, absolute_import, print_function
+
 import sys
 
 from numpy.testing import *
 from numpy.core import *
-from numpy.compat import asbytes
+from numpy.compat import asbytes, sixu
 
 # Guess the UCS length for this python interpreter
-if sys.version_info[0] >= 3:
+if sys.version_info[:2] >= (3, 3):
+    # Python 3.3 uses a flexible string representation
+    ucs4 = False
+    def buffer_length(arr):
+        if isinstance(arr, unicode):
+            arr = str(arr)
+            return (sys.getsizeof(arr+"a") - sys.getsizeof(arr)) * len(arr)
+        v = memoryview(arr)
+        if v.shape is None:
+            return len(v) * v.itemsize
+        else:
+            return prod(v.shape) * v.itemsize
+elif sys.version_info[0] >= 3:
     import array as _array
     ucs4 = (_array.array('u').itemsize == 4)
     def buffer_length(arr):
@@ -17,7 +31,7 @@ if sys.version_info[0] >= 3:
         else:
             return prod(v.shape) * v.itemsize
 else:
-    if len(buffer(u'u')) == 4:
+    if len(buffer(sixu('u'))) == 4:
         ucs4 = True
     else:
         ucs4 = False
@@ -26,10 +40,12 @@ else:
             return len(arr.data)
         return len(buffer(arr))
 
+# In both cases below we need to make sure that the byte swapped value (as
+# UCS4) is still a valid unicode:
 # Value that can be represented in UCS2 interpreters
-ucs2_value = u'\uFFFF'
+ucs2_value = sixu('\u0900')
 # Value that cannot be represented in UCS2 interpreters (but can in UCS4)
-ucs4_value = u'\U0010FFFF'
+ucs4_value = sixu('\U00100900')
 
 
 ############################################################
@@ -46,7 +62,7 @@ class create_zeros(object):
         # Check the length of the data buffer
         self.assertTrue(buffer_length(ua) == nbytes)
         # Small check that data in array element is ok
-        self.assertTrue(ua_scalar == u'')
+        self.assertTrue(ua_scalar == sixu(''))
         # Encode to ascii and double check
         self.assertTrue(ua_scalar.encode('ascii') == asbytes(''))
         # Check buffer lengths for scalars
@@ -68,9 +84,9 @@ class create_zeros(object):
 
     def test_zerosMD(self):
         """Check creation of multi-dimensional objects"""
-        ua = zeros((2,3,4), dtype='U%s' % self.ulen)
-        self.content_check(ua, ua[0,0,0], 4*self.ulen*2*3*4)
-        self.content_check(ua, ua[-1,-1,-1], 4*self.ulen*2*3*4)
+        ua = zeros((2, 3, 4), dtype='U%s' % self.ulen)
+        self.content_check(ua, ua[0, 0, 0], 4*self.ulen*2*3*4)
+        self.content_check(ua, ua[-1, -1, -1], 4*self.ulen*2*3*4)
 
 
 class test_create_zeros_1(create_zeros, TestCase):
@@ -129,8 +145,8 @@ class create_values(object):
     def test_valuesMD(self):
         """Check creation of multi-dimensional objects with values"""
         ua = array([[[self.ucs_value*self.ulen]*2]*3]*4, dtype='U%s' % self.ulen)
-        self.content_check(ua, ua[0,0,0], 4*self.ulen*2*3*4)
-        self.content_check(ua, ua[-1,-1,-1], 4*self.ulen*2*3*4)
+        self.content_check(ua, ua[0, 0, 0], 4*self.ulen*2*3*4)
+        self.content_check(ua, ua[-1, -1, -1], 4*self.ulen*2*3*4)
 
 
 class test_create_values_1_ucs2(create_values, TestCase):
@@ -216,11 +232,11 @@ class assign_values(object):
 
     def test_valuesMD(self):
         """Check assignment of multi-dimensional objects with values"""
-        ua = zeros((2,3,4), dtype='U%s' % self.ulen)
-        ua[0,0,0] = self.ucs_value*self.ulen
-        self.content_check(ua, ua[0,0,0], 4*self.ulen*2*3*4)
-        ua[-1,-1,-1] = self.ucs_value*self.ulen
-        self.content_check(ua, ua[-1,-1,-1], 4*self.ulen*2*3*4)
+        ua = zeros((2, 3, 4), dtype='U%s' % self.ulen)
+        ua[0, 0, 0] = self.ucs_value*self.ulen
+        self.content_check(ua, ua[0, 0, 0], 4*self.ulen*2*3*4)
+        ua[-1, -1, -1] = self.ucs_value*self.ulen
+        self.content_check(ua, ua[-1, -1, -1], 4*self.ulen*2*3*4)
 
 
 class test_assign_values_1_ucs2(assign_values, TestCase):
@@ -294,8 +310,8 @@ class byteorder_values:
         ua = array([[[self.ucs_value*self.ulen]*2]*3]*4,
                    dtype='U%s' % self.ulen)
         ua2 = ua.newbyteorder()
-        self.assertTrue(ua[0,0,0] != ua2[0,0,0])
-        self.assertTrue(ua[-1,-1,-1] != ua2[-1,-1,-1])
+        self.assertTrue(ua[0, 0, 0] != ua2[0, 0, 0])
+        self.assertTrue(ua[-1, -1, -1] != ua2[-1, -1, -1])
         ua3 = ua2.newbyteorder()
         # Arrays must be equal after the round-trip
         assert_equal(ua, ua3)

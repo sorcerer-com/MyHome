@@ -104,6 +104,22 @@ available as array methods, i.e. ``x = np.array([1,2,3]); x.sort()``.
 Exceptions to this rule are documented.
 
 """
+from __future__ import division, absolute_import, print_function
+
+import sys
+
+
+class ModuleDeprecationWarning(DeprecationWarning):
+    """Module deprecation warning.
+
+    The nose tester turns ordinary Deprecation warnings into test failures.
+    That makes it hard to deprecate whole modules, because they get
+    imported by default. So this is a special Deprecation warning that the
+    nose tester will let pass without making tests fail.
+
+    """
+    pass
+
 
 # We first need to detect if we're being called as part of the numpy setup
 # procedure itself in a reliable manner.
@@ -115,7 +131,7 @@ except NameError:
 
 if __NUMPY_SETUP__:
     import sys as _sys
-    _sys.stderr.write('Running from numpy source directory.')
+    _sys.stderr.write('Running from numpy source directory.\n')
     del _sys
 else:
     try:
@@ -125,43 +141,48 @@ else:
         its source directory; please exit the numpy source tree, and relaunch
         your python intepreter from there."""
         raise ImportError(msg)
-    from version import git_revision as __git_revision__
-    from version import version as __version__
+    from .version import git_revision as __git_revision__
+    from .version import version as __version__
 
-    from _import_tools import PackageLoader
+    from ._import_tools import PackageLoader
 
     def pkgload(*packages, **options):
         loader = PackageLoader(infunc=True)
         return loader(*packages, **options)
 
-    import add_newdocs
-    __all__ = ['add_newdocs']
+    from . import add_newdocs
+    __all__ = ['add_newdocs', 'ModuleDeprecationWarning']
 
     pkgload.__doc__ = PackageLoader.__call__.__doc__
 
-    from testing import Tester
+    from .testing import Tester
     test = Tester().test
     bench = Tester().bench
 
-    import core
-    from core import *
-    import compat
-    import lib
-    from lib import *
-    import linalg
-    import fft
-    import polynomial
-    import random
-    import ctypeslib
-    import ma
-    import matrixlib as _mat
-    from matrixlib import *
+    from . import core
+    from .core import *
+    from . import compat
+    from . import lib
+    from .lib import *
+    from . import linalg
+    from . import fft
+    from . import polynomial
+    from . import random
+    from . import ctypeslib
+    from . import ma
+    from . import matrixlib as _mat
+    from .matrixlib import *
+    from .compat import long
 
     # Make these accessible from numpy name-space
     #  but not imported in from numpy import *
-    from __builtin__ import bool, int, long, float, complex, \
-         object, unicode, str
-    from core import round, abs, max, min
+    if sys.version_info[0] >= 3:
+        from builtins import bool, int, float, complex, object, str
+        unicode = str
+    else:
+        from __builtin__ import bool, int, float, complex, object, unicode, str
+
+    from .core import round, abs, max, min
 
     __all__.extend(['__version__', 'pkgload', 'PackageLoader',
                'show_config'])
@@ -169,3 +190,8 @@ else:
     __all__.extend(_mat.__all__)
     __all__.extend(lib.__all__)
     __all__.extend(['linalg', 'fft', 'random', 'ctypeslib', 'ma'])
+
+    # Filter annoying Cython warnings that serve no good purpose.
+    import warnings
+    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")

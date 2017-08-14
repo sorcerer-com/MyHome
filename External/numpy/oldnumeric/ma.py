@@ -1,4 +1,5 @@
 """MA: a facility for dealing with missing observations
+
 MA is generally used as a numpy.array look-alike.
 by Paul F. Dubois.
 
@@ -8,18 +9,29 @@ Adapted for numpy_core 2005 by Travis Oliphant and
 (mainly) Paul Dubois.
 
 """
-import types, sys
+from __future__ import division, absolute_import, print_function
+
+import sys
+import types
+import warnings
+from functools import reduce
 
 import numpy.core.umath as umath
 import numpy.core.fromnumeric as fromnumeric
+import numpy.core.numeric as numeric
 from numpy.core.numeric import newaxis, ndarray, inf
 from numpy.core.fromnumeric import amax, amin
 from numpy.core.numerictypes import bool_, typecodes
 import numpy.core.numeric as numeric
-import warnings
+from numpy.compat import bytes, long
 
 if sys.version_info[0] >= 3:
-    from functools import reduce
+    _MAXINT = sys.maxsize
+    _MININT = -sys.maxsize - 1
+else:
+    _MAXINT = sys.maxint
+    _MININT = -sys.maxint - 1
+
 
 # Ufunc domain lookup for __array_wrap__
 ufunc_domain = {}
@@ -83,13 +95,13 @@ default_object_fill_value = '?'
 
 def default_fill_value (obj):
     "Function to calculate default fill value for an object."
-    if isinstance(obj, types.FloatType):
+    if isinstance(obj, float):
         return default_real_fill_value
-    elif isinstance(obj, types.IntType) or isinstance(obj, types.LongType):
+    elif isinstance(obj, int) or isinstance(obj, long):
         return default_integer_fill_value
-    elif isinstance(obj, types.StringType):
+    elif isinstance(obj, bytes):
         return default_character_fill_value
-    elif isinstance(obj, types.ComplexType):
+    elif isinstance(obj, complex):
         return default_complex_fill_value
     elif isinstance(obj, MaskedArray) or isinstance(obj, ndarray):
         x = obj.dtype.char
@@ -109,37 +121,37 @@ def default_fill_value (obj):
 
 def minimum_fill_value (obj):
     "Function to calculate default fill value suitable for taking minima."
-    if isinstance(obj, types.FloatType):
+    if isinstance(obj, float):
         return numeric.inf
-    elif isinstance(obj, types.IntType) or isinstance(obj, types.LongType):
-        return sys.maxint
+    elif isinstance(obj, int) or isinstance(obj, long):
+        return _MAXINT
     elif isinstance(obj, MaskedArray) or isinstance(obj, ndarray):
         x = obj.dtype.char
         if x in typecodes['Float']:
             return numeric.inf
         if x in typecodes['Integer']:
-            return sys.maxint
+            return _MAXINT
         if x in typecodes['UnsignedInteger']:
-            return sys.maxint
+            return _MAXINT
     else:
-        raise TypeError, 'Unsuitable type for calculating minimum.'
+        raise TypeError('Unsuitable type for calculating minimum.')
 
 def maximum_fill_value (obj):
     "Function to calculate default fill value suitable for taking maxima."
-    if isinstance(obj, types.FloatType):
+    if isinstance(obj, float):
         return -inf
-    elif isinstance(obj, types.IntType) or isinstance(obj, types.LongType):
-        return -sys.maxint
+    elif isinstance(obj, int) or isinstance(obj, long):
+        return -_MAXINT
     elif isinstance(obj, MaskedArray) or isinstance(obj, ndarray):
         x = obj.dtype.char
         if x in typecodes['Float']:
             return -inf
         if x in typecodes['Integer']:
-            return -sys.maxint
+            return -_MAXINT
         if x in typecodes['UnsignedInteger']:
             return 0
     else:
-        raise TypeError, 'Unsuitable type for calculating maximum.'
+        raise TypeError('Unsuitable type for calculating maximum.')
 
 def set_fill_value (a, fill_value):
     "Set fill value of a if it is a masked array."
@@ -229,7 +241,7 @@ def filled (a, value = None):
         return a.filled(value)
     elif isinstance(a, ndarray) and a.flags['CONTIGUOUS']:
         return a
-    elif isinstance(a, types.DictType):
+    elif isinstance(a, dict):
         return numeric.array(a, 'O')
     else:
         return numeric.array(a)
@@ -598,7 +610,7 @@ class MaskedArray (object):
                         self._data = fromnumeric.resize(self._data, self._mask.shape)
                         self._data.shape = self._mask.shape
                     else:
-                        raise MAError, "Mask and data not compatible."
+                        raise MAError("Mask and data not compatible.")
                 elif nm == 1 and shape(self._mask) != shape(self._data):
                     self.unshare_mask()
                     self._mask.shape = self._data.shape
@@ -614,15 +626,15 @@ class MaskedArray (object):
                                   "numeric because data\n    is masked in one or "\
                                   "more locations.");
                     return self._data
-                    #raise MAError, \
+                    #raise MAError(
                     #      """Cannot automatically convert masked array to numeric because data
                     #      is masked in one or more locations.
-                    #      """
+                    #      """)
                 else:
                     func, args, i = context
                     fills = ufunc_fills.get(func)
                     if fills is None:
-                        raise MAError, "%s not known to ma" % func
+                        raise MAError("%s not known to ma" % func)
                     return self.filled(fills[i])
             else:  # Mask is all false
                    # Optimize to avoid future invocations of this section.
@@ -786,14 +798,14 @@ array(data = %(data)s,
         "Convert self to float."
         self.unmask()
         if self._mask is not nomask:
-            raise MAError, 'Cannot convert masked element to a Python float.'
+            raise MAError('Cannot convert masked element to a Python float.')
         return float(self.data.item())
 
     def __int__(self):
         "Convert self to int."
         self.unmask()
         if self._mask is not nomask:
-            raise MAError, 'Cannot convert masked element to a Python int.'
+            raise MAError('Cannot convert masked element to a Python int.')
         return int(self.data.item())
 
     def __getitem__(self, i):
@@ -827,7 +839,7 @@ array(data = %(data)s,
         "Set item described by index. If value is masked, mask those locations."
         d = self._data
         if self is masked:
-            raise MAError, 'Cannot alter masked elements.'
+            raise MAError('Cannot alter masked elements.')
         if value is masked:
             if self._mask is nomask:
                 self._mask = make_mask_none(d.shape)
@@ -852,6 +864,18 @@ array(data = %(data)s,
             self._mask[index] = m
 
     def __nonzero__(self):
+        """returns true if any element is non-zero or masked
+
+        """
+        # XXX: This changes bool conversion logic from MA.
+        # XXX: In MA bool(a) == len(a) != 0, but in numpy
+        # XXX: scalars do not have len
+        m = self._mask
+        d = self._data
+        return bool(m is not nomask and m.any()
+                    or d is not nomask and d.any())
+
+    def __bool__(self):
         """returns true if any element is non-zero or masked
 
         """
@@ -973,14 +997,14 @@ array(data = %(data)s,
             if t1 in typecodes['Integer']:
                 f = f.astype(t)
             else:
-                raise TypeError, 'Incorrect type for in-place operation.'
+                raise TypeError('Incorrect type for in-place operation.')
         elif t in typecodes['Float']:
             if t1 in typecodes['Integer']:
                 f = f.astype(t)
             elif t1 in typecodes['Float']:
                 f = f.astype(t)
             else:
-                raise TypeError, 'Incorrect type for in-place operation.'
+                raise TypeError('Incorrect type for in-place operation.')
         elif t in typecodes['Complex']:
             if t1 in typecodes['Integer']:
                 f = f.astype(t)
@@ -989,9 +1013,9 @@ array(data = %(data)s,
             elif t1 in typecodes['Complex']:
                 f = f.astype(t)
             else:
-                raise TypeError, 'Incorrect type for in-place operation.'
+                raise TypeError('Incorrect type for in-place operation.')
         else:
-            raise TypeError, 'Incorrect type for in-place operation.'
+            raise TypeError('Incorrect type for in-place operation.')
 
         if self._mask is nomask:
             self._data += f
@@ -1016,14 +1040,14 @@ array(data = %(data)s,
             if t1 in typecodes['Integer']:
                 f = f.astype(t)
             else:
-                raise TypeError, 'Incorrect type for in-place operation.'
+                raise TypeError('Incorrect type for in-place operation.')
         elif t in typecodes['Float']:
             if t1 in typecodes['Integer']:
                 f = f.astype(t)
             elif t1 in typecodes['Float']:
                 f = f.astype(t)
             else:
-                raise TypeError, 'Incorrect type for in-place operation.'
+                raise TypeError('Incorrect type for in-place operation.')
         elif t in typecodes['Complex']:
             if t1 in typecodes['Integer']:
                 f = f.astype(t)
@@ -1032,9 +1056,9 @@ array(data = %(data)s,
             elif t1 in typecodes['Complex']:
                 f = f.astype(t)
             else:
-                raise TypeError, 'Incorrect type for in-place operation.'
+                raise TypeError('Incorrect type for in-place operation.')
         else:
-            raise TypeError, 'Incorrect type for in-place operation.'
+            raise TypeError('Incorrect type for in-place operation.')
 
         if self._mask is nomask:
             self._data *= f
@@ -1059,14 +1083,14 @@ array(data = %(data)s,
             if t1 in typecodes['Integer']:
                 f = f.astype(t)
             else:
-                raise TypeError, 'Incorrect type for in-place operation.'
+                raise TypeError('Incorrect type for in-place operation.')
         elif t in typecodes['Float']:
             if t1 in typecodes['Integer']:
                 f = f.astype(t)
             elif t1 in typecodes['Float']:
                 f = f.astype(t)
             else:
-                raise TypeError, 'Incorrect type for in-place operation.'
+                raise TypeError('Incorrect type for in-place operation.')
         elif t in typecodes['Complex']:
             if t1 in typecodes['Integer']:
                 f = f.astype(t)
@@ -1075,9 +1099,9 @@ array(data = %(data)s,
             elif t1 in typecodes['Complex']:
                 f = f.astype(t)
             else:
-                raise TypeError, 'Incorrect type for in-place operation.'
+                raise TypeError('Incorrect type for in-place operation.')
         else:
-            raise TypeError, 'Incorrect type for in-place operation.'
+            raise TypeError('Incorrect type for in-place operation.')
 
         if self._mask is nomask:
             self._data -= f
@@ -1104,14 +1128,14 @@ array(data = %(data)s,
             if t1 in typecodes['Integer']:
                 f = f.astype(t)
             else:
-                raise TypeError, 'Incorrect type for in-place operation.'
+                raise TypeError('Incorrect type for in-place operation.')
         elif t in typecodes['Float']:
             if t1 in typecodes['Integer']:
                 f = f.astype(t)
             elif t1 in typecodes['Float']:
                 f = f.astype(t)
             else:
-                raise TypeError, 'Incorrect type for in-place operation.'
+                raise TypeError('Incorrect type for in-place operation.')
         elif t in typecodes['Complex']:
             if t1 in typecodes['Integer']:
                 f = f.astype(t)
@@ -1120,9 +1144,9 @@ array(data = %(data)s,
             elif t1 in typecodes['Complex']:
                 f = f.astype(t)
             else:
-                raise TypeError, 'Incorrect type for in-place operation.'
+                raise TypeError('Incorrect type for in-place operation.')
         else:
-            raise TypeError, 'Incorrect type for in-place operation.'
+            raise TypeError('Incorrect type for in-place operation.')
         mo = getmask(other)
         result = divide(self, masked_array(f, mask=mo))
         self._data = result.data
@@ -1133,22 +1157,22 @@ array(data = %(data)s,
         return self
 
     def __eq__(self, other):
-        return equal(self,other)
+        return equal(self, other)
 
     def __ne__(self, other):
-        return not_equal(self,other)
+        return not_equal(self, other)
 
     def __lt__(self, other):
-        return less(self,other)
+        return less(self, other)
 
     def __le__(self, other):
-        return less_equal(self,other)
+        return less_equal(self, other)
 
     def __gt__(self, other):
-        return greater(self,other)
+        return greater(self, other)
 
     def __ge__(self, other):
-        return greater_equal(self,other)
+        return greater_equal(self, other)
 
     def astype (self, tc):
         "return self as array of given type."
@@ -1521,7 +1545,7 @@ def new_repeat(a, repeats, axis=None):
        telling how many times to repeat each element.
     """
     af = filled(a)
-    if isinstance(repeats, types.IntType):
+    if isinstance(repeats, int):
         if axis is None:
             num = af.size
         else:
@@ -1567,7 +1591,7 @@ def count (a, axis = None):
 def power (a, b, third=None):
     "a**b"
     if third is not None:
-        raise MAError, "3-argument power not supported."
+        raise MAError("3-argument power not supported.")
     ma = getmask(a)
     mb = getmask(b)
     m = mask_or(ma, mb)
@@ -1665,7 +1689,7 @@ def new_average (a, axis=None, weights=None, returned = 0):
                     d = add.reduce(w, axis)
                     del w, r
                 else:
-                    raise ValueError, 'average: weights wrong shape.'
+                    raise ValueError('average: weights wrong shape.')
         else:
             if weights is None:
                 n = add.reduce(a, axis)
@@ -1688,7 +1712,7 @@ def new_average (a, axis=None, weights=None, returned = 0):
                     n = add.reduce(a*w, axis)
                     d = add.reduce(w, axis)
                 else:
-                    raise ValueError, 'average: weights wrong shape.'
+                    raise ValueError('average: weights wrong shape.')
                 del w
     #print n, d, repr(mask), repr(weights)
     if n is masked or d is masked: return masked
@@ -1748,7 +1772,7 @@ def masked_where(condition, x, copy=1):
     """Return x as an array masked where condition is true.
        Also masked where x or condition masked.
     """
-    cm = filled(condition,1)
+    cm = filled(condition, 1)
     m = mask_or(getmask(x), cm)
     return array(filled(x), copy=copy, mask=m)
 
@@ -2131,11 +2155,13 @@ def asarray(data, dtype=None):
 # Add methods to support ndarray interface
 # XXX: I is better to to change the masked_*_operation adaptors
 # XXX: to wrap ndarray methods directly to create ma.array methods.
-from types import MethodType
+
 def _m(f):
-    return MethodType(f, None, array)
+    return types.MethodType(f, None, array)
+
 def not_implemented(*args, **kwds):
-    raise NotImplementedError, "not yet implemented for numpy.ma arrays"
+    raise NotImplementedError("not yet implemented for numpy.ma arrays")
+
 array.all = _m(alltrue)
 array.any = _m(sometrue)
 array.argmax = _m(argmax)
@@ -2153,7 +2179,7 @@ def _clip(self,a_min,a_max,out=None):
     return MaskedArray(data = self.data.clip(asarray(a_min).data,
                                              asarray(a_max).data),
                        mask = mask_or(self.mask,
-                                      mask_or(getmask(a_min),getmask(a_max))))
+                                      mask_or(getmask(a_min), getmask(a_max))))
 array.clip = _m(_clip)
 
 def _compress(self, cond, axis=None, out=None):
@@ -2211,7 +2237,7 @@ array.nonzero = _m(nonzero)
 array.prod = _m(product)
 
 def _ptp(a,axis=None,out=None):
-    return a.max(axis,out)-a.min(axis)
+    return a.max(axis, out)-a.min(axis)
 array.ptp = _m(_ptp)
 array.repeat = _m(new_repeat)
 array.resize = _m(resize)
@@ -2231,7 +2257,7 @@ array.squeeze = _m(_squeeze)
 
 array.strides = property(_m(not_implemented))
 array.sum = _m(sum)
-def _swapaxes(self,axis1,axis2):
+def _swapaxes(self, axis1, axis2):
     return MaskedArray(data = self.data.swapaxes(axis1, axis2),
                        mask = self.mask.swapaxes(axis1, axis2))
 array.swapaxes = _m(_swapaxes)
@@ -2243,19 +2269,19 @@ array.transpose = _m(transpose)
 def _var(self,axis=None,dtype=None, out=None):
     if axis is None:
         return numeric.asarray(self.compressed()).var()
-    a = self.swapaxes(axis,0)
+    a = self.swapaxes(axis, 0)
     a = a - a.mean(axis=0)
     a *= a
     a /= a.count(axis=0)
-    return a.swapaxes(0,axis).sum(axis)
+    return a.swapaxes(0, axis).sum(axis)
 def _std(self,axis=None, dtype=None, out=None):
-    return (self.var(axis,dtype))**0.5
+    return (self.var(axis, dtype))**0.5
 array.var = _m(_var)
 array.std = _m(_std)
 
 array.view =  _m(not_implemented)
 array.round = _m(around)
-del _m, MethodType, not_implemented
+del _m, not_implemented
 
 
 masked = MaskedArray(0, int, mask=1)

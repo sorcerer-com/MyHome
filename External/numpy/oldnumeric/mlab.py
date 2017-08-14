@@ -1,4 +1,7 @@
-# This module is for compatibility only.  All functions are defined elsewhere.
+"""This module is for compatibility only.  All functions are defined elsewhere.
+
+"""
+from __future__ import division, absolute_import, print_function
 
 __all__ = ['rand', 'tril', 'trapz', 'hanning', 'rot90', 'triu', 'diff', 'angle',
            'roots', 'ptp', 'kaiser', 'randn', 'cumprod', 'diag', 'msort',
@@ -12,13 +15,14 @@ from numpy import tril, trapz as _Ntrapz, hanning, rot90, triu, diff, \
      angle, roots, ptp as _Nptp, kaiser, cumprod as _Ncumprod, \
      diag, msort, prod as _Nprod, std as _Nstd, hamming, flipud, \
      amax as _Nmax, amin as _Nmin, blackman, bartlett, \
-     squeeze, sinc, median, fliplr, mean as _Nmean, transpose
+     squeeze, sinc, median, fliplr, mean as _Nmean, transpose, \
+     sqrt, multiply, __version__
 
 from numpy.linalg import eig, svd
 from numpy.random import rand, randn
 import numpy as np
 
-from typeconv import convtypecode
+from .typeconv import convtypecode
 
 def eye(N, M=None, k=0, typecode=None, dtype=None):
     """ eye returns a N-by-M 2-d array where the  k-th diagonal is all ones,
@@ -26,7 +30,7 @@ def eye(N, M=None, k=0, typecode=None, dtype=None):
     """
     dtype = convtypecode(typecode, dtype)
     if M is None: M = N
-    m = np.equal(np.subtract.outer(np.arange(N), np.arange(M)),-k)
+    m = np.equal(np.subtract.outer(np.arange(N), np.arange(M)), -k)
     if m.dtype != dtype:
         return m.astype(dtype)
 
@@ -36,7 +40,7 @@ def tri(N, M=None, k=0, typecode=None, dtype=None):
     """
     dtype = convtypecode(typecode, dtype)
     if M is None: M = N
-    m = np.greater_equal(np.subtract.outer(np.arange(N), np.arange(M)),-k)
+    m = np.greater_equal(np.subtract.outer(np.arange(N), np.arange(M)), -k)
     if m.dtype != dtype:
         return m.astype(dtype)
 
@@ -80,47 +84,41 @@ def cov(m, y=None, rowvar=0, bias=0):
         y = transpose(y)
     N = m.shape[0]
     if (y.shape[0] != N):
-        raise ValueError, "x and y must have the same number "\
-              "of observations"
-    m = m - _Nmean(m,axis=0)
-    y = y - _Nmean(y,axis=0)
+        raise ValueError("x and y must have the same number of observations")
+    m = m - _Nmean(m, axis=0)
+    y = y - _Nmean(y, axis=0)
     if bias:
         fact = N*1.0
     else:
         fact = N-1.0
     return squeeze(dot(transpose(m), conjugate(y)) / fact)
 
-from numpy import sqrt, multiply
 def corrcoef(x, y=None):
     c = cov(x, y)
     d = diag(c)
-    return c/sqrt(multiply.outer(d,d))
+    return c/sqrt(multiply.outer(d, d))
 
-from compat import *
-from functions import *
-from precision import *
-from ufuncs import *
-from misc import *
+from .compat import *
+from .functions import *
+from .precision import *
+from .ufuncs import *
+from .misc import *
 
-import compat
-import precision
-import functions
-import misc
-import ufuncs
-
-import numpy
-__version__ = numpy.__version__
-del numpy
+from .compat import __all__ as compat_all
+from .functions import __all__ as functions_all
+from .precision import __all__ as precision_all
+from .ufuncs import __all__ as ufuncs_all
+from .misc import __all__ as misc_all
 
 __all__ += ['__version__']
-__all__ += compat.__all__
-__all__ += precision.__all__
-__all__ += functions.__all__
-__all__ += ufuncs.__all__
-__all__ += misc.__all__
+__all__ += compat_all
+__all__ += precision_all
+__all__ += functions_all
+__all__ += ufuncs_all
+__all__ += misc_all
 
-del compat
-del functions
-del precision
-del ufuncs
-del misc
+del compat_all
+del precision_all
+del functions_all
+del ufuncs_all
+del misc_all

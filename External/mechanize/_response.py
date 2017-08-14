@@ -389,6 +389,9 @@ class closeable_response:
     def info(self):
         return self._headers
 
+    def getcode(self):
+        return self.code
+
     def get_header_values(self, name):
         return self._headers.getheaders(name)
 
@@ -400,6 +403,12 @@ class closeable_response:
                 h = normalize_header_name(h)
             ans.append(h)
         return ans
+
+    def __getitem__(self, name):
+        return self._headers[name]
+
+    def get(self, name, default):
+        return self._headers.get(name)
 
     def geturl(self):
         return self._url

@@ -1,15 +1,16 @@
 """ Basic functions for manipulating 2d arrays
 
 """
+from __future__ import division, absolute_import, print_function
 
-__all__ = ['diag','diagflat','eye','fliplr','flipud','rot90','tri','triu',
-           'tril','vander','histogram2d','mask_indices',
-           'tril_indices','tril_indices_from','triu_indices','triu_indices_from',
+__all__ = ['diag', 'diagflat', 'eye', 'fliplr', 'flipud', 'rot90', 'tri', 'triu',
+           'tril', 'vander', 'histogram2d', 'mask_indices',
+           'tril_indices', 'tril_indices_from', 'triu_indices', 'triu_indices_from',
            ]
 
 from numpy.core.numeric import asanyarray, equal, subtract, arange, \
      zeros, greater_equal, multiply, ones, asarray, alltrue, where, \
-     empty
+     empty, diagonal
 
 def fliplr(m):
     """
@@ -112,7 +113,7 @@ def flipud(m):
     m = asanyarray(m)
     if m.ndim < 1:
         raise ValueError("Input must be >= 1-d.")
-    return m[::-1,...]
+    return m[::-1, ...]
 
 def rot90(m, k=1):
     """
@@ -159,12 +160,12 @@ def rot90(m, k=1):
     if k == 0:
         return m
     elif k == 1:
-        return fliplr(m).swapaxes(0,1)
+        return fliplr(m).swapaxes(0, 1)
     elif k == 2:
         return fliplr(flipud(m))
     else:
         # k == 3
-        return fliplr(m.swapaxes(0,1))
+        return fliplr(m.swapaxes(0, 1))
 
 def eye(N, M=None, k=0, dtype=float):
     """
@@ -221,6 +222,11 @@ def diag(v, k=0):
     """
     Extract a diagonal or construct a diagonal array.
 
+    See the more detailed documentation for ``numpy.diagonal`` if you use this
+    function to extract a diagonal and wish to write to the resulting array;
+    whether it returns a copy or a view depends on what version of numpy you
+    are using.
+
     Parameters
     ----------
     v : array_like
@@ -270,7 +276,7 @@ def diag(v, k=0):
     s = v.shape
     if len(s) == 1:
         n = s[0]+abs(k)
-        res = zeros((n,n), v.dtype)
+        res = zeros((n, n), v.dtype)
         if k >= 0:
             i = k
         else:
@@ -278,16 +284,7 @@ def diag(v, k=0):
         res[:n-k].flat[i::n+1] = v
         return res
     elif len(s) == 2:
-        if k >= s[1]:
-            return empty(0, dtype=v.dtype)
-        if v.flags.f_contiguous:
-            # faster slicing
-            v, k, s = v.T, -k, s[::-1]
-        if k >= 0:
-            i = k
-        else:
-            i = (-k) * s[1]
-        return v[:s[1]-k].flat[i::s[1]+1]
+        return v.diagonal(k)
     else:
         raise ValueError("Input must be 1- or 2-d.")
 
@@ -337,12 +334,12 @@ def diagflat(v, k=0):
     v = asarray(v).ravel()
     s = len(v)
     n = s + abs(k)
-    res = zeros((n,n), v.dtype)
+    res = zeros((n, n), v.dtype)
     if (k >= 0):
-        i = arange(0,n-k)
+        i = arange(0, n-k)
         fi = i+k+i*n
     else:
-        i = arange(0,n+k)
+        i = arange(0, n+k)
         fi = i+(i-k)*n
     res.flat[fi] = v
     if not wrap:
@@ -369,7 +366,7 @@ def tri(N, M=None, k=0, dtype=float):
 
     Returns
     -------
-    T : ndarray of shape (N, M)
+    tri : ndarray of shape (N, M)
         Array with its lower triangle filled with ones and zero elsewhere;
         in other words ``T[i,j] == 1`` for ``i <= j + k``, 0 otherwise.
 
@@ -388,7 +385,7 @@ def tri(N, M=None, k=0, dtype=float):
     """
     if M is None:
         M = N
-    m = greater_equal(subtract.outer(arange(N), arange(M)),-k)
+    m = greater_equal(subtract.outer(arange(N), arange(M)), -k)
     return m.astype(dtype)
 
 def tril(m, k=0):
@@ -407,7 +404,7 @@ def tril(m, k=0):
 
     Returns
     -------
-    L : ndarray, shape (M, N)
+    tril : ndarray, shape (M, N)
         Lower triangle of `m`, of same shape and data-type as `m`.
 
     See Also
@@ -424,7 +421,7 @@ def tril(m, k=0):
 
     """
     m = asanyarray(m)
-    out = multiply(tri(m.shape[0], m.shape[1], k=k, dtype=m.dtype),m)
+    out = multiply(tri(m.shape[0], m.shape[1], k=k, dtype=m.dtype), m)
     return out
 
 def triu(m, k=0):
@@ -513,9 +510,9 @@ def vander(x, N=None):
     x = asarray(x)
     if N is None:
         N=len(x)
-    X = ones( (len(x),N), x.dtype)
+    X = ones( (len(x), N), x.dtype)
     for i in range(N - 1):
-        X[:,i] = x**(N - i - 1)
+        X[:, i] = x**(N - i - 1)
     return X
 
 
@@ -525,17 +522,21 @@ def histogram2d(x, y, bins=10, range=None, normed=False, weights=None):
 
     Parameters
     ----------
-    x : array_like, shape(N,)
-        A sequence of values to be histogrammed along the first dimension.
-    y : array_like, shape(M,)
-        A sequence of values to be histogrammed along the second dimension.
+    x : array_like, shape (N,)
+        An array containing the x coordinates of the points to be
+        histogrammed.
+    y : array_like, shape (N,)
+        An array containing the y coordinates of the points to be
+        histogrammed.
     bins : int or [int, int] or array_like or [array, array], optional
         The bin specification:
 
           * If int, the number of bins for the two dimensions (nx=ny=bins).
           * If [int, int], the number of bins in each dimension (nx, ny = bins).
-          * If array_like, the bin edges for the two dimensions (x_edges=y_edges=bins).
-          * If [array, array], the bin edges in each dimension (x_edges, y_edges = bins).
+          * If array_like, the bin edges for the two dimensions
+            (x_edges=y_edges=bins).
+          * If [array, array], the bin edges in each dimension
+            (x_edges, y_edges = bins).
 
     range : array_like, shape(2,2), optional
         The leftmost and rightmost edges of the bins along each dimension
@@ -543,13 +544,13 @@ def histogram2d(x, y, bins=10, range=None, normed=False, weights=None):
         ``[[xmin, xmax], [ymin, ymax]]``. All values outside of this range
         will be considered outliers and not tallied in the histogram.
     normed : bool, optional
-        If False, returns the number of samples in each bin. If True, returns
-        the bin density, i.e. the bin count divided by the bin area.
+        If False, returns the number of samples in each bin. If True,
+        returns the bin density ``bin_count / sample_count / bin_area``.
     weights : array_like, shape(N,), optional
-        An array of values ``w_i`` weighing each sample ``(x_i, y_i)``. Weights
-        are normalized to 1 if `normed` is True. If `normed` is False, the
-        values of the returned histogram are equal to the sum of the weights
-        belonging to the samples falling into each bin.
+        An array of values ``w_i`` weighing each sample ``(x_i, y_i)``.
+        Weights are normalized to 1 if `normed` is True. If `normed` is
+        False, the values of the returned histogram are equal to the sum of
+        the weights belonging to the samples falling into each bin.
 
     Returns
     -------
@@ -564,41 +565,75 @@ def histogram2d(x, y, bins=10, range=None, normed=False, weights=None):
 
     See Also
     --------
-    histogram: 1D histogram
-    histogramdd: Multidimensional histogram
+    histogram : 1D histogram
+    histogramdd : Multidimensional histogram
 
     Notes
     -----
-    When `normed` is True, then the returned histogram is the sample density,
-    defined such that:
-
-    .. math::
-      \\sum_{i=0}^{nx-1} \\sum_{j=0}^{ny-1} H_{i,j} \\Delta x_i \\Delta y_j = 1
-
-    where `H` is the histogram array and :math:`\\Delta x_i \\Delta y_i`
-    the area of bin `{i,j}`.
+    When `normed` is True, then the returned histogram is the sample
+    density, defined such that the sum over bins of the product
+    ``bin_value * bin_area`` is 1.
 
     Please note that the histogram does not follow the Cartesian convention
-    where `x` values are on the abcissa and `y` values on the ordinate axis.
-    Rather, `x` is histogrammed along the first dimension of the array
-    (vertical), and `y` along the second dimension of the array (horizontal).
-    This ensures compatibility with `histogramdd`.
+    where `x` values are on the abscissa and `y` values on the ordinate
+    axis.  Rather, `x` is histogrammed along the first dimension of the
+    array (vertical), and `y` along the second dimension of the array
+    (horizontal).  This ensures compatibility with `histogramdd`.
 
     Examples
     --------
-    >>> x, y = np.random.randn(2, 100)
-    >>> H, xedges, yedges = np.histogram2d(x, y, bins=(5, 8))
-    >>> H.shape, xedges.shape, yedges.shape
-    ((5, 8), (6,), (9,))
-
-    We can now use the Matplotlib to visualize this 2-dimensional histogram:
-
-    >>> extent = [yedges[0], yedges[-1], xedges[-1], xedges[0]]
+    >>> import matplotlib as mpl
     >>> import matplotlib.pyplot as plt
-    >>> plt.imshow(H, extent=extent, interpolation='nearest')
-    <matplotlib.image.AxesImage object at ...>
-    >>> plt.colorbar()
-    <matplotlib.colorbar.Colorbar instance at ...>
+
+    Construct a 2D-histogram with variable bin width. First define the bin
+    edges:
+
+    >>> xedges = [0, 1, 1.5, 3, 5]
+    >>> yedges = [0, 2, 3, 4, 6]
+
+    Next we create a histogram H with random bin content:
+
+    >>> x = np.random.normal(3, 1, 100)
+    >>> y = np.random.normal(1, 1, 100)
+    >>> H, xedges, yedges = np.histogram2d(y, x, bins=(xedges, yedges))
+
+    Or we fill the histogram H with a determined bin content:
+
+    >>> H = np.ones((4, 4)).cumsum().reshape(4, 4)
+    >>> print H[::-1]  # This shows the bin content in the order as plotted
+    [[ 13.  14.  15.  16.]
+     [  9.  10.  11.  12.]
+     [  5.   6.   7.   8.]
+     [  1.   2.   3.   4.]]
+
+    Imshow can only do an equidistant representation of bins:
+
+    >>> fig = plt.figure(figsize=(7, 3))
+    >>> ax = fig.add_subplot(131)
+    >>> ax.set_title('imshow:\nequidistant')
+    >>> im = plt.imshow(H, interpolation='nearest', origin='low',
+                    extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
+
+    pcolormesh can displaying exact bin edges:
+
+    >>> ax = fig.add_subplot(132)
+    >>> ax.set_title('pcolormesh:\nexact bin edges')
+    >>> X, Y = np.meshgrid(xedges, yedges)
+    >>> ax.pcolormesh(X, Y, H)
+    >>> ax.set_aspect('equal')
+
+    NonUniformImage displays exact bin edges with interpolation:
+
+    >>> ax = fig.add_subplot(133)
+    >>> ax.set_title('NonUniformImage:\ninterpolated')
+    >>> im = mpl.image.NonUniformImage(ax, interpolation='bilinear')
+    >>> xcenters = xedges[:-1] + 0.5 * (xedges[1:] - xedges[:-1])
+    >>> ycenters = yedges[:-1] + 0.5 * (yedges[1:] - yedges[:-1])
+    >>> im.set_data(xcenters, ycenters, H)
+    >>> ax.images.append(im)
+    >>> ax.set_xlim(xedges[0], xedges[-1])
+    >>> ax.set_ylim(yedges[0], yedges[-1])
+    >>> ax.set_aspect('equal')
     >>> plt.show()
 
     """
@@ -612,7 +647,7 @@ def histogram2d(x, y, bins=10, range=None, normed=False, weights=None):
     if N != 1 and N != 2:
         xedges = yedges = asarray(bins, float)
         bins = [xedges, yedges]
-    hist, edges = histogramdd([x,y], bins, range, normed, weights)
+    hist, edges = histogramdd([x, y], bins, range, normed, weights)
     return hist, edges[0], edges[1]
 
 
@@ -681,7 +716,7 @@ def mask_indices(n, mask_func, k=0):
     array([1, 2, 5])
 
     """
-    m = ones((n,n), int)
+    m = ones((n, n), int)
     a = mask_func(m, k)
     return where(a != 0)
 
@@ -801,9 +836,10 @@ def triu_indices(n, k=0):
 
     Returns
     -------
-    inds : tuple of arrays
+    inds : tuple, shape(2) of ndarrays, shape(`n`)
         The indices for the triangle. The returned tuple contains two arrays,
-        each with the indices along one dimension of the array.
+        each with the indices along one dimension of the array.  Can be used
+        to slice a ndarray of shape(`n`, `n`).
 
     See also
     --------
@@ -863,17 +899,21 @@ def triu_indices(n, k=0):
 
 def triu_indices_from(arr, k=0):
     """
-    Return the indices for the upper-triangle of an (n, n) array.
+    Return the indices for the upper-triangle of a (N, N) array.
 
     See `triu_indices` for full details.
 
     Parameters
     ----------
-    arr : array_like
-        The indices will be valid for square arrays whose dimensions are
-        the same as arr.
+    arr : ndarray, shape(N, N)
+        The indices will be valid for square arrays.
     k : int, optional
-      Diagonal offset (see `triu` for details).
+        Diagonal offset (see `triu` for details).
+
+    Returns
+    -------
+    triu_indices_from : tuple, shape(2) of ndarray, shape(N)
+        Indices for the upper-triangle of `arr`.
 
     See Also
     --------
@@ -886,5 +926,4 @@ def triu_indices_from(arr, k=0):
     """
     if not (arr.ndim == 2 and arr.shape[0] == arr.shape[1]):
         raise ValueError("input array must be 2-d and square")
-    return triu_indices(arr.shape[0],k)
-
+    return triu_indices(arr.shape[0], k)

@@ -1,10 +1,14 @@
-# This is only meant to add docs to objects defined in C-extension modules.
-# The purpose is to allow easier editing of the docstrings without
-# requiring a re-compile.
+"""
+This is only meant to add docs to objects defined in C-extension modules.
+The purpose is to allow easier editing of the docstrings without
+requiring a re-compile.
 
-# NOTE: Many of the methods of ndarray have corresponding functions.
-#       If you update these docstrings, please keep also the ones in
-#       core/fromnumeric.py, core/defmatrix.py up-to-date.
+NOTE: Many of the methods of ndarray have corresponding functions.
+      If you update these docstrings, please keep also the ones in
+      core/fromnumeric.py, core/defmatrix.py up-to-date.
+
+"""
+from __future__ import division, absolute_import, print_function
 
 from numpy.lib import add_newdoc
 
@@ -148,6 +152,8 @@ add_newdoc('numpy.core', 'flatiter', ('copy',
 add_newdoc('numpy.core', 'nditer',
     """
     Efficient multi-dimensional iterator object to iterate over arrays.
+    To get started using this object, see the
+    :ref:`introductory guide to array iteration <arrays.nditer>`.
 
     Parameters
     ----------
@@ -195,10 +201,17 @@ add_newdoc('numpy.core', 'nditer',
           * "allocate" causes the array to be allocated if it is None
             in the `op` parameter.
           * "no_subtype" prevents an "allocate" operand from using a subtype.
+          * "arraymask" indicates that this operand is the mask to use
+            for selecting elements when writing to operands with the
+            'writemasked' flag set. The iterator does not enforce this,
+            but when writing from a buffer back to the array, it only
+            copies those elements indicated by this mask.
+          * 'writemasked' indicates that only elements where the chosen
+            'arraymask' operand is True will be written to.
     op_dtypes : dtype or tuple of dtype(s), optional
         The required data type(s) of the operands. If copying or buffering
         is enabled, the data will be converted to/from their original types.
-    order : {'C', 'F', 'A', or 'K'}, optional
+    order : {'C', 'F', 'A', 'K'}, optional
         Controls the iteration order. 'C' means C order, 'F' means
         Fortran order, 'A' means 'F' order if all the arrays are Fortran
         contiguous, 'C' order otherwise, and 'K' means as close to the
@@ -770,8 +783,10 @@ add_newdoc('numpy.core.multiarray', 'empty_like',
         The shape and data-type of `a` define these same attributes of the
         returned array.
     dtype : data-type, optional
+        .. versionadded:: 1.6.0
         Overrides the data type of the result.
     order : {'C', 'F', 'A', or 'K'}, optional
+        .. versionadded:: 1.6.0
         Overrides the memory layout of the result. 'C' means C-order,
         'F' means F-order, 'A' means 'F' if ``a`` is Fortran contiguous,
         'C' otherwise. 'K' means match the layout of ``a`` as closely
@@ -895,7 +910,7 @@ add_newdoc('numpy.core.multiarray', 'count_nonzero',
 
     Returns
     -------
-    count : int
+    count : int or array of int
         Number of non-zero values in the array.
 
     See Also
@@ -906,12 +921,11 @@ add_newdoc('numpy.core.multiarray', 'count_nonzero',
     --------
     >>> np.count_nonzero(np.eye(4))
     4
-
     >>> np.count_nonzero([[0,1,7,0,0],[3,0,0,2,19]])
     5
     """)
 
-add_newdoc('numpy.core.multiarray','set_typeDict',
+add_newdoc('numpy.core.multiarray', 'set_typeDict',
     """set_typeDict(dict)
 
     Set the internal dictionary that can look up an array type using a
@@ -1266,10 +1280,10 @@ add_newdoc('numpy.core', 'inner',
 
     """)
 
-add_newdoc('numpy.core','fastCopyAndTranspose',
+add_newdoc('numpy.core', 'fastCopyAndTranspose',
     """_fastCopyAndTranspose(a)""")
 
-add_newdoc('numpy.core.multiarray','correlate',
+add_newdoc('numpy.core.multiarray', 'correlate',
     """cross_correlate(a,v, mode=0)""")
 
 add_newdoc('numpy.core.multiarray', 'arange',
@@ -1282,7 +1296,7 @@ add_newdoc('numpy.core.multiarray', 'arange',
     (in other words, the interval including `start` but excluding `stop`).
     For integer arguments the function is equivalent to the Python built-in
     `range <http://docs.python.org/lib/built-in-funcs.html>`_ function,
-    but returns a ndarray rather than a list.
+    but returns an ndarray rather than a list.
 
     When using a non-integer step, such as 0.1, the results will often not
     be consistent.  It is better to use ``linspace`` for these cases.
@@ -1306,7 +1320,7 @@ add_newdoc('numpy.core.multiarray', 'arange',
 
     Returns
     -------
-    out : ndarray
+    arange : ndarray
         Array of evenly spaced values.
 
         For floating point arguments, the length of the result is
@@ -1317,8 +1331,8 @@ add_newdoc('numpy.core.multiarray', 'arange',
     See Also
     --------
     linspace : Evenly spaced numbers with careful handling of endpoints.
-    ogrid: Arrays of evenly spaced numbers in N-dimensions
-    mgrid: Grid-shaped arrays of evenly spaced numbers in N-dimensions
+    ogrid: Arrays of evenly spaced numbers in N-dimensions.
+    mgrid: Grid-shaped arrays of evenly spaced numbers in N-dimensions.
 
     Examples
     --------
@@ -1333,14 +1347,14 @@ add_newdoc('numpy.core.multiarray', 'arange',
 
     """)
 
-add_newdoc('numpy.core.multiarray','_get_ndarray_c_version',
+add_newdoc('numpy.core.multiarray', '_get_ndarray_c_version',
     """_get_ndarray_c_version()
 
     Return the compile time NDARRAY_VERSION number.
 
     """)
 
-add_newdoc('numpy.core.multiarray','_reconstruct',
+add_newdoc('numpy.core.multiarray', '_reconstruct',
     """_reconstruct(subtype, shape, dtype)
 
     Construct an empty array. Used by Pickles.
@@ -1458,6 +1472,17 @@ add_newdoc('numpy.core.multiarray', 'where',
            [ 3.,  4., -1.],
            [-1., -1., -1.]])
 
+    Find the indices of elements of `x` that are in `goodvalues`.
+
+    >>> goodvalues = [3, 4, 7]
+    >>> ix = np.in1d(x.ravel(), goodvalues).reshape(x.shape)
+    >>> ix
+    array([[False, False, False],
+           [ True,  True, False],
+           [False,  True, False]], dtype=bool)
+    >>> np.where(ix)
+    (array([1, 1, 2]), array([0, 1, 1]))
+
     """)
 
 
@@ -1478,7 +1503,7 @@ add_newdoc('numpy.core.multiarray', 'lexsort',
 
     Parameters
     ----------
-    keys : (k,N) array or tuple containing k (N,)-shaped sequences
+    keys : (k, N) array or tuple containing k (N,)-shaped sequences
         The `k` different "columns" to be sorted.  The last column (or row if
         `keys` is a 2D array) is the primary sort key.
     axis : int, optional
@@ -1573,7 +1598,6 @@ add_newdoc('numpy.core.multiarray', 'can_cast',
 
     Examples
     --------
-
     Basic examples
 
     >>> np.can_cast(np.int32, np.int64)
@@ -1776,7 +1800,7 @@ add_newdoc('numpy.core.multiarray', 'result_type',
     Categories are determined by first checking which of boolean,
     integer (int/uint), or floating point (float/complex) the maximum
     kind of all the arrays and the scalars are.
-    
+
     If there are only scalars or the maximum category of the scalars
     is higher than the maximum category of the arrays,
     the data types are combined with :func:`promote_types`
@@ -1803,10 +1827,21 @@ add_newdoc('numpy.core.multiarray', 'result_type',
 
     """)
 
-add_newdoc('numpy.core.multiarray','newbuffer',
-    """newbuffer(size)
+add_newdoc('numpy.core.multiarray', 'newbuffer',
+    """
+    newbuffer(size)
 
-    Return a new uninitialized buffer object of size bytes
+    Return a new uninitialized buffer object.
+
+    Parameters
+    ----------
+    size : int
+        Size in bytes of returned buffer object.
+
+    Returns
+    -------
+    newbuffer : buffer object
+        Returned, uninitialized buffer object of `size` bytes.
 
     """)
 
@@ -1942,7 +1977,7 @@ add_newdoc('numpy.core', 'einsum',
         If provided, forces the calculation to use the data type specified.
         Note that you may have to also give a more liberal `casting`
         parameter to allow the conversions.
-    order : {'C', 'F', 'A', or 'K'}, optional
+    order : {'C', 'F', 'A', 'K'}, optional
         Controls the memory layout of the output. 'C' means it should
         be C contiguous. 'F' means it should be Fortran contiguous,
         'A' means it should be 'F' if the inputs are all 'F', 'C' otherwise.
@@ -2110,7 +2145,7 @@ add_newdoc('numpy.core', 'einsum',
 
 add_newdoc('numpy.core', 'alterdot',
     """
-    Change `dot`, `vdot`, and `innerproduct` to use accelerated BLAS functions.
+    Change `dot`, `vdot`, and `inner` to use accelerated BLAS functions.
 
     Typically, as a user of Numpy, you do not explicitly call this function. If
     Numpy is built with an accelerated BLAS, this function is automatically
@@ -2147,6 +2182,8 @@ add_newdoc('numpy.core', 'restoredot',
 
 add_newdoc('numpy.core', 'vdot',
     """
+    vdot(a, b)
+
     Return the dot product of two vectors.
 
     The vdot(`a`, `b`) function handles complex numbers differently than
@@ -2577,12 +2614,11 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('flags',
         created writeable view onto it.)  Attempting to change a non-writeable
         array raises a RuntimeError exception.
     ALIGNED (A)
-        The data and strides are aligned appropriately for the hardware.
+        The data and all elements are aligned appropriately for the hardware.
     UPDATEIFCOPY (U)
         This array is a copy of some other array. When this array is
         deallocated, the base array will be updated with the contents of
         this array.
-
     FNC
         F_CONTIGUOUS and not C_CONTIGUOUS.
     FORC
@@ -2612,6 +2648,16 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('flags',
       or the ultimate owner of the memory exposes a writeable buffer
       interface or is a string.
 
+    Arrays can be both C-style and Fortran-style contiguous simultaneously.
+    This is clear for 1-dimensional arrays, but can also be true for higher
+    dimensional arrays.
+
+    Even for contiguous arrays a stride for a given dimension
+    ``arr.strides[dim]`` may be *arbitrary* if ``arr.shape[dim] == 1``
+    or the array has no elements.
+    It does *not* generally hold that ``self.strides[-1] == self.itemsize``
+    for C-style contiguous arrays or ``self.strides[0] == self.itemsize`` for
+    Fortran-style contiguous arrays is true.
     """))
 
 
@@ -2999,20 +3045,70 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('argsort',
     """))
 
 
+add_newdoc('numpy.core.multiarray', 'ndarray', ('argpartition',
+    """
+    a.argpartition(kth, axis=-1, kind='introselect', order=None)
+
+    Returns the indices that would partition this array.
+
+    Refer to `numpy.argpartition` for full documentation.
+
+    .. versionadded:: 1.8.0
+
+    See Also
+    --------
+    numpy.argpartition : equivalent function
+
+    """))
+
+
 add_newdoc('numpy.core.multiarray', 'ndarray', ('astype',
     """
-    a.astype(t)
+    a.astype(dtype, order='K', casting='unsafe', subok=True, copy=True)
 
     Copy of the array, cast to a specified type.
 
     Parameters
     ----------
-    t : str or dtype
+    dtype : str or dtype
         Typecode or data-type to which the array is cast.
+    order : {'C', 'F', 'A', 'K'}, optional
+        Controls the memory layout order of the result.
+        'C' means C order, 'F' means Fortran order, 'A'
+        means 'F' order if all the arrays are Fortran contiguous,
+        'C' order otherwise, and 'K' means as close to the
+        order the array elements appear in memory as possible.
+        Default is 'K'.
+    casting : {'no', 'equiv', 'safe', 'same_kind', 'unsafe'}, optional
+        Controls what kind of data casting may occur. Defaults to 'unsafe'
+        for backwards compatibility.
+
+          * 'no' means the data types should not be cast at all.
+          * 'equiv' means only byte-order changes are allowed.
+          * 'safe' means only casts which can preserve values are allowed.
+          * 'same_kind' means only safe casts or casts within a kind,
+            like float64 to float32, are allowed.
+          * 'unsafe' means any data conversions may be done.
+    subok : bool, optional
+        If True, then sub-classes will be passed-through (default), otherwise
+        the returned array will be forced to be a base-class array.
+    copy : bool, optional
+        By default, astype always returns a newly allocated array. If this
+        is set to false, and the `dtype`, `order`, and `subok`
+        requirements are satisfied, the input array is returned instead
+        of a copy.
+
+    Returns
+    -------
+    arr_t : ndarray
+        Unless `copy` is False and the other conditions for returning the input
+        array are satisfied (see description for `copy` input paramter), `arr_t`
+        is a new array of the same shape as the input array, with dtype, order
+        given by `dtype`, `order`.
 
     Raises
     ------
-    ComplexWarning :
+    ComplexWarning
         When casting from complex to float or int. To avoid this,
         one should use ``a.real.astype(t)``.
 
@@ -3039,12 +3135,12 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('byteswap',
 
     Parameters
     ----------
-    inplace: bool, optional
+    inplace : bool, optional
         If ``True``, swap bytes in-place, default is ``False``.
 
     Returns
     -------
-    out: ndarray
+    out : ndarray
         The byteswapped array. If `inplace` is ``True``, this is
         a view to self.
 
@@ -3151,11 +3247,18 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('copy',
 
     Parameters
     ----------
-    order : {'C', 'F', 'A'}, optional
-        By default, the result is stored in C-contiguous (row-major) order in
-        memory.  If `order` is `F`, the result has 'Fortran' (column-major)
-        order.  If order is 'A' ('Any'), then the result has the same order
-        as the input.
+    order : {'C', 'F', 'A', 'K'}, optional
+        Controls the memory layout of the copy. 'C' means C-order,
+        'F' means F-order, 'A' means 'F' if `a` is Fortran contiguous,
+        'C' otherwise. 'K' means match the layout of `a` as closely
+        as possible. (Note that this function and :func:numpy.copy are very
+        similar, but have different default values for their order=
+        arguments.)
+
+    See also
+    --------
+    numpy.copy
+    numpy.copyto
 
     Examples
     --------
@@ -3215,7 +3318,7 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('diagonal',
 
     Return specified diagonals.
 
-    Refer to `numpy.diagonal` for full documentation.
+    Refer to :func:`numpy.diagonal` for full documentation.
 
     See Also
     --------
@@ -3342,57 +3445,42 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('flatten',
 
 add_newdoc('numpy.core.multiarray', 'ndarray', ('getfield',
     """
-    a.getfield(dtype, offset)
+    a.getfield(dtype, offset=0)
 
     Returns a field of the given array as a certain type.
 
-    A field is a view of the array data with each itemsize determined
-    by the given type and the offset into the current array, i.e. from
-    ``offset * dtype.itemsize`` to ``(offset+1) * dtype.itemsize``.
+    A field is a view of the array data with a given data-type. The values in
+    the view are determined by the given type and the offset into the current
+    array in bytes. The offset needs to be such that the view dtype fits in the
+    array dtype; for example an array of dtype complex128 has 16-byte elements.
+    If taking a view with a 32-bit integer (4 bytes), the offset needs to be
+    between 0 and 12 bytes.
 
     Parameters
     ----------
-    dtype : str
-        String denoting the data type of the field.
+    dtype : str or dtype
+        The data type of the view. The dtype size of the view can not be larger
+        than that of the array itself.
     offset : int
-        Number of `dtype.itemsize`'s to skip before beginning the element view.
+        Number of bytes to skip before beginning the element view.
 
     Examples
     --------
     >>> x = np.diag([1.+1.j]*2)
+    >>> x[1, 1] = 2 + 4.j
     >>> x
     array([[ 1.+1.j,  0.+0.j],
-           [ 0.+0.j,  1.+1.j]])
-    >>> x.dtype
-    dtype('complex128')
-
-    >>> x.getfield('complex64', 0) # Note how this != x
-    array([[ 0.+1.875j,  0.+0.j   ],
-           [ 0.+0.j   ,  0.+1.875j]], dtype=complex64)
-
-    >>> x.getfield('complex64',1) # Note how different this is than x
-    array([[ 0. +5.87173204e-39j,  0. +0.00000000e+00j],
-           [ 0. +0.00000000e+00j,  0. +5.87173204e-39j]], dtype=complex64)
-
-    >>> x.getfield('complex128', 0) # == x
-    array([[ 1.+1.j,  0.+0.j],
-           [ 0.+0.j,  1.+1.j]])
-
-    If the argument dtype is the same as x.dtype, then offset != 0 raises
-    a ValueError:
-
-    >>> x.getfield('complex128', 1)
-    Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-    ValueError: Need 0 <= offset <= 0 for requested type but received offset = 1
-
-    >>> x.getfield('float64', 0)
+           [ 0.+0.j,  2.+4.j]])
+    >>> x.getfield(np.float64)
     array([[ 1.,  0.],
-           [ 0.,  1.]])
+           [ 0.,  2.]])
 
-    >>> x.getfield('float64', 1)
-    array([[  1.77658241e-307,   0.00000000e+000],
-           [  0.00000000e+000,   1.77658241e-307]])
+    By choosing an offset of 8 bytes we can select the complex part of the
+    array for our view:
+
+    >>> x.getfield(np.float64, offset=8)
+    array([[ 1.,  0.],
+       [ 0.,  4.]])
 
     """))
 
@@ -3577,6 +3665,32 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('min',
     """))
 
 
+add_newdoc('numpy.core.multiarray', 'may_share_memory',
+    """
+    Determine if two arrays can share memory
+
+    The memory-bounds of a and b are computed.  If they overlap then
+    this function returns True.  Otherwise, it returns False.
+
+    A return of True does not necessarily mean that the two arrays
+    share any element.  It just means that they *might*.
+
+    Parameters
+    ----------
+    a, b : ndarray
+
+    Returns
+    -------
+    out : bool
+
+    Examples
+    --------
+    >>> np.may_share_memory(np.array([1,2]), np.array([5,8,9]))
+    False
+
+    """)
+
+
 add_newdoc('numpy.core.multiarray', 'ndarray', ('newbyteorder',
     """
     arr.newbyteorder(new_order='S')
@@ -3678,6 +3792,41 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('put',
 
     """))
 
+add_newdoc('numpy.core.multiarray', 'copyto',
+    """
+    copyto(dst, src, casting='same_kind', where=None, preservena=False)
+
+    Copies values from one array to another, broadcasting as necessary.
+
+    Raises a TypeError if the `casting` rule is violated, and if
+    `where` is provided, it selects which elements to copy.
+
+    .. versionadded:: 1.7.0
+
+    Parameters
+    ----------
+    dst : ndarray
+        The array into which values are copied.
+    src : array_like
+        The array from which values are copied.
+    casting : {'no', 'equiv', 'safe', 'same_kind', 'unsafe'}, optional
+        Controls what kind of data casting may occur when copying.
+
+          * 'no' means the data types should not be cast at all.
+          * 'equiv' means only byte-order changes are allowed.
+          * 'safe' means only casts which can preserve values are allowed.
+          * 'same_kind' means only safe casts or casts within a kind,
+            like float64 to float32, are allowed.
+          * 'unsafe' means any data conversions may be done.
+    where : array_like of bool, optional
+        A boolean array which is broadcasted to match the dimensions
+        of `dst`, and selects elements to copy from `src` to `dst`
+        wherever it contains the value True.
+    preservena : bool, optional
+        If set to True, leaves any NA values in `dst` untouched. This
+        is similar to the "hard mask" feature in numpy.ma.
+
+    """)
 
 add_newdoc('numpy.core.multiarray', 'putmask',
     """
@@ -3689,6 +3838,11 @@ add_newdoc('numpy.core.multiarray', 'putmask',
 
     If `values` is not the same size as `a` and `mask` then it will repeat.
     This gives behavior different from ``a[mask] = values``.
+
+    .. note:: The `putmask` functionality is also provided by `copyto`, which
+              can be significantly faster and in addition is NA-aware
+              (`preservena` keyword).  Replacing `putmask` with
+              ``np.copyto(a, values, where=mask)`` is recommended.
 
     Parameters
     ----------
@@ -3702,7 +3856,7 @@ add_newdoc('numpy.core.multiarray', 'putmask',
 
     See Also
     --------
-    place, put, take
+    place, put, take, copyto
 
     Examples
     --------
@@ -3875,7 +4029,7 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('round',
 
 add_newdoc('numpy.core.multiarray', 'ndarray', ('searchsorted',
     """
-    a.searchsorted(v, side='left')
+    a.searchsorted(v, side='left', sorter=None)
 
     Find indices where elements of v should be inserted in a to maintain order.
 
@@ -4035,6 +4189,7 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('sort',
     argsort : Indirect sort.
     lexsort : Indirect stable sort on multiple keys.
     searchsorted : Find elements in sorted array.
+    partition: Partial sort.
 
     Notes
     -----
@@ -4064,9 +4219,62 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('sort',
     """))
 
 
+add_newdoc('numpy.core.multiarray', 'ndarray', ('partition',
+    """
+    a.partition(kth, axis=-1, kind='introselect', order=None)
+
+    Rearranges the elements in the array in such a way that value of the
+    element in kth position is in the position it would be in a sorted array.
+    All elements smaller than the kth element are moved before this element and
+    all equal or greater are moved behind it. The ordering of the elements in
+    the two partitions is undefined.
+
+    .. versionadded:: 1.8.0
+
+    Parameters
+    ----------
+    kth : int or sequence of ints
+        Element index to partition by. The kth element value will be in its
+        final sorted position and all smaller elements will be moved before it
+        and all equal or greater elements behind it.
+        The order all elements in the partitions is undefined.
+        If provided with a sequence of kth it will partition all elements
+        indexed by kth of them into their sorted position at once.
+    axis : int, optional
+        Axis along which to sort. Default is -1, which means sort along the
+        last axis.
+    kind : {'introselect'}, optional
+        Selection algorithm. Default is 'introselect'.
+    order : list, optional
+        When `a` is an array with fields defined, this argument specifies
+        which fields to compare first, second, etc.  Not all fields need be
+        specified.
+
+    See Also
+    --------
+    numpy.partition : Return a parititioned copy of an array.
+    argpartition : Indirect partition.
+    sort : Full sort.
+
+    Notes
+    -----
+    See ``np.partition`` for notes on the different algorithms.
+
+    Examples
+    --------
+    >>> a = np.array([3, 4, 2, 1])
+    >>> a.partition(a, 3)
+    >>> a
+    array([2, 1, 3, 4])
+
+    >>> a.partition((1, 3))
+    array([1, 2, 3, 4])
+    """))
+
+
 add_newdoc('numpy.core.multiarray', 'ndarray', ('squeeze',
     """
-    a.squeeze()
+    a.squeeze(axis=None)
 
     Remove single-dimensional entries from the shape of `a`.
 
@@ -4338,10 +4546,12 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('view',
 
     Parameters
     ----------
-    dtype : data-type, optional
-        Data-type descriptor of the returned view, e.g., float32 or int16.
-        The default, None, results in the view having the same data-type
-        as `a`.
+    dtype : data-type or ndarray sub-class, optional
+        Data-type descriptor of the returned view, e.g., float32 or int16. The
+        default, None, results in the view having the same data-type as `a`.
+        This argument can also be specified as an ndarray sub-class, which
+        then specifies the type of the returned object (this is equivalent to
+        setting the ``type`` parameter).
     type : Python type, optional
         Type of the returned view, e.g., ndarray or matrix.  Again, the
         default None results in type preservation.
@@ -4358,6 +4568,15 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('view',
     returns an instance of `ndarray_subclass` that looks at the same array
     (same shape, dtype, etc.)  This does not cause a reinterpretation of the
     memory.
+
+    For ``a.view(some_dtype)``, if ``some_dtype`` has a different number of
+    bytes per entry than the previous dtype (for example, converting a
+    regular array to a structured array), then the behavior of the view
+    cannot be predicted just from the superficial appearance of ``a`` (shown
+    by ``print(a)``). It also depends on exactly how ``a`` is stored in
+    memory. Therefore if ``a`` is C-ordered versus fortran-ordered, versus
+    defined as a slice or transpose, etc., the view may give different
+    results.
 
 
     Examples
@@ -4400,6 +4619,22 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('view',
     >>> z[0]
     (9, 10)
 
+    Views that change the dtype size (bytes per entry) should normally be
+    avoided on arrays defined by slices, transposes, fortran-ordering, etc.:
+
+    >>> x = np.array([[1,2,3],[4,5,6]], dtype=np.int16)
+    >>> y = x[:, 0:2]
+    >>> y
+    array([[1, 2],
+           [4, 5]], dtype=int16)
+    >>> y.view(dtype=[('width', np.int16), ('length', np.int16)])
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    ValueError: new type not compatible with array.
+    >>> z = y.copy()
+    >>> z.view(dtype=[('width', np.int16), ('length', np.int16)])
+    array([[(1, 2)],
+           [(4, 5)]], dtype=[('width', '<i2'), ('length', '<i2')])
     """))
 
 
@@ -4408,45 +4643,6 @@ add_newdoc('numpy.core.multiarray', 'ndarray', ('view',
 # umath functions
 #
 ##############################################################################
-
-add_newdoc('numpy.core.umath', 'frexp',
-    """
-    Return normalized fraction and exponent of 2 of input array, element-wise.
-
-    Returns (`out1`, `out2`) from equation ``x` = out1 * 2**out2``.
-
-    Parameters
-    ----------
-    x : array_like
-        Input array.
-
-    Returns
-    -------
-    (out1, out2) : tuple of ndarrays, (float, int)
-        `out1` is a float array with values between -1 and 1.
-        `out2` is an int array which represent the exponent of 2.
-
-    See Also
-    --------
-    ldexp : Compute ``y = x1 * 2**x2``, the inverse of `frexp`.
-
-    Notes
-    -----
-    Complex dtypes are not supported, they will raise a TypeError.
-
-    Examples
-    --------
-    >>> x = np.arange(9)
-    >>> y1, y2 = np.frexp(x)
-    >>> y1
-    array([ 0.   ,  0.5  ,  0.5  ,  0.75 ,  0.5  ,  0.625,  0.75 ,  0.875,
-            0.5  ])
-    >>> y2
-    array([0, 1, 2, 2, 3, 3, 3, 3, 4])
-    >>> y1 * 2**y2
-    array([ 0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.])
-
-    """)
 
 add_newdoc('numpy.core.umath', 'frompyfunc',
     """
@@ -4485,44 +4681,6 @@ add_newdoc('numpy.core.umath', 'frompyfunc',
     >>> np.array((oct(10), oct(30), oct(100))) # for comparison
     array(['012', '036', '0144'],
           dtype='|S4')
-
-    """)
-
-add_newdoc('numpy.core.umath', 'ldexp',
-    """
-    Compute y = x1 * 2**x2.
-
-    Parameters
-    ----------
-    x1 : array_like
-        The array of multipliers.
-    x2 : array_like
-        The array of exponents.
-
-    Returns
-    -------
-    y : array_like
-        The output array, the result of ``x1 * 2**x2``.
-
-    See Also
-    --------
-    frexp : Return (y1, y2) from ``x = y1 * 2**y2``, the inverse of `ldexp`.
-
-    Notes
-    -----
-    Complex dtypes are not supported, they will raise a TypeError.
-
-    `ldexp` is useful as the inverse of `frexp`, if used by itself it is
-    more clear to simply use the expression ``x1 * 2**x2``.
-
-    Examples
-    --------
-    >>> np.ldexp(5, np.arange(4))
-    array([  5.,  10.,  20.,  40.], dtype=float32)
-
-    >>> x = np.arange(6)
-    >>> np.ldexp(*np.frexp(x))
-    array([ 0.,  1.,  2.,  3.,  4.,  5.])
 
     """)
 
@@ -4658,14 +4816,17 @@ add_newdoc('numpy.core.umath', 'seterrobj',
 
 add_newdoc('numpy.lib._compiled_base', 'digitize',
     """
-    digitize(x, bins)
+    digitize(x, bins, right=False)
 
     Return the indices of the bins to which each value in input array belongs.
 
     Each index ``i`` returned is such that ``bins[i-1] <= x < bins[i]`` if
     `bins` is monotonically increasing, or ``bins[i-1] > x >= bins[i]`` if
     `bins` is monotonically decreasing. If values in `x` are beyond the
-    bounds of `bins`, 0 or ``len(bins)`` is returned as appropriate.
+    bounds of `bins`, 0 or ``len(bins)`` is returned as appropriate. If right
+    is True, then the right bin is closed so that the index ``i`` is such
+    that ``bins[i-1] < x <= bins[i]`` or bins[i-1] >= x > bins[i]`` if `bins`
+    is monotonically increasing or decreasing, respectively.
 
     Parameters
     ----------
@@ -4673,6 +4834,12 @@ add_newdoc('numpy.lib._compiled_base', 'digitize',
         Input array to be binned. It has to be 1-dimensional.
     bins : array_like
         Array of bins. It has to be 1-dimensional and monotonic.
+    right : bool, optional
+        Indicating whether the intervals include the right or the left bin
+        edge. Default behavior is (right==False) indicating that the interval
+        does not include the right edge. The left bin and is open in this
+        case. Ie., bins[i-1] <= x < bins[i] is the default behavior for
+        monotonically increasing bins.
 
     Returns
     -------
@@ -4711,6 +4878,12 @@ add_newdoc('numpy.lib._compiled_base', 'digitize',
     2.5 <= 3.0 < 4.0
     1.0 <= 1.6 < 2.5
 
+    >>> x = np.array([1.2, 10.0, 12.4, 15.5, 20.])
+    >>> bins = np.array([0,5,10,15,20])
+    >>> np.digitize(x,bins,right=True)
+    array([1, 2, 3, 4, 4])
+    >>> np.digitize(x,bins,right=False)
+    array([1, 3, 3, 4, 5])
     """)
 
 add_newdoc('numpy.lib._compiled_base', 'bincount',
@@ -4888,12 +5061,38 @@ add_newdoc('numpy.lib._compiled_base', 'unravel_index',
 
 add_newdoc('numpy.lib._compiled_base', 'add_docstring',
     """
-    docstring(obj, docstring)
+    add_docstring(obj, docstring)
 
     Add a docstring to a built-in obj if possible.
     If the obj already has a docstring raise a RuntimeError
     If this routine does not know how to add a docstring to the object
     raise a TypeError
+    """)
+
+add_newdoc('numpy.lib._compiled_base', 'add_newdoc_ufunc',
+    """
+    add_ufunc_docstring(ufunc, new_docstring)
+
+    Replace the docstring for a ufunc with new_docstring.
+    This method will only work if the current docstring for
+    the ufunc is NULL. (At the C level, i.e. when ufunc->doc is NULL.)
+
+    Parameters
+    ----------
+    ufunc : numpy.ufunc
+        A ufunc whose current doc is NULL.
+    new_docstring : string
+        The new docstring for the ufunc.
+
+    Notes
+    -----
+    This method allocates memory for new_docstring on
+    the heap. Technically this creates a mempory leak, since this
+    memory will not be reclaimed until the end of the program
+    even if the ufunc itself is removed. However this will only
+    be a problem if the user is repeatedly creating ufuncs with
+    no documentation, adding documentation via add_newdoc_ufunc,
+    and then throwing away the ufunc.
     """)
 
 add_newdoc('numpy.lib._compiled_base', 'packbits',
@@ -5221,7 +5420,7 @@ add_newdoc('numpy.core', 'ufunc', ('types',
 
 add_newdoc('numpy.core', 'ufunc', ('reduce',
     """
-    reduce(a, axis=0, dtype=None, out=None)
+    reduce(a, axis=0, dtype=None, out=None, keepdims=False)
 
     Reduces `a`'s dimension by one, by applying ufunc along one axis.
 
@@ -5233,7 +5432,7 @@ add_newdoc('numpy.core', 'ufunc', ('reduce',
     ::
 
      r = op.identity # op = ufunc
-     for i in xrange(len(A)):
+     for i in range(len(A)):
        r = op(r, A[i])
      return r
 
@@ -5243,8 +5442,22 @@ add_newdoc('numpy.core', 'ufunc', ('reduce',
     ----------
     a : array_like
         The array to act on.
-    axis : int, optional
-        The axis along which to apply the reduction.
+    axis : None or int or tuple of ints, optional
+        Axis or axes along which a reduction is performed.
+        The default (`axis` = 0) is perform a reduction over the first
+        dimension of the input array. `axis` may be negative, in
+        which case it counts from the last to the first axis.
+
+        .. versionadded:: 1.7.0
+
+        If this is `None`, a reduction is performed over all the axes.
+        If this is a tuple of ints, a reduction is performed on multiple
+        axes, instead of a single axis or all the axes as before.
+
+        For operations which are either not commutative or not associative,
+        doing a reduction over multiple axes is not well-defined. The
+        ufuncs do not currently raise an exception in this case, but will
+        likely do so in the future.
     dtype : data-type code, optional
         The type used to represent the intermediate results. Defaults
         to the data-type of the output array if this is provided, or
@@ -5252,6 +5465,10 @@ add_newdoc('numpy.core', 'ufunc', ('reduce',
     out : ndarray, optional
         A location into which the result is stored. If not provided, a
         freshly-allocated array is returned.
+    keepdims : bool, optional
+        If this is set to True, the axes which are reduced are left
+        in the result as dimensions with size one. With this option,
+        the result will broadcast correctly against the original `arr`.
 
     Returns
     -------
@@ -5296,7 +5513,7 @@ add_newdoc('numpy.core', 'ufunc', ('accumulate',
 
       r = np.empty(len(A))
       t = op.identity        # op = the ufunc being applied to A's  elements
-      for i in xrange(len(A)):
+      for i in range(len(A)):
           t = op(t, A[i])
           r[i] = t
       return r
@@ -5476,8 +5693,8 @@ add_newdoc('numpy.core', 'ufunc', ('outer',
     For `A` and `B` one-dimensional, this is equivalent to::
 
       r = empty(len(A),len(B))
-      for i in xrange(len(A)):
-          for j in xrange(len(B)):
+      for i in range(len(A)):
+          for j in range(len(B)):
               r[i,j] = op(A[i], B[j]) # op = ufunc in question
 
     Parameters
@@ -5523,6 +5740,61 @@ add_newdoc('numpy.core', 'ufunc', ('outer',
 
     """))
 
+add_newdoc('numpy.core', 'ufunc', ('at',
+    """
+    at(a, indices, b=None)
+
+    Performs unbuffered in place operation on operand 'a' for elements
+    specified by 'indices'. For addition ufunc, this method is equivalent to
+    `a[indices] += b`, except that results are accumulated for elements that
+    are indexed more than once. For example, `a[[0,0]] += 1` will only
+    increment the first element once because of buffering, whereas
+    `add.at(a, [0,0], 1)` will increment the first element twice.
+
+    .. versionadded:: 1.8.0
+
+    Parameters
+    ----------
+    a : array_like
+        The array to perform in place operation on.
+    indices : array_like or tuple
+        Array like index object or slice object for indexing into first
+        operand. If first operand has multiple dimensions, indices can be a
+        tuple of array like index objects or slice objects.
+    b : array_like
+        Second operand for ufuncs requiring two operands. Operand must be
+        broadcastable over first operand after indexing or slicing.
+
+    Examples
+    --------
+    Set items 0 and 1 to their negative values:
+
+    >>> a = np.array([1, 2, 3, 4])
+    >>> np.negative.at(a, [0, 1])
+    >>> print(a)
+    array([-1, -2, 3, 4])
+
+    ::
+
+    Increment items 0 and 1, and increment item 2 twice:
+
+    >>> a = np.array([1, 2, 3, 4])
+    >>> np.add.at(a, [0, 1, 2, 2], 1)
+    >>> print(a)
+    array([2, 3, 5, 4])
+
+    ::
+
+    Add items 0 and 1 in first array to second array,
+    and store results in first array:
+
+    >>> a = np.array([1, 2, 3, 4])
+    >>> b = np.array([1, 2])
+    >>> np.add.at(a, [0, 1], b)
+    >>> print(a)
+    array([2, 4, 3, 4])
+
+    """))
 
 ##############################################################################
 #
@@ -5553,7 +5825,8 @@ add_newdoc('numpy.core.multiarray', 'dtype',
     align : bool, optional
         Add padding to the fields to match what a C compiler would output
         for a similar C-struct. Can be ``True`` only if `obj` is a dictionary
-        or a comma-separated string.
+        or a comma-separated string. If a struct dtype is being created,
+        this also sets a sticky alignment flag ``isalignedstruct``.
     copy : bool, optional
         Make a new copy of the data-type object. If ``False``, the result
         may just be a reference to a built-in data-type object.
@@ -5709,7 +5982,6 @@ add_newdoc('numpy.core.multiarray', 'dtype', ('fields',
 
     Examples
     --------
-
     >>> dt = np.dtype([('name', np.str_, 16), ('grades', np.float64, (2,))])
     >>> print dt.fields
     {'grades': (dtype(('float64',(2,))), 16), 'name': (dtype('|S16'), 0)}
@@ -5777,6 +6049,14 @@ add_newdoc('numpy.core.multiarray', 'dtype', ('isnative',
 
     """))
 
+add_newdoc('numpy.core.multiarray', 'dtype', ('isalignedstruct',
+    """
+    Boolean indicating whether the dtype is a struct which maintains
+    field alignment. This flag is sticky, so when combining multiple
+    structs together, it is preserved and produces new dtypes which
+    are also aligned.
+    """))
+
 add_newdoc('numpy.core.multiarray', 'dtype', ('itemsize',
     """
     The element size of this data-type object.
@@ -5809,7 +6089,6 @@ add_newdoc('numpy.core.multiarray', 'dtype', ('names',
 
     Examples
     --------
-
     >>> dt = np.dtype([('name', np.str_, 16), ('grades', np.float64, (2,))])
     >>> dt.names
     ('name', 'grades')
@@ -5923,6 +6202,287 @@ add_newdoc('numpy.core.multiarray', 'dtype', ('newbyteorder',
 
     """))
 
+
+##############################################################################
+#
+# Datetime-related Methods
+#
+##############################################################################
+
+add_newdoc('numpy.core.multiarray', 'busdaycalendar',
+    """
+    busdaycalendar(weekmask='1111100', holidays=None)
+
+    A business day calendar object that efficiently stores information
+    defining valid days for the busday family of functions.
+
+    The default valid days are Monday through Friday ("business days").
+    A busdaycalendar object can be specified with any set of weekly
+    valid days, plus an optional "holiday" dates that always will be invalid.
+
+    Once a busdaycalendar object is created, the weekmask and holidays
+    cannot be modified.
+
+    .. versionadded:: 1.7.0
+
+    Parameters
+    ----------
+    weekmask : str or array_like of bool, optional
+        A seven-element array indicating which of Monday through Sunday are
+        valid days. May be specified as a length-seven list or array, like
+        [1,1,1,1,1,0,0]; a length-seven string, like '1111100'; or a string
+        like "Mon Tue Wed Thu Fri", made up of 3-character abbreviations for
+        weekdays, optionally separated by white space. Valid abbreviations
+        are: Mon Tue Wed Thu Fri Sat Sun
+    holidays : array_like of datetime64[D], optional
+        An array of dates to consider as invalid dates, no matter which
+        weekday they fall upon.  Holiday dates may be specified in any
+        order, and NaT (not-a-time) dates are ignored.  This list is
+        saved in a normalized form that is suited for fast calculations
+        of valid days.
+
+    Returns
+    -------
+    out : busdaycalendar
+        A business day calendar object containing the specified
+        weekmask and holidays values.
+
+    See Also
+    --------
+    is_busday : Returns a boolean array indicating valid days.
+    busday_offset : Applies an offset counted in valid days.
+    busday_count : Counts how many valid days are in a half-open date range.
+
+    Attributes
+    ----------
+    Note: once a busdaycalendar object is created, you cannot modify the
+    weekmask or holidays.  The attributes return copies of internal data.
+    weekmask : (copy) seven-element array of bool
+    holidays : (copy) sorted array of datetime64[D]
+
+    Examples
+    --------
+    >>> # Some important days in July
+    ... bdd = np.busdaycalendar(
+    ...             holidays=['2011-07-01', '2011-07-04', '2011-07-17'])
+    >>> # Default is Monday to Friday weekdays
+    ... bdd.weekmask
+    array([ True,  True,  True,  True,  True, False, False], dtype='bool')
+    >>> # Any holidays already on the weekend are removed
+    ... bdd.holidays
+    array(['2011-07-01', '2011-07-04'], dtype='datetime64[D]')
+    """)
+
+add_newdoc('numpy.core.multiarray', 'busdaycalendar', ('weekmask',
+    """A copy of the seven-element boolean mask indicating valid days."""))
+
+add_newdoc('numpy.core.multiarray', 'busdaycalendar', ('holidays',
+    """A copy of the holiday array indicating additional invalid days."""))
+
+add_newdoc('numpy.core.multiarray', 'is_busday',
+    """
+    is_busday(dates, weekmask='1111100', holidays=None, busdaycal=None, out=None)
+
+    Calculates which of the given dates are valid days, and which are not.
+
+    .. versionadded:: 1.7.0
+
+    Parameters
+    ----------
+    dates : array_like of datetime64[D]
+        The array of dates to process.
+    weekmask : str or array_like of bool, optional
+        A seven-element array indicating which of Monday through Sunday are
+        valid days. May be specified as a length-seven list or array, like
+        [1,1,1,1,1,0,0]; a length-seven string, like '1111100'; or a string
+        like "Mon Tue Wed Thu Fri", made up of 3-character abbreviations for
+        weekdays, optionally separated by white space. Valid abbreviations
+        are: Mon Tue Wed Thu Fri Sat Sun
+    holidays : array_like of datetime64[D], optional
+        An array of dates to consider as invalid dates.  They may be
+        specified in any order, and NaT (not-a-time) dates are ignored.
+        This list is saved in a normalized form that is suited for
+        fast calculations of valid days.
+    busdaycal : busdaycalendar, optional
+        A `busdaycalendar` object which specifies the valid days. If this
+        parameter is provided, neither weekmask nor holidays may be
+        provided.
+    out : array of bool, optional
+        If provided, this array is filled with the result.
+
+    Returns
+    -------
+    out : array of bool
+        An array with the same shape as ``dates``, containing True for
+        each valid day, and False for each invalid day.
+
+    See Also
+    --------
+    busdaycalendar: An object that specifies a custom set of valid days.
+    busday_offset : Applies an offset counted in valid days.
+    busday_count : Counts how many valid days are in a half-open date range.
+
+    Examples
+    --------
+    >>> # The weekdays are Friday, Saturday, and Monday
+    ... np.is_busday(['2011-07-01', '2011-07-02', '2011-07-18'],
+    ...                 holidays=['2011-07-01', '2011-07-04', '2011-07-17'])
+    array([False, False,  True], dtype='bool')
+    """)
+
+add_newdoc('numpy.core.multiarray', 'busday_offset',
+    """
+    busday_offset(dates, offsets, roll='raise', weekmask='1111100', holidays=None, busdaycal=None, out=None)
+
+    First adjusts the date to fall on a valid day according to
+    the ``roll`` rule, then applies offsets to the given dates
+    counted in valid days.
+
+    .. versionadded:: 1.7.0
+
+    Parameters
+    ----------
+    dates : array_like of datetime64[D]
+        The array of dates to process.
+    offsets : array_like of int
+        The array of offsets, which is broadcast with ``dates``.
+    roll : {'raise', 'nat', 'forward', 'following', 'backward', 'preceding', 'modifiedfollowing', 'modifiedpreceding'}, optional
+        How to treat dates that do not fall on a valid day. The default
+        is 'raise'.
+
+          * 'raise' means to raise an exception for an invalid day.
+          * 'nat' means to return a NaT (not-a-time) for an invalid day.
+          * 'forward' and 'following' mean to take the first valid day
+            later in time.
+          * 'backward' and 'preceding' mean to take the first valid day
+            earlier in time.
+          * 'modifiedfollowing' means to take the first valid day
+            later in time unless it is across a Month boundary, in which
+            case to take the first valid day earlier in time.
+          * 'modifiedpreceding' means to take the first valid day
+            earlier in time unless it is across a Month boundary, in which
+            case to take the first valid day later in time.
+    weekmask : str or array_like of bool, optional
+        A seven-element array indicating which of Monday through Sunday are
+        valid days. May be specified as a length-seven list or array, like
+        [1,1,1,1,1,0,0]; a length-seven string, like '1111100'; or a string
+        like "Mon Tue Wed Thu Fri", made up of 3-character abbreviations for
+        weekdays, optionally separated by white space. Valid abbreviations
+        are: Mon Tue Wed Thu Fri Sat Sun
+    holidays : array_like of datetime64[D], optional
+        An array of dates to consider as invalid dates.  They may be
+        specified in any order, and NaT (not-a-time) dates are ignored.
+        This list is saved in a normalized form that is suited for
+        fast calculations of valid days.
+    busdaycal : busdaycalendar, optional
+        A `busdaycalendar` object which specifies the valid days. If this
+        parameter is provided, neither weekmask nor holidays may be
+        provided.
+    out : array of datetime64[D], optional
+        If provided, this array is filled with the result.
+
+    Returns
+    -------
+    out : array of datetime64[D]
+        An array with a shape from broadcasting ``dates`` and ``offsets``
+        together, containing the dates with offsets applied.
+
+    See Also
+    --------
+    busdaycalendar: An object that specifies a custom set of valid days.
+    is_busday : Returns a boolean array indicating valid days.
+    busday_count : Counts how many valid days are in a half-open date range.
+
+    Examples
+    --------
+    >>> # First business day in October 2011 (not accounting for holidays)
+    ... np.busday_offset('2011-10', 0, roll='forward')
+    numpy.datetime64('2011-10-03','D')
+    >>> # Last business day in February 2012 (not accounting for holidays)
+    ... np.busday_offset('2012-03', -1, roll='forward')
+    numpy.datetime64('2012-02-29','D')
+    >>> # Third Wednesday in January 2011
+    ... np.busday_offset('2011-01', 2, roll='forward', weekmask='Wed')
+    numpy.datetime64('2011-01-19','D')
+    >>> # 2012 Mother's Day in Canada and the U.S.
+    ... np.busday_offset('2012-05', 1, roll='forward', weekmask='Sun')
+    numpy.datetime64('2012-05-13','D')
+
+    >>> # First business day on or after a date
+    ... np.busday_offset('2011-03-20', 0, roll='forward')
+    numpy.datetime64('2011-03-21','D')
+    >>> np.busday_offset('2011-03-22', 0, roll='forward')
+    numpy.datetime64('2011-03-22','D')
+    >>> # First business day after a date
+    ... np.busday_offset('2011-03-20', 1, roll='backward')
+    numpy.datetime64('2011-03-21','D')
+    >>> np.busday_offset('2011-03-22', 1, roll='backward')
+    numpy.datetime64('2011-03-23','D')
+    """)
+
+add_newdoc('numpy.core.multiarray', 'busday_count',
+    """
+    busday_count(begindates, enddates, weekmask='1111100', holidays=[], busdaycal=None, out=None)
+
+    Counts the number of valid days between `begindates` and
+    `enddates`, not including the day of `enddates`.
+
+    If ``enddates`` specifies a date value that is earlier than the
+    corresponding ``begindates`` date value, the count will be negative.
+
+    .. versionadded:: 1.7.0
+
+    Parameters
+    ----------
+    begindates : array_like of datetime64[D]
+        The array of the first dates for counting.
+    enddates : array_like of datetime64[D]
+        The array of the end dates for counting, which are excluded
+        from the count themselves.
+    weekmask : str or array_like of bool, optional
+        A seven-element array indicating which of Monday through Sunday are
+        valid days. May be specified as a length-seven list or array, like
+        [1,1,1,1,1,0,0]; a length-seven string, like '1111100'; or a string
+        like "Mon Tue Wed Thu Fri", made up of 3-character abbreviations for
+        weekdays, optionally separated by white space. Valid abbreviations
+        are: Mon Tue Wed Thu Fri Sat Sun
+    holidays : array_like of datetime64[D], optional
+        An array of dates to consider as invalid dates.  They may be
+        specified in any order, and NaT (not-a-time) dates are ignored.
+        This list is saved in a normalized form that is suited for
+        fast calculations of valid days.
+    busdaycal : busdaycalendar, optional
+        A `busdaycalendar` object which specifies the valid days. If this
+        parameter is provided, neither weekmask nor holidays may be
+        provided.
+    out : array of int, optional
+        If provided, this array is filled with the result.
+
+    Returns
+    -------
+    out : array of int
+        An array with a shape from broadcasting ``begindates`` and ``enddates``
+        together, containing the number of valid days between
+        the begin and end dates.
+
+    See Also
+    --------
+    busdaycalendar: An object that specifies a custom set of valid days.
+    is_busday : Returns a boolean array indicating valid days.
+    busday_offset : Applies an offset counted in valid days.
+
+    Examples
+    --------
+    >>> # Number of weekdays in January 2011
+    ... np.busday_count('2011-01', '2011-02')
+    21
+    >>> # Number of weekdays in 2011
+    ...  np.busday_count('2011', '2012')
+    260
+    >>> # Number of Saturdays in 2011
+    ... np.busday_count('2011', '2012', weekmask='Sat')
+    53
+    """)
 
 ##############################################################################
 #
