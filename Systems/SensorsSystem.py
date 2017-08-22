@@ -106,7 +106,6 @@ class SensorsSystem(BaseSystem):
 				serial.close()
 				self._serials.remove(serial)
 				sendCommand = false
-		time.sleep(2) # TODO: may be remove when fix the problem with power supply
 			
 		# if command is send successfully
 		if sendCommand:
@@ -141,10 +140,11 @@ class SensorsSystem(BaseSystem):
 						serial.close()
 	
 	def _processSerialData(self, data):
-		print data # TODO: remove
+		# fix NANs
 		for i in range(0, len(data)):
 			if data[i] == "nan":
 				data[i] = "0.0"
+				
 		sensorID = int(data[0])
 		if data[1] == "data" and len(data) == 7:
 			import math
@@ -213,7 +213,7 @@ class SensorsSystem(BaseSystem):
 			if len(value) == 0:
 				continue
 			# fire check: if the temperature is higher than set value
-			if value[1] > self.fireAlarmTempreture and False: # TODO: remove False when fix the power supply
+			if value[1] > self.fireAlarmTempreture:
 				self._owner.sendAlert("Fire Alarm Activated!")
 				break
 			# smoke check: if the smoke value is higher than set value
