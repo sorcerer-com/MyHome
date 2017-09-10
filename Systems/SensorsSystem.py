@@ -109,7 +109,7 @@ class SensorsSystem(BaseSystem):
 			
 		# if command is send successfully
 		if sendCommand:
-			if self._nextTime.minute <= self.checkInterval:
+			if self._nextTime.minute < self.checkInterval:
 				self._archiveData()
 				self._owner.systemChanged = True
 			self._nextTime += timedelta(minutes=self.checkInterval)
@@ -144,7 +144,7 @@ class SensorsSystem(BaseSystem):
 		for i in range(0, len(data)):
 			if data[i] == "nan":
 				data[i] = "0.0"
-				
+		
 		sensorID = int(data[0])
 		if data[1] == "data" and len(data) == 7:
 			import math

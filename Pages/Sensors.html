@@ -21,6 +21,7 @@
 					var names = [{% for key in data[i]|sort %}'{{ key }}', {% endfor %}]
 					drawLineChart('canvas{{ idx }}{{ i }}', values, names, {{ drawValues|lower }}, {{ drawAxis|lower }});
 				</script>
+				<br/><br/>
 			{% endfor %}
 		{% endmacro %}
 		
@@ -49,9 +50,8 @@
 						<summary>Archive</summary>
 						<br/>
 						{{ charts(value[1], False, True, " - 5 days", key + "1") }}
-						<br/><br/>
+						<br/>
 						{{ charts(value[2], False, True, " - Older", key + "2") }}
-						<br/><br/>
 					</details>
 				</div>
 			</div>

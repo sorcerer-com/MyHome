@@ -51,7 +51,7 @@ class MediaPlayerSystem(BaseSystem):
 			return
 		if path in self.radios:
 			self._playing = path
-			self._process = PCControlService.openMedia(path, "local", int(self.volume * 300 * 1.75), False)
+			self._process = PCControlService.openMedia(path, "local", int(self.volume * 300 * 1.5), False)
 		else:
 			# mark as watched
 			dirPath = os.path.dirname(os.path.join(self.rootPath, path))
