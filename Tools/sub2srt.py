@@ -35,7 +35,7 @@ def fixEncoding(filePath):
 		
 		
 if len(sys.argv) < 3:
-	print "Usage: fps filePath"
+	print "Usage: fps path(file or directory)"
 else:
 	fps = float(sys.argv[1])
 	path = sys.argv[2]

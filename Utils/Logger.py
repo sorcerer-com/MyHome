@@ -15,6 +15,8 @@ class Logger:
 			getattr(Logger.logger, type)(formatted)
 			if type <> "debug":
 				Logger.data.append(formatted)
+				if len(Logger.data) > 700:
+					Logger.data = Logger.data[len(Logger.data) - 500:]
 			if Config.PrintLog and type <> "debug":
 				print formatted
 			Logger.backup()

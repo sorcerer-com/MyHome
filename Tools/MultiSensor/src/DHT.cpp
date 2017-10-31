@@ -257,3 +257,4 @@ uint32_t DHT::expectPulse(bool level) {
 
   return count;
 }
+
