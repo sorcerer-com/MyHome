@@ -1,7 +1,8 @@
 #ifndef MULTISENSOR_H
 #define MULTISENSOR_H
 
-#include "src/DHT.h"
+#include "src/libs/DHT.h"
+#include "src/RFNetwork.h"
 
 class MultiSensor {
   private:
@@ -9,14 +10,17 @@ class MultiSensor {
     const int tempHumSensorPin = 3;
     const int gasSensorPin = A0;
     const int lightingSensorPin = A1;
-    const int LEDPins[3] = {9, 10, 11};
+    const int ledPins[3] = {9, 10, 11};
+    const int receiverPin = 10;
+    const int transmitterPin = 11;
 
     DHT dht;
-
     ulong LEDtimer = 0;
     bool prevMotion = false;
+    
+    RFNetwork net;
   public:
-    MultiSensor() : dht(tempHumSensorPin, DHT11) {
+    MultiSensor() : dht(tempHumSensorPin, DHT11), net(receiverPin, transmitterPin, 300) {
     }
 
     void begin() {
@@ -26,17 +30,20 @@ class MultiSensor {
       pinMode(lightingSensorPin, INPUT);
 
       for (int i = 0; i < 3; i++)
-        pinMode(LEDPins[i], OUTPUT);
+        pinMode(ledPins[i], OUTPUT);
+      
+      randomSeed(analogRead(7));
+      pinMode(LED_BUILTIN, OUTPUT);
     }
 
     void update() {
+      net.update();
+      
       // check for motion
       bool motion = digitalRead(motionSensorPin) == HIGH;
       if (motion && !prevMotion)
       {
-        // TODO: nodeID?
-        //Serial.println(nodeID);
-        Serial.println(0);
+        Serial.println(net.getNodeId());
         Serial.println("motion");
       }
       prevMotion = motion;
@@ -59,9 +66,9 @@ class MultiSensor {
       {
         float factor = (float)delta / fadeTime;
         // white
-        analogWrite(LEDPins[0], 255 * factor);
-        analogWrite(LEDPins[1], 255 * factor);
-        analogWrite(LEDPins[2], 255 * factor);
+        analogWrite(ledPins[0], 255 * factor);
+        analogWrite(ledPins[1], 255 * factor);
+        analogWrite(ledPins[2], 255 * factor);
         //DEBUG("// LED fade in ");
         //DEBUGLN(factor);
       }
@@ -77,18 +84,18 @@ class MultiSensor {
             LEDtimer = millis() - fullTime + fadeTime - 1; // go to fade out
         }
         // white
-        analogWrite(LEDPins[0], 255);
-        analogWrite(LEDPins[1], 255);
-        analogWrite(LEDPins[2], 255);
+        analogWrite(ledPins[0], 255);
+        analogWrite(ledPins[1], 255);
+        analogWrite(ledPins[2], 255);
         //DEBUGLN("// LED fully ON");
       }
       else if (delta <= fullTime) // LED fade out
       {
         float factor = (float)(fullTime - delta) / fadeTime;
         // white
-        analogWrite(LEDPins[0], 255 * factor);
-        analogWrite(LEDPins[1], 255 * factor);
-        analogWrite(LEDPins[2], 255 * factor);
+        analogWrite(ledPins[0], 255 * factor);
+        analogWrite(ledPins[1], 255 * factor);
+        analogWrite(ledPins[2], 255 * factor);
         //DEBUG("// LED fade out ");
         //DEBUGLN(factor);
       }
@@ -106,20 +113,20 @@ class MultiSensor {
           }
         }
         // white
-        analogWrite(LEDPins[0], 0);
-        analogWrite(LEDPins[1], 0);
-        analogWrite(LEDPins[2], 0);
+        analogWrite(ledPins[0], 0);
+        analogWrite(ledPins[1], 0);
+        analogWrite(ledPins[2], 0);
       }
     }
 
 
     void connect()
     {
-      // TODO:
-      //nodeID = 0; // master node
-      //Serial.println(nodeID);
-      Serial.println(0);
+      // TODO: net.createNetwork();
+      Serial.println(net.getNodeId());
       Serial.println("connected");
+      DEBUG("// Created Network: ");
+      DEBUGLN(net.getNetworkId());
     }
 
     void getData()
@@ -132,8 +139,7 @@ class MultiSensor {
       lighting = 1.0f - lighting;
 
       // send data
-      // TODO: Serial.println(nodeID);
-      Serial.println(0);
+      Serial.println(net.getNodeId());
       Serial.println("data");
 
       DEBUGLN("// Motion");

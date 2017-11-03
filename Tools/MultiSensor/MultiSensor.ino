@@ -1,4 +1,4 @@
-#include "Utils.h"
+#include "src/Utils.h"
 #include "MultiSensor.h"
 
 unsigned long timer = 0;
@@ -7,7 +7,7 @@ MultiSensor sensor;
 void setup()
 {
   Serial.begin(9600);
-  DEBUGLN("//setup");
+  DEBUGLN("// Setup");
   sensor.begin();
 }
 
@@ -21,13 +21,15 @@ void loop()
   if (Serial.available())
   {
     String command = Serial.readString();
-    DEBUGLN("//recevied: " + command);
+    DEBUGLN("// Recevied: " + command);
     command.toLowerCase();
 
     if (command == "connect")
       sensor.connect();
     else if (command == "getdata")
       sensor.getData();
+    // TODO: discover 
+    // TODO: connect to network
     return; // don't do anything than command respond
   }
 
