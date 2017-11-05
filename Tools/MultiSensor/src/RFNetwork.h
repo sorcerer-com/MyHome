@@ -7,8 +7,8 @@
 
 const int MAX_SENDER_ID = 31;
 
-class RFNetwork {
-  
+class RFNetwork
+{  
   private:
     const RFReceiver receiver;
     const RFTransmitter transmitter;
@@ -29,10 +29,12 @@ class RFNetwork {
 
     void waitToSend() const;
     void crypt(byte* data, byte len) const;
+
   public:
     RFNetwork(byte inputPin, byte outputPin, uint pulseLength = 100);
 
     void createNetwork();
+	void setNetwork(const uint& networkId, const byte& nodeId);
     void discover(uint interval);
     void connect();
     void update();

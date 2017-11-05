@@ -49,6 +49,12 @@ void RFNetwork::createNetwork()
   digitalWrite(LED_BUILTIN, LOW);
 }
 
+void RFNetwork::setNetwork(const uint& networkId, const byte& nodeId)
+{
+  this->networkId = networkId;
+  this->nodeId = nodeId;
+}
+
 void RFNetwork::discover(uint interval)
 {
   this->discoverTimer = millis() + interval;

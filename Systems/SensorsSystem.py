@@ -76,6 +76,8 @@ class SensorsSystem(BaseSystem):
 				data = []
 				while serial.in_waiting > 0:
 					data.append(self._readSerial(serial))
+					if data[-1] == "":
+						del data[-1]
 			except Exception as e:
 				Logger.log("error", "Sensors System: cannot read from usb port " + serial.port)
 				Logger.log("debug", str(e))
@@ -93,7 +95,7 @@ class SensorsSystem(BaseSystem):
 			self._nextTime = self._nextTime.replace(minute=int(self._nextTime.minute / self.checkInterval) * self.checkInterval, second=0, microsecond=0) # the exact self.checkInterval minute in the hour
 			
 		# check for new serial device
-		self._checkForNewDevice()
+		self._checkForNewDevice() # TODO: may be do it more ofen (not in 15 minutes)
 		
 		# ask for data
 		sendCommand = True
@@ -118,7 +120,8 @@ class SensorsSystem(BaseSystem):
 		openedPorts = [serial.port for serial in self._serials]
 		ports = list(External.serial.tools.list_ports.comports())
 		for p in ports:
-			if p.device not in openedPorts and p.name != None and p.name.startswith("ttyUSB") and p.description != "n/a":
+			if p.device not in openedPorts and p.name != None and \
+				p.name.startswith("ttyUSB") and p.description != "n/a":
 				serial = None
 				try:
 					serial = Serial(p.device, baudrate=9600, timeout=2) # open serial port
@@ -145,20 +148,24 @@ class SensorsSystem(BaseSystem):
 			if data[i] == "nan":
 				data[i] = "0.0"
 		
-		sensorID = int(data[0])
-		if data[1] == "data" and len(data) == 7:
-			import math
-			humCorrect = round(math.sqrt(float(data[4])) * 10)
-			# motion, temperature, humidity, gas value, lighing
-			value = (bool(int(data[2])) or self._motion, float(data[3]), humCorrect, float(data[5]) * 100, float(data[6]) * 100)
+		try:
+			sensorID = int(data[0])
+			if data[1] == "data" and len(data) == 7:
+				import math
+				humCorrect = round(math.sqrt(float(data[4])) * 10)
+				# motion, temperature, humidity, gas value, lighing
+				value = (bool(int(data[2])) or self._motion, float(data[3]), humCorrect, float(data[5]) * 100, float(data[6]) * 100)
 
-			lastTime = self._nextTime - timedelta(minutes=self.checkInterval)
-			self._data[sensorID][lastTime] = value
-			self._motion = bool(int(data[2]))
-			self._checkData()
-			self._owner.systemChanged = True
-		if data[1] == "motion":
-			self._motion = True
+				lastTime = self._nextTime - timedelta(minutes=self.checkInterval)
+				self._data[sensorID][lastTime] = value
+				self._motion = bool(int(data[2]))
+				self._checkData()
+				self._owner.systemChanged = True
+			if data[1] == "motion":
+				self._motion = True
+		except Exception as e:
+			Logger.log("error", "Sensors System: process serial data: " + str(data))
+			Logger.log("debug", str(e))
 			
 	def _readSerial(self, serial):
 		temp = "//"
@@ -199,7 +206,7 @@ class SensorsSystem(BaseSystem):
 						elif type(value[0]) is int:
 							newValue.append(int(round(sum(value) / float(len(value)))))
 						elif type(value[0]) is float:
-							newValue.append(sum(value) / float(len(value)))
+							newValue.append(round(sum(value) / float(len(value)), 2))
 					for t in times:
 						del self._data[i][t]
 					self._data[i][times[0].replace(minute=0, second=0, microsecond=0)] = tuple(newValue)

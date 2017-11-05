@@ -21,7 +21,8 @@
 #include <util/crc16.h>
 #endif
 
-static inline uint16_t crc_update(uint16_t crc, uint8_t data) {
+static inline uint16_t crc_update(uint16_t crc, uint8_t data)
+{
 #if defined(__AVR__)
   return _crc_ccitt_update(crc, data);
 #else

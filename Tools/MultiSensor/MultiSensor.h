@@ -3,27 +3,34 @@
 
 #include "src/libs/DHT.h"
 #include "src/RFNetwork.h"
+#include "Settings.h"
 
-class MultiSensor {
+class MultiSensor
+{
   private:
     const int motionSensorPin = 2;
     const int tempHumSensorPin = 3;
     const int gasSensorPin = A0;
     const int lightingSensorPin = A1;
-    const int ledPins[3] = {9, 10, 11};
+    const int ledPins[3] = { 9, 10, 11 };
     const int receiverPin = 10;
     const int transmitterPin = 11;
 
     DHT dht;
     ulong LEDtimer = 0;
     bool prevMotion = false;
-    
+
+    Settings settings;
     RFNetwork net;
+
   public:
-    MultiSensor() : dht(tempHumSensorPin, DHT11), net(receiverPin, transmitterPin, 300) {
+    MultiSensor() : dht(tempHumSensorPin, DHT11), net(receiverPin, transmitterPin, 300)
+    {
+        LEDtimer = -settings.getLedONDuration() - 1;
     }
 
-    void begin() {
+    void begin()
+    {
       dht.begin();
       pinMode(motionSensorPin, INPUT);
       pinMode(gasSensorPin, INPUT);
@@ -31,14 +38,15 @@ class MultiSensor {
 
       for (int i = 0; i < 3; i++)
         pinMode(ledPins[i], OUTPUT);
-      
+
       randomSeed(analogRead(7));
       pinMode(LED_BUILTIN, OUTPUT);
     }
 
-    void update() {
+    void update()
+    {
       net.update();
-      
+
       // check for motion
       bool motion = digitalRead(motionSensorPin) == HIGH;
       if (motion && !prevMotion)
@@ -54,21 +62,19 @@ class MultiSensor {
 
     void updateLED(bool motion)
     {
-      // TODO: to be a setting - ON time, LED max color, lighting threshold
       const int fadeTime = 3 * sec; // second
-      const int fullTime = 30 * sec; // minute
-      const float lightingThreshold = 0.2f;
-      if (LEDtimer == 0) // on start
-        LEDtimer = -fullTime - 1;
+      const int fullTime = settings.getLedONDuration();
+      const float lightingThreshold = settings.getLedLightingThreshold();
+      byte r, g, b;
+      settings.getLedColor(r, g, b);
+      
       ulong delta = millis() - LEDtimer;
-
       if (delta <= fadeTime) // LED fade in
       {
         float factor = (float)delta / fadeTime;
-        // white
-        analogWrite(ledPins[0], 255 * factor);
-        analogWrite(ledPins[1], 255 * factor);
-        analogWrite(ledPins[2], 255 * factor);
+        analogWrite(ledPins[0], r * factor);
+        analogWrite(ledPins[1], g * factor);
+        analogWrite(ledPins[2], b * factor);
         //DEBUG("// LED fade in ");
         //DEBUGLN(factor);
       }
@@ -83,19 +89,17 @@ class MultiSensor {
           else
             LEDtimer = millis() - fullTime + fadeTime - 1; // go to fade out
         }
-        // white
-        analogWrite(ledPins[0], 255);
-        analogWrite(ledPins[1], 255);
-        analogWrite(ledPins[2], 255);
+        analogWrite(ledPins[0], r);
+        analogWrite(ledPins[1], g);
+        analogWrite(ledPins[2], b);
         //DEBUGLN("// LED fully ON");
       }
       else if (delta <= fullTime) // LED fade out
       {
         float factor = (float)(fullTime - delta) / fadeTime;
-        // white
-        analogWrite(ledPins[0], 255 * factor);
-        analogWrite(ledPins[1], 255 * factor);
-        analogWrite(ledPins[2], 255 * factor);
+        analogWrite(ledPins[0], r * factor);
+        analogWrite(ledPins[1], g * factor);
+        analogWrite(ledPins[2], b * factor);
         //DEBUG("// LED fade out ");
         //DEBUGLN(factor);
       }
@@ -112,7 +116,7 @@ class MultiSensor {
             DEBUGLN("// Turn On LED");
           }
         }
-        // white
+        // turn off
         analogWrite(ledPins[0], 0);
         analogWrite(ledPins[1], 0);
         analogWrite(ledPins[2], 0);
@@ -122,7 +126,16 @@ class MultiSensor {
 
     void connect()
     {
-      // TODO: net.createNetwork();
+      // if network is already created
+      if (settings.getNetworkId() != 0 && settings.getNodeId() != 0)
+        net.setNetwork(settings.getNetworkId(), settings.getNodeId() != 0);
+      else
+      {
+        // TODO:
+        //net.createNetwork();
+        settings.setNetworkId(net.getNetworkId());
+        settings.setNodeId(net.getNodeId());
+      }
       Serial.println(net.getNodeId());
       Serial.println("connected");
       DEBUG("// Created Network: ");

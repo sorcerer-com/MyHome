@@ -28,8 +28,9 @@ void loop()
       sensor.connect();
     else if (command == "getdata")
       sensor.getData();
-    // TODO: discover 
-    // TODO: connect to network
+    // TODO: discover
+    // TODO: connect to network (set IDs to settings)
+    // TODO: disconnect command
     return; // don't do anything than command respond
   }
 
