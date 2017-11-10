@@ -50,7 +50,7 @@ class ControlSystem(BaseSystem):
 				self._owner.event(self, "CommandExecuted", command)
 			except Exception as e:
 				Logger.log("error", "Control System: cannot execute '%s'" % command)
-				Logger.log("debug", str(e))
+				Logger.log("exception", str(e))
 			
 		self.prevDate = res[0]["date"]
 		self._owner.systemChanged = True

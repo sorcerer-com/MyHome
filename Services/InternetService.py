@@ -46,7 +46,7 @@ class InternetService:
 			return True
 		except Exception as e:
 			Logger.log("error", "Internet Service: cannot send email to '%s' subject: '%s'" % (str(send_to), subject))
-			Logger.log("debug", str(e))
+			Logger.log("exception", str(e))
 			return False
 			
 	@staticmethod
@@ -75,7 +75,7 @@ class InternetService:
 				
 		except Exception as e:
 			Logger.log("error", "Internet Service: cannot receive emails")
-			Logger.log("debug", str(e))
+			Logger.log("exception", str(e))
 			return False
 		
 		return result
@@ -126,7 +126,7 @@ class InternetService:
 				
 		except Exception as e:
 			Logger.log("error", "Internet Service: cannot send SMS '%s' to %s" % (msg, number))
-			Logger.log("debug", str(e))
+			Logger.log("exception", str(e))
 			return False
 			
 	@staticmethod
@@ -165,7 +165,7 @@ class InternetService:
 			result.append(getDayWeather(html.find(".//a[@class='wfTomorrowContent wfNonCurrentContent']")))
 		except Exception as e:
 			Logger.log("error", "Internet Service: cannot get weather")
-			Logger.log("debug", str(e))
+			Logger.log("exception", str(e))
 			return False
 			
 		return result

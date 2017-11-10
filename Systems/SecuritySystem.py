@@ -48,7 +48,7 @@ class SecuritySystem(BaseSystem):
 						raise Exception()
 				except Exception as e:
 					Logger.log("warning", "Security System: cannot send email or sms")
-					Logger.log("debug", str(e))
+					Logger.log("exception", str(e))
 					
 		if not self._activated and elapsed > timedelta(): # if not _activated and after delay start - check for motion
 			self._activated = self._owner.systems[SensorsSystem.Name].motionDetected()

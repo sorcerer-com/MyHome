@@ -130,7 +130,7 @@ class AISystem(BaseSystem):
 				self._owner.event(self, "CommandExecuted", command)
 			except Exception as e:
 				Logger.log("error", u"AI System: cannot execute '%s'" % transcript)
-				Logger.log("debug", str(e))
+				Logger.log("exception", str(e))
 		
 		self._lastVoiceCommand = (transcript, result)
 		if result != "":

@@ -80,7 +80,7 @@ class SensorsSystem(BaseSystem):
 						del data[-1]
 			except Exception as e:
 				Logger.log("error", "Sensors System: cannot read from usb port " + serial.port)
-				Logger.log("debug", str(e))
+				Logger.log("exception", str(e))
 				serial.close()
 				self._serials.remove(serial)
 
@@ -104,10 +104,10 @@ class SensorsSystem(BaseSystem):
 				serial.write("getdata")
 			except Exception as e:
 				Logger.log("error", "Sensors System: cannot send command to " + serial.port)
-				Logger.log("debug", str(e))
+				Logger.log("exception", str(e))
 				serial.close()
 				self._serials.remove(serial)
-				sendCommand = false
+				sendCommand = False
 			
 		# if command is send successfully
 		if sendCommand:
@@ -127,7 +127,7 @@ class SensorsSystem(BaseSystem):
 					serial = Serial(p.device, baudrate=9600, timeout=2) # open serial port
 					time.sleep(2)
 					serial.write("connect")
-					id = int(self._readSerial(serial))
+					id = int(self._readSerial(serial)) - 1
 					cmd = self._readSerial(serial)
 					if id >= 0 and cmd == "connected":
 						self._serials.append(serial)
@@ -138,7 +138,7 @@ class SensorsSystem(BaseSystem):
 						serial.close()
 				except Exception as e:
 					Logger.log("error", "Sensors System: cannot open usb port " + p.device)
-					Logger.log("debug", str(e))
+					Logger.log("exception", str(e))
 					if serial != None:
 						serial.close()
 	
@@ -149,7 +149,7 @@ class SensorsSystem(BaseSystem):
 				data[i] = "0.0"
 		
 		try:
-			sensorID = int(data[0])
+			sensorID = int(data[0]) - 1
 			if data[1] == "data" and len(data) == 7:
 				import math
 				humCorrect = round(math.sqrt(float(data[4])) * 10)
@@ -165,7 +165,7 @@ class SensorsSystem(BaseSystem):
 				self._motion = True
 		except Exception as e:
 			Logger.log("error", "Sensors System: process serial data: " + str(data))
-			Logger.log("debug", str(e))
+			Logger.log("exception", str(e))
 			
 	def _readSerial(self, serial):
 		temp = "//"
@@ -257,7 +257,7 @@ class SensorsSystem(BaseSystem):
 				Logger.log("info", "Sensors System: init camera %d" % cameraIndex);
 		except Exception as e:
 			Logger.log("warning", "Sensors System: cannot init cameras")
-			Logger.log("debug", str(e))
+			Logger.log("exception", str(e))
 			return None
 		
 		try:
@@ -270,5 +270,5 @@ class SensorsSystem(BaseSystem):
 			return img
 		except Exception as e:
 			Logger.log("error", "Sensors System: cannot get image")
-			Logger.log("debug", str(e))
+			Logger.log("exception", str(e))
 			return None

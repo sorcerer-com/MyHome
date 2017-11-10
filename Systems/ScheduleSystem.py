@@ -97,7 +97,7 @@ class ScheduleSystem(BaseSystem):
 					exec(command)
 				except Exception as e:
 					Logger.log("error", "Schedule System: cannot execute '%s'" % command)
-					Logger.log("debug", str(e))
+					Logger.log("exception", str(e))
 				self._owner.event(self, "CommandExecuted", command)
 
 				if item["Time"] + item["Repeat"] == item["Time"]:
