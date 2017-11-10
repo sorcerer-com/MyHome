@@ -51,22 +51,22 @@ class RFTransmitter {
     void sendByte(byte data) {
       byte i = 4;
       do {
-        switch(data & 3) {
-        case 0:
-          send00();
-          break;
-        case 1:
-          send01();
-          break;
-        case 2:
-          send10();
-          break;
-        case 3:
-          send11();
-          break;
+        switch (data & 3) {
+          case 0:
+            send00();
+            break;
+          case 1:
+            send01();
+            break;
+          case 2:
+            send10();
+            break;
+          case 3:
+            send11();
+            break;
         }
         data >>= 2;
-      } while(--i);
+      } while (--i);
     }
 
     void sendByteRed(byte data) {
@@ -80,29 +80,29 @@ class RFTransmitter {
       sendByte(0x00);
       sendByte(0x00);
       sendByte(0xE0);
-    
+
       // Add crc to the message
       byte packageLen = len + 2;
       sendByteRed(packageLen);
-    
+
       uint16_t crc = 0xffff;
       crc = crc_update(crc, packageLen);
-    
+
       for (byte i = 0; i < len; ++i) {
         sendByteRed(data[i]);
         crc = crc_update(crc, data[i]);
       }
-    
+
       sendByteRed(crc & 0xFF);
       sendByteRed(crc >> 8);
-    
+
       digitalWrite(outputPin, LOW);
       lineState = LOW;
     }
 
   public:
-    RFTransmitter(byte outputPin, unsigned int pulseLength = 100, unsigned int backoffDelay = 100, byte resendCount = 1) : 
-        outputPin(outputPin), pulseLength(pulseLength), backoffDelay(backoffDelay), resendCount(resendCount) {
+    RFTransmitter(byte outputPin, unsigned int pulseLength = 100, unsigned int backoffDelay = 100, byte resendCount = 1) :
+      outputPin(outputPin), pulseLength(pulseLength), backoffDelay(backoffDelay), resendCount(resendCount) {
 
       pinMode(outputPin, OUTPUT);
       digitalWrite(outputPin, LOW);
@@ -112,24 +112,24 @@ class RFTransmitter {
     void setBackoffDelay(unsigned int millies) {
       backoffDelay = millies;
     }
-    
+
     void setResendCount(byte count) {
       resendCount = count;
     }
-    
+
     void send(byte *data, byte len) {
       if (len > MAX_PAYLOAD_SIZE)
         len = MAX_PAYLOAD_SIZE;
-    
+
       sendPackage(data, len);
-    
+
       for (byte i = 0; i < resendCount; ++i) {
         delay(random(backoffDelay, backoffDelay << 1));
         sendPackage(data, len);
       }
     }
-    
-    void print(char *message) { 
+
+    void print(char *message) {
       send((byte *)message, strlen(message));
     }
 };

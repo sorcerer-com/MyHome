@@ -1,7 +1,7 @@
 #include "RFNetwork.h"
 
-RFNetwork::RFNetwork(byte inputPin, byte outputPin, uint pulseLength) : 
-  receiver(inputPin, pulseLength), 
+RFNetwork::RFNetwork(byte inputPin, byte outputPin, uint pulseLength) :
+  receiver(inputPin, pulseLength),
   transmitter(outputPin, pulseLength),
   nodeSendTime((((ulong)MAX_PACKAGE_SIZE * 8) * pulseLength) / 1000 / 2), // time to send the half(probability) package data in milliseconds
   fullSendTime(nodeSendTime * (MAX_SENDER_ID - 1)) // time all nodes to send data
@@ -13,7 +13,7 @@ RFNetwork::RFNetwork(byte inputPin, byte outputPin, uint pulseLength) :
 
   for (int i = 0; i < MAX_SENDER_ID; i++)
     this->prevPackageIds[i] = 0;
-    
+
   this->discoverTimer = millis();
   this->masterTimeOffset = 0;
 
@@ -25,11 +25,11 @@ void RFNetwork::createNetwork()
 {
   this->networkId = (uint)random((uint)(-1)); // "-1" = max unsigned int
   this->nodeId = 1;
-  
+
   // broadcast ping with networkId
   this->print("ping");
   delay(100);
-  
+
   for (int i = 0; i < (fullSendTime * 2) / 100; i++) // wait for two full send cycles
   {
     if (this->receiver.ready())
@@ -57,6 +57,9 @@ void RFNetwork::setNetwork(const uint& networkId, const byte& nodeId)
 
 void RFNetwork::discover(uint interval)
 {
+  if (this->nodeId != 1) // discover only the master node
+    return;
+
   this->discoverTimer = millis() + interval;
 }
 
@@ -64,7 +67,7 @@ void RFNetwork::connect()
 {
   this->print("ping");
   delay(100);
-  
+
   for (int i = 0; i < (fullSendTime * 2) / 100; i++) // wait for two full send cycles
   {
     if (this->receiver.ready()) // receive networkId and nodeId
@@ -73,7 +76,7 @@ void RFNetwork::connect()
       const byte len = this->receiver.recvPackage(buff);
       const char* data = (char*)(buff + 4);
       if (strcmp(data, "pong") == 0)
-      {        
+      {
         this->networkId = ((uint)buff[0] << 8) + buff[1];
         this->nodeId = data[5];
         ulong masterTime = ((ulong)buff[4 + 7] << 24) + ((ulong)buff[4 + 8] << 16) + ((ulong)buff[4 + 9] << 8) + buff[4 + 10];
@@ -152,7 +155,7 @@ void RFNetwork::update()
   if (millis() < this->discoverTimer)
   {
     if (strcmp(data, "ping") == 0 && networkId == 0)
-    {   
+    {
       for (int i = 2; i < MAX_SENDER_ID; i++)
       {
         int idx = i * 2; // before the middle range - 4, 6, 8, ...
@@ -160,7 +163,7 @@ void RFNetwork::update()
           idx = (i % (MAX_SENDER_ID / 2)) * 2 + 1;
         if (prevPackageIds[idx] == 0) // first free nodeId
         {
-          char* msg = new char[11]; // 4("pong") + 1(0) + 1(NodeId) + 1(0) + 4(millis)
+          char msg[11]; // 4("pong") + 1(0) + 1(NodeId) + 1(0) + 4(millis)
           strcpy(msg, "pong");
           msg[4] = 0;
           msg[5] = (char)idx;
@@ -178,10 +181,9 @@ void RFNetwork::update()
           Serial.println(time);
           Serial.println();
 #endif
-          
+
           delay(100);
           this->send((byte*)msg, 11, false);
-          delete msg;
           break;
         }
       }
@@ -201,7 +203,7 @@ void RFNetwork::update()
   {
     this->print("pong");
   }
-  else if(strcmp(data, "pong") != 0) // add package to the buffer
+  else if (strcmp(data, "pong") != 0) // add package to the buffer
   {
     this->bufferLen = len;
 
@@ -226,14 +228,14 @@ void RFNetwork::send(const byte* data, byte len, bool crypt = true)
 {
   ++this->packageId;
   this->prevPackageIds[this->nodeId] = this->packageId;
-  
+
   this->resend(data, len, crypt);
 }
 
 void RFNetwork::resend(const byte* data, byte len, bool crypt) const
 {
   this->waitToSend();
-  
+
   // package: networkId(2 byte) + senderId(1 byte) + packageId(1 byte) + data
   byte newData[MAX_PACKAGE_SIZE];
   newData[0] = (byte)(this->networkId >> 8);
@@ -269,12 +271,12 @@ void RFNetwork::waitToSend() const
 {
   if (this->nodeId <= 0)
     return;
-  
+
   const ulong masterTime = millis() + this->masterTimeOffset;
   ulong nextSendWindow = (masterTime / fullSendTime) * fullSendTime + (this->nodeId - 1) * nodeSendTime; // calculate begin(for 0 node) master time and add id of the current node multiplied to send time
   if (masterTime > nextSendWindow) // if we already passed the send window for the current node, wait for full send time
     nextSendWindow += fullSendTime;
-    
+
 #ifdef DEBUG
   Serial.print("// wait: ");
   Serial.print(nextSendWindow - masterTime);
@@ -307,7 +309,7 @@ byte RFNetwork::recvPackage(byte* data, byte* pSenderId, byte* pPackageId)
 {
   if (!this->ready())
     return 0;
-    
+
   //uint networkId = ((uint)this->buffer[0] << 8) + this->buffer[1];
   const byte senderId = this->buffer[2];
   const byte packageId = this->buffer[3];

@@ -8,13 +8,13 @@
 const int MAX_SENDER_ID = 31;
 
 class RFNetwork
-{  
+{
   private:
     const RFReceiver receiver;
     const RFTransmitter transmitter;
     const ulong nodeSendTime;
     const ulong fullSendTime;
-    
+
     uint networkId;
     byte nodeId;
     byte packageId;
@@ -34,8 +34,8 @@ class RFNetwork
     RFNetwork(byte inputPin, byte outputPin, uint pulseLength = 100);
 
     void createNetwork();
-	void setNetwork(const uint& networkId, const byte& nodeId);
-    void discover(uint interval);
+    void setNetwork(const uint& networkId, const byte& nodeId);
+    void discover(uint interval = 30 * sec);
     void connect();
     void update();
 

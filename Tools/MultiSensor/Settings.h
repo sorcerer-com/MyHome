@@ -41,13 +41,27 @@ class Settings
         EEPROM.get(address.ledColor, ledColor);
     }
 
+    void set(const char name[], const char value[])
+    {
+      // NetworkId and NodeId should be able to be set
+      if (strcmp(name, "LedLightingThreshold") == 0)
+        setLedLightingThreshold((float)atof(value));
+      else if (strcmp(name, "LedONDuration") == 0)
+        setLedONDuration(atoi(value));
+      else if (strcmp(name, "LedColor") == 0)
+      {
+        ulong value = (ulong)atol(value);
+        setLedColor((byte)value, (byte)(value >> 8), (byte)(value >> 16));
+      }
+    }
+
     // NetworkId
     uint getNetworkId()
     {
       return networkId;
     }
 
-    void setNetworkId(uint value)
+    void setNetworkId(const uint& value)
     {
       networkId = value;
       EEPROM.put(address.networkId, networkId);
@@ -59,7 +73,7 @@ class Settings
       return nodeId;
     }
 
-    void setNodeId(byte value)
+    void setNodeId(const byte& value)
     {
       nodeId = value;
       EEPROM.put(address.nodeId, nodeId);
@@ -71,7 +85,7 @@ class Settings
       return ledLightingThreshold;
     }
 
-    void setLedLightingThreshold(float value)
+    void setLedLightingThreshold(const float& value)
     {
       ledLightingThreshold = value;
       EEPROM.put(address.ledLightingThreshold, ledLightingThreshold);
@@ -83,7 +97,7 @@ class Settings
       return ledONDuration;
     }
 
-    void setLedONDuration(int value)
+    void setLedONDuration(const int& value)
     {
       ledONDuration = value;
       EEPROM.put(address.ledONDuration, ledONDuration);
@@ -107,3 +121,6 @@ class Settings
 };
 
 #endif // SETTINGS_H
+
+
+

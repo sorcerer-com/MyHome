@@ -49,7 +49,7 @@ class RFReceiver : PinChangeInterruptHandler {
 
       byte len = inputBufLen;
       memcpy(data, inputBuf, len - 2);
-    
+
       // Enable the input as fast as possible
       inputBufReady = false;
       // The last two bytes contain the checksum, which is no longer needed
@@ -58,10 +58,10 @@ class RFReceiver : PinChangeInterruptHandler {
 
   public:
     RFReceiver(byte inputPin, unsigned int pulseLength = 100) : inputPin(inputPin),
-        pulseLimit((pulseLength << 2) - (pulseLength >> 1)), shiftByte(0),
-        bitCount(0), byteCount(0), errorCorBufCount(0), lastTimestamp(0),
-        packageStarted(false), inputBufLen(0), checksum(0),
-        inputBufReady(false), changeCount(0) {
+      pulseLimit((pulseLength << 2) - (pulseLength >> 1)), shiftByte(0),
+      bitCount(0), byteCount(0), errorCorBufCount(0), lastTimestamp(0),
+      packageStarted(false), inputBufLen(0), checksum(0),
+      inputBufReady(false), changeCount(0) {
 
     }
     void begin() {
@@ -73,12 +73,12 @@ class RFReceiver : PinChangeInterruptHandler {
       detachPCInterrupt(digitalPinToPCINT(inputPin));
     }
 
-    /**
-     * Returns true if a valid and deduplicated package is in the buffer, so
-     * that a subsequent call to recvPackage() will not block.
-     *
-     * @returns True if recvPackage() will not block
-     */
+    /*
+       Returns true if a valid and deduplicated package is in the buffer, so
+       that a subsequent call to recvPackage() will not block.
+
+       @returns True if recvPackage() will not block
+    */
     bool ready() const {
       return inputBufReady;
     }
@@ -92,21 +92,21 @@ class RFReceiver : PinChangeInterruptHandler {
     void decodeByte(byte inputByte) {
       if (!packageStarted)
         return;
-    
+
       errorCorBuf[errorCorBufCount++] = inputByte;
-    
+
       if (errorCorBufCount != 3)
         return;
       errorCorBufCount = 0;
-    
+
       if (!byteCount) {
         // Quickly decide if this is really a package or not
         if (errorCorBuf[0] < MIN_PACKAGE_SIZE || errorCorBuf[0] > MAX_PACKAGE_SIZE ||
-                errorCorBuf[0] != errorCorBuf[1] || errorCorBuf[0] != errorCorBuf[2]) {
+            errorCorBuf[0] != errorCorBuf[1] || errorCorBuf[0] != errorCorBuf[2]) {
           packageStarted = false;
           return;
         }
-    
+
         inputBufLen = errorCorBuf[0];
         checksum = crc_update(checksum, inputBufLen);
       } else {
@@ -114,44 +114,44 @@ class RFReceiver : PinChangeInterruptHandler {
         inputBuf[byteCount - 1] = data;
         // Calculate the checksum on the fly
         checksum = crc_update(checksum, data);
-    
-        if (byteCount == inputBufLen) {    
+
+        if (byteCount == inputBufLen) {
           // Check if the checksum is correct
           if (!checksum) {
             inputBufReady = true;
           }
-    
+
           packageStarted = false;
           return;
         }
       }
-    
-      ++byteCount;  
+
+      ++byteCount;
     }
-    
+
     virtual void handlePCInterrupt(int8_t pcIntNum, bool value) {
       if (inputBufReady)
         return;
-    
+
       ++changeCount;
-    
+
       {
         unsigned long time = micros();
         if (time - lastTimestamp < pulseLimit)
           return;
-    
+
         lastTimestamp = time;
       }
-    
+
       shiftByte = (shiftByte >> 2) | ((changeCount - 1) << 6);
       changeCount = 0;
-    
+
       if (packageStarted) {
         bitCount += 2;
         if (bitCount != 8)
           return;
         bitCount = 0;
-    
+
         decodeByte(shiftByte);
       } else if (shiftByte == 0xE0) {
         // New package starts here

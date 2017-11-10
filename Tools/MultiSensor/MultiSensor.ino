@@ -17,22 +17,35 @@ void loop()
     return;
   timer = millis();
 
-  // check for recevied command
+  // check for received command
   if (Serial.available())
   {
     String command = Serial.readString();
-    DEBUGLN("// Recevied: " + command);
+    DEBUGLN("// Received: " + command);
     command.toLowerCase();
 
-    if (command == "connect")
+    if (command == "setsetting")
+    {
+      String name = Serial.readString();
+      String value = Serial.readString();
+      sensor.setSetting(name.c_str(), value.c_str());
+    }
+    else if (command == "connect")
       sensor.connect();
+    else if (command == "disconnect")
+      sensor.disconnect();
+    else if (command == "discover")
+      sensor.discover();
     else if (command == "getdata")
       sensor.getData();
-    // TODO: discover
-    // TODO: connect to network (set IDs to settings)
-    // TODO: disconnect command
+
+    // TODO: think about Emon to send data by smaller interval (by its initiative, not when asked)
+    // TODO: add maybe indication using the LED
     return; // don't do anything than command respond
   }
 
   sensor.update();
 }
+
+
+
