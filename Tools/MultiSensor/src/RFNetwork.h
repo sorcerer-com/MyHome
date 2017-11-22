@@ -1,3 +1,5 @@
+// basedon: https://andreasrohner.at/posts/Electronics/New-Arduino-library-for-433-Mhz-AM-Radio-Modules/
+
 #ifndef RFNETWORK_H
 #define RFNETWORK_H
 

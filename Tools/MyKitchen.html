@@ -67,6 +67,14 @@
 			historyDishes.push({ name: dish, date: (new Date()).valueOf() });
 			refreshLists();
 		}
+		
+		function removeCooked(dish) {
+			var idx = dishes.indexOf(dish);
+			if (idx == -1 || !confirm("Are you sure?"))
+				return;
+			dishes.splice(idx, 1);
+			refreshLists();
+		}
 	
 		function enterCooked(e) {
 			if (e.keyCode != 13)
@@ -86,6 +94,8 @@
 			for (i = 0; i < dishes.length; i++) {
 				var li = document.createElement("li");
 				li.innerHTML = dishes[i];
+				li.style = "cursor: pointer;";
+				li.onclick = function(e) { removeCooked(e.srcElement.innerHTML); };
 				dishesList.appendChild(li);
 			}
 

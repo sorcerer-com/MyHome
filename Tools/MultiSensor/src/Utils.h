@@ -3,6 +3,7 @@
 
 #define uint  unsigned int
 #define ulong unsigned long
+#define ullong unsigned long long
 
 #define sec 1000
 

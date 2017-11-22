@@ -39,7 +39,6 @@ void loop()
     else if (command == "getdata")
       sensor.getData();
 
-    // TODO: think about Emon to send data by smaller interval (by its initiative, not when asked)
     // TODO: add maybe indication using the LED
     return; // don't do anything than command respond
   }
