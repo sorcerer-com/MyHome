@@ -28,8 +28,10 @@ class MultiSensor
     ulong LEDTimer = 0;
     bool prevMotion = false;
 #else // EMON
+    // TODO: multiple sensors?
     const int currentSensorPin = 4;
 
+    const int voltage = 230; // V
     EnergyMonitor emon;
     ulong deltaTimer = 0;
     ulong counter = 0;
@@ -49,7 +51,7 @@ class MultiSensor
     }
 #else // EMON
     {
-      emon.current(2, 28); // TODO: calibration
+      emon.current(2, 29); // Cur Const = Ratio/BurdenR. 1800/62 = 29.
       deltaTimer = millis();
     }
 #endif
@@ -98,12 +100,19 @@ class MultiSensor
       // check the LED state
       updateLED(motion);
 #else // EMON
-      double Irms = emon.calcIrms(1480);
-      if (Irms < 0.05) // noise
-        Irms = 0.0;
-      ulong power = Irms * 230; // 230 V
-      totalPower += power;
+      float power = emon.calcIrms(1480) * voltage; // 230 V
+      if (power < 0.05 * voltage) // noise
+        power = 0.0;
+      totalPower += round(power);
       counter++;
+
+      ulong delta = millis() - deltaTimer;
+      if (delta > 20 * min)
+      {
+        ulong powerConsumption = getPowerConsumption();
+        settings.setPowerConsumption(powerConsumption);
+      }
+      delay(200);
 #endif
     }
 
@@ -153,15 +162,20 @@ class MultiSensor
 
         network.send(buff, 26);
 #else // EMON
-        ulong pwr = getPowerConsumption();
+        float power = emon.calcIrms(1480) * voltage;
+        if (power < 0.05 * voltage) // noise
+          power = 0.0;
+        ulong powerConsumption = getPowerConsumption();
 
-        byte buff[9]; // 'data'(4) + '\0'(1) + powerConsumption(4)
+        byte buff[14]; // 'data'(4) + '\0'(1) + power(4) + '\0'(1) + powerConsumption(4)
         strcpy(buff, "data");
         buff[4] = 0;
-        buff[5]  = (byte)(pwr >> 24);
-        buff[6]  = (byte)(pwr >> 16);
-        buff[7]  = (byte)(pwr >> 8);
-        buff[8] = (byte)pwr;
+        float_to_bytes(power, &buff[5]);
+        buff[9] = 0;
+        buff[10]  = (byte)(powerConsumption >> 24);
+        buff[11]  = (byte)(powerConsumption >> 16);
+        buff[12]  = (byte)(powerConsumption >> 8);
+        buff[13] = (byte)powerConsumption;
 
         network.send(buff, 9);
 #endif
@@ -182,10 +196,12 @@ class MultiSensor
 
           getData(motion, temperature, humidity, gasValue, lighting);
         }
-        else if (len == 9) // Emon data
+        else if (len == 14) // Emon data
         {
-          ulong powerConsumption = ((ulong)data[5] << 24) + ((ulong)data[6] << 16) + ((ulong)data[7] << 8) + data[8];
-          getData(powerConsumption);
+          float power;
+          bytes_to_float(&data[5], power);
+          ulong powerConsumption = ((ulong)data[10] << 24) + ((ulong)data[11] << 16) + ((ulong)data[12] << 8) + data[13];
+          getData(power, powerConsumption);
         }
       }
     }
@@ -260,12 +276,15 @@ class MultiSensor
         return 0;
 
       ulong delta = millis() - deltaTimer;
-      double avgDeltaInHours = (delta / (double)counter) / 3600;
-      ulong power_hour = totalPower * avgDeltaInHours / 10;
+      // totalPower / ((3600 * 1000) / avgDelta)
+      ullong power_hour = totalPower * delta / counter / 3600;
+      power_hour = round(power_hour / (float)10);
+      power_hour += settings.getPowerConsumption();
 
       deltaTimer = millis();
       counter = 0;
       totalPower = 0;
+      settings.setPowerConsumption(0);
       return power_hour;
     }
 #endif
@@ -320,8 +339,11 @@ class MultiSensor
 
       getData(motion, temperature, humidity, gasValue, lighting);
 #else // EMON
+      float power = emon.calcIrms(1480) * voltage;
+      if (power < 0.05 * voltage) // noise
+        power = 0.0;
       ulong powerConsumption = getPowerConsumption();
-      getData(powerConsumption);
+      getData(power, powerConsumption);
 #endif
 
       if (send)
@@ -350,16 +372,19 @@ class MultiSensor
       Serial.println(lighting);
     }
 
-    void getData(ulong powerConsumption) const
+    void getData(float currentPower, ulong powerConsumption) const
     {
       // send data
       Serial.println(network.getNodeId());
       Serial.println("data");
 
+      DEBUGLN("// Current Power");
+      Serial.println(currentPower);
       DEBUGLN("// Power Consumption");
       Serial.print(powerConsumption / 100);
       Serial.print(".");
-      Serial.println(powerConsumption % 100);
+      Serial.print((powerConsumption / 10) % 10);
+      Serial.println(powerConsumption % 10);
     }
 };
 

@@ -6,6 +6,7 @@
 #define ullong unsigned long long
 
 #define sec 1000
+#define min 60000
 
 #define DEBUG
 
