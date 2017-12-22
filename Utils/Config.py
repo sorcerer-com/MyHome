@@ -9,7 +9,7 @@ class Config:
 	LogMaxSize = 1000000
 	PrintLog = True
 	Password = ""
-	InternalIPs = ["192.168.0.1", "78.90.127.249"]
+	InternalIPs = []
 	
 	GSMNumber = ""
 	MyTelenorPassword = ""

@@ -35,3 +35,5 @@ sudo apt-get install git
 
 sudo apt-get install python-opencv
 sudo apt-get install libopencv-photo2.4
+
+#https://rasspberrypi.wordpress.com/2012/09/04/mounting-and-automounting-windows-shares-on-raspberry-pi/

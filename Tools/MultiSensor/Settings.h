@@ -13,7 +13,7 @@ class Settings
       const int ledLightingThreshold    = nodeId + sizeof(byte); // float (4 bytes)
       const int ledONDuration           = ledLightingThreshold + sizeof(float); // int  (2 bytes)
       const int ledColor                = ledONDuration + sizeof(int); // 3 * byte (3 bytes)
-      const int powerConsumption        = ledColor + sizeof(byte) * 3; // ulong (4 bytes)
+      const int powerConsumptions       = ledColor + 3 * sizeof(byte); // 3 * ulong (4 bytes)
     } address;
 
     uint networkId              = 0;
@@ -21,7 +21,7 @@ class Settings
     float ledLightingThreshold  = 0.2f;
     int ledONDuration           = 30 * sec;
     byte ledColor[3]            = { 255, 255, 255 };
-    ulong powerConsumption      = 0;
+    ulong powerConsumptions[3]  = { 0, 0, 0 };
 
   public:
     Settings()
@@ -42,8 +42,8 @@ class Settings
       if (EEPROM[address.ledColor] != 0xFF)
         EEPROM.get(address.ledColor, ledColor);
       // powerConsumption
-      if (EEPROM[address.powerConsumption] != 0xFF)
-        EEPROM.get(address.powerConsumption, powerConsumption);
+      if (EEPROM[address.powerConsumptions] != 0xFF)
+        EEPROM.get(address.powerConsumptions, powerConsumptions);
     }
 
     void set(const char name[], const char value[])
@@ -125,15 +125,15 @@ class Settings
     }
 
     // PowerConsumption
-    ulong getPowerConsumption()
+    ulong getPowerConsumptions(const int& idx)
     {
-      return powerConsumption;
+      return powerConsumptions[idx];
     }
 
-    void setPowerConsumption(const ulong& value)
+    void setPowerConsumptions(const int& idx, const ulong& value)
     {
-      powerConsumption = value;
-      EEPROM.put(address.powerConsumption, powerConsumption);
+      powerConsumptions[idx] = value;
+      EEPROM.put(address.powerConsumptions, powerConsumptions);
     }
 };
 
