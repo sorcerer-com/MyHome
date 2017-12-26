@@ -11,15 +11,15 @@
 			<h2 class='title'>Sensors</h2>
 		</div>
 		
-		{% macro charts(data, drawValues, drawAxis, subTitle="", idx=0) -%}
-			{% for i in range(names|count) %}
-				<div>{{ names[i] }}{{ subTitle }}</div>
-				<canvas id='canvas{{ idx }}{{ i }}' width='300' height='150'></canvas>
+		{% macro charts(data, drawValues, drawAxis, subTitle="", name="") -%}
+			{% for (subName, value) in data.iteritems() %}
+				<div>{{ subName }}{{ subTitle }}</div>
+				<canvas id='canvas{{ name }}{{ subName }}' width='300' height='150'></canvas>
 				<script type='text/javascript'>
-					// {{ data[i]|count }}
-					var values = [{% for key in data[i]|sort %}{{ data[i][key]|float }}, {% endfor %}]
-					var names = [{% for key in data[i]|sort %}'{{ key }}', {% endfor %}]
-					drawLineChart('canvas{{ idx }}{{ i }}', values, names, {{ drawValues|lower }}, {{ drawAxis|lower }});
+					// {{ subName|count }}
+					var values = [{% for key in value.keys()|sort %}{{ value[key]|float }}, {% endfor %}]
+					var names = [{% for key in value.keys()|sort %}'{{ key }}', {% endfor %}]
+					drawLineChart('canvas{{ name }}{{ subName }}', values, names, {{ drawValues|lower }}, {{ drawAxis|lower }});
 				</script>
 				<br/><br/>
 			{% endfor %}
@@ -36,7 +36,7 @@
 		{% endfor %}
 		{% endif %}
 		
-		{% for key, value in data.iteritems() %}
+		{% for (key, value) in data.iteritems() %}
 			{% if key == data.keys()[0] %}
 			<div class='tabContent active'>
 			{% else %}

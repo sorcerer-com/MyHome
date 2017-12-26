@@ -183,23 +183,15 @@ def Sensors():
 		sensorsSystem.enabled = value
 		return redirect("/Sensors")
 		
-	data = {}
-	for i in range(0, len(sensorsSystem._data)):
-		name = sensorsSystem.sensorNames[i]
-		temp = []
-		temp.append({key: value for (key, value) in sensorsSystem._data[i].items() if (datetime.now() - key).days < 1})
-		temp.append({key: value for (key, value) in sensorsSystem._data[i].items() if (datetime.now() - key).days >= 1 and (datetime.now() - key).days <= 5})
-		temp.append({key: value for (key, value) in sensorsSystem._data[i].items() if (datetime.now() - key).days > 5})
-		data[name] = [[], [], []]
-		for j in range(0, len(temp)):
-			for (key, value) in temp[j].items():
-				for i in range(0, len(value)):
-					if len(data[name][j]) <= i:
-						data[name][j].append({})
-					data[name][j][i][key] = round(value[i], 2)
-	
-	names = ["Motion", "Temperature", "Humidity", "Smoke", "Lighting"]
-	return render_template("Sensors.html", names=names, data=data, enabled=sensorsSystem.enabled)
+	# {sensorName: [{subname: {time: value}}, {subname: {time: value}}, {subname: {time: value}}] # 3 list elements - 1st day, 5 days, older
+	data = collections.OrderedDict()
+	for sensor in sensorsSystem._sensors.values():
+		data[sensor.Name] = [collections.OrderedDict(), collections.OrderedDict(), collections.OrderedDict()]
+		for subName in sensor.subNames:
+			data[sensor.Name][0][subName] = sensor.getData(subName, datetime.now() - timedelta(days=1), datetime.now())
+			data[sensor.Name][1][subName] = sensor.getData(subName, datetime.now() - timedelta(days=5), datetime.now() - timedelta(days=1))
+			data[sensor.Name][2][subName] = sensor.getData(subName, datetime.now() - timedelta(days=366), datetime.now() - timedelta(days=6))
+	return render_template("Sensors.html", data=data, enabled=sensorsSystem.enabled)
 
 @app.route("/AI", methods=["GET", "POST"])
 def AI():
@@ -231,7 +223,8 @@ def settings():
 			
 			if hasattr(type(system), prop):
 				attrType = type(getattr(type(system), prop))
-				setattr(type(system), prop, parse(value, attrType))
+				if attrType is not property:
+					setattr(type(system), prop, parse(value, attrType))
 			if hasattr(system, prop):
 				attrType = type(getattr(system, prop))
 				setattr(system, prop, parse(value, attrType))

@@ -1,6 +1,7 @@
 import External.serial.tools.list_ports
 from External.serial import *
 from BaseSystem import *
+from Systems.Models.Sensor import *
 
 class SensorsSystem(BaseSystem):
 	Name = "Sensors"
@@ -8,35 +9,57 @@ class SensorsSystem(BaseSystem):
 	def __init__(self, owner):
 		BaseSystem.__init__(self, owner)
 		
-		self.sensorNames = ["LivingRoom"]
 		self.checkInterval = 15
 		self.camerasCount = 1
 		self.fireAlarmTempreture = 40
-		self.smokeAlarmValue = 40
+		self.smokeAlarmValue = 50
 		
 		self._nextTime = datetime.now()
 		self._nextTime = self._nextTime.replace(minute=int(self._nextTime.minute / self.checkInterval) * self.checkInterval, second=0, microsecond=0) # the exact self.checkInterval minute in the hour
 		self._serials = []
-		self._data = []
+		self._sensors = {} # id / sensor
 		self._motion = False
 		self._cameras = {}
-		
 		
 	def __del__(self):
 		for serial in self._serials:
 			serial.close()
+	
+	
+	@property
+	def sensorNames(self):
+		return [sensor.Name for sensor in self._sensors.values()]
+		
+	@sensorNames.setter
+	def sensorNames(self, value):
+		for i in range(len(value)):
+			if len(self._sensors) <= i:
+				self._sensors[i] = Sensor(value[i])
+			else:
+				self._sensors.values()[i].Name = value[i]
+	
 		
 	def loadSettings(self, configParser, data):
 		BaseSystem.loadSettings(self, configParser, data)
 		if len(data) ==  0:
 			return
-		self._data = []
 		
+		# rearange sensors by ids in the dictionary
 		idx = 0
+		ids = data[idx].split(";")
+		idx += 1
+		names = self.sensorNames
+		self._sensors.clear()
+		for i in range(len(ids)):
+			self._sensors[int(ids[i])] = Sensor(names[i])
+		
 		countSensors = int(data[idx])
 		idx += 1
 		for i in range(0, countSensors):
-			self._data.append({})
+			id = int(data[idx])
+			idx += 1
+			subNames = data[idx].split(";")
+			idx+= 1
 			count = int(data[idx])
 			idx += 1
 			for j in range(0, count):
@@ -44,19 +67,26 @@ class SensorsSystem(BaseSystem):
 				idx += 1				
 				values = data[idx].split(";")
 				idx+= 1
-				self._data[i][key] = tuple([parse(value, None) for value in values])
+				for k in range(len(values)):
+					self._sensors[id].addValue(key, str(subNames[k]), parse(values[k], None))
 
 	def saveSettings(self, configParser, data):
 		BaseSystem.saveSettings(self, configParser, data)
+
+		temp = {sensor.Name: id for (id, sensor) in self._sensors.items()}
+		ids = [str(temp[name]) for name in self.sensorNames]
+		data.append(";".join(ids))
 		
-		data.append(len(self._data))
-		for i in range(0, len(self._data)):
-			data.append(len(self._data[i]))
-			keys = sorted(self._data[i].keys())
-			for key in keys:
-				data.append(string(key))
-				temp = [string(v) for v in self._data[i][key]]
-				data.append(";".join(temp))
+		data.append(len(self._sensors))
+		for (id, sensor) in self._sensors.items():
+			data.append(id)
+			data.append(";".join(sensor.subNames))
+			times = sorted(sensor._data.values()[0].keys())
+			data.append(len(times))
+			for time in times:
+				data.append(string(time))
+				values = [string(sensor._data[subName][time]) for subName in sensor.subNames]
+				data.append(";".join(values))
 			
 	def update(self):
 		BaseSystem.update(self)
@@ -72,19 +102,11 @@ class SensorsSystem(BaseSystem):
 		
 		# read from serial
 		for serial in self._serials:
-			try:
-				data = []
-				while serial.in_waiting > 0:
-					data.append(self._readSerial(serial))
-					if data[-1] == "":
-						del data[-1]
-			except Exception as e:
-				Logger.log("error", "Sensors System: cannot read from usb port " + serial.port)
-				Logger.log("exception", str(e))
+			data = self._readDataSerial(serial)
+			if data == None:
 				serial.close()
 				self._serials.remove(serial)
-
-			if len(data) != 0:
+			elif len(data) != 0:
 				self._processSerialData(data)
 			
 		
@@ -95,16 +117,14 @@ class SensorsSystem(BaseSystem):
 			self._nextTime = self._nextTime.replace(minute=int(self._nextTime.minute / self.checkInterval) * self.checkInterval, second=0, microsecond=0) # the exact self.checkInterval minute in the hour
 			
 		# check for new serial device
-		self._checkForNewDevice() # TODO: may be do it more ofen (not in 15 minutes)
+		self._checkForNewDevice() # TODO: may be do it more often (not in 15 minutes)
+		# TODO: if doesn't receive data from all sensors maybe send command again (may be to specific sensorID)
+		# TODO: property wrapper
 		
 		# ask for data
 		sendCommand = True
 		for serial in self._serials:
-			try:
-				serial.write("getdata")
-			except Exception as e:
-				Logger.log("error", "Sensors System: cannot send command to " + serial.port)
-				Logger.log("exception", str(e))
+			if not self._writeSerial(serial, "getdata"):
 				serial.close()
 				self._serials.remove(serial)
 				sendCommand = False
@@ -112,9 +132,11 @@ class SensorsSystem(BaseSystem):
 		# if command is send successfully
 		if sendCommand:
 			if self._nextTime.minute < self.checkInterval:
-				self._archiveData()
+				for sensor in self._sensors.values():
+					sensor.archiveData()
 				self._owner.systemChanged = True
 			self._nextTime += timedelta(minutes=self.checkInterval)
+	
 	
 	def _checkForNewDevice(self):
 		openedPorts = [serial.port for serial in self._serials]
@@ -131,9 +153,8 @@ class SensorsSystem(BaseSystem):
 					cmd = self._readSerial(serial)
 					if id >= 0 and cmd == "connected":
 						self._serials.append(serial)
-						while len(self._data) <= id:
-							self._data.append({})
-							self.sensorNames.append("Sensor" + len(self._data))
+						if id not in self._sensors:
+							self._sensors[id] = Sensor("Sensor" + str(id))
 					else:
 						serial.close()
 				except Exception as e:
@@ -149,18 +170,17 @@ class SensorsSystem(BaseSystem):
 				data[i] = "0.0"
 		
 		try:
-			sensorID = int(data[0]) - 1
-			if data[1] == "data" and len(data) == 7:
+			sensorId = int(data[0]) - 1
+			if data[1] == "data":
 				import math
-				humCorrect = round(math.sqrt(float(data[4])) * 10)
-				# motion, temperature, humidity, gas value, lighing
-				value = (bool(int(data[2])) or self._motion, float(data[3]), humCorrect, float(data[5]) * 100, float(data[6]) * 100)
 
 				lastTime = self._nextTime - timedelta(minutes=self.checkInterval)
-				self._data[sensorID][lastTime] = value
-				self._motion = bool(int(data[2]))
-				self._checkData()
+				for i in range(2, len(data) - 1, 2):
+					value = parse(data[i + 1], None)
+					self._sensors[sensorId].addValue(lastTime, data[i], value)
+					self._checkData(data[i], value)
 				self._owner.systemChanged = True
+					
 			if data[1] == "motion":
 				self._motion = True
 		except Exception as e:
@@ -172,81 +192,60 @@ class SensorsSystem(BaseSystem):
 		while temp.startswith("//"):
 			temp = serial.readline().strip()
 		return temp
+		
+	def _readDataSerial(self, serial):
+		try:
+			data = []
+			if serial.in_waiting > 0:
+				while len(data) == 0 or data[-1] != "end":
+					data.append(self._readSerial(serial))
+					if data[-1] == "":
+						del data[-1]
+						break
+			return data
+		except Exception as e:
+			Logger.log("error", "Sensors System: cannot read from usb port " + serial.port)
+			Logger.log("exception", str(e))
+			return None
+			
+	def _writeSerial(self, serial, value):
+		try:
+			serial.write(str(value))
+			return True
+		except Exception as e:
+			Logger.log("error", "Sensors System: cannot send command to " + serial.port)
+			Logger.log("exception", str(e))
+			return False
+	
+	def _checkData(self, name, value):
+		# TODO: maybe as dictionary - sensor name / alarm value
+		# fire check: if the temperature is higher than set value
+		if name == "Temperature" and value > self.fireAlarmTempreture:
+			self._owner.sendAlert("Fire Alarm Activated!")
+		# smoke check: if the smoke value is higher than set value
+		elif name == "Smoke" and value > self.smokeAlarmValue:
+			self._owner.sendAlert("Smoke Alarm Activated!")
 	
 	
-	def _archiveData(self):
-		for i in range(0, len(self._data)):
-			keys = sorted(self._data[i].keys())
-			idx = 0
-			while idx < len(keys):
-				times = []
-				if (self._nextTime - keys[idx]).days > 365: # for older then 365 days, delete it
-					del self._data[i][keys[idx]]
-				elif (self._nextTime - keys[idx]).days > 5: # for older then 5 days, save only 1 per day
-					for j in range(idx, len(keys)):
-						if keys[j].day == keys[idx].day and (keys[j] - keys[idx]).days < 1:
-							times.append(keys[j])
-						else:
-							break
-				elif (self._nextTime - keys[idx]).days >= 1: # for older then 24 hour, save only 1 per hour
-					for j in range(idx, len(keys)):
-						if keys[j].day == keys[idx].day and keys[j].hour == keys[idx].hour and \
-							(keys[j] - keys[idx]).seconds < 1 * 3600: # less then hour
-							times.append(keys[j])
-						else:
-							break
-
-				if len(times) > 1:
-					values = [self._data[i][t] for t in times]
-					values = map(list, zip(*values)) # transpose array
-					newValue = []
-					for value in values:
-						if type(value[0]) is bool:
-							newValue.append(len([v for v in value if v]) >= float(len(value)) / 2) # if True values are more then False
-						elif type(value[0]) is int:
-							newValue.append(int(round(sum(value) / float(len(value)))))
-						elif type(value[0]) is float:
-							newValue.append(round(sum(value) / float(len(value)), 2))
-					for t in times:
-						del self._data[i][t]
-					self._data[i][times[0].replace(minute=0, second=0, microsecond=0)] = tuple(newValue)
-					idx += len(times)
-				else:
-					idx += 1
-				
-	def _checkData(self):
-		data = self.getLatestData()
-		for key, value in data.items():
-			if len(value) == 0:
-				continue
-			# fire check: if the temperature is higher than set value
-			if value[1] > self.fireAlarmTempreture:
-				self._owner.sendAlert("Fire Alarm Activated!")
-				break
-			# smoke check: if the smoke value is higher than set value
-			if value[3] > self.smokeAlarmValue:
-				self._owner.sendAlert("Smoke Alarm Activated!")
-				break
-				
 	def getLatestData(self):
 		result = {}
-		for i in range(0, len(self._data)):
-			keys = sorted(self._data[i].keys())
-			if len(keys) > 0:
-				result[self.sensorNames[i]] = self._data[i][keys[-1]]
-			else:
-				result[self.sensorNames[i]] = ()
+		for sensor in self._sensors.values():
+			result[sensor.Name] = sensor.getLatestData()
 		return result
 		
 	def motionDetected(self):
 		temp = self._motion
 		self._motion = False
+		for sensor in self._sensors.values():
+			if "Motion" in sensor.subNames and sensor.getLatestValue("Motion"):
+				return True
 		return temp
 		
 	def getImage(self, cameraIndex=0, size=(640, 480), stamp=True):
 		if cameraIndex >= self.camerasCount:
 			return None
 		
+		# init camera
 		try:
 			from SimpleCV import Camera
 			if cameraIndex not in self._cameras:
@@ -260,6 +259,7 @@ class SensorsSystem(BaseSystem):
 			Logger.log("exception", str(e))
 			return None
 		
+		# capture image
 		try:
 			img = self._cameras[cameraIndex][0].getImage()
 			self._cameras[cameraIndex][1] = datetime.now()
