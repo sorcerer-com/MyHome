@@ -42,6 +42,17 @@
 			{% else %}
 			<div class='tabContent'>
 			{% endif %}
+				
+				{% if key.startswith("Power") %}
+					<div class="settings">
+					<ul>
+						<li><h3>Day Consumption:</h3> {{ powerConsumption[0] }} W </li>
+						<li><h3>Night Consumption:</h3> {{ powerConsumption[1] }} W </li>
+						<li><h3>Total Consumption:</h3> {{ powerConsumption[2] }} W </li>
+						<li><h3>Price:</h3> {{ powerConsumption[3] }} </li>
+					</ul>
+					</div>
+				{% endif %}
 			
 				{{ charts(value[0], True, False, "", key) }}
 				

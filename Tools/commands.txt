@@ -37,3 +37,4 @@ sudo apt-get install python-opencv
 sudo apt-get install libopencv-photo2.4
 
 #https://rasspberrypi.wordpress.com/2012/09/04/mounting-and-automounting-windows-shares-on-raspberry-pi/
+sudo mount -t cifs -o username=username,password=password "//192.168.0.101/My Videos" /home/pi/Videos/shared

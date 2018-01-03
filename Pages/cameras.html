@@ -8,9 +8,13 @@
 		</div>
 		
 		<summary><b>Sensors Data</b></summary>
+		<div class="settings">
+		<ul>
 		{% for key, value in sensorsData.iteritems() %}
-			{{ key }}: {{ value }}<br/>
+			<li><h3>{{ key }}:</h3> {{ value }}</li>
 		{% endfor %}
+		</ul>
+		</div>
 		<br/><br/>
 		
 	{% for i in range(camerasCount) %}

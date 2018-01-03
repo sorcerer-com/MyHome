@@ -51,13 +51,13 @@ class SecuritySystem(BaseSystem):
 					Logger.log("exception", str(e))
 					
 		if not self._activated and elapsed > timedelta(): # if not _activated and after delay start - check for motion
-			self._activated = self._owner.systems[SensorsSystem.Name].motionDetected()
+			self._activated = self._owner.systems[SensorsSystem.Name].isMotionDetected()
 			if self._activated:
 				Logger.log("info", "Security System: Alarm Activated")
 				self._owner.event(self, "AlarmActivated")
 			self._lastSendTime = datetime.now()
 		elif not self._activated:
-			self._owner.systems[SensorsSystem.Name].motionDetected()
+			self._owner.systems[SensorsSystem.Name].isMotionDetected()
 		
 		if self._activated:
 			img = self._owner.systems[SensorsSystem.Name].getImage()

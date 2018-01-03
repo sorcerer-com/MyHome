@@ -11,6 +11,12 @@ class SensorsSystem(BaseSystem):
 		
 		self.checkInterval = 15
 		self.camerasCount = 1
+		self.powerCycleDay = 6
+		# TODO: maybe transform this to dictionary - star hour / tariff price
+		self.powerDayTariffHour = 6
+		self.powerNightTariffHour = 23
+		self.powerDayTariffPrice = 0.3
+		self.powerNightTariffPrice = 0.15
 		self.fireAlarmTempreture = 40
 		self.smokeAlarmValue = 50
 		
@@ -172,11 +178,12 @@ class SensorsSystem(BaseSystem):
 		try:
 			sensorId = int(data[0]) - 1
 			if data[1] == "data":
-				import math
-
 				lastTime = self._nextTime - timedelta(minutes=self.checkInterval)
 				for i in range(2, len(data) - 1, 2):
 					value = parse(data[i + 1], None)
+					if data[i] == "Motion":
+						value = value or self._motion
+						self._motion = False
 					self._sensors[sensorId].addValue(lastTime, data[i], value)
 					self._checkData(data[i], value)
 				self._owner.systemChanged = True
@@ -184,7 +191,7 @@ class SensorsSystem(BaseSystem):
 			if data[1] == "motion":
 				self._motion = True
 		except Exception as e:
-			Logger.log("error", "Sensors System: process serial data: " + str(data))
+			Logger.log("error", "Sensors System: cannot process serial data: " + str(data))
 			Logger.log("exception", str(e))
 			
 	def _readSerial(self, serial):
@@ -233,13 +240,38 @@ class SensorsSystem(BaseSystem):
 			result[sensor.Name] = sensor.getLatestData()
 		return result
 		
-	def motionDetected(self):
+	def isMotionDetected(self):
 		temp = self._motion
 		self._motion = False
-		for sensor in self._sensors.values():
-			if "Motion" in sensor.subNames and sensor.getLatestValue("Motion"):
-				return True
 		return temp
+		
+	def getMonthlyPowerConsumption(self): # (day,night,total,price)
+		day = 0.0
+		night = 0.0
+		cycleDate = datetime.now()
+		if cycleDate.day < self.powerCycleDay:
+			if cycleDate.month > 1:
+				cycleDate = cycleDate.replace(month=cycleDate.month-1)
+			else:
+				cycleDate = cycleDate.replace(month=12, year=cycleDate.year-1)
+		cycleDate = cycleDate.replace(day=self.powerCycleDay, hour=0, minute=0, second=0, microsecond=0)
+		
+		for sensor in self._sensors.values():
+			for subName in sensor.subNames:
+				if subName.startswith("ConsumedPower"):
+					data = sensor.getData(subName, cycleDate, datetime.now())
+					# TODO: in archiveData it should sum values for power consumption, not average them
+					# is it ok, with that code:
+					times = sorted(data.keys())
+					for i in range(1, len(times)):
+						count = (times[i] - times[i - 1]).total_seconds() / 60 / self.checkInterval
+						if times[i].hour > self.powerDayTariffHour and times[i].hour < self.powerNightTariffHour:
+							day += data[times[i]] * count
+						else:
+							night += data[times[i]] * count
+		total = round(day + night, 2)
+		price = round(day / 1000 * self.powerDayTariffPrice + night / 1000 * self.powerNightTariffPrice, 2)
+		return (round(day, 2), round(night, 2), total, price)
 		
 	def getImage(self, cameraIndex=0, size=(640, 480), stamp=True):
 		if cameraIndex >= self.camerasCount:

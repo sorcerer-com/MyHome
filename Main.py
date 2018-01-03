@@ -191,7 +191,9 @@ def Sensors():
 			data[sensor.Name][0][subName] = sensor.getData(subName, datetime.now() - timedelta(days=1), datetime.now())
 			data[sensor.Name][1][subName] = sensor.getData(subName, datetime.now() - timedelta(days=5), datetime.now() - timedelta(days=1))
 			data[sensor.Name][2][subName] = sensor.getData(subName, datetime.now() - timedelta(days=366), datetime.now() - timedelta(days=6))
-	return render_template("Sensors.html", data=data, enabled=sensorsSystem.enabled)
+	# (day,night,total,price)
+	powerConsumption = sensorsSystem.getMonthlyPowerConsumption()
+	return render_template("Sensors.html", data=data, powerConsumption=powerConsumption, enabled=sensorsSystem.enabled)
 
 @app.route("/AI", methods=["GET", "POST"])
 def AI():

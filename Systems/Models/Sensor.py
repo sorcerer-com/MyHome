@@ -50,7 +50,7 @@ class Sensor(object):
 					elif type(values[0]) is int:
 						newValue = int(round(sum(values) / float(len(values))))
 					elif type(values[0]) is float:
-						newValue = round(sum(values) / float(len(values)), 2)
+						newValue = sum(values) / float(len(values))
 					
 					for t in times:
 						del self._data[subName][t]
@@ -67,7 +67,7 @@ class Sensor(object):
 		result = []
 		for subName in self.subNames:
 			temp = self.getLatestValue(subName)
-			result.append(round(float(temp, 2)))
+			result.append(round(float(temp), 2))
 		return result
 		
 	def getData(self, subName, minTime, maxTime):
