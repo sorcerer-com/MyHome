@@ -138,6 +138,3 @@ class Settings
 };
 
 #endif // SETTINGS_H
-
-
-

@@ -16,6 +16,7 @@ class SecuritySystem(BaseSystem):
 		self.numImages = 30
 		
 		self._activated = False
+		self._cameraMotion = False
 		self._imageCount = 0
 		self._lastSendTime = datetime.now()
 		self._prevImg = None
@@ -23,6 +24,7 @@ class SecuritySystem(BaseSystem):
 	def _onEnabledChanged(self):
 		BaseSystem._onEnabledChanged(self)
 		self._activated = False
+		self._cameraMotion = False
 		self._lastSendTime = datetime.now() + self.startDelay
 		self.clearImages()
 		self._prevImg = None
@@ -32,8 +34,12 @@ class SecuritySystem(BaseSystem):
 		
 		elapsed = datetime.now() - self._lastSendTime
 		if elapsed > self.sendInterval:
+			if not self._cameraMotion:
+				self._activated = False
+				self.clearImages()
 			if self._activated or self._imageCount != 0:
 				self._activated = False
+				self._cameraMotion = False
 				try:
 					images = []
 					for i in range(0, self._imageCount):
@@ -62,8 +68,10 @@ class SecuritySystem(BaseSystem):
 		if self._activated:
 			img = self._owner.systems[SensorsSystem.Name].getImage()
 			if img == None:
-				PCControlService.captureImage("image%02d.jpg" % self._imageCount, "640x480", 1, 4)				
-			if elapsed > (self.sendInterval / self.numImages) * (self._imageCount % (self.numImages + 1)) or self.findMotion(self._prevImg, img):
+				PCControlService.captureImage("image%02d.jpg" % self._imageCount, "640x480", 1, 4)
+			motion = self.findMotion(self._prevImg, img)
+			self._cameraMotion = self._cameraMotion or motion
+			if elapsed > (self.sendInterval / self.numImages) * (self._imageCount % (self.numImages + 1)) or motion:
 				self._prevImg = img
 				if img != None:
 					img.save("image%02d.jpg" % self._imageCount)

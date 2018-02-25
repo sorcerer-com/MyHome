@@ -74,7 +74,7 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 	var axisStyle = '#000000';
 	var axisGuideStyle = 'rgba(255, 255, 255, 0.3)';
 	var chartLineStyle = '#0000cc';
-	var charUnderLineStyle = 'rgba(128, 128, 128, 0.2)';
+	var charUnderLineStyle = 'rgba(128, 128, 128, 0.3)';
 	var textStyle = '#666666';
 	if (!Array.isArray(values) || values.length == 0)
 		return

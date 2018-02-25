@@ -132,6 +132,8 @@ def MediaPlayer():
 			getattr(mediaPlayerSystem, data["action"])() # call function with set action name
 		if "command" in data:
 			mediaPlayerSystem.command(data["command"])
+		if "refreshSharedList" in data:
+			mediaPlayerSystem.refreshSharedList()
 		if "volume" in data:
 			mediaPlayerSystem.volume = int(data["volume"])
 			myHome.systemChanged = True

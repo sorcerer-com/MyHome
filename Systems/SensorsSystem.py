@@ -12,11 +12,10 @@ class SensorsSystem(BaseSystem):
 		self.checkInterval = 15
 		self.camerasCount = 1
 		self.powerCycleDay = 6
-		# TODO: maybe transform this to dictionary - star hour / tariff price
 		self.powerDayTariffHour = 6
+		self.powerDayTariffPrice = 0.13205 + 0.04527
 		self.powerNightTariffHour = 23
-		self.powerDayTariffPrice = 0.3
-		self.powerNightTariffPrice = 0.15
+		self.powerNightTariffPrice = 0.05696 + 0.04527
 		self.fireAlarmTempreture = 40
 		self.smokeAlarmValue = 50
 		
@@ -114,6 +113,11 @@ class SensorsSystem(BaseSystem):
 				self._serials.remove(serial)
 			elif len(data) != 0:
 				self._processSerialData(data)
+
+		# check for new serial device
+		delta = self._nextTime - datetime.now()
+		if delta.seconds % 10 == 0 and delta.microseconds < 100000:
+			self._checkForNewDevice()
 			
 		
 		if datetime.now() < self._nextTime:
@@ -122,10 +126,7 @@ class SensorsSystem(BaseSystem):
 			self._nextTime = datetime.now()
 			self._nextTime = self._nextTime.replace(minute=int(self._nextTime.minute / self.checkInterval) * self.checkInterval, second=0, microsecond=0) # the exact self.checkInterval minute in the hour
 			
-		# check for new serial device
-		self._checkForNewDevice() # TODO: may be do it more often (not in 15 minutes)
 		# TODO: if doesn't receive data from all sensors maybe send command again (may be to specific sensorID)
-		# TODO: property wrapper
 		
 		# ask for data
 		sendCommand = True
@@ -147,6 +148,7 @@ class SensorsSystem(BaseSystem):
 	def _checkForNewDevice(self):
 		openedPorts = [serial.port for serial in self._serials]
 		ports = list(External.serial.tools.list_ports.comports())
+		# TODO: if device isn't "sensor" and pass the if createria then it will delay every time
 		for p in ports:
 			if p.device not in openedPorts and p.name != None and \
 				p.name.startswith("ttyUSB") and p.description != "n/a":

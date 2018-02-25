@@ -45,6 +45,3 @@ void loop()
 
   sensor.update();
 }
-
-
-
