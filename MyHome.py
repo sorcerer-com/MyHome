@@ -59,6 +59,7 @@ class MHome(object):
 	def sendAlert(self, msg):
 		Logger.log("info", "My Home: send alert '%s'" % msg)
 		PCControlService.captureImage("test.jpg", "640x480", 1, 4)
+		msg = time.strftime("%d/%m/%Y %H:%M:%S") + "\n" + msg
 		msg += "\n%s" % self.systems[SensorsSystem.Name].getLatestData()
 		InternetService.sendSMS(Config.GSMNumber, "telenor", msg)
 		InternetService.sendEMail([Config.EMail], "My Home", msg, ["test.jpg"])

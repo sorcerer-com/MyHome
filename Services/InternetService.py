@@ -14,7 +14,7 @@ from Utils.Utils import *
 
 class InternetService:
 	@staticmethod
-	@timeout(40, use_signals=False)
+	@timeout(60, use_signals=False)
 	def sendEMail(send_to, subject, text, files=None):
 		Logger.log("info", "Internet Service: send mail to '%s' subject: '%s'" % (str(send_to), subject))
 		

@@ -45,7 +45,8 @@ class SecuritySystem(BaseSystem):
 					for i in range(0, self._imageCount):
 						images.append("image%02d.jpg" % i)
 						
-					msg = "Security Alarm Activated!\n%s" % self._owner.systems[SensorsSystem.Name].getLatestData()
+					msg = "%s\nSecurity Alarm Activated!\n%s" % \
+						(time.strftime("%d/%m/%Y %H:%M:%S"), self._owner.systems[SensorsSystem.Name].getLatestData())
 					if not InternetService.sendSMS(Config.GSMNumber, "telenor", msg):
 						raise Exception()
 					if InternetService.sendEMail([Config.EMail], "My Home", msg, images): # if send successful

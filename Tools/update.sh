@@ -5,7 +5,7 @@ printf "\nApplication update\n"
 apt-get update
 
 printf "\nApplication upgrade\n"
-apt-get upgrade
+apt-get dist-upgrade
 
 printf "\nApplication clean\n"
 apt-get clean

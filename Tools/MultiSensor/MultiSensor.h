@@ -395,7 +395,7 @@ class MultiSensor
       Serial.println("Temperature");
       Serial.println(temperature);
       Serial.println("Humidity");
-      Serial.println((float)round(sqrt(humidity) * 13)); // fix humidity value
+      Serial.println((float)round(sqrt(humidity) * 10)); // fix humidity value
 
       Serial.println("Smoke");
       Serial.println((float)round(gasValue * 100));

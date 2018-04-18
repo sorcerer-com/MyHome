@@ -191,6 +191,6 @@ class MediaPlayerSystem(BaseSystem):
 				subPaths.remove(subPaths[0])
 			conn.close()
 		except Exception as e:
-			Logger.log("error", "MediaPlayer System: list shared folder")
+			Logger.log("error", "MediaPlayer System: cannot list shared folder")
 			Logger.log("exception", str(e))
 		return result

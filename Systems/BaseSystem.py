@@ -39,6 +39,7 @@ class BaseSystem(object):
 			if hasattr(self, name):
 				propType = type(getattr(self, name))
 				setattr(self, name, parse(value, propType))
+			#print "%s: %s" % (name, value)
 
 	def saveSettings(self, configParser, data):
 		items = getProperties(self, True)
