@@ -26,14 +26,16 @@ def beforeRequest():
 	
 	if ("password" not in session) or (session["password"] != Config.Password): # pass only login
 		if request.endpoint == "login":
-			return login()
+			return
 		elif not isLocalIP and request.endpoint != "index":
 			abort(404)
 		else:
 			return redirect("/login")
 		
 	if not isLocalIP:
-		if request.endpoint != "cameras" and request.endpoint != "camerasImage":
+		if request.endpoint == "login" or ("token" in session and session["token"] == Config.Token):
+			return
+		elif request.endpoint != "cameras" and request.endpoint != "camerasImage":
 			infos = [(name, myHome.systems[name].enabled) for name in sorted(myHome.systems.keys())]
 			content = "<h2 class='title'>External Request</h2>\n"
 			for info in infos:
@@ -72,6 +74,8 @@ def login():
 		return redirect("/")
 		
 	data = request.form if request.method == "POST" else request.args
+	invalid = False
+	token = "token" in data and "password" in session and session["password"] == Config.Password
 	if "password" in data: 
 		if str(hash(data["password"])) == Config.Password:
 			Logger.log("info", "LogIn: correct password")
@@ -80,10 +84,16 @@ def login():
 		else:
 			Logger.log("warning", "LogIn: invalid password")
 			invalid = True
-	else:
-		invalid = False
-		
-	return render_template("login.html", invalid=invalid)
+	elif token:
+		if str(hash(data["token"])) == Config.Token:
+			Logger.log("info", "LogIn: correct token")
+			session["token"] = str(hash(data["token"]))
+			return redirect("/")
+		elif str(data["token"]) != "":
+			Logger.log("warning", "LogIn: invalid token")
+			invalid = True
+	
+	return render_template("login.html", invalid=invalid, token=token)
 		
 @app.route("/cameras")
 def cameras():
@@ -269,7 +279,7 @@ def start():
 	app.secret_key = u"\xf2N\x8a 8\xb1\xd9(&\xa6\x90\x12R\xf0\\\xe8\x1e\xf92\xa6AN\xed\xb3"
 	app.permanent_session_lifetime = timedelta(minutes=15)
 	app.config['TEMPLATES_AUTO_RELOAD'] = True
-	app.run(debug=False, host="0.0.0.0")
+	app.run(debug=False, host="0.0.0.0", threaded=True)
 
 if __name__ == "__main__":
 	if len(sys.argv) > 1 and sys.argv[1] == "-service":

@@ -1,32 +1,38 @@
 {% extends "base.html" %}
 
 {% block content %}
+	{% if token == False %}
 		<h2 class='title'>LogIn</h2>
+		{% set name = "password" %}
+	{% else %}
+		<h2 class='title'>Token</h2>
+		{% set name = "token" %}
+	{% endif %}
 		
 		<form id='form' action='' method='post' class='login'>
 		{% if invalid == False %}
-			<input type='password' name='password' autofocus/>
+			<input type='password' name='{{ name }}' autofocus/>
 		{% else %}
-			<input type='password' name='password' class='red' autofocus/>
+			<input type='password' name='{{ name }}' class='red' autofocus/>
 		{% endif %}
 			<div class='buttonContainer'>
-				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>1</a>
-				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>2</a>
-				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>3</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "{{ name }}")'>1</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "{{ name }}")'>2</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "{{ name }}")'>3</a>
 			</div>
 			<div class='buttonContainer'>
-				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>4</a>
-				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>5</a>
-				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>6</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "{{ name }}")'>4</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "{{ name }}")'>5</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "{{ name }}")'>6</a>
 			</div>
 			<div class='buttonContainer'>
-				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>7</a>
-				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>8</a>
-				<a class='button' href='javascript:;' onclick='addText(this, "form", "password")'>9</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "{{ name }}")'>7</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "{{ name }}")'>8</a>
+				<a class='button' href='javascript:;' onclick='addText(this, "form", "{{ name }}")'>9</a>
 			</div>
 			<div class='buttonContainer'>
-				<a class='button' href='javascript:;' onclick='removeText("form", "password", 1)'><</a>
-				<a class='button' href='javascript:;' onclick='addText("form", "password", this)'>0</a>
+				<a class='button' href='javascript:;' onclick='removeText("form", "{{ name }}", 1)'><</a>
+				<a class='button' href='javascript:;' onclick='addText("form", "{{ name }}", this)'>0</a>
 				<a class='button' href='javascript:;' onclick='submitForm("form")'>></a>
 			</div>
 		</form>

@@ -9,6 +9,7 @@ class Config:
 	LogMaxSize = 1000000
 	PrintLog = True
 	Password = ""
+	Token = ""
 	InternalIPs = []
 	
 	GSMNumber = ""
