@@ -1,3 +1,4 @@
+import json
 from threading import Timer
 from Utils.Logger import *
 from Utils.Event import *
@@ -76,23 +77,15 @@ class MHome(object):
 		data = []
 		if os.path.isfile(Config.DataFileName):
 			with open(Config.DataFileName, 'r') as f:
-				data = f.read().decode("utf8").split("\n")
-			self._lastBackupSettings = parse(data[0], datetime)
+				data = json.load(f)
+			self._lastBackupSettings = parse(data["0"], datetime)
 			
 		Config.load(configParser)
 		
 		# load systems settings
 		keys = sorted(self.systems.keys())
 		for key in keys:
-			systemData = []
-			if ("[%s]" % key) in data:
-				systemData = data[data.index("[%s]" % key)+1:]
-				for i in range(1, len(systemData)):
-					if systemData[i].startswith("["):
-						systemData = systemData[:i-1]
-						break
-						
-			self.systems[key].loadSettings(configParser, systemData)
+			self.systems[key].loadSettings(configParser, data[key])
 		
 		self.systemChanged = False
 		self.event(self, "SettingsLoaded")
@@ -112,23 +105,20 @@ class MHome(object):
 		Config.save(configParser)
 		
 		# save systems settings
-		data = []
+		data = {}
+		data[0] = string(self._lastBackupSettings)
 		keys = sorted(self.systems.keys())
 		for key in keys:
 			configParser.add_section(self.systems[key].Name)
-			systemData = []
+			systemData = {}
 			self.systems[key].saveSettings(configParser, systemData)
-
-			data.append("[%s]" % self.systems[key].Name)
-			data.extend(systemData)
-			data.append("")
+			data[self.systems[key].Name] = systemData
+		data = json.dumps(data, indent=4, sort_keys=True, ensure_ascii=False).encode('utf8')
 				
 		with open(Config.ConfigFileName, 'wb') as configFile:
 			configParser.write(configFile)
 			
 		with open(Config.DataFileName, 'w') as dataFile:
-			dataFile.write("%s\n" % string(self._lastBackupSettings))
-			for item in data:
-				dataFile.write("%s\n" % unicode(item).encode("utf8"))
+			dataFile.write(data)
 		
 		self.event(self, "SettingsSaved")

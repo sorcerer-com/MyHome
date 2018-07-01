@@ -50,48 +50,30 @@ class SensorsSystem(BaseSystem):
 			return
 		
 		# rearange sensors by ids in the dictionary
-		idx = 0
-		ids = data[idx].split(";")
-		idx += 1
-		names = self.sensorNames
 		self._sensors.clear()
-		for i in range(len(ids)):
-			self._sensors[int(ids[i])] = Sensor(names[i])
+		for (key, value) in data["ids"].items():
+			self._sensors[int(value)] = Sensor(str(key))
 		
-		countSensors = int(data[idx])
-		idx += 1
-		for i in range(0, countSensors):
-			id = int(data[idx])
-			idx += 1
-			subNames = data[idx].split(";")
-			idx+= 1
-			count = int(data[idx])
-			idx += 1
-			for j in range(0, count):
-				key = parse(data[idx], datetime)
-				idx += 1				
-				values = data[idx].split(";")
-				idx+= 1
-				for k in range(len(values)):
-					self._sensors[id].addValue(key, str(subNames[k]), parse(values[k], None))
+		for id in data["ids"].values():
+			for (time, values) in data[str(id)].items():
+				if time == "subNames":
+					continue
+				for i in range(0, len(values)):
+					name = data[str(id)]["subNames"][i]
+					self._sensors[id].addValue(parse(time, datetime), str(name), values[i])
 
 	def saveSettings(self, configParser, data):
 		BaseSystem.saveSettings(self, configParser, data)
 
-		temp = {sensor.Name: id for (id, sensor) in self._sensors.items()}
-		ids = [str(temp[name]) for name in self.sensorNames]
-		data.append(";".join(ids))
-		
-		data.append(len(self._sensors))
+		data["ids"] = {sensor.Name: id for (id, sensor) in self._sensors.items()}
 		for (id, sensor) in self._sensors.items():
-			data.append(id)
-			data.append(";".join(sensor.subNames))
+			data[id] = {}
+			data[id]["subNames"] = sensor.subNames
 			times = sorted(sensor._data.values()[0].keys())
-			data.append(len(times))
 			for time in times:
-				data.append(string(time))
-				values = [string(sensor._data[subName][time]) for subName in sensor.subNames]
-				data.append(";".join(values))
+				data[id][string(time)] = []
+				for subName in sensor.subNames:
+					data[id][string(time)].append(sensor._data[subName][time])
 			
 	def update(self):
 		BaseSystem.update(self)

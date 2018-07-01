@@ -201,7 +201,7 @@ def Sensors():
 		data[sensor.Name] = [collections.OrderedDict(), collections.OrderedDict(), collections.OrderedDict()]
 		for subName in sensor.subNames:
 			data[sensor.Name][0][subName] = sensor.getData(subName, datetime.now() - timedelta(days=1), datetime.now())
-			data[sensor.Name][1][subName] = sensor.getData(subName, datetime.now() - timedelta(days=5), datetime.now() - timedelta(days=1))
+			data[sensor.Name][1][subName] = sensor.getData(subName, datetime.now() - timedelta(days=6), datetime.now() - timedelta(days=1))
 			data[sensor.Name][2][subName] = sensor.getData(subName, datetime.now() - timedelta(days=366), datetime.now() - timedelta(days=6))
 	# (day,night,total,price)
 	powerConsumption = sensorsSystem.getMonthlyPowerConsumption()

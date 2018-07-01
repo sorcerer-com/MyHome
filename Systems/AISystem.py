@@ -44,39 +44,15 @@ class AISystem(BaseSystem):
 		BaseSystem.loadSettings(self, configParser, data)
 		if len(data) == 0:
 			return
-		self._commands = []
-		self._voiceCommands = {}
-		
-		ptr = 0
-		count = int(data[ptr])
-		ptr += 1
-		for i in range(0, count):
-			self._commands.append([])
-			count2 = int(data[ptr])
-			ptr += 1
-			for j in range(0, count2):
-				self._commands[i].append(data[ptr])
-				ptr += 1
-				
-		count = int(data[ptr])
-		ptr += 1
-		for i in range(0, count):
-			self._voiceCommands[data[ptr]] = int(data[ptr + 1])
-			ptr += 2
+
+		self._commands = data["commands"]
+		self._voiceCommands = data["voiceCommands"]
 
 	def saveSettings(self, configParser, data):
 		BaseSystem.saveSettings(self, configParser, data)
 		
-		data.append(len(self._commands))
-		for command in self._commands:
-			data.append(len(command))
-			for cmd in command:
-				data.append(cmd)
-				
-		data.append(len(self._voiceCommands))
-		for (key, value) in self._voiceCommands.items():
-			data.append(key)
-			data.append(value)
+		data["commands"] = self._commands
+		data["voiceCommands"] = self._voiceCommands
 
 	def _onEnabledChanged(self):
 		BaseSystem._onEnabledChanged(self)

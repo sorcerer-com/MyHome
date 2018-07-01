@@ -54,28 +54,27 @@ class ScheduleSystem(BaseSystem):
 			return
 		self._schedule = []
 		
-		count = int(data[0])
-		names = data[1].split(",")
-		for i in range(0, count):
+		for item in data["schedule"]:
 			self._schedule.append({})
-			for j in range(0, len(names)):
-				if names[j] == "Time":
-					self._schedule[i][names[j]] = parse(data[2 + i * len(names) + j], datetime)
-				elif names[j] == "Repeat":
-					self._schedule[i][names[j]] = parse(data[2 + i * len(names) + j], timedelta)
+			for (key, value) in item.items():
+				if key == "Time":
+					self._schedule[-1][key] = parse(value, datetime)
+				elif key == "Repeat":
+					self._schedule[-1][key] = parse(value, timedelta)
 				else:
-					self._schedule[i][names[j]] = parse(data[2 + i * len(names) + j], str)
+					self._schedule[-1][key] = parse(value, str)
 
 	def saveSettings(self, configParser, data):
 		BaseSystem.saveSettings(self, configParser, data)
 		if len(self._schedule) == 0:
 			return
-			
-		data.append(len(self._schedule))
-		data.append(",".join(self._schedule[0].keys()))
+		
+		data["schedule"] = []
 		for item in self._schedule:
+			temp = {}
 			for (key, value) in item.items():
-				data.append("%s" % string(value))
+				temp[key] = string(value)
+			data["schedule"].append(temp)
 
 	def update(self):
 		BaseSystem.update(self)

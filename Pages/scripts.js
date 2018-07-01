@@ -150,7 +150,7 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 	if (drawValues) {
 		context.strokeStyle = textStyle;
 		for (i = 0; i < values.length; i++) {
-			if (i > 0 && values[i] == values[i - 1])
+			if (i > 0 && Math.abs(values[i] - values[i - 1]) < 1)
 				continue;
 			var pos = {x: start.x + i * withEps, y: start.y - (values[i] - minValue) * heightEps};
 			var textWidth = context.measureText(values[i]).width;
