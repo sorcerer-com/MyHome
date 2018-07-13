@@ -7,9 +7,10 @@ from email.utils import COMMASPACE, formatdate
 from email import parser
 
 import External.mechanize
-from External.timeout_decorator import *
-from Utils.Logger import *
-from Utils.Utils import *
+from External.timeout_decorator import timeout
+
+from Utils.Logger import Logger
+from Utils.Config import Config
 
 
 class InternetService:
@@ -88,7 +89,7 @@ class InternetService:
 			Logger.log("error", "Internet Service: cannot send sms - invalid number")
 			return False
 			
-		return InternetService.sendMail([number + "@sms.telenor.bg"], "", msg)
+		return InternetService.sendEMail([number + "@sms.telenor.bg"], "", msg)
 		
 	@staticmethod
 	def sendSMS(number, operator, msg):

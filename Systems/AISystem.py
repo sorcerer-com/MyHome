@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*- 
-import warnings, threading, random, re
-from gtts import gTTS
-from BaseSystem import *
-from SecuritySystem import *
-from Services.PCControlService import *
-from Services.InternetService import *
-from Utils.Utils import *
+import warnings, threading, random, re, os
+
+from External.gtts import gTTS
+
+from Utils.Logger import Logger
+from BaseSystem import BaseSystem
+from SecuritySystem import SecuritySystem
+from Services.PCControlService import PCControlService
+from Services.InternetService import InternetService
 
 class AISystem(BaseSystem):
 	Name = "AI"
@@ -93,7 +95,6 @@ class AISystem(BaseSystem):
 			if self._lastVoiceCommand[1] == u"Кой е там?" and (transcript == u"ние сме" or transcript == u"аз съм"):
 				self._owner.systems[SecuritySystem.Name].enabled = False
 				result = u"Добре"
-				unknown = False
 			
 			if result == "":
 				result = random.choice(AISystem._UnknownVoiceCommandResponses)

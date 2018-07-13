@@ -1,10 +1,19 @@
 ﻿#!/usr/bin/env python
-import sys, os, threading, subprocess
+import sys, os, threading, subprocess, collections, logging, time
+from datetime import datetime, timedelta
 sys.path.insert(0, os.path.join(os.getcwd(), "External"))
 os.chdir("bin")
 
-from External.flask import *
-from MyHome import *
+from External.flask import Flask, request, session, abort, redirect, render_template, send_from_directory, Response
+
+from Utils.Logger import Logger
+from Utils.Utils import parse, string, getProperties
+from Utils.Config import Config
+from MyHome import MHome
+from Systems.AISystem import AISystem
+from Systems.SensorsSystem import SensorsSystem
+from Systems.ScheduleSystem import ScheduleSystem
+from Systems.MediaPlayerSystem import MediaPlayerSystem
 
 logging.getLogger().info("")
 template_dir = os.path.abspath("../Pages")
@@ -20,7 +29,7 @@ def beforeRequest():
 		request.endpoint == "style" or request.endpoint == "scripts":
 		return
 
-	isLocalIP = request.remote_addr == "127.0.0.1";
+	isLocalIP = request.remote_addr == "127.0.0.1"
 	for ip in Config.InternalIPs:
 		isLocalIP |= request.remote_addr.startswith(ip)
 	
@@ -48,7 +57,7 @@ def beforeRequest():
 	
 @app.route("/robots.txt")
 def robots():
-	return "User-agent: *\nDisallow: /";
+	return "User-agent: *\nDisallow: /"
 
 @app.route("/favicon.ico")
 def favicon():

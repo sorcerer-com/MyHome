@@ -1,5 +1,5 @@
-from Utils.Logger import *
-from Utils.Utils import *
+from Utils.Logger import Logger
+from Utils.Utils import parse, string, getProperties
 
 class BaseSystem(object):
 	Name = ""

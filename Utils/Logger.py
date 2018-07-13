@@ -1,5 +1,6 @@
 import logging, time, os
-from Config import *
+
+from Config import Config
 
 class Logger:		
 	logger = logging.getLogger()

@@ -1,5 +1,6 @@
 import ConfigParser
 import inspect
+
 import Utils
 
 class Config:
@@ -28,7 +29,6 @@ class Config:
 		items = dir(Config)
 		for attr in items:
 			value = getattr(Config, attr)
-			attrType = type(value)
 			if (not callable(value)) and (not attr.startswith("_")):
 				result.append(attr)
 		return result

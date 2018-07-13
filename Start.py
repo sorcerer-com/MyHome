@@ -4,7 +4,7 @@ sys.path.append(os.path.join(os.getcwd(), "External"))
 os.chdir("bin")
 
 import External.mechanize
-from Utils.Logger import *
+from Utils.Logger import Logger
 from datetime import datetime, timedelta
 os.chdir("..")
 

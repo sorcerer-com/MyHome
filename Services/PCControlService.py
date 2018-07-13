@@ -1,5 +1,6 @@
 import subprocess
-from Utils.Logger import *
+
+from Utils.Logger import Logger
 
 class PCControlService:
 	@staticmethod

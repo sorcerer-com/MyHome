@@ -1,7 +1,14 @@
+import time
+from datetime import datetime, timedelta
+
 import External.serial.tools.list_ports
-from External.serial import *
-from BaseSystem import *
-from Systems.Models.Sensor import *
+from External.serial import Serial
+
+from Utils.Logger import Logger
+from Utils.Utils import parse, string
+from BaseSystem import BaseSystem
+from Systems.Models.Sensor import Sensor
+
 
 class SensorsSystem(BaseSystem):
 	Name = "Sensors"
@@ -84,7 +91,7 @@ class SensorsSystem(BaseSystem):
 				if datetime.now() - self._cameras[key][1] > timedelta(minutes=5):
 					self._cameras[key][0].stop()
 					del self._cameras[key]
-					Logger.log("info", "Sensors System: stop camera %d" % key);
+					Logger.log("info", "Sensors System: stop camera %d" % key)
 					
 		
 		# read from serial
@@ -269,7 +276,7 @@ class SensorsSystem(BaseSystem):
 				if not hasattr(self._cameras[cameraIndex][0], "threaded"): # check if camera is really created
 					del self._cameras[cameraIndex]
 					return None
-				Logger.log("info", "Sensors System: init camera %d" % cameraIndex);
+				Logger.log("info", "Sensors System: init camera %d" % cameraIndex)
 		except Exception as e:
 			Logger.log("warning", "Sensors System: cannot init cameras")
 			Logger.log("exception", str(e))
