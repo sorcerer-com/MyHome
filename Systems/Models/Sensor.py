@@ -51,6 +51,10 @@ class Sensor(object):
 						newValue = int(round(sum(values) / float(len(values))))
 					elif type(values[0]) is float:
 						newValue = sum(values) / float(len(values))
+						
+					# TODO: maybe receive from sensor if the values should be sumed, but not average
+					if type(values[0]) is not bool and subName.startswith("ConsumedPower"):
+						newValue = newValue * len(values)
 					
 					for t in times:
 						del self._data[subName][t]

@@ -8,6 +8,7 @@ from Utils.Logger import Logger
 from Utils.Utils import parse, string
 from BaseSystem import BaseSystem
 from Systems.Models.Sensor import Sensor
+from Services.InternetService import InternetService
 
 
 class SensorsSystem(BaseSystem):
@@ -18,13 +19,16 @@ class SensorsSystem(BaseSystem):
 		
 		self.checkInterval = 15
 		self.camerasCount = 1
+		self.sensorsIPs = ["192.168.0.105"]
 		self.powerCycleDay = 6
 		self.powerDayTariffHour = 6
-		self.powerDayTariffPrice = 0.13205 + 0.04527
+		self.powerDayTariffPrice = (0.13294 + 0.04748) * 1.2
 		self.powerNightTariffHour = 23
-		self.powerNightTariffPrice = 0.05696 + 0.04527
+		self.powerNightTariffPrice = (0.05654 + 0.04748) * 1.2
 		self.fireAlarmTempreture = 40
 		self.smokeAlarmValue = 50
+		self.powerAlarmValue = 3000
+		self.consumedPowerAlarmValue = 1000
 		
 		self._nextTime = datetime.now()
 		self._nextTime = self._nextTime.replace(minute=int(self._nextTime.minute / self.checkInterval) * self.checkInterval, second=0, microsecond=0) # the exact self.checkInterval minute in the hour
@@ -32,6 +36,8 @@ class SensorsSystem(BaseSystem):
 		self._sensors = {} # id / sensor
 		self._motion = False
 		self._cameras = {}
+		
+		self._lastPowerReadings = []
 		
 	def __del__(self):
 		for serial in self._serials:
@@ -60,6 +66,7 @@ class SensorsSystem(BaseSystem):
 		self._sensors.clear()
 		for (key, value) in data["ids"].items():
 			self._sensors[int(value)] = Sensor(str(key))
+		self._lastPowerReadings = data["lastPowerReadings"]
 		
 		for id in data["ids"].values():
 			for (time, values) in data[str(id)].items():
@@ -73,6 +80,8 @@ class SensorsSystem(BaseSystem):
 		BaseSystem.saveSettings(self, configParser, data)
 
 		data["ids"] = {sensor.Name: id for (id, sensor) in self._sensors.items()}
+		data["lastPowerReadings"] = self._lastPowerReadings
+		# TODO: maybe move to Sensor.py
 		for (id, sensor) in self._sensors.items():
 			data[id] = {}
 			data[id]["subNames"] = sensor.subNames
@@ -115,6 +124,21 @@ class SensorsSystem(BaseSystem):
 			self._nextTime = datetime.now()
 			self._nextTime = self._nextTime.replace(minute=int(self._nextTime.minute / self.checkInterval) * self.checkInterval, second=0, microsecond=0) # the exact self.checkInterval minute in the hour
 			
+		# TODO: fix to work with more then one sensor
+		json = InternetService.getJsonContent("http://%s/data" % self.sensorsIPs[0])
+		if json != None:
+			for i in range(0, len(json)):
+				self._sensors[1].addValue(self._nextTime, "Power" + str(i+1), json[i][0])
+				self._checkData("Power" + str(i+1), json[i][0])
+				if i >= len(self._lastPowerReadings):
+					self._lastPowerReadings.append(json[i][1])
+				value = json[i][1] - self._lastPowerReadings[i]
+				if value < -1000:
+					value = json[i][1]
+				self._sensors[1].addValue(self._nextTime, "ConsumedPower" + str(i+1), value)
+				self._checkData("ConsumedPower" + str(i+1), value)
+				self._lastPowerReadings[i] = json[i][1]
+
 		# TODO: if doesn't receive data from all sensors maybe send command again (may be to specific sensorID)
 		
 		# ask for data
@@ -223,6 +247,12 @@ class SensorsSystem(BaseSystem):
 		# smoke check: if the smoke value is higher than set value
 		elif name == "Smoke" and value > self.smokeAlarmValue:
 			self._owner.sendAlert("Smoke Alarm Activated!")
+		# power check: if the current power consumption is higher than set value
+		elif name.startswith("Power") and value > self.powerAlarmValue:
+			self._owner.sendAlert("Power Alarm Activated!")
+		# power check: if the last consumed power is higher than set value
+		elif name.startswith("ConsumedPower") and value > self.consumedPowerAlarmValue:
+			self._owner.sendAlert("Consumed Power Alarm Activated!")
 	
 	
 	def getLatestData(self):
@@ -251,15 +281,12 @@ class SensorsSystem(BaseSystem):
 			for subName in sensor.subNames:
 				if subName.startswith("ConsumedPower"):
 					data = sensor.getData(subName, cycleDate, datetime.now())
-					# TODO: in archiveData it should sum values for power consumption, not average them
-					# is it ok, with that code:
 					times = sorted(data.keys())
 					for i in range(1, len(times)):
-						count = (times[i] - times[i - 1]).total_seconds() / 60 / self.checkInterval
 						if times[i].hour > self.powerDayTariffHour and times[i].hour < self.powerNightTariffHour:
-							day += data[times[i]] * count
+							day += data[times[i]]
 						else:
-							night += data[times[i]] * count
+							night += data[times[i]]
 		total = round(day + night, 2)
 		price = round(day / 1000 * self.powerDayTariffPrice + night / 1000 * self.powerNightTariffPrice, 2)
 		return (round(day, 2), round(night, 2), total, price)

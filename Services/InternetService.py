@@ -1,4 +1,4 @@
-import smtplib, poplib
+import smtplib, poplib, requests
 from os.path import basename, isfile
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
@@ -170,3 +170,15 @@ class InternetService:
 			return False
 			
 		return result
+		
+	@staticmethod
+	def getJsonContent(url):
+		try:
+			r = requests.get(url)
+			if r.status_code == requests.codes.ok:
+				return r.json()
+			return None
+		except Exception as e:
+			Logger.log("error", "Internet Service: cannot get json content")
+			Logger.log("exception", str(e))
+			return None
