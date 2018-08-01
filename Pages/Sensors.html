@@ -25,6 +25,10 @@
 			{% endfor %}
 		{% endmacro %}
 		
+		{% macro printNumber(number) -%}
+			{% if number / 1000 > 0 %}{{ (number / 1000) | int }} {% if number % 1000 < 100 %}0{% endif %}{% if number % 1000 < 10 %}0{% endif %}{% endif %}{{ number % 1000 }}
+		{% endmacro %}
+		
 		<div class='tabContainer'>
 		{% if data|count > 1 %}
 		{% for i in range(data|count) %}
@@ -46,10 +50,16 @@
 				{% if key.startswith("Power") %}
 					<div class="settings">
 					<ul>
-						<li><h3>Day Consumption:</h3> {{ powerConsumption[0] }} W </li>
-						<li><h3>Night Consumption:</h3> {{ powerConsumption[1] }} W </li>
-						<li><h3>Total Consumption:</h3> {{ powerConsumption[2] }} W </li>
-						<li><h3>Price:</h3> {{ powerConsumption[3] }} </li>
+						<li><h3>Day Consumption:</h3> 
+							{{ printNumber(powerConsumption[0][0]) }} 
+							({{ printNumber(powerConsumption[1][0]) }}) W </li>
+						<li><h3>Night Consumption:</h3> 
+							{{ printNumber(powerConsumption[0][1]) }} 
+							({{ printNumber(powerConsumption[1][1]) }}) W </li>
+						<li><h3>Total Consumption:</h3> 
+							{{ printNumber(powerConsumption[0][2]) }} 
+							({{ printNumber(powerConsumption[1][2]) }}) W </li>
+						<li><h3>Price:</h3> {{ powerConsumption[0][3] }} ({{ powerConsumption[1][3] }}) </li>
 					</ul>
 					</div>
 				{% endif %}

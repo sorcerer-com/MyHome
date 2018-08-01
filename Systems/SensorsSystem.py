@@ -266,9 +266,7 @@ class SensorsSystem(BaseSystem):
 		self._motion = False
 		return temp
 		
-	def getMonthlyPowerConsumption(self): # (day,night,total,price)
-		day = 0.0
-		night = 0.0
+	def getMonthlyPowerConsumption(self): # [(day,night,total,price), (day,night,total,price)] - current, last month
 		cycleDate = datetime.now()
 		if cycleDate.day < self.powerCycleDay:
 			if cycleDate.month > 1:
@@ -276,11 +274,24 @@ class SensorsSystem(BaseSystem):
 			else:
 				cycleDate = cycleDate.replace(month=12, year=cycleDate.year-1)
 		cycleDate = cycleDate.replace(day=self.powerCycleDay, hour=0, minute=0, second=0, microsecond=0)
+		prevCycleDate = cycleDate
+		if prevCycleDate.month > 1:
+			prevCycleDate = prevCycleDate.replace(month=prevCycleDate.month-1)
+		else:
+			prevCycleDate = prevCycleDate.replace(month=12, year=prevCycleDate.year-1)
+
+		result = []
+		result.append(self._getPowerConsumption(cycleDate, datetime.now()))
+		result.append(self._getPowerConsumption(prevCycleDate, cycleDate))
+		return result
 		
+	def _getPowerConsumption(self, startDate, endDate):
+		day = 0.0
+		night = 0.0
 		for sensor in self._sensors.values():
 			for subName in sensor.subNames:
 				if subName.startswith("ConsumedPower"):
-					data = sensor.getData(subName, cycleDate, datetime.now())
+					data = sensor.getData(subName, startDate, endDate)
 					times = sorted(data.keys())
 					for i in range(1, len(times)):
 						if times[i].hour > self.powerDayTariffHour and times[i].hour < self.powerNightTariffHour:
