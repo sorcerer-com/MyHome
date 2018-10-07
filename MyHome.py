@@ -67,7 +67,11 @@ class MHome(object):
 		PCControlService.captureImage("test.jpg", "640x480", 1, 4)
 		msg = time.strftime("%d/%m/%Y %H:%M:%S") + "\n" + msg
 		msg += "\n%s" % self.systems[SensorsSystem.Name].getLatestData()
-		InternetService.sendSMS(Config.GSMNumber, "telenor", msg)
+		# send SMSs only if we are outside of the quiet hours
+		if datetime.now().hour < int(Config.QuietHours[0]) and datetime.now().hour >= int(Config.QuietHours[1]):
+			InternetService.sendSMS(Config.GSMNumber, "telenor", msg)
+		else:
+			Logger.log("info", "Quiet hours: %s-%s" % (Config.QuietHours[0], Config.QuietHours[1]))
 		InternetService.sendEMail([Config.EMail], "My Home", msg, ["test.jpg"])
 		if os.path.isfile("test.jpg"):
 			os.remove("test.jpg")
@@ -98,6 +102,7 @@ class MHome(object):
 	def saveSettings(self):
 		Logger.log("info", "My Home: save settings")
 		# backup config and data file every day
+		
 		if (datetime.now() - self._lastBackupSettings) > timedelta(days=1):
 			from shutil import copyfile
 			self._lastBackupSettings = datetime.now()

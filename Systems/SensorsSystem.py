@@ -31,7 +31,7 @@ class SensorsSystem(BaseSystem):
 		self.consumedPowerAlarmValue = 1000
 		
 		self._nextTime = datetime.now()
-		self._nextTime = self._nextTime.replace(minute=int(self._nextTime.minute / self.checkInterval) * self.checkInterval, second=0, microsecond=0) # the exact self.checkInterval minute in the hour
+		self._nextTime = self._nextTime.replace(minute=int(self._nextTime.minute / self.checkInterval) * self.checkInterval, second=50, microsecond=0) # in the middle of the  self.checkInterval minute in the hour
 		self._serials = []
 		self._sensors = {} # id / sensor
 		self._motion = False
@@ -122,22 +122,28 @@ class SensorsSystem(BaseSystem):
 			return
 		if self._nextTime.minute % self.checkInterval != 0: # if checkInterval is changed
 			self._nextTime = datetime.now()
-			self._nextTime = self._nextTime.replace(minute=int(self._nextTime.minute / self.checkInterval) * self.checkInterval, second=0, microsecond=0) # the exact self.checkInterval minute in the hour
+			self._nextTime = self._nextTime.replace(minute=int(self._nextTime.minute / self.checkInterval) * self.checkInterval, second=50, microsecond=0) # in the middle of the self.checkInterval minute in the hour
 			
 		# TODO: fix to work with more then one sensor
 		json = InternetService.getJsonContent("http://%s/data" % self.sensorsIPs[0])
 		if json != None:
-			for i in range(0, len(json)):
-				self._sensors[1].addValue(self._nextTime, "Power" + str(i+1), json[i][0])
-				self._checkData("Power" + str(i+1), json[i][0])
-				if i >= len(self._lastPowerReadings):
-					self._lastPowerReadings.append(json[i][1])
-				value = json[i][1] - self._lastPowerReadings[i]
-				if value < -1000:
-					value = json[i][1]
-				self._sensors[1].addValue(self._nextTime, "ConsumedPower" + str(i+1), value)
-				self._checkData("ConsumedPower" + str(i+1), value)
-				self._lastPowerReadings[i] = json[i][1]
+			for i in range(0, 3):
+				try:
+					self._sensors[1].addValue(self._nextTime, "Power" + str(i+1), float(json[i][0]))
+					self._checkData("Power" + str(i+1), float(json[i][0]))
+					if i >= len(self._lastPowerReadings):
+						self._lastPowerReadings.append(float(json[i][1]))
+					value = float(json[i][1]) - self._lastPowerReadings[i]
+					if value < 0:
+						value = 0
+					self._sensors[1].addValue(self._nextTime, "ConsumedPower" + str(i+1), value)
+					self._checkData("ConsumedPower" + str(i+1), value)
+					if value >= 0:
+						self._lastPowerReadings[i] = float(json[i][1])
+				except Exception as e:
+					Logger.log("error", "Sensors System: cannot parse json " + str(json))
+					Logger.log("exception", str(e))
+			self._owner.systemChanged = True
 
 		# TODO: if doesn't receive data from all sensors maybe send command again (may be to specific sensorID)
 		

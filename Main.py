@@ -36,7 +36,7 @@ def beforeRequest():
 	if ("password" not in session) or (session["password"] != Config.Password): # pass only login
 		if request.endpoint == "login":
 			return
-		elif not isLocalIP and request.endpoint != "index":
+		elif not isLocalIP:
 			abort(404)
 		else:
 			return redirect("/login")

@@ -84,11 +84,12 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 		minValue = Math.min(minValue, values[i]);
 		maxValue = Math.max(maxValue, values[i]);
 	}
+	var delta = Math.max(maxValue - minValue, 0.01);
 	
 	var canvas = document.getElementById(canvasId);
 	var context = canvas.getContext("2d");
 	var withEps = (canvas.width - 20) / (values.length - 1);
-	var heightEps = (canvas.height - 40) / Math.max(maxValue - minValue, 0.01);
+	var heightEps = (canvas.height - 40) / delta;
 	var start = {x: 10, y: canvas.height - 20};
 	
 	if (drawAxis) {					
@@ -149,9 +150,11 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 	
 	if (drawValues) {
 		context.strokeStyle = textStyle;
+		var prevValue = minValue - delta; // to be sure that first value will be shown
 		for (i = 0; i < values.length; i++) {
-			if (i > 0 && Math.abs(values[i] - values[i - 1]) < 1)
+			if (i > 0 && Math.abs(values[i] - prevValue) < delta * 0.1)
 				continue;
+			prevValue = values[i];
 			var pos = {x: start.x + i * withEps, y: start.y - (values[i] - minValue) * heightEps};
 			var textWidth = context.measureText(values[i]).width;
 			var textHeight = parseInt(context.font);
@@ -170,14 +173,17 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 			var idx = Math.round((canvasPosX - start.x) / withEps);
 			if (idx < 0 || idx >= values.length)
 				return;
-			var chartY = start.y - (values[idx] - minValue) * heightEps;
-			if (Math.abs(chartY - canvasPosY) > 5)
-				return;
+			//var chartY = start.y - (values[idx] - minValue) * heightEps;
+			//if (Math.abs(chartY - canvasPosY) > 5)
+			//	return;
 				
 			tooltip.style.left = e.pageX + "px";
 			tooltip.style.top = (e.pageY + 20) + "px";
 			tooltip.style.visibility = "visible";
 			tooltip.innerHTML = names[idx] + ": " + values[idx];
+		};
+		canvas.onmouseout = function(e) {
+			tooltip.style.visibility = "collapse";
 		};
 	}
 }

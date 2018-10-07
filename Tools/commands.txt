@@ -1,3 +1,6 @@
+#ethernet mac: B8-27-EB-B1-6F-C8
+#wifi mac: 00-0F-00-F6-6B-D2
+
 sudo apt-get install xrdp
 
 sudo rpi-update

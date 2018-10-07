@@ -53,6 +53,7 @@ class Sensor(object):
 						newValue = sum(values) / float(len(values))
 						
 					# TODO: maybe receive from sensor if the values should be sumed, but not average
+					# TODO: sum energy in two values for day and night value
 					if type(values[0]) is not bool and subName.startswith("ConsumedPower"):
 						newValue = newValue * len(values)
 					
