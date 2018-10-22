@@ -1,11 +1,18 @@
 #!/usr/bin/env python
-import subprocess, signal, time, sys, os
-os.chdir("bin")
+import logging
+import os
+import signal
+import subprocess
+import sys
+import time
+from datetime import datetime, timedelta
 
 import robobrowser
-from Utils.Logger import Logger
-from datetime import datetime, timedelta
-os.chdir("..")
+
+from Utils import Utils
+
+Utils.setupLogging("bin/starter.log", useBufferHandler=False)
+logger = logging.getLogger()
 
 proc = None
 def killProc():
@@ -51,7 +58,7 @@ while True:
 
 	try:
 		killProc()
-		proc = subprocess.Popen(["python", "Main.py", "-service"])
+		proc = subprocess.Popen(["python3", "Main.py", "-service"])
 
 		while (proc is not None) and (proc.poll() is None):
 			for i in range(0, 12): # wait a minute
@@ -60,6 +67,7 @@ while True:
 					break
 			
 			if (proc is None) or (proc.poll() is not None):
+				logger.error("My Home didn't start so try to restart it")
 				break
 			
 			# try open page 3 times
@@ -71,16 +79,16 @@ while True:
 					kill = False
 					break
 				except Exception as e:
-					Logger.log("debug", str(e))
+					logger.debug(str(e))
 					time.sleep(30)
 			if kill:
-				Logger.log("error", "Cannot open the web page restart My Home")
+				logger.error("Cannot open the web page restart My Home")
 				break
 		print("")
 	except (KeyboardInterrupt, SystemExit) as e:
 		killProc()
 		break
 	except Exception as e:
-		Logger.log("debug", str(e))
+		logger.debug(str(e))
 		time.sleep(60) # wait a minute
 		pass
