@@ -1,3 +1,4 @@
+import logging
 from configparser import RawConfigParser
 from os import path
 
@@ -5,48 +6,56 @@ from Utils import Utils
 from Utils.Decorators import type_check
 from Utils.Singleton import Singleton
 
+logger = logging.getLogger(__name__)
+
 
 class Config(Singleton):
-	LogFilePath = "bin/log.log"
-	ConfigFilePath = "bin/config.ini"
+    """ Singleton configuration class. """
 
-	@type_check
-	def __init__(self):
-		""" Initialize singleton Config instace. """
+    LogFilePath = "bin/log.log"
+    ConfigFilePath = "bin/config.ini"
+    DataFilePath = "bin/data.json"
 
-		self.load()
+    @type_check
+    def __init__(self):
+        """ Initialize singleton Config instace. """
+        pass
 
-	@type_check
-	def load(self) -> bool:
-		""" Loads configurations from the config file.
-		
-		Returns:
-			bool -- True if the loading is successful, otherwise False.
-		"""
+    @type_check
+    def load(self, configParser: RawConfigParser) -> bool:
+        """ Loads configurations from the config parser.
 
-		configParser = RawConfigParser()
-		configParser.optionxform = str
-		if Config.ConfigFilePath not in configParser.read(Config.ConfigFilePath):
-			return False
+        Arguments:
+                configParser {RawConfigParser} -- ConfigParser which will be used to load configurations.
 
-		items = configParser.items(self.__class__.__name__)
-		for (name, value) in items:
-			if hasattr(self, name):
-				value = Utils.parse(value, type(getattr(self, name)))
-				setattr(self, name, value)
-		return True
+        Returns:
+                bool -- True if the loading is successful, otherwise False.
+        """
 
-	@type_check
-	def save(self, configParser:RawConfigParser) -> None:
-		""" Saves configurations to the config file.
-		
-		Arguments:
-			configParser {RawConfigParser} -- ConfigParser which will be used to save configurations.
-		"""
+        logger.debug("Load Config")
+        items = configParser.items(self.__class__.__name__)
+        for (name, value) in items:
+            if hasattr(self, name):
+                valueType = type(getattr(self, name))
+                value = Utils.parse(value, valueType)
+                setattr(self, name, value)
+                logger.debug("Config - %s: %s (%s)" %
+                             (name, value, valueType))
+        return True
 
-		section = self.__class__.__name__
-		configParser.add_section(section)
-		items = Utils.getFields(self)
-		for attr in items:
-			value = getattr(self, attr)
-			configParser.set(section, attr, Utils.string(value))
+    @type_check
+    def save(self, configParser: RawConfigParser) -> None:
+        """ Saves configurations to the config parser.
+
+        Arguments:
+                configParser {RawConfigParser} -- ConfigParser which will be used to save configurations.
+        """
+
+        logger.debug("Save Config")
+        section = self.__class__.__name__
+        configParser.add_section(section)
+        items = Utils.getFields(self)
+        for name in items:
+            value = getattr(self, name)
+            configParser.set(section, name, Utils.string(value))
+            logger.debug("Config - %s: %s" % (name, value))
