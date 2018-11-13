@@ -12,21 +12,23 @@ from Utils import Utils
 from Utils.Config import Config
 from Utils.Decorators import type_check
 from Utils.Event import Event
+from Utils.Singleton import Singleton
 
 logger = logging.getLogger(__name__)
 
 
-class MHome(object):
+class MyHome(Singleton):
     """ My Home manager class. """
 
     _UpdateTime = 1  # seconds
     _UpdateWarningTimeout = 0.1  # seconds
 
     def __init__(self):
-        """ Initialize an instance of the MHome class. """
+        """ Initialize an instance of the MyHome class. """
 
         logger.info("Start My Home")
 
+        self.config = Config()
         self.event = Event()
 
         # systems
@@ -45,15 +47,15 @@ class MHome(object):
         self.event(self, "Start")
 
     def __del__(self):
-        """ Destroy the MHome instance. """
+        """ Destroy the MyHome instance. """
         self.stop()
 
     @type_check
     def stop(self) -> None:
-        """ Save and stop MHome. """
+        """ Save and stop MyHome. """
 
         self.event(self, "Stop")
-        MHome._UpdateTime = 0
+        MyHome._UpdateTime = 0
 
         self.save()
         for key in self.systems.keys():
@@ -64,7 +66,7 @@ class MHome(object):
     def update(self) -> None:
         """ Update all the systems rapidly. """
 
-        while(MHome._UpdateTime > 0):
+        while(MyHome._UpdateTime > 0):
             start = datetime.now()
             # update systems
             for system in self.systems.values():
@@ -75,10 +77,10 @@ class MHome(object):
                 self.save()
                 self.systemChanged = False
 
-            if (datetime.now() - start).total_seconds() > MHome._UpdateWarningTimeout:
+            if (datetime.now() - start).total_seconds() > MyHome._UpdateWarningTimeout:
                 logger.warn("Update time: %s" % str(datetime.now() - start))
 
-            time.sleep(MHome._UpdateTime)
+            time.sleep(MyHome._UpdateTime)
 
     @type_check
     def load(self) -> None:
@@ -97,7 +99,7 @@ class MHome(object):
             self._lastBackupTime = Utils.parse(
                 data["LastBackupTime"], datetime)
 
-        Config().load(configParser)
+        self.config.load(configParser)
 
         # load systems settings
         keys = sorted(self.systems.keys())
@@ -121,7 +123,7 @@ class MHome(object):
         configParser = RawConfigParser()
         configParser.optionxform = str
 
-        Config().save(configParser)
+        self.config.save(configParser)
 
         # save systems settings
         data = {}

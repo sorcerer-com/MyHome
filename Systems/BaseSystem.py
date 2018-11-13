@@ -16,7 +16,7 @@ class BaseSystem(object):
         """ Initialize an instance of the BaseSystem class.
 
         Arguments:
-                owner {MHome} -- MHome object which is the owner of the system.
+                owner {MyHome} -- MyHome object which is the owner of the system.
         """
 
         self._owner = owner

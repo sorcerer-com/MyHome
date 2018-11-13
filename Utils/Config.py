@@ -4,13 +4,12 @@ from os import path
 
 from Utils import Utils
 from Utils.Decorators import type_check
-from Utils.Singleton import Singleton
 
 logger = logging.getLogger(__name__)
 
 
-class Config(Singleton):
-    """ Singleton configuration class. """
+class Config(object):
+    """ Configuration class. """
 
     LogFilePath = "bin/log.log"
     ConfigFilePath = "bin/config.ini"
@@ -18,8 +17,9 @@ class Config(Singleton):
 
     @type_check
     def __init__(self):
-        """ Initialize singleton Config instace. """
-        pass
+        """ Initialize Config instace. """
+
+        self.appSecret = ""
 
     @type_check
     def load(self, configParser: RawConfigParser) -> bool:
