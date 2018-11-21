@@ -11,6 +11,7 @@ import robobrowser
 
 from Utils import Utils
 
+
 Utils.setupLogging("bin/starter.log", useBufferHandler=False)
 logger = logging.getLogger()
 
@@ -46,6 +47,11 @@ def signal_handler(signal, frame):
     sys.exit(0)
 
 
+# args - Start.py "command" "web address"
+if len(sys.argv) < 3:
+    logger.error("Invalid arguments")
+    sys.exit(1)
+
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
@@ -63,7 +69,7 @@ while True:
 
     try:
         killProc()
-        proc = subprocess.Popen(["python3", "Main.py", "-service"])
+        proc = subprocess.Popen(sys.argv[1].split())
 
         while (proc is not None) and (proc.poll() is None):
             for i in range(0, 12):  # wait a minute
@@ -72,7 +78,7 @@ while True:
                     break
 
             if (proc is None) or (proc.poll() is not None):
-                logger.error("My Home didn't start so try to restart it")
+                logger.error("Process didn't start, so try to restart it")
                 break
 
             # try open page 3 times
@@ -80,14 +86,14 @@ while True:
             for i in range(0, 3):
                 try:
                     br = robobrowser.RoboBrowser(timeout=30)
-                    br.open("http://localhost:5000")
+                    br.open(sys.argv[2])
                     kill = False
                     break
                 except Exception as e:
                     logger.debug(str(e))
                     time.sleep(30)
             if kill:
-                logger.error("Cannot open the web page restart My Home")
+                logger.error("Cannot open the web page try to restart")
                 break
         print("")
     except (KeyboardInterrupt, SystemExit) as e:

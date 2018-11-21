@@ -1,4 +1,3 @@
-
 from Utils.Decorators import type_check
 
 # http://www.valuedlessons.com/2008/04/events-in-python.html
@@ -7,6 +6,7 @@ from Utils.Decorators import type_check
 class Event(object):
     """ Class used for creating events. """
 
+    @type_check
     def __init__(self):
         """ Initialize an instance of the Event class. """
 

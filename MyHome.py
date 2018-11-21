@@ -23,6 +23,7 @@ class MyHome(Singleton):
     _UpdateTime = 1  # seconds
     _UpdateWarningTimeout = 0.1  # seconds
 
+    @type_check
     def __init__(self):
         """ Initialize an instance of the MyHome class. """
 

@@ -20,10 +20,13 @@ def type_check(decorator: callable) -> callable:
 
         # iterate all type hints
         for attr_name, attr_type in hints.items():
-            if attr_name == "return":
+            if attr_name == "return" or attr_name not in kwargs:
                 continue
 
-            if (attr_name in kwargs) and (not isinstance(kwargs[attr_name], attr_type)):
+            if attr_type is callable and callable(kwargs[attr_name]):
+                continue
+
+            if not isinstance(kwargs[attr_name], attr_type):
                 raise TypeError("Argument %r is not of type %s" %
                                 (attr_name, attr_type))
 
@@ -39,9 +42,10 @@ def type_check(decorator: callable) -> callable:
                 decorator.__module__, decorator.__name__))
 
         # check for hints count
-        func_args_count = len(func_args) if "self" not in func_args else len(func_args) - 1
-        hits_count = max(0, len(get_type_hints(decorator)) -
-                         1)  # without 'return'
+        hints = get_type_hints(decorator)
+        func_args_count = len(
+            func_args) if "self" not in func_args else len(func_args) - 1
+        hits_count = len(hints) if "return" not in hints else len(hints) - 1
         if func_args_count != hits_count:
             raise SyntaxWarning(
                 "Function doesn't have appropriate type hints: %s.%s" % (decorator.__module__, decorator.__name__))

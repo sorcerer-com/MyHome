@@ -5,6 +5,7 @@ import re
 from datetime import datetime, timedelta
 
 from Utils.Decorators import try_catch, type_check
+from Utils.LoggingFilter import LoggingFilter
 
 
 @type_check
@@ -31,17 +32,22 @@ def setupLogging(fileName: str, showInConsole: bool = True, useBufferHandler: bo
     file.setFormatter(formatter)
     logger.addHandler(file)
 
+    noWerkzeugInfoFilter = LoggingFilter(lambda r: not (
+        r.name == "werkzeug" and r.levelno == logging.INFO))
     if showInConsole:
         # add Console handler
         console = logging.StreamHandler()
         console.setLevel(logging.INFO)
         console.setFormatter(formatter)
+        console.addFilter(noWerkzeugInfoFilter)
         logger.addHandler(console)
 
     if useBufferHandler:
         # add BufferHandler
         buffer = logging.handlers.BufferingHandler(500)
+        buffer.setLevel(logging.INFO)
         buffer.setFormatter(formatter)
+        buffer.addFilter(noWerkzeugInfoFilter)
         logger.addHandler(buffer)
 
 
