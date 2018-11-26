@@ -20,6 +20,10 @@ class Config(object):
         """ Initialize Config instace. """
 
         self.appSecret = ""
+        # TODO: expose as UI elements
+        self.password = ""
+        self.token = ""
+        self.internalIPs = []
 
     @type_check
     def load(self, configParser: RawConfigParser) -> bool:

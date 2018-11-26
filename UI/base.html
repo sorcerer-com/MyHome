@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>My Home</title>
+		<meta name='viewport' content='initial-scale=1.0, width=device-width'/>
+		<link rel='stylesheet' type='text/css' href='static/style.css'>
+		<script src='static/scripts.js'></script>
+	</head>
+
+	<body>
+		<script>
+			// refresh when something get changed
+			var current = ""
+			function onTimer() {
+				request("GET", location.href, function() { 
+					if (this.readyState == 4 && this.status == 200) {
+						if (current != "" && current != this.responseText)
+							location.reload();
+						else if (current == "") {
+							current = this.responseText;
+							setTimeout(onTimer, 1000);
+						}
+						else
+							setTimeout(onTimer, 3000);
+					}
+					else if (this.readyState == 4 && this.status == 0)
+						setTimeout(onTimer, 1000);
+				})
+			}
+			
+			onTimer();
+		</script>
+		
+		<div class='title'>
+			<img src='static/img/MyHome.ico'/>
+			<h1>My Home</h1>
+		</div>
+		
+		<div id='tooltip'></div>
+		{% block content %}{{ content|safe }}{% endblock %}
+	</body>
+</html>
