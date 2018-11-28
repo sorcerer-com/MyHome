@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+		<div class='buttonContainer'>
+			<a class='button left' href='/'>back</a>
+			<a class='button right hidden'>enabled</a>
+			<h2 class='title'>Log</h2>
+		</div>
+		
+		<ul class='log'>
+		{% for line in log %}
+			{% if "\terror\t" in line: %}
+			<li class='redText'>{{ line }}</li>
+			{% else %}
+			<li>{{ line }}</li>
+			{% endif %}
+		{% endfor %}
+		</ul>
+{% endblock %}

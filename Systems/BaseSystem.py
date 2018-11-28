@@ -20,7 +20,8 @@ class BaseSystem(object):
         """
 
         self._owner = owner
-        self._enabled = True
+        self._isEnabled = True
+        self.isVisible = True
 
     def stop(self) -> None:
         """ Stop current system. """
@@ -28,33 +29,30 @@ class BaseSystem(object):
         pass
 
     @property
-    def enabled(self) -> bool:
+    def isEnabled(self) -> bool:
         """ Gets a value indicating whether the system is enabled. 
 
         Returns:
                 bool -- True if the system is enabled, otherwise false.
         """
-        return self._enabled
+        return self._isEnabled
 
+    @isEnabled.setter
     @type_check
-    @enabled.setter
-    def enabled(self, value: bool) -> None:
+    def isEnabled(self, value: bool) -> None:
         """ Sets a value indicating whether the system is enabled.
 
         Arguments:
                 value {bool} -- If true the system will be enabled, otherwise it'll be disabled.
         """
 
-        if self._enabled != value:
-            self._enabled = value
+        if self.isEnabled != value:
+            self._isEnabled = value
             self._owner.systemChanged = True
-            self._onEnabledChanged()
 
-    @type_check
-    def _onEnabledChanged(self) -> None:
-        logger.info(self.Name + " System " +
-                    ("enabled" if self.enabled else "disabled"))
-        self._owner.event(self, "EnabledChanged", self.enabled)
+            logger.info(self.Name + " System " +
+                        ("enabled" if self.isEnabled else "disabled"))
+            self._owner.event(self, "IsEnabledChanged", self.isEnabled)
 
     @type_check
     def update(self) -> None:

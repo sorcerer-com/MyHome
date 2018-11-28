@@ -71,7 +71,7 @@ class MyHome(Singleton):
             start = datetime.now()
             # update systems
             for system in self.systems.values():
-                if system.enabled:
+                if system.isEnabled:
                     system.update()
 
             if self.systemChanged:
@@ -105,7 +105,8 @@ class MyHome(Singleton):
         # load systems settings
         keys = sorted(self.systems.keys())
         for key in keys:
-            self.systems[key].loadSettings(configParser, data[key])
+            if key in data:
+                self.systems[key].load(configParser, data[key])
 
         self.systemChanged = False
         self.event(self, "Loaded")
@@ -133,7 +134,7 @@ class MyHome(Singleton):
         for key in keys:
             configParser.add_section(self.systems[key].Name)
             systemData = {}
-            self.systems[key].saveSettings(configParser, systemData)
+            self.systems[key].save(configParser, systemData)
             data[self.systems[key].Name] = systemData
         data = json.dumps(data, indent=4, sort_keys=True, ensure_ascii=True)
 

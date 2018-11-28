@@ -72,10 +72,14 @@ def login():
 
 @views.route("/")
 def index():
-    logger.info("index")
-    result = "<html>"
-    for log in Utils.getLogs():
-        result += log + "<br/>"
-    result += str(MyHome()._UpdateTime)
-    result += "</html>"
-    return result
+    infos = [(name, MyHome().systems[name].isEnabled)
+             for name in sorted(MyHome().systems.keys())
+             if MyHome().systems[name].isVisible]
+    infos.append(("Settings", None))
+    infos.append(("Logs", None))
+    return render_template("index.html", infos=infos)
+
+
+@views.route("/Logs")
+def log():
+    return render_template("logs.html", log=reversed(Utils.getLogs()))
