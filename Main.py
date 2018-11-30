@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 
 from flask import Flask
 
+from Config import Config
 from MyHome import MyHome
 from Utils import Utils
-from Utils.Config import Config
 from Views import views
 
 Utils.setupLogging(Config.LogFilePath)

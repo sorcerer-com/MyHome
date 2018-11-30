@@ -20,7 +20,7 @@ def type_check(decorator: callable) -> callable:
 
         # iterate all type hints
         for attr_name, attr_type in hints.items():
-            if attr_name == "return" or attr_name not in kwargs:
+            if attr_name == "return" or attr_name not in kwargs or attr_type == type(None):
                 continue
 
             if attr_type is callable and callable(kwargs[attr_name]):

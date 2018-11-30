@@ -3,19 +3,22 @@ import logging
 import logging.handlers
 import re
 from datetime import datetime, timedelta
+from typing import get_type_hints
 
 from Utils.Decorators import try_catch, type_check
 from Utils.LoggingFilter import LoggingFilter
 
 
 @type_check
-def setupLogging(fileName: str, showInConsole: bool = True, useBufferHandler: bool = True) -> None:
+def setupLogging(fileName: str, fileLogLevel: int = logging.INFO, showInConsole: bool = True, useBufferHandler: bool = True) -> None:
+
     """ Setup Logging module.
 
     Arguments:
             fileName {str} -- Path to the file which will contains the logs.
 
     Keyword Arguments:
+            fileLogLevel {int} -- Log level of the file handler. (default: {logging.INFO})
             showInConsole {bool} -- Indicate whether the logs will be shown in the standart output. (default: {True})
             useBufferHandler {bool} -- Indicate whether the logs will be collected in the buffer. (default: {True})
     """
@@ -28,7 +31,7 @@ def setupLogging(fileName: str, showInConsole: bool = True, useBufferHandler: bo
     # add RotatingFileHandler
     file = logging.handlers.RotatingFileHandler(
         fileName, maxBytes=1024*1024, backupCount=3)
-    file.setLevel(logging.INFO)
+    file.setLevel(fileLogLevel)
     file.setFormatter(formatter)
     logger.addHandler(file)
 

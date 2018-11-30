@@ -12,7 +12,7 @@ import robobrowser
 from Utils import Utils
 
 
-Utils.setupLogging("bin/starter.log", useBufferHandler=False)
+Utils.setupLogging("bin/starter.log", fileLogLevel=logging.DEBUG, useBufferHandler=False)
 logger = logging.getLogger()
 
 proc = None
@@ -49,7 +49,7 @@ def signal_handler(signal, frame):
 
 # args - Start.py "command" "web address"
 if len(sys.argv) < 3:
-    logger.error("Invalid arguments")
+    logger.error("Invalid arguments - command and web address required")
     sys.exit(1)
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -95,7 +95,7 @@ while True:
             if kill:
                 logger.error("Cannot open the web page try to restart")
                 break
-        print("")
+        logger.info("")
     except (KeyboardInterrupt, SystemExit) as e:
         killProc()
         break

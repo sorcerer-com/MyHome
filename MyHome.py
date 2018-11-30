@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 from shutil import copyfile
 from threading import Thread
 
+from Config import Config
 from Systems.BaseSystem import BaseSystem
 from Utils import Utils
-from Utils.Config import Config
 from Utils.Decorators import type_check
 from Utils.Event import Event
 from Utils.Singleton import Singleton

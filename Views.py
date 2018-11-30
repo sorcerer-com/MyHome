@@ -49,6 +49,11 @@ def beforeRequest():
     session.modified = True
 
 
+@views.route("/robots.txt")
+def robots():
+    return "User-agent: *\nDisallow: /"
+
+
 @views.route("/login", methods=["GET", "POST"])
 def login():
     if MyHome().config.password == "":
