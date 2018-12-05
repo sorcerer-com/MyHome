@@ -11,7 +11,6 @@ from Utils.LoggingFilter import LoggingFilter
 
 @type_check
 def setupLogging(fileName: str, fileLogLevel: int = logging.INFO, showInConsole: bool = True, useBufferHandler: bool = True) -> None:
-
     """ Setup Logging module.
 
     Arguments:
@@ -116,7 +115,12 @@ def string(value: object) -> str:
     elif valueType is timedelta:
         value = datetime(1900, 1, 1) + value
         return "%02d-%02d-%02d %02d:%02d:%02d" % (value.year - 1900, value.month - 1, value.day - 1, value.hour, value.minute, value.second)
-    # TODO: list and dict - use json
+    elif valueType is list:
+        temp = [(type(v).__name__, string(v)) for v in value]
+        return json.dumps(temp)
+    elif valueType is dict:
+        temp = {k: (type(k).__name__, type(v).__name__, string(v)) for k, v in value.items()}
+        return json.dumps(temp)
     return str(value)
 
 
@@ -149,5 +153,16 @@ def parse(value: str, valueType: type) -> object:
     elif valueType is timedelta:
         value = re.split("-| |:", value)
         return datetime(1900 + int(value[0]), 1 + int(value[1]), 1 + int(value[2]), int(value[3]), int(value[4]), int(value[5])) - datetime(1900, 1, 1)
-    # TODO: list and dict - use json
+    elif valueType is list:
+        temp = json.loads(value)
+        res = []
+        for t in temp:
+            res.append(parse(t[1], eval(t[0])))
+        return res
+    elif valueType is dict:
+        temp = json.loads(value)
+        res = {}
+        for k, v in temp.items():
+            res[parse(k, eval(v[0]))] = parse(v[2], eval(v[1]))
+        return res
     raise Exception("Unsupported type to parse: %s" % valueType)
