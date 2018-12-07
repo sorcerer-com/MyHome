@@ -91,7 +91,12 @@ def getFields(obj: object, publicOnly: bool = True, includeStatic: bool = False)
         if publicOnly and attr.startswith("_"):
             continue
         if not includeStatic and hasattr(type(obj), attr):
-            continue
+            staticValue = getattr(type(obj), attr)
+            # skip only non properties or properties without getter or setter
+            if type(staticValue) is not property or \
+               staticValue.fget == None or \
+               staticValue.fset == None:
+                continue
         if not callable(value):
             result[attr] = value
     return result
@@ -119,7 +124,8 @@ def string(value: object) -> str:
         temp = [(type(v).__name__, string(v)) for v in value]
         return json.dumps(temp)
     elif valueType is dict:
-        temp = {k: (type(k).__name__, type(v).__name__, string(v)) for k, v in value.items()}
+        temp = {k: (type(k).__name__, type(v).__name__, string(v))
+                for k, v in value.items()}
         return json.dumps(temp)
     return str(value)
 

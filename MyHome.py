@@ -8,6 +8,7 @@ from shutil import copyfile
 from threading import Thread
 
 from Config import Config
+from UIManager import UIManager
 from Systems.BaseSystem import BaseSystem
 from Utils import Utils
 from Utils.Decorators import type_check
@@ -15,6 +16,8 @@ from Utils.Event import Event
 from Utils.Singleton import Singleton
 
 logger = logging.getLogger(__name__)
+
+# TODO: add __repr__ to all classes
 
 
 class MyHome(Singleton):
@@ -29,17 +32,20 @@ class MyHome(Singleton):
 
         logger.info("Start My Home")
 
-        self.config = Config()
+        self.uiManager = UIManager(self)
+        self.config = Config(self)
         self.event = Event()
 
         # systems
         self.systems = {}
         for cls in BaseSystem.__subclasses__():
-            self.systems[cls.Name] = cls(self)
+            self.systems[cls] = cls(self)
 
         self._lastBackupTime = datetime.now()
         self.systemChanged = False
         self.load()
+
+        self.setup()
 
         t = Thread(target=self.update)
         t.daemon = True
@@ -47,9 +53,18 @@ class MyHome(Singleton):
 
         self.event(self, "Start")
 
+    @type_check
     def __del__(self):
         """ Destroy the MyHome instance. """
         self.stop()
+
+    @type_check
+    def setup(self) -> None:
+        """ Setup all sub-components. """
+
+        self.config.setup()
+        for system in self.systems.values():
+            system.setup()
 
     @type_check
     def stop(self) -> None:
@@ -59,8 +74,8 @@ class MyHome(Singleton):
         MyHome._UpdateTime = 0
 
         self.save()
-        for key in self.systems.keys():
-            self.systems[key].stop()
+        for system in self.systems.values():
+            system.stop()
         logger.info("Stop My Home")
 
     @type_check
@@ -103,10 +118,10 @@ class MyHome(Singleton):
         self.config.load(configParser)
 
         # load systems settings
-        keys = sorted(self.systems.keys())
+        keys = sorted([k.__name__ for k in self.systems.keys()])
         for key in keys:
-            if key in data:
-                self.systems[key].load(configParser, data[key])
+            systemData = data[key] if key in data else {}
+            self.systems[eval(key)].load(configParser, systemData)
 
         self.systemChanged = False
         self.event(self, "Loaded")
@@ -130,12 +145,12 @@ class MyHome(Singleton):
         # save systems settings
         data = {}
         data["LastBackupTime"] = Utils.string(self._lastBackupTime)
-        keys = sorted(self.systems.keys())
+        keys = sorted([k.__name__ for k in self.systems.keys()])
         for key in keys:
-            configParser.add_section(self.systems[key].Name)
+            configParser.add_section(self.systems[eval(key)].name)
             systemData = {}
-            self.systems[key].save(configParser, systemData)
-            data[self.systems[key].Name] = systemData
+            self.systems[eval(key)].save(configParser, systemData)
+            data[self.systems[eval(key)].name] = systemData
         data = json.dumps(data, indent=4, sort_keys=True, ensure_ascii=True)
 
         logger.debug("Save config to file: %s", Config.ConfigFilePath)

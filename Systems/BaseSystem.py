@@ -10,9 +10,8 @@ logger = logging.getLogger(__name__)
 class BaseSystem(object):
     """ BaseSystem class """
 
-    Name = ""
-
-    def __init__(self, owner):
+    @type_check
+    def __init__(self, owner: None):
         """ Initialize an instance of the BaseSystem class.
 
         Arguments:
@@ -23,12 +22,31 @@ class BaseSystem(object):
         self._isEnabled = True
         self.isVisible = True
 
+    @type_check
+    def setup(self) -> None:
+        """ Setup the system. """
+
+        self._owner.uiManager.registerContainer(self)
+
+    @type_check
     def stop(self) -> None:
         """ Stop current system. """
-        logger.debug("Stop system: %s System" % self.Name)
+        logger.debug("Stop system: %s" % self.name)
         pass
 
     @property
+    @type_check
+    def name(self) -> str:
+        """ Gets name of the system.
+
+        Returns:
+            str -- Name of the system.
+        """
+
+        return self.__class__.__name__[:-len("System")]
+
+    @property
+    @type_check
     def isEnabled(self) -> bool:
         """ Gets a value indicating whether the system is enabled. 
 
@@ -50,14 +68,14 @@ class BaseSystem(object):
             self._isEnabled = value
             self._owner.systemChanged = True
 
-            logger.info(self.Name + " System " +
+            logger.info(self.name + " System " +
                         ("enabled" if self.isEnabled else "disabled"))
             self._owner.event(self, "IsEnabledChanged", self.isEnabled)
 
     @type_check
     def update(self) -> None:
         """ Update current system's state. """
-        logger.debug("Update system: %s System" % self.Name)
+        logger.debug("Update system: %s" % self.name)
         pass
 
     @type_check
@@ -69,11 +87,11 @@ class BaseSystem(object):
                 data {dict} -- Dictionary from which the system data will be loaded.
         """
 
-        logger.debug("Load system: %s System" % self.Name)
-        if not configParser.has_section(self.Name):
+        logger.debug("Load system: %s" % self.name)
+        if not configParser.has_section(self.name):
             return
 
-        items = configParser.items(self.Name)
+        items = configParser.items(self.name)
         for (name, value) in items:
             # static fields
             if hasattr(type(self), name):
@@ -85,7 +103,7 @@ class BaseSystem(object):
                 valueType = type(getattr(self, name))
                 setattr(self, name, Utils.parse(value, valueType))
             logger.debug("%s System - %s: %s (%s)" %
-                         (self.Name, name, value, valueType))
+                         (self.name, name, value, valueType))
 
     @type_check
     def save(self, configParser: RawConfigParser, data: dict) -> None:
@@ -96,9 +114,9 @@ class BaseSystem(object):
                 data {dict} -- Dictionary to which the system data will be saved.
         """
 
-        logger.debug("Save system: %s System" % self.Name)
+        logger.debug("Save system: %s" % self.name)
         items = Utils.getFields(self)
         for name in items:
             value = getattr(self, name)
-            configParser.set(self.Name, name, Utils.string(value))
-            logger.debug("%s System - %s: %s" % (self.Name, name, value))
+            configParser.set(self.name, name, Utils.string(value))
+            logger.debug("%s System - %s: %s" % (self.name, name, value))

@@ -16,14 +16,26 @@ class Config(object):
     DataFilePath = "bin/data.json"
 
     @type_check
-    def __init__(self):
-        """ Initialize Config instace. """
+    def __init__(self, owner: None):
+        """ Initialize an instance of the Config class.
+
+        Arguments:
+            owner {MyHome} -- MyHome object which is the owner of the config.
+        """
+
+        self._owner = owner
 
         self.appSecret = ""
-        # TODO: expose as UI elements
         self.password = ""
         self.token = ""
         self.internalIPs = []
+
+    @type_check
+    def setup(self) -> None:
+        """ Setup config. """
+
+        uiContainer = self._owner.uiManager.registerContainer(self)
+        uiContainer.properties["appSecret"].isPrivate = True
 
     @type_check
     def load(self, configParser: RawConfigParser) -> bool:
