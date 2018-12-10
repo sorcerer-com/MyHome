@@ -7,7 +7,7 @@ class Event(object):
     """ Class used for creating events. """
 
     @type_check
-    def __init__(self):
+    def __init__(self) -> None:
         """ Initialize an instance of the Event class. """
 
         self.handlers = set()

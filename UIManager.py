@@ -8,7 +8,7 @@ class UIManager(object):
     """ UI Manager class. """
 
     @type_check
-    def __init__(self, owner: None):
+    def __init__(self, owner: None) -> None:
         """ Initialize an instance of the UI Manager class.
 
         Arguments:
@@ -54,7 +54,7 @@ class UIContainer(object):
     """ UI Container class. """
 
     @type_check
-    def __init__(self, owner: UIManager, name: str):
+    def __init__(self, owner: UIManager, name: str) -> None:
         """ Initialize an instance of the UIContainer class.
 
         Arguments:
@@ -76,7 +76,7 @@ class UIProperty(object):
     """ UI Property class. """
 
     @type_check
-    def __init__(self, owner: UIContainer, name: str, type_: type):
+    def __init__(self, owner: UIContainer, name: str, type_: type) -> None:
         """ Initialize an instance of the UIProperty class.
 
         Arguments:

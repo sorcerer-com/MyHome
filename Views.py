@@ -1,9 +1,10 @@
 import logging
 import secrets
 
-from flask import Blueprint, redirect, render_template, request, session, abort
-from werkzeug.security import (check_password_hash,
-                               generate_password_hash)  # use to generate hash of the password/token
+from flask import Blueprint, abort, redirect, render_template, request, session
+from werkzeug.security import \
+    generate_password_hash  # use to generate hash of the password/token
+from werkzeug.security import check_password_hash
 
 from MyHome import MyHome
 from Utils import Utils
@@ -11,6 +12,7 @@ from Utils import Utils
 logger = logging.getLogger(__name__)
 
 views = Blueprint('views', __name__)
+myHome = MyHome()
 
 
 @views.before_request
@@ -23,11 +25,11 @@ def beforeRequest():
             abort(403)
 
     isLocalIP = (request.remote_addr == "127.0.0.1")
-    for ip in MyHome().config.internalIPs:
+    for ip in myHome.config.internalIPs:
         isLocalIP |= request.remote_addr.startswith(ip)
 
     # pass only login
-    if ("password" not in session) or (session["password"] != MyHome().config.password):
+    if ("password" not in session) or (session["password"] != myHome.config.password):
         if request.endpoint == "views.login":
             return
         elif not isLocalIP:
@@ -37,7 +39,7 @@ def beforeRequest():
 
     # external request
     if not isLocalIP:
-        if ("token" not in session) or (session["token"] != MyHome().config.token):
+        if ("token" not in session) or (session["token"] != myHome.config.token):
             if request.endpoint == "views.login":
                 return
             else:
@@ -56,16 +58,16 @@ def robots():
 
 @views.route("/login", methods=["GET", "POST"])
 def login():
-    if MyHome().config.password == "":
-        session["password"] = MyHome().config.password
+    if myHome.config.password == "":
+        session["password"] = myHome.config.password
         return redirect("/")
 
     invalid = False
     if request.method == "POST":
         loginType = request.form["loginType"]
-        if check_password_hash(MyHome().config.password, request.form[loginType]):
+        if check_password_hash(myHome.config.password, request.form[loginType]):
             logger.info("LogIn: Correct " + loginType)
-            session[loginType] = MyHome().config.password
+            session[loginType] = myHome.config.password
             return redirect("/")
         else:
             logger.warning("LogIn: Invalid" + loginType)
@@ -77,9 +79,10 @@ def login():
 
 @views.route("/")
 def index():
-    infos = [(name, MyHome().systems[name].isEnabled)
-             for name in sorted(MyHome().systems.keys())
-             if MyHome().systems[name].isVisible]
+    infos = [(system.name, system.isEnabled)
+             for system in myHome.systems.values()
+             if system.isVisible]
+    infos.sort(key=lambda x: x[0])
     infos.append(("Settings", None))
     infos.append(("Logs", None))
     return render_template("index.html", infos=infos)

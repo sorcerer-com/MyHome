@@ -17,8 +17,6 @@ from Utils.Singleton import Singleton
 
 logger = logging.getLogger(__name__)
 
-# TODO: add __repr__ to all classes
-
 
 class MyHome(Singleton):
     """ My Home manager class. """
@@ -27,7 +25,7 @@ class MyHome(Singleton):
     _UpdateWarningTimeout = 0.1  # seconds
 
     @type_check
-    def __init__(self):
+    def __init__(self) -> None:
         """ Initialize an instance of the MyHome class. """
 
         logger.info("Start My Home")
@@ -54,9 +52,15 @@ class MyHome(Singleton):
         self.event(self, "Start")
 
     @type_check
-    def __del__(self):
+    def __del__(self) -> None:
         """ Destroy the MyHome instance. """
         self.stop()
+
+    @type_check
+    def __repr__(self) -> str:
+        """ Return string representation of the object. """
+
+        return str([system.name for system in self.systems.values()])
 
     @type_check
     def setup(self) -> None:
@@ -108,7 +112,7 @@ class MyHome(Singleton):
         if Config.ConfigFilePath not in configParser.read(Config.ConfigFilePath):
             return
 
-        data = []
+        data = {}
         if os.path.isfile(Config.DataFilePath):
             with open(Config.DataFilePath, 'r', encoding="utf8") as f:
                 data = json.load(f)
@@ -118,16 +122,16 @@ class MyHome(Singleton):
         self.config.load(configParser)
 
         # load systems settings
-        keys = sorted([k.__name__ for k in self.systems.keys()])
+        keys = sorted(self.systems.keys(), key=lambda x: x.__name__)
         for key in keys:
             systemData = data[key] if key in data else {}
-            self.systems[eval(key)].load(configParser, systemData)
+            self.systems[key].load(configParser, systemData)
 
         self.systemChanged = False
         self.event(self, "Loaded")
 
     @type_check
-    def save(self):
+    def save(self) -> None:
         """ Save configurations and systems settings and data. """
 
         logger.info("Save settings and data")
@@ -145,12 +149,12 @@ class MyHome(Singleton):
         # save systems settings
         data = {}
         data["LastBackupTime"] = Utils.string(self._lastBackupTime)
-        keys = sorted([k.__name__ for k in self.systems.keys()])
+        keys = sorted(self.systems.keys(), key=lambda x: x.__name__)
         for key in keys:
-            configParser.add_section(self.systems[eval(key)].name)
+            configParser.add_section(self.systems[key].name)
             systemData = {}
-            self.systems[eval(key)].save(configParser, systemData)
-            data[self.systems[eval(key)].name] = systemData
+            self.systems[key].save(configParser, systemData)
+            data[self.systems[key].name] = systemData
         data = json.dumps(data, indent=4, sort_keys=True, ensure_ascii=True)
 
         logger.debug("Save config to file: %s", Config.ConfigFilePath)

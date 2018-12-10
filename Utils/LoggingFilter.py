@@ -6,7 +6,7 @@ class LoggingFilter(logging.Filter):
     """ Filter instances are used to perform arbitrary filtering of LogRecords. """
 
     @type_check
-    def __init__(self, pred: callable):
+    def __init__(self, pred: callable) -> None:
         """ Initialize a filter.
 
         Arguments:

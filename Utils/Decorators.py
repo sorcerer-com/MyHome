@@ -45,8 +45,7 @@ def type_check(decorator: callable) -> callable:
         hints = get_type_hints(decorator)
         func_args_count = len(
             func_args) if "self" not in func_args else len(func_args) - 1
-        hits_count = len(hints) if "return" not in hints else len(hints) - 1
-        if func_args_count != hits_count:
+        if func_args_count != len(hints) - 1:  # without the 'return' hint
             raise SyntaxWarning(
                 "Function doesn't have appropriate type hints: %s.%s" % (decorator.__module__, decorator.__name__))
 

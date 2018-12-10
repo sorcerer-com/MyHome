@@ -16,7 +16,7 @@ class Config(object):
     DataFilePath = "bin/data.json"
 
     @type_check
-    def __init__(self, owner: None):
+    def __init__(self, owner: None) -> None:
         """ Initialize an instance of the Config class.
 
         Arguments:
@@ -29,6 +29,12 @@ class Config(object):
         self.password = ""
         self.token = ""
         self.internalIPs = []
+
+    @type_check
+    def __repr__(self) -> str:
+        """ Return string representation of the object. """
+
+        return str({name: getattr(self, name) for name in Utils.getFields(self)})
 
     @type_check
     def setup(self) -> None:
