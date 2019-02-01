@@ -7,10 +7,12 @@
 			<h2 class='title'>Log</h2>
 		</div>
 		
-		<ul class='log'>
+		<ul class='logs'>
 		{% for line in log %}
-			{% if "\terror\t" in line: %}
-			<li class='redText'>{{ line }}</li>
+			{% if " ERROR " in line: %}
+			<li class='error'>{{ line }}</li>
+			{% elif " WARNING " in line: %}
+			<li class='warning'>{{ line }}</li>
 			{% else %}
 			<li>{{ line }}</li>
 			{% endif %}

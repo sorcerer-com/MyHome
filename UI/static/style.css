@@ -174,6 +174,13 @@ select
 	text-align: left;
 }
 
+.settings li
+{
+	display: grid;
+	grid-template-columns: 48% 52%;
+
+}
+
 .settings h3
 {
 	display: inline-block;
@@ -181,40 +188,57 @@ select
 	width: 160px;
 	margin: 3px 0px;
 	text-align: right;
+	grid-column: 1;
+}
+
+.settings span
+{
+	grid-column: 2;
+	margin: 1px;
 }
 
 .settings .buttonContainer
 {
-	text-align: center;
+	grid-column: 2;
 }
 
-/* log */
-ul.log
+/* logs */
+ul.logs
 {
 	list-style-type: none;
 	padding: 3px;
 	text-align: left;
 }
 
-ul.log li
+ul.logs li
 {
 	white-space: pre;
     font-family: monospace;
 }
 
-ul.log li:nth-child(odd)
+ul.logs li:nth-child(odd)
 {
     color: #666;
 }
 
-ul.log li.redText
+ul.logs li.error
 {
 	color: #a00;
 }
 
-ul.log li.redText:nth-child(odd)
+ul.logs li.error:nth-child(odd)
 {
 	color: #d00;
+}
+
+ul.logs li.warning
+{
+	color: #a0a;
+}
+
+ul.logs li.errwarningor:nth-child(odd)
+{
+	color: #d0d;
 }
 
 /* button */

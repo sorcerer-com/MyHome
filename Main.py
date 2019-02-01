@@ -20,6 +20,18 @@ app.register_blueprint(views)
 
 myHome = MyHome()
 
+
+@app.template_filter()
+def typeDictSort(value):
+    keys = sorted(value.keys(), key=lambda x: type(x).__name__)
+    return [(key, value[key]) for key in keys]
+
+
+@app.template_filter()
+def toString(value):
+    return Utils.string(value)
+
+
 if __name__ == "__main__":
     if myHome.config.appSecret == "":
         myHome.config.appSecret = secrets.token_hex(24)

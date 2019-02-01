@@ -32,7 +32,8 @@ class BaseSystem(object):
     def setup(self) -> None:
         """ Setup the system. """
 
-        self._owner.uiManager.registerContainer(self)
+        uiContainer = self._owner.uiManager.registerContainer(self)
+        uiContainer.properties["isVisible"].isPrivate = True
 
     @type_check
     def stop(self) -> None:

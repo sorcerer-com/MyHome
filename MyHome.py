@@ -52,11 +52,6 @@ class MyHome(Singleton):
         self.event(self, "Start")
 
     @type_check
-    def __del__(self) -> None:
-        """ Destroy the MyHome instance. """
-        self.stop()
-
-    @type_check
     def __repr__(self) -> str:
         """ Return string representation of the object. """
 
@@ -166,3 +161,19 @@ class MyHome(Singleton):
             dataFile.write(data)
 
         self.event(self, "SettingsSaved")
+
+    @type_check
+    def getSystemByClassName(self, className: str) -> BaseSystem:
+        """ Gets system by set class name.
+
+        Arguments:
+            className {str} -- Class name of the system.
+
+        Returns:
+            BaseSystem -- Instance of the system with the set class name, if there isn't such system None.
+        """
+
+        for key in self.systems.keys():
+            if key.__name__ == className:
+                return self.systems[key]
+        return None

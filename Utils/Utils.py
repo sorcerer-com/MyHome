@@ -143,7 +143,7 @@ def parse(value: str, valueType: type) -> object:
             Exception -- It's raised if try to parse to unsupported type.
 
     Returns:
-            any -- Parsed value.
+            object -- Parsed value.
     """
 
     if valueType is bool:

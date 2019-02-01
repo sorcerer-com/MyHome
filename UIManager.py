@@ -19,7 +19,13 @@ class UIManager(object):
         self.containers = {}
 
     @type_check
-    def registerContainer(self, obj: None, name: str = None) -> None:
+    def __repr__(self) -> str:
+        """ Return string representation of the object. """
+
+        return "containers[%s]" % len(self.containers)
+
+    @type_check
+    def registerContainer(self, obj: object, name: str = None) -> str:
         """ Register object as UI container.
 
         Arguments:
@@ -27,6 +33,9 @@ class UIManager(object):
 
         Keyword Arguments:
             name {str} -- Name of the container. (default: class name)
+
+        Returns:
+            UIContainer - Registered UI container.
         """
 
         name = type(obj).__name__ if name == None else name
@@ -34,7 +43,9 @@ class UIManager(object):
         items = Utils.getFields(obj)
         for name in items:
             valueType = type(getattr(obj, name))
-            container.properties[name] = UIProperty(container, name, valueType)
+            displayName = name[0].upper() + name[1:]
+            container.properties[name] = UIProperty(
+                container, displayName, valueType)
             if valueType is list:
                 container.properties[name].subtype = str
             elif valueType is dict:
@@ -42,12 +53,6 @@ class UIManager(object):
 
         self.containers[obj] = container
         return container
-
-    @type_check
-    def __repr__(self) -> str:
-        """ Return string representation of the object. """
-
-        return "containers[%s]" % len(self.containers)
 
 
 class UIContainer(object):
@@ -76,27 +81,26 @@ class UIProperty(object):
     """ UI Property class. """
 
     @type_check
-    def __init__(self, owner: UIContainer, name: str, type_: type) -> None:
+    def __init__(self, owner: UIContainer, displayName: str, type_: type) -> None:
         """ Initialize an instance of the UIProperty class.
 
         Arguments:
             owner {UIContainer} -- UIContainer owner of this container.
-            name {str} -- Name of the property.
+            displayName {str} -- Display name of the property.
             type_ {type} -- Type of the property.
         """
 
         self._owner = owner
-        self.name = name
+        self.displayName = displayName
         self.type_ = type_
         self.subtype = None
         self.isPrivate = False
-        # TODO: display name?
 
     @type_check
     def __repr__(self) -> str:
         """ Return string representation of the object. """
 
-        result = "%s (%s)" % (self.name, self.type_.__name__)
+        result = "%s (%s)" % (self.displayName, self.type_.__name__)
         if self.isPrivate:
             result = "*" + result
         if self.subtype != None:

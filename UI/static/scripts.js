@@ -1,7 +1,7 @@
 function request(method, url, func, postData) {
 	if (!window.XMLHttpRequest)
 		return;
-		
+
 	var xhttp = new XMLHttpRequest();
 	xhttp.timeout = 4000; // Set timeout to 4 seconds (4000 milliseconds)
 	xhttp.onreadystatechange = func;
@@ -14,7 +14,7 @@ function submitForm(formId) {
 	document.getElementById(formId).submit()
 }
 
-			
+
 function addText(sender, formId, inputName) {
 	var form = document.getElementById(formId);
 	var element = form.elements[inputName];
@@ -28,11 +28,38 @@ function removeText(formId, inputName, count) {
 }
 
 
-function addItem(sender) {
-	var parent = sender.parentElement.parentElement;
-	var index = Array.prototype.indexOf.call(parent.children, sender.parentElement);
-	var newItem = parent.children[index - 1].cloneNode(true);
-	parent.insertBefore(newItem, parent.children[index]);
+function addItem(sender, type, name, value, button = false) {
+	var span = document.createElement("span");
+	if (type != "bool") {
+		var element = document.createElement("input");
+		element.type = "text"; // TODO: implement other types
+		element.value = value;
+		element.title = value;
+	} else {
+		var element = document.createElement("select");
+		for (v of ["True", "False"]) {
+			var option = document.createElement("option");
+			option.value = v;
+			option.label = v;
+			if (value == v)
+				option.selected = true;
+			element.appendChild(option);
+		}
+	}
+	element.name = name;
+	span.appendChild(element);
+
+	if (button) {
+		span.appendChild(document.createTextNode("\n"));
+		var button = document.createElement("a");
+		button.className = "button";
+		button.href = "javascript:;";
+		button.onclick = function () { removeItem(button); };
+		button.text = "-";
+		span.appendChild(button);
+	}
+
+	sender.parentElement.insertBefore(span, sender);
 }
 
 function removeItem(sender, level = 1) {
@@ -54,22 +81,22 @@ function toggleDetails(sender) {
 function openTab(sender) {
 	var tabContainer = sender.parentElement;
 	var idx = Array.prototype.indexOf.call(tabContainer.children, sender);
-	
+
 	var tabButtons = tabContainer.getElementsByTagName("button");
-    for (i = 0; i < tabButtons.length; i++) {
-        tabButtons[i].className = tabButtons[i].className.replace("active", "");
-    }
+	for (i = 0; i < tabButtons.length; i++) {
+		tabButtons[i].className = tabButtons[i].className.replace("active", "");
+	}
 	sender.className += " active";
-	
+
 	var tabContents = tabContainer.getElementsByClassName("tabContent");
-    for (i = 0; i < tabContents.length; i++) {
-        tabContents[i].className = tabContents[i].className.replace(" active", "");
+	for (i = 0; i < tabContents.length; i++) {
+		tabContents[i].className = tabContents[i].className.replace(" active", "");
 		if (i == idx)
 			tabContents[i].className += " active";
-    }
+	}
 }
 
-			
+
 function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 	var axisStyle = '#000000';
 	var axisGuideStyle = 'rgba(255, 255, 255, 0.3)';
@@ -78,21 +105,21 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 	var textStyle = '#666666';
 	if (!Array.isArray(values) || values.length == 0)
 		return
-		
+
 	var minValue = values[0], maxValue = values[0];
 	for (i = 1; i < values.length; i++) {
 		minValue = Math.min(minValue, values[i]);
 		maxValue = Math.max(maxValue, values[i]);
 	}
 	var delta = Math.max(maxValue - minValue, 0.01);
-	
+
 	var canvas = document.getElementById(canvasId);
 	var context = canvas.getContext("2d");
 	var withEps = (canvas.width - 20) / (values.length - 1);
 	var heightEps = (canvas.height - 40) / delta;
-	var start = {x: 10, y: canvas.height - 20};
-	
-	if (drawAxis) {					
+	var start = { x: 10, y: canvas.height - 20 };
+
+	if (drawAxis) {
 		var maxValueWidth = context.measureText(maxValue).width;
 		var textHeight = parseInt(context.font);
 		// draw X and Y axis
@@ -103,7 +130,7 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 		context.lineTo(canvas.width - 10, canvas.height - 10);
 		context.strokeStyle = axisStyle;
 		context.stroke();
-		
+
 		for (i = Math.round(minValue); i <= maxValue; i++) {
 			if (i % Math.max(Math.round(textHeight / heightEps), 1) != 0)
 				continue;
@@ -118,23 +145,23 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 			context.strokeStyle = textStyle;
 			context.strokeText(i, maxValueWidth + 5 - textWidth, start.y - (i - minValue) * heightEps + textHeight / 2);
 		}
-		
+
 		withEps = (canvas.width - 20 - maxValueWidth - 15) / (values.length - 1);
-		start = {x: 10 + maxValueWidth + 10, y: canvas.height - 20};
+		start = { x: 10 + maxValueWidth + 10, y: canvas.height - 20 };
 	}
-	
+
 	// fill area below the curve
 	context.beginPath();
 	context.fillStyle = charUnderLineStyle;
 	context.moveTo(start.x, start.y);
 	context.lineTo(start.x, start.y - (values[0] - minValue) * heightEps);
 	for (i = 1; i < values.length; i++) {
-		var pos = {x: start.x + i * withEps, y: start.y - (values[i] - minValue) * heightEps};
+		var pos = { x: start.x + i * withEps, y: start.y - (values[i] - minValue) * heightEps };
 		context.lineTo(pos.x, pos.y);
 	}
 	context.lineTo(start.x + (values.length - 1) * withEps, start.y);
 	context.fill();
-	
+
 	// draw the curve
 	context.beginPath();
 	context.strokeStyle = chartLineStyle;
@@ -142,12 +169,12 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 	context.moveTo(start.x, start.y - (values[0] - minValue) * heightEps);
 	context.fillRect(start.x - 2, start.y - (values[0] - minValue) * heightEps - 2, 4, 4);
 	for (i = 1; i < values.length; i++) {
-		var pos = {x: start.x + i * withEps, y: start.y - (values[i] - minValue) * heightEps};
+		var pos = { x: start.x + i * withEps, y: start.y - (values[i] - minValue) * heightEps };
 		context.lineTo(pos.x, pos.y);
 		context.fillRect(pos.x - 2, pos.y - 2, 4, 4);
 	}
 	context.stroke();
-	
+
 	if (drawValues) {
 		context.strokeStyle = textStyle;
 		var prevValue = minValue - delta; // to be sure that first value will be shown
@@ -155,7 +182,7 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 			if (i > 0 && Math.abs(values[i] - prevValue) < delta * 0.1)
 				continue;
 			prevValue = values[i];
-			var pos = {x: start.x + i * withEps, y: start.y - (values[i] - minValue) * heightEps};
+			var pos = { x: start.x + i * withEps, y: start.y - (values[i] - minValue) * heightEps };
 			var textWidth = context.measureText(values[i]).width;
 			var textHeight = parseInt(context.font);
 			if (i > 0 && values[i - 1] > values[i]) textHeight *= -1;
@@ -163,10 +190,10 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 			context.strokeText(values[i], pos.x - textWidth / 2, pos.y + 4 - textHeight);
 		}
 	}
-	
+
 	var tooltip = document.getElementById("tooltip");
 	if (Array.isArray(names) && tooltip != undefined) {
-		canvas.onmousemove = function(e) {
+		canvas.onmousemove = function (e) {
 			tooltip.style.visibility = "collapse";
 			var canvasPosX = e.clientX - canvas.getBoundingClientRect().left;
 			var canvasPosY = (e.clientY - canvas.getBoundingClientRect().top);
@@ -176,7 +203,7 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 			var chartY = start.y - (values[idx] - minValue) * heightEps;
 			if (Math.abs(chartY - canvasPosY) > 5)
 				return;
-				
+
 			tooltip.style.left = e.pageX + "px";
 			tooltip.style.top = (e.pageY + 20) + "px";
 			tooltip.style.visibility = "visible";

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}		
+		<h2 class='title'>Settings</h2>
+		
+		<form id='form' action='' method='post' class='settings'>
+			{% for obj, container in uiManager.containers|typeDictSort %}
+			<details onclick="toggleDetails(this)">
+				<summary>{{ container.name }}</summary>
+				<ul>
+					{% for key, property in container.properties|dictsort if not property.isPrivate %}
+						{% set value = obj|attr(key) %}
+						<li>
+							<h3>{{ property.displayName }}: </h3>
+						{% if property.subtype == None %}
+							<script>
+								var scriptTags = document.getElementsByTagName('script');
+								addItem(scriptTags[scriptTags.length - 1], "{{ property.type_.__name__ }}", "{{ container.name }}:{{ key }}", "{{ value|toString }}");
+							</script>
+						{% elif property.subtype is not sequence %}
+						{% for item in value %}				
+							<script>
+								var scriptTags = document.getElementsByTagName('script');
+								addItem(scriptTags[scriptTags.length - 1], "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}[]", "{{ item|toString }}", true);
+							</script>
+						{% endfor %}
+							<div class='buttonContainer'>
+								<a class='button' href='javascript:;' 
+								   onclick='addItem(this.parentElement, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}[]", "")'>
+									+
+								</a>
+							</div>
+						{% endif %}
+						</li>
+					{% else %}
+					</ul>
+					None
+					<ul>
+					{% endfor %}
+				</ul>
+			</details>
+			{% endfor %}
+			<input type="hidden" name="CSRF" value="{{ csrf }}"/>
+		</form>
+		
+		<div class='buttonContainer'>
+			<a class='button' href='javascript:;' onclick='submitForm("form");'>Save</a>
+			<a class='button' href='/'>Cancel</a>
+		</div>
+{% endblock %}

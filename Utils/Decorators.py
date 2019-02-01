@@ -55,7 +55,7 @@ def type_check(decorator: callable) -> callable:
     return wrapped_decorator
 
 
-def try_catch(message: str = "Exception was thrown", defaultReturn=None) -> callable:
+def try_catch(message: str = "Exception was thrown", defaultReturn: object = None) -> callable:
     """ Try-catch decorator which catch all types of Exceptions caught in the decorated function and log a message.
 
     Keyword Arguments:

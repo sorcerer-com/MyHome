@@ -70,7 +70,7 @@ def login():
             session[loginType] = myHome.config.password
             return redirect("/")
         else:
-            logger.warning("LogIn: Invalid" + loginType)
+            logger.warning("LogIn: Invalid " + loginType)
             invalid = True
 
     loginType = "token" if "token" in request.args else "password"
@@ -88,6 +88,44 @@ def index():
     return render_template("index.html", infos=infos)
 
 
+@views.route("/Settings", methods=["GET", "POST"])
+def settings():
+    if request.method == "POST":
+        data = request.form
+        for arg in data:
+            if arg == "CSRF":
+                continue
+            if arg.endswith("[]"):
+                value = data.getlist(arg)
+                arg = arg[:-2]
+            else:
+                value = str(data[arg])
+
+            systemName, prop = arg.split(":")
+            obj = myHome.getSystemByClassName(
+                systemName) if systemName != "Config" else myHome.config
+            if hasattr(obj, prop):
+                uiProperty = myHome.uiManager.containers[obj].properties[prop]
+                if type(value) is list:
+                    value = [Utils.parse(v, uiProperty.subtype) for v in value]
+                    setattr(obj, prop, value)
+                else:
+                    setattr(obj, prop, Utils.parse(value, uiProperty.type_))
+
+        myHome.systemChanged = True
+        return redirect("/")
+
+    return render_template("settings.html", uiManager=myHome.uiManager, csrf=session["CSRF"])
+
+
+@views.route("/restart")
+def restart():
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is not None:
+        func()
+    return redirect("/")
+
+
 @views.route("/Logs")
-def log():
+def logs():
     return render_template("logs.html", log=reversed(Utils.getLogs()))
