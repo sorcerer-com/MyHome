@@ -32,6 +32,7 @@ def toString(value):
     return Utils.string(value)
 
 
+# TODO: generate requirements.txt
 if __name__ == "__main__":
     if myHome.config.appSecret == "":
         myHome.config.appSecret = secrets.token_hex(24)

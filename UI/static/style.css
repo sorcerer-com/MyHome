@@ -278,7 +278,7 @@ div.tabContainer button:hover {
 }
 
 div.tabContainer button.active {
-    background-color: rgba(64, 64, 64, 0.3);rgba(128, 128, 128, 0.4);
+    background-color: rgba(64, 64, 64, 0.3);
 }
 
 div.tabContent {
@@ -289,4 +289,55 @@ div.tabContent {
 
 div.tabContent.active {
 	display: block;
+}
+
+/* tree */
+.treeContainer {
+	text-align: left;
+	background-color: rgba(192, 192, 192, 0.4);
+	border: 2px solid #808080;
+	border-radius: 5px;
+	margin: 10px;
+	padding: 5px;
+	overflow-x: hidden;
+}
+
+.treeContainer div {
+	margin: 1px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.treeIndent {
+	margin: 0px 10px;
+}
+
+.treeRoot {
+	font-size: 18px;
+	font-weight: bold;
+}
+
+/* selection */
+.selectable {
+	font-style: italic;
+	color: #326A99;
+	cursor: pointer;
+}
+
+.selectable:hover {
+	font-size: 16px;
+	font-weight: bold;
+	padding: 2px 5px;
+}
+
+.selected {
+	font-size: 16px;
+	font-weight: bold;
+	font-style: italic;
+	color: #326A99;
+}
+
+.disabled {
+	cursor: unset;
+	color: #66747F;
 }

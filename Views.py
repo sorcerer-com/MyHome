@@ -91,15 +91,14 @@ def index():
 @views.route("/Settings", methods=["GET", "POST"])
 def settings():
     if request.method == "POST":
-        data = request.form
-        for arg in data:
+        for arg in request.form:
             if arg == "CSRF":
                 continue
             if arg.endswith("[]"):
-                value = data.getlist(arg)
+                value = request.form.getlist(arg)
                 arg = arg[:-2]
             else:
-                value = str(data[arg])
+                value = str(request.form[arg])
 
             systemName, prop = arg.split(":")
             obj = myHome.getSystemByClassName(
@@ -116,6 +115,23 @@ def settings():
         return redirect("/")
 
     return render_template("settings.html", uiManager=myHome.uiManager, csrf=session["CSRF"])
+
+@views.route("/MediaPlayer", methods=["GET", "POST"])
+def MediaPlayer():
+    system = myHome.getSystemByClassName("MediaPlayerSystem")
+    data = request.form if request.method == "POST" else request.args
+    if len(data) > 0:
+        if "play" in data:
+            system.play(data["play"])
+        if "action" in data and hasattr(system, data["action"]):
+            getattr(system, data["action"])() # call function with set action name
+        if "command" in data:
+            system.command(data["command"])
+        if "refreshSharedList" in data:
+            system.refreshSharedList()
+        return redirect("/MediaPlayer")
+        
+    return render_template("MediaPlayer.html", tree=system.mediaTree, selected=system.playing, watched=system._watched, csrf=session["CSRF"])
 
 
 @views.route("/restart")

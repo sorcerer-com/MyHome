@@ -15,10 +15,16 @@ function submitForm(formId) {
 }
 
 
-function addText(sender, formId, inputName) {
+function setText(formId, inputName, text) {
 	var form = document.getElementById(formId);
 	var element = form.elements[inputName];
-	element.value += sender.text;
+	element.value = text;
+}
+
+function addText(formId, inputName, text) {
+	var form = document.getElementById(formId);
+	var element = form.elements[inputName];
+	element.value += text;
 }
 
 function removeText(formId, inputName, count) {

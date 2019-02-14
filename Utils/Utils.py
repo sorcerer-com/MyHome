@@ -171,4 +171,7 @@ def parse(value: str, valueType: type) -> object:
         for k, v in temp.items():
             res[parse(k, eval(v[0]))] = parse(v[2], eval(v[1]))
         return res
+
+    if value == "None":
+        return None
     raise Exception("Unsupported type to parse: %s" % valueType)

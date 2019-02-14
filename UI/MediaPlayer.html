@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+		<div class='buttonContainer'>
+			<a class='button left' href='/'>back</a>
+			<a class='button right hidden'>enabled</a>
+			<h2 class='title'>Media Player</h2>
+		</div>
+		
+		<script>
+			document.onkeypress = function(e) {
+				window.location.href = "?command=" + e.key;
+			};
+
+			function select(sender, fullname) {
+				setText("form", "play", fullname);
+				// deselect previous selected element
+				var elements = document.getElementsByClassName("selected");
+				for (var elem of elements) {
+					elem.classList.remove("selected");
+					elem.classList.add("selectable");
+				}
+				// select current element
+				sender.classList.add("selected");
+				sender.classList.remove("selectable");
+			}
+		</script>
+		
+		{% macro genTree(name, fullname, children, indent) -%}
+			<div>
+			{% for i in range(indent) %}
+				<span class='treeIndent'>+</span>
+			{% endfor %}
+
+			{% if fullname == selected %}
+				<span class='selected' title='{{ fullname }}'>{{ name }}</span>
+			{% elif children|length == 0 %}
+				{% set jsFullname = fullname|replace("\\", "\\\\") %}
+				{% if selected == "" %}
+					<span class='selectable' title='{{ fullname }}' onclick='select(this, "{{ jsFullname }}")'>{{ name }}</span>
+				{% else %} {# if something is selected disable items #}
+					<span class='disabled' title='{{ fullname }}'>{{ name }}</span>
+				{% endif %}
+			{% elif indent == 0 %}
+				<span class='treeRoot' title='{{ fullname }}'>{{ name }}</span>
+			{% else %}
+				<span title='{{ fullname }}'>{{ name }}</span>
+			{% endif %}
+
+			{% if fullname in watched %}
+				*
+			{% endif%}
+			</div>
+
+			{# recursion #}
+			{% for key, child in children|dictsort %}
+				{{ genTree(key, fullname + '\\' + key, child, indent + 1) }}
+			{% endfor %}
+		{%- endmacro %}
+		
+		<div class='buttonContainer'>{{ selected }}</div>
+		
+		<form id='form' action='' method='post'>
+			<input type='hidden' name='play'/>
+		{% if selected == "" %}
+			<a class='button' href='javascript:;' onclick='submitForm("form");'>Play</a>
+		{% else %}
+			<a class='button' href='?action=stop'>Stop</a>
+		{% endif %}
+			<a class='button' href='?action=pause'>||</a>
+			<a class='button' href='?action=volumeDown'>-</a>
+			<a class='button' href='?action=volumeUp'>+</a>
+			<a class='button' href='?action=seekBack'><</a>
+			<a class='button' href='?action=seekForward'>></a>
+			<a class='button' href='?action=seekBackFast'><<</a>
+			<a class='button' href='?action=seekForwardFast'>>></a>
+			<input type="hidden" name="CSRF" value="{{ csrf }}"/>
+		</form>
+
+		<div class='treeContainer'>
+			{% for key, child in tree|dictsort %}
+				{{ genTree(key, key, child, 0) }}
+			{% endfor %}
+		</div>
+		<a class='button' href='?refreshSharedList'>Refresh Shared</a>
+{% endblock %}

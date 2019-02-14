@@ -8,8 +8,9 @@ from shutil import copyfile
 from threading import Thread
 
 from Config import Config
-from UIManager import UIManager
 from Systems.BaseSystem import BaseSystem
+from Systems.MediaPlayerSystem import MediaPlayerSystem
+from UIManager import UIManager
 from Utils import Utils
 from Utils.Decorators import type_check
 from Utils.Event import Event
@@ -88,12 +89,12 @@ class MyHome(Singleton):
                 if system.isEnabled:
                     system.update()
 
+            if (datetime.now() - start).total_seconds() > MyHome._UpdateWarningTimeout:
+                logger.warn("Update time: %s" % str(datetime.now() - start))
+
             if self.systemChanged:
                 self.save()
                 self.systemChanged = False
-
-            if (datetime.now() - start).total_seconds() > MyHome._UpdateWarningTimeout:
-                logger.warn("Update time: %s" % str(datetime.now() - start))
 
             time.sleep(MyHome._UpdateTime)
 
@@ -119,8 +120,9 @@ class MyHome(Singleton):
         # load systems settings
         keys = sorted(self.systems.keys(), key=lambda x: x.__name__)
         for key in keys:
-            systemData = data[key] if key in data else {}
-            self.systems[key].load(configParser, systemData)
+            if key in self.systems:
+                systemData = data[self.systems[key].name] if self.systems[key].name in data else {}
+                self.systems[key].load(configParser, systemData)
 
         self.systemChanged = False
         self.event(self, "Loaded")
