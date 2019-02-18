@@ -152,6 +152,7 @@ select
 .settings details summary
 {
 	background-color: rgba(128, 128, 128, 0.3);
+	border-radius: 3px;
 	padding: 3px;
 	outline: none;
 	user-select: none;
@@ -161,6 +162,7 @@ select
 .settings details[open] summary
 {
 	background-color: rgba(128, 128, 128, 0.6);
+	border-radius: 3px 3px 0px 0px;
 	border-color: #808080;
 	border-width: 0 0 2px 0;
 	border-style: solid;

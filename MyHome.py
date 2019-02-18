@@ -10,6 +10,7 @@ from threading import Thread
 from Config import Config
 from Systems.BaseSystem import BaseSystem
 from Systems.MediaPlayerSystem import MediaPlayerSystem
+from Systems.ScheduleSystem import ScheduleSystem
 from UIManager import UIManager
 from Utils import Utils
 from Utils.Decorators import type_check

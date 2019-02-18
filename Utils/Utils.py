@@ -121,12 +121,9 @@ def string(value: object) -> str:
         value = datetime(1900, 1, 1) + value
         return "%02d-%02d-%02d %02d:%02d:%02d" % (value.year - 1900, value.month - 1, value.day - 1, value.hour, value.minute, value.second)
     elif valueType is list:
-        temp = [(type(v).__name__, string(v)) for v in value]
-        return json.dumps(temp)
+        return json.dumps(serializable(value))
     elif valueType is dict:
-        temp = {k: (type(k).__name__, type(v).__name__, string(v))
-                for k, v in value.items()}
-        return json.dumps(temp)
+        return json.dumps(serializable(value))
     return str(value)
 
 
@@ -160,18 +157,54 @@ def parse(value: str, valueType: type) -> object:
         value = re.split("-| |:", value)
         return datetime(1900 + int(value[0]), 1 + int(value[1]), 1 + int(value[2]), int(value[3]), int(value[4]), int(value[5])) - datetime(1900, 1, 1)
     elif valueType is list:
-        temp = json.loads(value)
-        res = []
-        for t in temp:
-            res.append(parse(t[1], eval(t[0])))
-        return res
+        return deserializable(json.loads(value))
     elif valueType is dict:
-        temp = json.loads(value)
-        res = {}
-        for k, v in temp.items():
-            res[parse(k, eval(v[0]))] = parse(v[2], eval(v[1]))
-        return res
+        return deserializable(json.loads(value))
 
     if value == "None":
         return None
     raise Exception("Unsupported type to parse: %s" % valueType)
+
+
+@try_catch("Cannot make serializable object")
+@type_check
+def serializable(value: object) -> object:
+    """ Convert to serializable object.
+
+    Arguments:
+        value {object} -- Value to be converted.
+
+    Returns:
+        object -- Serializable object.
+    """
+
+    valueType = type(value)
+    if valueType is list:
+        return [(type(v).__name__, serializable(v)) for v in value]
+    elif valueType is dict:
+        return {string(k): (type(k).__name__, type(v).__name__, serializable(v)) for k, v in value.items()}
+
+    return string(value)
+
+
+@try_catch("Cannot make deserializable object")
+@type_check
+def deserializable(value: object, valueType: type = type(None)) -> object:
+    """ Convert to deserializable object.
+
+    Arguments:
+        value {object} -- Value to be converted.
+
+    Returns:
+        object -- Deserializable object.
+    """
+
+    if valueType == type(None):
+        valueType = type(value)
+
+    if valueType is list:
+        return [deserializable(v[1], eval(v[0])) for v in value]
+    elif valueType is dict:
+        return {parse(k, eval(v[0])): deserializable(v[2], eval(v[1])) for k, v in value.items()}
+
+    return parse(value, valueType)

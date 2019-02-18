@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+		<div class='buttonContainer'>
+			<a class='button left hidden' href='/'>back</a>
+		{% if enabled == True %}
+			<a class='button right green' href='?enabled=False'>enabled</a>
+		{% else %}
+			<a class='button right red' href='?enabled=True'>disabled</a>
+		{% endif %}
+			<h2 class='title'>Schedule</h2>
+		</div>
+
+		<script>
+			function addSchedule(item) {
+				var form = document.getElementById("form");
+				var details = document.createElement("details");
+				details.onclick = function() { toggleDetails(details); };
+				var summary = document.createElement("summary");
+				summary.style.backgroundColor = item.Color;
+				summary.title = `${item.Time} ${item.Repeat}`;
+				summary.textContent = item.Name;
+				var removeButton = document.createElement("a");
+				removeButton.className = "button";
+				removeButton.href = "javascript:;";
+				removeButton.onclick = function() { removeItem(removeButton, 2); };
+				removeButton.textContent = "-";
+				summary.appendChild(removeButton);
+				details.appendChild(summary);
+				var ul = document.createElement("ul");
+				for (var key in item) {
+					var li = document.createElement("li");
+					var h3 = document.createElement("h3");
+					h3.textContent = `${key}: `;
+					li.appendChild(h3);
+					var input = document.createElement("input");
+					input.type = "text";
+					input.name = key;
+					input.value = item[key];
+					input.title = item[key];
+					li.appendChild(input);
+					ul.appendChild(li);
+				}
+				details.appendChild(ul);
+				form.insertBefore(details, form.children[form.childElementCount - 2]);
+			}
+			function addEmpty(){
+				var d = new Date();
+				d.setHours(d.getHours() + 1, -d.getTimezoneOffset(), 0, 0);
+				var time = d.toISOString().replace("T"," ").slice(0, -5);
+				addSchedule({Name: 'Name', Time: time, Repeat: '00-00-00 00:00:00', Command: '', Color: 'rgba(0, 0, 0, 0.3)'});
+			}
+		</script>
+		
+		<form id='form' action='' method='post' class='settings'>
+		{% for item in items|reverse %}
+			<script>
+				addSchedule({Name: '{{ item["Name"] }}', Time: '{{ item["Time"] }}', Repeat: '{{ item["Repeat"] }}', Command: '{{ item["Command"] }}', Color: '{{ item["Color"] }}'});
+			</script>
+		{% endfor %}
+			<input type="hidden" name="CSRF" value="{{ csrf }}"/>
+		
+			<div class='buttonContainer'>
+				<a class='button' href='javascript:;' onclick='addEmpty()'>+</a>
+			</div>
+			
+			<div class='buttonContainer'>
+				<a class='button' href='javascript:;' onclick='submitForm("form");'>Save</a>
+				<a class='button' href='/'>Cancel</a>
+			</div>
+		</form>
+{% endblock %}

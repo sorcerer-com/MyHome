@@ -1,5 +1,6 @@
 import logging
 import secrets
+from datetime import datetime, timedelta
 
 from flask import Blueprint, abort, redirect, render_template, request, session
 from werkzeug.security import \
@@ -116,6 +117,7 @@ def settings():
 
     return render_template("settings.html", uiManager=myHome.uiManager, csrf=session["CSRF"])
 
+
 @views.route("/MediaPlayer", methods=["GET", "POST"])
 def MediaPlayer():
     system = myHome.getSystemByClassName("MediaPlayerSystem")
@@ -124,14 +126,48 @@ def MediaPlayer():
         if "play" in data:
             system.play(data["play"])
         if "action" in data and hasattr(system, data["action"]):
-            getattr(system, data["action"])() # call function with set action name
+            # call function with set action name
+            getattr(system, data["action"])()
         if "command" in data:
             system.command(data["command"])
         if "refreshSharedList" in data:
             system.refreshSharedList()
         return redirect("/MediaPlayer")
-        
+
     return render_template("MediaPlayer.html", tree=system.mediaTree, selected=system.playing, watched=system._watched, csrf=session["CSRF"])
+
+
+@views.route("/Schedule", methods=["GET", "POST"])
+def Schedule():
+    system = myHome.getSystemByClassName("ScheduleSystem")
+    if request.method == "GET" and len(request.args) == 1:
+        system.isEnabled = (request.args["enabled"] == "True")
+    elif request.method == "POST" and len(request.form) > 0:
+        system._schedule = []
+        for arg in request.form:
+            if arg == "CSRF":
+                continue
+            values = request.form.getlist(arg)
+            for i in range(0, len(values)):
+                if len(system._schedule) <= i:
+                    system._schedule.append({})
+                if arg == "Time":
+                    value = Utils.parse(values[i], datetime)
+                elif arg == "Repeat":
+                    value = Utils.parse(values[i], timedelta)
+                else:
+                    value = values[i]
+                system._schedule[i][arg] = value
+        system._schedule.sort(key=lambda x: x["Time"])
+        system._nextTime = datetime.now()
+        myHome.systemChanged = True
+        return redirect("/")
+
+    items = []
+    for item in system._schedule:
+        items.append({key: Utils.string(value)
+                      for (key, value) in item.items()})
+    return render_template("Schedule.html", items=items, enabled=system.isEnabled, csrf=session["CSRF"])
 
 
 @views.route("/restart")

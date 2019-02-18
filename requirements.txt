@@ -1,0 +1,7 @@
+Flask==1.0.2
+robobrowser==0.5.3
+pysmb==1.1.27
+requests==2.19.1
+Werkzeug==0.14.1
+secrets==1.0.2
+typing==3.6.6

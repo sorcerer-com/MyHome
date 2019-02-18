@@ -83,7 +83,6 @@ class BaseSystem(object):
     def update(self) -> None:
         """ Update current system's state. """
         logger.debug("Update system: %s" % self.name)
-        pass
 
     @type_check
     def load(self, configParser: RawConfigParser, data: dict) -> None:
