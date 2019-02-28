@@ -96,8 +96,15 @@ def settings():
             if arg == "CSRF":
                 continue
             if arg.endswith("[]"):
-                value = request.form.getlist(arg)
+                value = request.form.getlist(arg)[1:] # skip first dummy item
                 arg = arg[:-2]
+                if arg.endswith(":key"):  # dict
+                    arg = arg[:-4]
+                    temp = request.form.getlist(
+                        arg + ":value[]")[1:]  # get values
+                    value = {value[i]: temp[i] for i in range(len(value))}
+                elif arg.endswith(":value"):  # skip values
+                    continue
             else:
                 value = str(request.form[arg])
 
@@ -108,6 +115,10 @@ def settings():
                 uiProperty = myHome.uiManager.containers[obj].properties[prop]
                 if type(value) is list:
                     value = [Utils.parse(v, uiProperty.subtype) for v in value]
+                    setattr(obj, prop, value)
+                elif type(value) is dict:
+                    value = {Utils.parse(k, uiProperty.subtype[0]): Utils.parse(
+                        v, uiProperty.subtype[0]) for k, v in value.items()}
                     setattr(obj, prop, value)
                 else:
                     setattr(obj, prop, Utils.parse(value, uiProperty.type_))

@@ -104,5 +104,5 @@ class UIProperty(object):
         if self.isPrivate:
             result = "*" + result
         if self.subtype != None:
-            result += "[%s]" % self.subtype
+            result += "[%s]" % str(self.subtype)
         return result

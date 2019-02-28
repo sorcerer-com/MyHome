@@ -1,6 +1,20 @@
 {% extends "base.html" %}
 
-{% block content %}		
+{% block content %}
+		<script>
+			function addOnClick(sender, type, name, keyPair) {
+				var span = document.createElement('span');
+				if (!keyPair) {
+					addItem(span, type, name + "[]", "", true);
+				}
+				else {
+					addItem(span, type, name + ":key[]", "");
+					addItem(span, type, name + ":value[]", "", true, true);
+				}
+				sender.parentElement.parentElement.insertBefore(span, sender.parentElement);
+			}
+		</script>
+
 		<h2 class='title'>Settings</h2>
 		
 		<form id='form' action='' method='post' class='settings'>
@@ -12,23 +26,46 @@
 						{% set value = obj|attr(key) %}
 						<li>
 							<h3>{{ property.displayName }}: </h3>
-						{% if property.subtype == None %}
+						{% if property.subtype == None %} {# normal type #}
+							<span>
 							<script>
-								var scriptTags = document.getElementsByTagName('script');
-								addItem(scriptTags[scriptTags.length - 1], "{{ property.type_.__name__ }}", "{{ container.name }}:{{ key }}", "{{ value|toString }}");
+								var span = document.currentScript.parentElement;
+								addItem(span, "{{ property.type_.__name__ }}", "{{ container.name }}:{{ key }}", "{{ value|toString }}");
 							</script>
-						{% elif property.subtype is not sequence %}
-						{% for item in value %}				
+							</span>
+						{% elif property.subtype is not sequence %} {# list type #}
+						<input type="hidden" name="{{ container.name }}:{{ key }}[]"/>
+						{% for item in value %}
+							<span>
 							<script>
-								var scriptTags = document.getElementsByTagName('script');
-								addItem(scriptTags[scriptTags.length - 1], "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}[]", "{{ item|toString }}", true);
+								var span = document.currentScript.parentElement;
+								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}[]", "{{ item|toString }}", true);
 							</script>
+							</span>
 						{% endfor %}
 							<div class='buttonContainer'>
 								<a class='button' href='javascript:;' 
-								   onclick='addItem(this.parentElement, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}[]", "")'>
+									onclick='addOnClick(this, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}", false)'>
 									+
 								</a>
+							</div>
+						{% else %} {# dict type #}
+						<input type="hidden" name="{{ container.name }}:{{ key }}:key[]"/>
+						<input type="hidden" name="{{ container.name }}:{{ key }}:value[]"/>
+						{% for itemKey, itemValue in value.items() %}
+							<span>
+							<script>
+								var span = document.currentScript.parentElement;
+								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}:key[]", "{{ itemKey|toString }}");
+								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}:value[]", "{{ itemValue|toString }}", true, true);
+							</script>
+							</span>
+						{% endfor %}
+							<div class='buttonContainer'>
+									<a class='button' href='javascript:;' 
+										onclick='addOnClick(this, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}", true)'>
+										+
+									</a>
 							</div>
 						{% endif %}
 						</li>

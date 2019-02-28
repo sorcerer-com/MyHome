@@ -19,7 +19,7 @@ canvas
 	margin: 5px
 }
 
-input
+input, select
 {
     padding: 3px 5px;
     border: 1px solid #666;
@@ -30,9 +30,7 @@ input
 
 select
 {
-    padding: 3px 5px;
-    border-radius: 5px;
-	width: 90%;
+	padding: 3px 0px;
 }
 
 
@@ -202,6 +200,14 @@ select
 .settings .buttonContainer
 {
 	grid-column: 2;
+}
+
+.settings hr
+{
+	border-width: 0px;
+	background-color: #808080;
+	height: 2px;
+	margin-right: 5px;
 }
 
 /* logs */

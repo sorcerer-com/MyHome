@@ -34,8 +34,7 @@ function removeText(formId, inputName, count) {
 }
 
 
-function addItem(sender, type, name, value, button = false) {
-	var span = document.createElement("span");
+function addItem(parent, type, name, value, button = false, line = false) {
 	if (type != "bool") {
 		var element = document.createElement("input");
 		element.type = "text"; // TODO: implement other types
@@ -53,19 +52,21 @@ function addItem(sender, type, name, value, button = false) {
 		}
 	}
 	element.name = name;
-	span.appendChild(element);
+	parent.appendChild(element);
 
 	if (button) {
-		span.appendChild(document.createTextNode("\n"));
+		parent.appendChild(document.createTextNode("\n"));
 		var button = document.createElement("a");
 		button.className = "button";
 		button.href = "javascript:;";
 		button.onclick = function () { removeItem(button); };
 		button.text = "-";
-		span.appendChild(button);
+		parent.appendChild(button);
 	}
 
-	sender.parentElement.insertBefore(span, sender);
+	if (line) {
+		parent.append(document.createElement("hr"));
+	}
 }
 
 function removeItem(sender, level = 1) {
