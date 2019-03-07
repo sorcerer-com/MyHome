@@ -61,8 +61,7 @@ class Config(object):
                 valueType = type(getattr(self, name))
                 value = Utils.parse(value, valueType)
                 setattr(self, name, value)
-                logger.debug("Config - %s: %s (%s)" %
-                             (name, value, valueType))
+                logger.debug(f"Config - {name}: {value} ({valueType})")
         return True
 
     @type_check
@@ -80,4 +79,4 @@ class Config(object):
         for name in items:
             value = getattr(self, name)
             configParser.set(section, name, Utils.string(value))
-            logger.debug("Config - %s: %s" % (name, value))
+            logger.debug(f"Config - {name}: {value}")

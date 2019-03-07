@@ -22,7 +22,7 @@ class UIManager(object):
     def __repr__(self) -> str:
         """ Return string representation of the object. """
 
-        return "containers[%s]" % len(self.containers)
+        return f"containers[{len(self.containers)}]"
 
     @type_check
     def registerContainer(self, obj: object, name: str = None) -> str:
@@ -74,7 +74,7 @@ class UIContainer(object):
     def __repr__(self) -> str:
         """ Return string representation of the object. """
 
-        return "%s properties[%s]" % (self.name, len(self.properties))
+        return f"{self.name} properties[{len(self.properties)}]"
 
 
 class UIProperty(object):
@@ -100,9 +100,9 @@ class UIProperty(object):
     def __repr__(self) -> str:
         """ Return string representation of the object. """
 
-        result = "%s (%s)" % (self.displayName, self.type_.__name__)
+        result = f"{self.displayName} ({self.type_.__name__})"
         if self.isPrivate:
             result = "*" + result
         if self.subtype != None:
-            result += "[%s]" % str(self.subtype)
+            result += f"[{self.subtype}]"
         return result

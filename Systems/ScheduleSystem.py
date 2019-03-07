@@ -70,12 +70,12 @@ class ScheduleSystem(BaseSystem):
                     command = command.replace("MyHome.", "self._owner.")
                     for cls, system in self._owner.systems.items():
                         command = command.replace(
-                            system.name + ".", "self._owner.getSystemByClassName('%s')." % cls.__name__)
+                            f"{system.name}.", f"self._owner.getSystemByClassName('{cls.__name__}').")
 
                 try:
                     exec(command)
                 except Exception:
-                    logger.exception("Cannot execute '%s'" % command)
+                    logger.exception(f"Cannot execute '{command}'")
                 self._owner.event(self, "CommandExecuted", command)
 
                 if item["Repeat"].total_seconds() == 0:

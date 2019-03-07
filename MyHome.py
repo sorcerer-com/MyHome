@@ -91,7 +91,7 @@ class MyHome(Singleton):
                     system.update()
 
             if (datetime.now() - start).total_seconds() > MyHome._UpdateWarningTimeout:
-                logger.warn("Update time: %s" % str(datetime.now() - start))
+                logger.warn(f"Update time: {datetime.now() - start}")
 
             if self.systemChanged:
                 self.save()
@@ -122,7 +122,9 @@ class MyHome(Singleton):
         keys = sorted(self.systems.keys(), key=lambda x: x.__name__)
         for key in keys:
             if key in self.systems:
-                systemData = data[self.systems[key].name] if self.systems[key].name in data else {}
+                systemData = {}
+                if self.systems[key].name in data:
+                    systemData = data[self.systems[key].name]
                 self.systems[key].load(configParser, systemData)
 
         self.systemChanged = False
@@ -155,11 +157,11 @@ class MyHome(Singleton):
             data[self.systems[key].name] = systemData
         data = json.dumps(data, indent=4, sort_keys=True, ensure_ascii=True)
 
-        logger.debug("Save config to file: %s", Config.ConfigFilePath)
+        logger.debug(f"Save config to file: {Config.ConfigFilePath}")
         with open(Config.ConfigFilePath, 'w') as configFile:
             configParser.write(configFile)
 
-        logger.debug("Save data to file: %s", Config.DataFilePath)
+        logger.debug(f"Save data to file: {Config.DataFilePath}")
         with open(Config.DataFilePath, 'w') as dataFile:
             dataFile.write(data)
 

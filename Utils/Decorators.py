@@ -27,8 +27,8 @@ def type_check(decorator: callable) -> callable:
                 continue
 
             if not isinstance(kwargs[attr_name], attr_type) and kwargs[attr_name] != None:
-                raise TypeError("Argument %r is not of type %s" %
-                                (attr_name, attr_type))
+                raise TypeError(
+                    f"Argument {attr_name} is not of type {attr_type}")
 
     @wraps(decorator)
     def wrapped_decorator(*args, **kwargs):
@@ -38,8 +38,8 @@ def type_check(decorator: callable) -> callable:
 
         # check for docstring
         if decorator.__doc__ is None:
-            raise SyntaxWarning("Function doesn't have docstring: %s.%s" % (
-                decorator.__module__, decorator.__name__))
+            raise SyntaxWarning(
+                f"Function doesn't have docstring: {decorator.__module__}.{decorator.__name__}")
 
         # check for hints count
         hints = get_type_hints(decorator)
@@ -47,7 +47,7 @@ def type_check(decorator: callable) -> callable:
             func_args) if "self" not in func_args else len(func_args) - 1
         if func_args_count != len(hints) - 1:  # without the 'return' hint
             raise SyntaxWarning(
-                "Function doesn't have appropriate type hints: %s.%s" % (decorator.__module__, decorator.__name__))
+                f"Function doesn't have appropriate type hints: {decorator.__module__}.{decorator.__name__}")
 
         validate_input(decorator, **kwargs)
         return decorator(**kwargs)

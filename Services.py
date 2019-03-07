@@ -36,7 +36,7 @@ class LocalService:
             object -- Return code of the process (when wait) or Popen object.
         """
 
-        logger.info("Open media '%s'" % path)
+        logger.info(f"Open media '{path}'")
         if path == "" or audioOutput not in ["hdmi", "local"]:
             logger.error("Cannot open media - invalid parameters")
             return None
@@ -69,8 +69,7 @@ class InternetService:
             bool -- True if the email was sent successfully, otherwise false.
         """
 
-        logger.info("Send mail to '%s' subject: '%s'" %
-                    (str(send_to), subject))
+        logger.info(f"Send mail to '{send_to}' subject: '{subject}'")
 
         if len(send_to) == 0 or send_to[0] == "":
             logger.error("Cannot send email - invalid email list")
@@ -88,8 +87,7 @@ class InternetService:
                 with open(f, "rb") as file:
                     msg.attach(MIMEApplication(
                         file.read(),
-                        Content_Disposition='attachment; filename="%s"' % os.path.basename(
-                            f),
+                        Content_Disposition=f"attachment; filename='{os.path.basename(f)}'",
                         Name=os.path.basename(f)
                     ))
 
@@ -116,7 +114,7 @@ class InternetService:
             bool -- True if the sms was sent successfully, otherwise false.
         """
 
-        logger.info("Send SMS '%s' to %s" % (msg, number))
+        logger.info(f"Send SMS '{msg}' to {number}")
         if number == "":
             logger.error("Cannot send sms - invalid number")
             return False
@@ -157,7 +155,7 @@ class InternetService:
             str -- JSON content of the set URL.
         """
 
-        logger.debug("Get json content from '%s'" % url)
+        logger.debug(f"Get json content from '{url}'")
         if url == "":
             logger.error("Cannot get json content - invalid url")
             return False

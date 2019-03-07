@@ -38,8 +38,7 @@ class BaseSystem(object):
     @type_check
     def stop(self) -> None:
         """ Stop current system. """
-        logger.debug("Stop system: %s" % self.name)
-        pass
+        logger.debug(f"Stop system: {self.name}")
 
     @property
     @type_check
@@ -82,7 +81,7 @@ class BaseSystem(object):
     @type_check
     def update(self) -> None:
         """ Update current system's state. """
-        logger.debug("Update system: %s" % self.name)
+        logger.debug(f"Update system: {self.name}")
 
     @type_check
     def load(self, configParser: RawConfigParser, data: dict) -> None:
@@ -93,7 +92,7 @@ class BaseSystem(object):
                 data {dict} -- Dictionary from which the system data will be loaded.
         """
 
-        logger.debug("Load system: %s" % self.name)
+        logger.debug(f"Load system: {self.name}")
         if not configParser.has_section(self.name):
             return
 
@@ -108,8 +107,7 @@ class BaseSystem(object):
             if hasattr(self, name):
                 valueType = type(getattr(self, name))
                 setattr(self, name, Utils.parse(value, valueType))
-            logger.debug("%s System - %s: %s (%s)" %
-                         (self.name, name, value, valueType))
+            logger.debug(f"{self.name} System - {name}: {value} ({valueType})")
 
     @type_check
     def save(self, configParser: RawConfigParser, data: dict) -> None:
@@ -120,9 +118,9 @@ class BaseSystem(object):
                 data {dict} -- Dictionary to which the system data will be saved.
         """
 
-        logger.debug("Save system: %s" % self.name)
+        logger.debug(f"Save system: {self.name}")
         items = Utils.getFields(self)
         for name in items:
             value = getattr(self, name)
             configParser.set(self.name, name, Utils.string(value))
-            logger.debug("%s System - %s: %s" % (self.name, name, value))
+            logger.debug(f"{self.name} System - {name}: {value}")

@@ -163,7 +163,7 @@ def parse(value: str, valueType: type) -> object:
 
     if value == "None":
         return None
-    raise Exception("Unsupported type to parse: %s" % valueType)
+    raise Exception(f"Unsupported type to parse: {valueType}")
 
 
 @try_catch("Cannot make serializable object")

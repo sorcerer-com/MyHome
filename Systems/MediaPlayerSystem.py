@@ -285,7 +285,7 @@ class MediaPlayerSystem(BaseSystem):
         if hostname:
             hostname = hostname.split('.')[0]
         else:
-            hostname = 'SMB%d' % os.getpid()
+            hostname = f"SMB{os.getpid()}"
 
         netBios = NetBIOS()
         server_name = netBios.queryIPForName(server_ip)[0]

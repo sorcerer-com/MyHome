@@ -46,8 +46,8 @@ def beforeRequest():
             else:
                 return redirect("/login?token")
         else:
-            logger.warning("Request: external request to %s from %s" %
-                           (request.endpoint, request.remote_addr))
+            logger.warning(
+                f"Request: external request to {request.endpoint} from {request.remote_addr}")
 
     session.modified = True
 
