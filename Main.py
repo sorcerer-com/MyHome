@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import logging
-import os
 import secrets
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from flask import Flask
 

@@ -83,7 +83,7 @@ class MyHome(Singleton):
     def update(self) -> None:
         """ Update all the systems rapidly. """
 
-        while(MyHome._UpdateTime > 0):
+        while MyHome._UpdateTime > 0:
             start = datetime.now()
             # update systems
             for system in self.systems.values():
@@ -91,7 +91,7 @@ class MyHome(Singleton):
                     system.update()
 
             if (datetime.now() - start).total_seconds() > MyHome._UpdateWarningTimeout:
-                logger.warn(f"Update time: {datetime.now() - start}")
+                logger.warning("Update time: %s", (datetime.now() - start))
 
             if self.systemChanged:
                 self.save()
@@ -157,11 +157,11 @@ class MyHome(Singleton):
             data[self.systems[key].name] = systemData
         data = json.dumps(data, indent=4, sort_keys=True, ensure_ascii=True)
 
-        logger.debug(f"Save config to file: {Config.ConfigFilePath}")
+        logger.debug("Save config to file: %s", Config.ConfigFilePath)
         with open(Config.ConfigFilePath, 'w') as configFile:
             configParser.write(configFile)
 
-        logger.debug(f"Save data to file: {Config.DataFilePath}")
+        logger.debug("Save data to file: %s", Config.DataFilePath)
         with open(Config.DataFilePath, 'w') as dataFile:
             dataFile.write(data)
 
@@ -178,7 +178,7 @@ class MyHome(Singleton):
             BaseSystem -- Instance of the system with the set class name, if there isn't such system None.
         """
 
-        for key in self.systems.keys():
+        for key in self.systems:
             if key.__name__ == className:
                 return self.systems[key]
         return None

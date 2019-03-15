@@ -26,7 +26,7 @@ def type_check(decorator: callable) -> callable:
             if attr_type is callable and callable(kwargs[attr_name]):
                 continue
 
-            if not isinstance(kwargs[attr_name], attr_type) and kwargs[attr_name] != None:
+            if not isinstance(kwargs[attr_name], attr_type) and kwargs[attr_name] is not None:
                 raise TypeError(
                     f"Argument {attr_name} is not of type {attr_type}")
 

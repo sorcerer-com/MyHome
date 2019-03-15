@@ -36,7 +36,7 @@ class LocalService:
             object -- Return code of the process (when wait) or Popen object.
         """
 
-        logger.info(f"Open media '{path}'")
+        logger.info("Open media '%s'", path)
         if path == "" or audioOutput not in ["hdmi", "local"]:
             logger.error("Cannot open media - invalid parameters")
             return None
@@ -58,7 +58,7 @@ class InternetService:
         Arguments:
             smtp_server_info {dict} -- Info of the SMTP server (address, port, usernam, password)
             send_from {str} -- Email address of the sender.
-            send_to {str} -- Email address of the receiver.
+            send_to {list} -- Email address of the receiver.
             subject {str} -- Subject of the email.
             text {str} -- Content of the email.
 
@@ -69,7 +69,7 @@ class InternetService:
             bool -- True if the email was sent successfully, otherwise false.
         """
 
-        logger.info(f"Send mail to '{send_to}' subject: '{subject}'")
+        logger.info("Send mail to '%s' subject: '%s'", str(send_to), subject)
 
         if len(send_to) == 0 or send_to[0] == "":
             logger.error("Cannot send email - invalid email list")
@@ -114,7 +114,7 @@ class InternetService:
             bool -- True if the sms was sent successfully, otherwise false.
         """
 
-        logger.info(f"Send SMS '{msg}' to {number}")
+        logger.info("Send SMS '%s' to %s", msg, number)
         if number == "":
             logger.error("Cannot send sms - invalid number")
             return False
@@ -138,9 +138,9 @@ class InternetService:
             br.submit_form(form)
             br.follow_link(br.get_link("logout"))
             return True
-        else:
-            logger.error("Cannot send sms - invalid operator")
-            return False
+
+        logger.error("Cannot send sms - invalid operator")
+        return False
 
     @staticmethod
     @try_catch("Cannot get json content", False)
@@ -155,7 +155,7 @@ class InternetService:
             str -- JSON content of the set URL.
         """
 
-        logger.debug(f"Get json content from '{url}'")
+        logger.debug("Get json content from '%s'", url)
         if url == "":
             logger.error("Cannot get json content - invalid url")
             return False

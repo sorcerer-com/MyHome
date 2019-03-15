@@ -266,7 +266,7 @@ class MediaPlayerSystem(BaseSystem):
             return []
         path = path[6:]
 
-        if not ":" in path or not "@" in path:
+        if ":" not in path or "@" not in path:
             return []
 
         username = path.split(":")[0]

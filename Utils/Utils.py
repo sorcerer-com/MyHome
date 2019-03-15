@@ -3,7 +3,6 @@ import logging
 import logging.handlers
 import re
 from datetime import datetime, timedelta
-from typing import get_type_hints
 
 from Utils.Decorators import try_catch, type_check
 from Utils.LoggingFilter import LoggingFilter
@@ -93,9 +92,9 @@ def getFields(obj: object, publicOnly: bool = True, includeStatic: bool = False)
         if not includeStatic and hasattr(type(obj), attr):
             staticValue = getattr(type(obj), attr)
             # skip only non properties or properties without getter or setter
-            if type(staticValue) is not property or \
-               staticValue.fget == None or \
-               staticValue.fset == None:
+            if not isinstance(staticValue, property) or \
+               staticValue.fget is None or \
+               staticValue.fset is None:
                 continue
         if not callable(value):
             result[attr] = value

@@ -1,6 +1,5 @@
 import logging
 from configparser import RawConfigParser
-from os import path
 
 from Utils import Utils
 from Utils.Decorators import type_check
@@ -8,7 +7,7 @@ from Utils.Decorators import type_check
 logger = logging.getLogger(__name__)
 
 
-class Config(object):
+class Config:
     """ Configuration class. """
 
     LogFilePath = "bin/log.log"
@@ -61,7 +60,7 @@ class Config(object):
                 valueType = type(getattr(self, name))
                 value = Utils.parse(value, valueType)
                 setattr(self, name, value)
-                logger.debug(f"Config - {name}: {value} ({valueType})")
+                logger.debug("Config - %s: %s (%s)", name, value,valueType)
         return True
 
     @type_check
@@ -79,4 +78,4 @@ class Config(object):
         for name in items:
             value = getattr(self, name)
             configParser.set(section, name, Utils.string(value))
-            logger.debug(f"Config - {name}: {value}")
+            logger.debug("Config - %s: %s", name, value)

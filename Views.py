@@ -3,8 +3,8 @@ import secrets
 from datetime import datetime, timedelta
 
 from flask import Blueprint, abort, redirect, render_template, request, session
-from werkzeug.security import \
-    generate_password_hash  # use to generate hash of the password/token
+# use to generate hash of the password/token
+# from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 
 from MyHome import MyHome
@@ -32,7 +32,7 @@ def beforeRequest():
     # pass only login
     if ("password" not in session) or (session["password"] != myHome.config.password):
         if request.endpoint == "views.login":
-            return
+            return None
         elif not isLocalIP:
             abort(404)
         else:
@@ -42,12 +42,12 @@ def beforeRequest():
     if not isLocalIP:
         if ("token" not in session) or (session["token"] != myHome.config.token):
             if request.endpoint == "views.login":
-                return
+                return None
             else:
                 return redirect("/login?token")
         else:
-            logger.warning(
-                f"Request: external request to {request.endpoint} from {request.remote_addr}")
+            logger.warning("Request: external request to %s from %s",
+                           request.endpoint, request.remote_addr)
 
     session.modified = True
 
@@ -67,11 +67,11 @@ def login():
     if request.method == "POST":
         loginType = request.form["loginType"]
         if check_password_hash(myHome.config.password, request.form[loginType]):
-            logger.info("LogIn: Correct " + loginType)
+            logger.info("LogIn: Correct %s", loginType)
             session[loginType] = myHome.config.password
             return redirect("/")
         else:
-            logger.warning("LogIn: Invalid " + loginType)
+            logger.warning("LogIn: Invalid %s", loginType)
             invalid = True
 
     loginType = "token" if "token" in request.args else "password"
@@ -96,7 +96,7 @@ def settings():
             if arg == "CSRF":
                 continue
             if arg.endswith("[]"):
-                value = request.form.getlist(arg)[1:] # skip first dummy item
+                value = request.form.getlist(arg)[1:]  # skip first dummy item
                 arg = arg[:-2]
                 if arg.endswith(":key"):  # dict
                     arg = arg[:-4]
@@ -113,10 +113,10 @@ def settings():
                 systemName) if systemName != "Config" else myHome.config
             if hasattr(obj, prop):
                 uiProperty = myHome.uiManager.containers[obj].properties[prop]
-                if type(value) is list:
+                if isinstance(value, list):
                     value = [Utils.parse(v, uiProperty.subtype) for v in value]
                     setattr(obj, prop, value)
-                elif type(value) is dict:
+                elif isinstance(value, dict):
                     value = {Utils.parse(k, uiProperty.subtype[0]): Utils.parse(
                         v, uiProperty.subtype[0]) for k, v in value.items()}
                     setattr(obj, prop, value)
@@ -159,15 +159,15 @@ def Schedule():
             if arg == "CSRF":
                 continue
             values = request.form.getlist(arg)
-            for i in range(0, len(values)):
+            for i, value in enumerate(values):
                 if len(system._schedule) <= i:
                     system._schedule.append({})
                 if arg == "Time":
-                    value = Utils.parse(values[i], datetime)
+                    value = Utils.parse(value, datetime)
                 elif arg == "Repeat":
-                    value = Utils.parse(values[i], timedelta)
+                    value = Utils.parse(value, timedelta)
                 else:
-                    value = values[i]
+                    value = value
                 system._schedule[i][arg] = value
         system._schedule.sort(key=lambda x: x["Time"])
         system._nextTime = datetime.now()

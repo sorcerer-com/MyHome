@@ -13,6 +13,8 @@ class LoggingFilter(logging.Filter):
             pred {callable} -- Predicate which will be used to check whether passed LogRecord should be filtered.
         """
 
+        super().__init__()
+
         self.pred = pred
 
     @type_check

@@ -56,6 +56,7 @@ class ScheduleSystem(BaseSystem):
     @type_check
     def update(self) -> None:
         """ Update current system's state. """
+
         super().update()
 
         if datetime.now() < self._nextTime:
@@ -75,7 +76,7 @@ class ScheduleSystem(BaseSystem):
                 try:
                     exec(command)
                 except Exception:
-                    logger.exception(f"Cannot execute '{command}'")
+                    logger.exception("Cannot execute '%s'", command)
                 self._owner.event(self, "CommandExecuted", command)
 
                 if item["Repeat"].total_seconds() == 0:

@@ -3,7 +3,7 @@ from Utils.Decorators import type_check
 # http://www.valuedlessons.com/2008/04/events-in-python.html
 
 
-class Event(object):
+class Event:
     """ Class used for creating events. """
 
     @type_check

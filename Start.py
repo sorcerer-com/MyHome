@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import logging
-import os
 import signal
 import subprocess
 import sys
@@ -12,7 +11,8 @@ import robobrowser
 from Utils import Utils
 
 
-Utils.setupLogging("bin/starter.log", fileLogLevel=logging.DEBUG, useBufferHandler=False)
+Utils.setupLogging("bin/starter.log",
+                   fileLogLevel=logging.DEBUG, useBufferHandler=False)
 logger = logging.getLogger()
 
 proc = None
@@ -102,4 +102,3 @@ while True:
     except Exception as e:
         logger.debug(str(e))
         time.sleep(60)  # wait a minute
-        pass

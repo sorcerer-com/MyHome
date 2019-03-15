@@ -1,10 +1,8 @@
-import logging
-
-from Utils.Decorators import type_check
 from Utils import Utils
+from Utils.Decorators import type_check
 
 
-class UIManager(object):
+class UIManager:
     """ UI Manager class. """
 
     @type_check
@@ -38,24 +36,24 @@ class UIManager(object):
             UIContainer - Registered UI container.
         """
 
-        name = type(obj).__name__ if name == None else name
+        name = type(obj).__name__ if name is None else name
         container = UIContainer(self, name)
-        items = Utils.getFields(obj)
-        for name in items:
-            valueType = type(getattr(obj, name))
-            displayName = name[0].upper() + name[1:]
-            container.properties[name] = UIProperty(
+        fields = Utils.getFields(obj)
+        for field in fields:
+            valueType = type(getattr(obj, field))
+            displayName = field[0].upper() + field[1:]
+            container.properties[field] = UIProperty(
                 container, displayName, valueType)
             if valueType is list:
-                container.properties[name].subtype = str
+                container.properties[field].subtype = str
             elif valueType is dict:
-                container.properties[name].subtype = (str, str)
+                container.properties[field].subtype = (str, str)
 
         self.containers[obj] = container
         return container
 
 
-class UIContainer(object):
+class UIContainer:
     """ UI Container class. """
 
     @type_check
@@ -67,6 +65,7 @@ class UIContainer(object):
             name {str} -- Name of the container.
         """
 
+        self._owner = owner
         self.name = name
         self.properties = {}
 
@@ -77,7 +76,7 @@ class UIContainer(object):
         return f"{self.name} properties[{len(self.properties)}]"
 
 
-class UIProperty(object):
+class UIProperty:
     """ UI Property class. """
 
     @type_check
@@ -95,6 +94,7 @@ class UIProperty(object):
         self.type_ = type_
         self.subtype = None
         self.isPrivate = False
+        self.hint = ""
 
     @type_check
     def __repr__(self) -> str:
@@ -103,6 +103,6 @@ class UIProperty(object):
         result = f"{self.displayName} ({self.type_.__name__})"
         if self.isPrivate:
             result = "*" + result
-        if self.subtype != None:
+        if self.subtype is not None:
             result += f"[{self.subtype}]"
         return result
