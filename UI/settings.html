@@ -25,12 +25,18 @@
 					{% for key, property in container.properties|dictsort if not property.isPrivate %}
 						{% set value = obj|attr(key) %}
 						<li>
-							<h3>{{ property.displayName }}: </h3>
+							{% if property.hint != "" %}
+							<h3 class="hintText" title="{{ property.hint }}">
+							{% else %}
+							<h3>
+							{% endif %}
+								{{ property.displayName }}: 
+							</h3>
 						{% if property.subtype == None %} {# normal type #}
 							<span>
 							<script>
 								var span = document.currentScript.parentElement;
-								addItem(span, "{{ property.type_.__name__ }}", "{{ container.name }}:{{ key }}", "{{ value|toString }}");
+								addItem(span, "{{ property.type_.__name__ }}", "{{ container.name }}:{{ key }}", "{{ value|toString|safe }}");
 							</script>
 							</span>
 						{% elif property.subtype is not sequence %} {# list type #}
@@ -39,7 +45,7 @@
 							<span>
 							<script>
 								var span = document.currentScript.parentElement;
-								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}[]", "{{ item|toString }}", true);
+								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}[]", "{{ item|toString|safe }}", true);
 							</script>
 							</span>
 						{% endfor %}
@@ -56,8 +62,8 @@
 							<span>
 							<script>
 								var span = document.currentScript.parentElement;
-								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}:key[]", "{{ itemKey|toString }}");
-								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}:value[]", "{{ itemValue|toString }}", true, true);
+								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}:key[]", "{{ itemKey|toString|safe }}");
+								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}:value[]", "{{ itemValue|toString|safe }}", true, true);
 							</script>
 							</span>
 						{% endfor %}

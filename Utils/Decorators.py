@@ -1,7 +1,7 @@
 import logging
 from functools import wraps
 from inspect import getfullargspec
-from typing import get_type_hints
+from typing import get_type_hints, Union
 
 
 # https://aboutsimon.com/blog/2018/04/04/Python3-Type-Checking-And-Data-Validation-With-Type-Hints.html
@@ -25,6 +25,9 @@ def type_check(decorator: callable) -> callable:
 
             if attr_type is callable and callable(kwargs[attr_name]):
                 continue
+
+            if attr_type.__class__ is Union.__class__:
+                attr_type = attr_type.__args__[0]
 
             if not isinstance(kwargs[attr_name], attr_type) and kwargs[attr_name] is not None:
                 raise TypeError(

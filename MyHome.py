@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import pkgutil
 import time
 from configparser import RawConfigParser
 from datetime import datetime, timedelta
@@ -8,16 +9,19 @@ from shutil import copyfile
 from threading import Thread
 
 from Config import Config
+from Services import InternetService
 from Systems.BaseSystem import BaseSystem
-from Systems.MediaPlayerSystem import MediaPlayerSystem
-from Systems.ScheduleSystem import ScheduleSystem
 from UIManager import UIManager
 from Utils import Utils
-from Utils.Decorators import type_check
+from Utils.Decorators import try_catch, type_check
 from Utils.Event import Event
 from Utils.Singleton import Singleton
 
 logger = logging.getLogger(__name__)
+
+# import all systems
+for importer, modname, ispkg in pkgutil.walk_packages(path=["./Systems"], prefix="Systems."):
+    __import__(modname)
 
 
 class MyHome(Singleton):
@@ -182,3 +186,33 @@ class MyHome(Singleton):
             if key.__name__ == className:
                 return self.systems[key]
         return None
+
+    @try_catch("Cannot send alert message")
+    @type_check
+    def sendAlert(self, msg: str) -> None:
+        """ Send alert message through sms and email.
+
+        Arguments:
+            msg {str} -- Message text which will be send.
+        """
+
+        logger.info("Send alert '%s'", msg)
+        # TODO: capture image
+        msg = time.strftime("%d/%m/%Y %H:%M:%S") + "\n" + msg + "\n"
+        msg += str(self.getSystemByClassName("SensorsSystem").getLatestData())
+
+        smtp_server_info = {"address": self.config.smtpServer, "port": self.config.smtpServerPort,
+                            "username": self.config.emailUserName, "password": self.config.emailPassword}
+        InternetService.sendEMail(smtp_server_info, self.config.email, [
+                                  self.config.email], "My Home", msg, ["test.jpg"])
+
+        # send SMSs only if we are outside of the quiet hours
+        quietHours = [int(hour.strip())
+                      for hour in self.config.quietHours.split("-")]
+        if quietHours[0] > quietHours[1] and (datetime.now().hour > quietHours[0] or datetime.now().hour < quietHours[1]):
+            logger.info("Quiet hours: %s", self.config.quietHours)
+        elif quietHours[0] < quietHours[1] and datetime.now().hour > quietHours[0] and datetime.now().hour < quietHours[1]:
+            logger.info("Quiet hours: %s", self.config.quietHours)
+        else:
+            InternetService.sendSMS(
+                self.config.gsmNumber, "telenor", self.config.myTelenorPassword, msg)

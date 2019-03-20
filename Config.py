@@ -28,6 +28,15 @@ class Config:
         self.password = ""
         self.token = ""
         self.internalIPs = []
+        self.quietHours = ""
+
+        self.gsmNumber = ""
+        self.myTelenorPassword = ""
+        self.smtpServer = ""
+        self.smtpServerPort = ""
+        self.email = ""
+        self.emailUserName = ""
+        self.emailPassword = ""
 
     @type_check
     def __repr__(self) -> str:
@@ -41,6 +50,7 @@ class Config:
 
         uiContainer = self._owner.uiManager.registerContainer(self)
         uiContainer.properties["appSecret"].isPrivate = True
+        uiContainer.properties["quietHours"].hint = "Format: start hour - end hour"
 
     @type_check
     def load(self, configParser: RawConfigParser) -> bool:
@@ -60,7 +70,7 @@ class Config:
                 valueType = type(getattr(self, name))
                 value = Utils.parse(value, valueType)
                 setattr(self, name, value)
-                logger.debug("Config - %s: %s (%s)", name, value,valueType)
+                logger.debug("Config - %s: %s (%s)", name, value, valueType)
         return True
 
     @type_check

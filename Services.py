@@ -90,9 +90,11 @@ class InternetService:
                         Content_Disposition=f"attachment; filename='{os.path.basename(f)}'",
                         Name=os.path.basename(f)
                     ))
+            else:
+                logger.warning("Invalid email file attachment - %s", f)
 
         smtp = smtplib.SMTP_SSL(
-            smtp_server_info["address"], smtp_server_info["port"])
+            smtp_server_info["address"], int(smtp_server_info["port"]))
         smtp.login(smtp_server_info["username"], smtp_server_info["password"])
         smtp.sendmail(send_from, send_to, msg.as_string())
         smtp.close()
@@ -114,14 +116,12 @@ class InternetService:
             bool -- True if the sms was sent successfully, otherwise false.
         """
 
-        logger.info("Send SMS '%s' to %s", msg, number)
+        logger.info("Send SMS '%s' to %s", msg.replace("\n", " "), number)
         if number == "":
             logger.error("Cannot send sms - invalid number")
             return False
 
         if operator.lower() == "telenor":
-            if number.startswith("359"):
-                number = "0" + number[3:]
             br = robobrowser.RoboBrowser(parser="html.parser")
             # login
             br.open("http://my.telenor.bg")
@@ -143,7 +143,7 @@ class InternetService:
         return False
 
     @staticmethod
-    @try_catch("Cannot get json content", False)
+    @try_catch("Cannot get json content", None)
     @type_check
     def getJsonContent(url: str) -> str:
         """ Gets JSON content after a request to the set URL.
@@ -158,9 +158,9 @@ class InternetService:
         logger.debug("Get json content from '%s'", url)
         if url == "":
             logger.error("Cannot get json content - invalid url")
-            return False
+            return None
 
-        r = requests.get(url)
+        r = requests.get(url, timeout=5)
         if r.status_code == requests.codes.ok:
             return r.json()
         return None
