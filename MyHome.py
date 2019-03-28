@@ -129,7 +129,8 @@ class MyHome(Singleton):
             if key in self.systems:
                 systemData = {}
                 if self.systems[key].name in data:
-                    systemData = Utils.deserializable(data[self.systems[key].name])
+                    systemData = Utils.deserializable(
+                        data[self.systems[key].name])
                 self.systems[key].load(configParser, systemData)
 
         self.systemChanged = False
@@ -198,15 +199,26 @@ class MyHome(Singleton):
         """
 
         logger.info("Send alert '%s'", msg)
-        # TODO: capture image
+        # TODO: remove:
+        print("Motion: " + str(self.getSystemByClassName("SensorsSystem").isMotionDetected))
+        return
         msg = time.strftime("%d/%m/%Y %H:%M:%S") + "\n" + msg + "\n"
-        msg += str(self.getSystemByClassName("SensorsSystem").getLatestData())
+        msg += str(self.getSystemByClassName("SensorsSystem").latestData)
+        files = []
+        for camera in self.getSystemByClassName("SensorsSystem")._cameras:
+            if camera.saveImage(Config.BinPath + camera.name + ".jpg"):
+                files.append(Config.BinPath + camera.name + ".jpg")
 
         smtp_server_info = {"address": self.config.smtpServer, "port": self.config.smtpServerPort,
                             "username": self.config.emailUserName, "password": self.config.emailPassword}
         InternetService.sendEMail(smtp_server_info, self.config.email, [
-                                  self.config.email], "My Home", msg, ["test.jpg"])
+                                  self.config.email], "My Home", msg, files)
+        
+        for file in files:
+            if os.path.isfile(file):
+                os.remove(file)
 
+        # TODO: add property to enable/disable quiet hours, or maybe add force param for security alarm
         # send SMSs only if we are outside of the quiet hours
         quietHours = [int(hour.strip())
                       for hour in self.config.quietHours.split("-")]

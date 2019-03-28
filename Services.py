@@ -48,7 +48,6 @@ class LocalService:
 class InternetService:
     """ Provides internet functionalities. """
 
-    # TODO: test
     @staticmethod
     @try_catch("Cannot send email", False)
     @type_check

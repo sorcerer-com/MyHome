@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+		<div class='buttonContainer'>
+			<a class='button left' href='/'>back</a>
+		{% if enabled == True %}
+			<a class='button right green' href='?enabled=False'>enabled</a>
+		{% else %}
+			<a class='button right red' href='?enabled=True'>disabled</a>
+		{% endif %}
+			<h2 class='title'>Sensors</h2>
+		</div>
+		
+		{% macro charts(data, metadata, drawValues, drawAxis, name="") -%}
+			{% for (subName, value) in data.items() %}
+				<div title="{{ metadata[subName]['desc'] }} ({{ metadata[subName]['aggrType'] }})">{{ subName }}</div>
+				<canvas id='canvas{{ name }}{{ subName }}' width='300' height='150'></canvas>
+				<script type='text/javascript'>
+					// {{ value|count }}
+					var values = [{% for key in (value.keys()|list)|sort %}{{ '%0.2f' % value[key]|float }}, {% endfor %}]
+					var names = [{% for key in (value.keys()|list)|sort %}'{{ key }}', {% endfor %}]
+					drawLineChart('canvas{{ name }}{{ subName }}', values, names, {{ drawValues|lower }}, {{ drawAxis|lower }});
+				</script>
+				<br/><br/>
+			{% endfor %}
+		{% endmacro %}
+		
+		<div class='tabContainer'>
+		{% if data|count > 1 %}
+		{% for i in range(data|count) %}
+			{% set name = (data.keys()|list)[i] %}
+			{% if i == 0 %}
+			<button class='active' onclick='openTab(this, "open_{{ name }}")'>{{ name }}</button>
+			{% else %}
+			<button onclick='openTab(this, "open_{{ name }}")'>{{ name }}</button>
+			{% endif %}
+		{% endfor %}
+		{% endif %}
+		
+		{% for (key, value) in data.items() %}
+			{% if key == (data.keys()|list)[0] %}
+			<div class='tabContent active'>
+			{% else %}
+			<div class='tabContent'>
+			{% endif %}
+			{% if key != "cameras" %} {# Sensors #}
+				{% if value["address"] %}
+					<a href="http://{{ value['address'] }}" target="_blank" class="right" style="margin-right:30px;font-style: italic;">Open UI</a>
+					<br/><br/>
+				{% endif %}
+
+				{{ charts(value["day"], value["metadata"], True, False, key) }}
+				
+				<div class='settings'>
+					<details>
+						<summary>Older</summary>
+						<br/>
+						{{ charts(value["older"], value["metadata"], False, True, key + "1") }}
+					</details>
+				</div>
+				<br/>
+				Sensors Token: {{ value["token"] }}
+			{% else %} {# Cameras #}
+				<script>
+					function open_cameras(sender) {
+						sender.innerHTML = "";
+						{% for name, isIP in value.items() %}
+						sender.innerHTML += "<div>{{ name }}</div>";
+						sender.innerHTML += "<a href='/cameras/{{ name }}' title='Fullscreen'><img src='/cameras/{{ name }}' width='300'/></a>";
+						{% if isIP %}
+						sender.innerHTML += "<a class='button' onclick='request(\"GET\", \"/cameras/{{ name }}?action=UP\")' title='Up'>&uarr;</a>"; // up
+						sender.innerHTML += "<a class='button' onclick='request(\"GET\", \"/cameras/{{ name }}?action=DOWN\")' title='Down'>&darr;</a>"; // down
+						sender.innerHTML += "<a class='button' onclick='request(\"GET\", \"/cameras/{{ name }}?action=LEFT\")' title='Left'>&larr;</a>"; // left
+						sender.innerHTML += "<a class='button' onclick='request(\"GET\", \"/cameras/{{ name }}?action=RIGHT\")' title='Right'>&rarr;</a>"; // right
+						sender.innerHTML += "<a class='button' onclick='request(\"GET\", \"/cameras/{{ name }}?action=ZOOMIN\")' title='ZoomIn'>&#9633;</a>"; // zoom in
+						sender.innerHTML += "<a class='button' onclick='request(\"GET\", \"/cameras/{{ name }}?action=ZOOMOUT\")' title='ZoomOut'>&#9643;</a>"; // zoom out
+						{% endif %}
+						sender.innerHTML += "<br/><br/>";
+						{% endfor %}
+					}
+				</script>
+			{% endif %}
+			</div>
+		{% endfor %}
+		</div>
+		<br/>
+{% endblock %}

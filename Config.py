@@ -10,9 +10,10 @@ logger = logging.getLogger(__name__.split(".")[-1])
 class Config:
     """ Configuration class. """
 
-    LogFilePath = "bin/log.log"
-    ConfigFilePath = "bin/config.ini"
-    DataFilePath = "bin/data.json"
+    BinPath = "bin/"
+    LogFilePath = BinPath + "log.log"
+    ConfigFilePath = BinPath + "config.ini"
+    DataFilePath = BinPath + "data.json"
 
     @type_check
     def __init__(self, owner: None) -> None:

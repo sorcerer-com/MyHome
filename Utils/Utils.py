@@ -22,12 +22,14 @@ def setupLogging(fileName: str, fileLogLevel: int = logging.INFO, showInConsole:
     """
 
     logger = logging.getLogger()
-    if len(logger.handlers) > 0:  # already setupped
+    # already setupped
+    if len(logger.handlers) > 0 and isinstance(logger.handlers[0], logging.handlers.RotatingFileHandler):
         return
 
+    logger.handlers.clear()
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        "%(asctime)-20s %(name)-12s %(levelname)-8s %(message)s", "%d/%m/%Y %H:%M:%S")
+        "%(asctime)-20s %(name)-15s %(levelname)-8s %(message)s", "%d/%m/%Y %H:%M:%S")
 
     # add RotatingFileHandler
     file = logging.handlers.RotatingFileHandler(

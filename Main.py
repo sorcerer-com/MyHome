@@ -3,7 +3,7 @@ import logging
 import secrets
 from datetime import timedelta
 
-from flask import Flask
+from flask import Flask, abort, request
 
 from Config import Config
 from MyHome import MyHome
@@ -31,7 +31,19 @@ def toString(value):
     return Utils.string(value)
 
 
-# TODO: generate requirements.txt
+@app.route("/sensor/data", methods=["POST"])
+def sensor():
+    # curl "http://127.0.0.1:5000/sensor/data" -i -X POST -H "token: c9dd348f9b48020e5d0a7204d5ce6eb8" -H "Content-Type: application/json" -d '[{"name": "test", "value": '$((1 + RANDOM % 100))'}]'
+    if "token" not in request.headers or not request.is_json or not isinstance(request.get_json(), list):
+        abort(404)
+
+    system = myHome.getSystemByClassName("SensorsSystem")
+    if not system.processData(request.headers["token"], request.get_json()):
+        abort(404)
+    return ""
+
+
+# TODO: generate requirements.txt and setup.sh -> virtualenv + pip install -r requirements.txt
 if __name__ == "__main__":
     if myHome.config.appSecret == "":
         myHome.config.appSecret = secrets.token_hex(24)

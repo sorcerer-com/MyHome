@@ -26,10 +26,10 @@ def type_check(decorator: callable) -> callable:
             if attr_type is callable and callable(kwargs[attr_name]):
                 continue
 
-            if attr_type.__class__ is Union.__class__:
-                attr_type = attr_type.__args__[0]
+            if hasattr(attr_type, "__args__"):
+                attr_type = attr_type.__args__
 
-            if not isinstance(kwargs[attr_name], attr_type) and kwargs[attr_name] is not None:
+            if kwargs[attr_name] is not None and not isinstance(kwargs[attr_name], attr_type):
                 raise TypeError(
                     f"Argument {attr_name} is not of type {attr_type}")
 

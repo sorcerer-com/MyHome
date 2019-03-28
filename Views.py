@@ -1,14 +1,17 @@
 import logging
 import secrets
+import time
 from datetime import datetime, timedelta
 
-from flask import Blueprint, abort, redirect, render_template, request, session
+from flask import (Blueprint, Response, abort, redirect, render_template,
+                   request, session)
 # use to generate hash of the password/token
 # from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 
 from Config import Config
 from MyHome import MyHome
+from Systems.Sensors.Camera import CameraMovement
 from Utils import Utils
 
 Utils.setupLogging(Config.LogFilePath)
@@ -89,6 +92,7 @@ def index():
     infos.sort(key=lambda x: x[0])
     infos.append(("Settings", None))
     infos.append(("Logs", None))
+    # TODO: show somehow that curtain system has UI, not only enable/disable
     return render_template("index.html", infos=infos)
 
 
@@ -183,6 +187,52 @@ def Schedule():
         items.append({key: Utils.string(value)
                       for (key, value) in item.items()})
     return render_template("Schedule.html", items=items, enabled=system.isEnabled, csrf=session["CSRF"])
+
+
+@views.route("/Sensors")
+def Sensors():
+    system = myHome.getSystemByClassName("SensorsSystem")
+    if len(request.args) == 1:
+        system.isEnabled = (request.args["enabled"] == "True")
+        return redirect("/Sensors")
+
+    now = datetime.now()
+    data = {}
+    for sensor in system._sensors:
+        data[sensor.name] = {"day": {}, "older": {}}  # 1st day data / older
+        for subName in sensor.subNames:
+            subData = {time: sensor._data[time][subName]
+                       for time in sensor._data if subName in sensor._data[time]}
+            data[sensor.name]["day"][subName] = {
+                time: value for time, value in subData.items() if time >= now - timedelta(days=1)}
+            data[sensor.name]["older"][subName] = {time: value for time, value in subData.items() if time < now.replace(
+                hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1)}
+        data[sensor.name]["metadata"] = sensor.metadata
+        data[sensor.name]["token"] = sensor.token
+        if sensor.address != "" and not sensor.address.startswith("/") and not sensor.address.startswith("COM"):
+            data[sensor.name]["address"] = sensor.address
+    if len(system._cameras) > 0:
+        data["cameras"] = {
+            camera.name: camera.isIPCamera for camera in system._cameras}
+    return render_template("Sensors.html", data=data, enabled=system.isEnabled)
+
+
+@views.route("/cameras/<cameraName>")
+def cameras(cameraName):
+    system = myHome.getSystemByClassName("SensorsSystem")
+
+    def gen():
+        while True:
+            imgData = system._camerasDict[cameraName].getImageData()
+            yield (b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + imgData + b"\r\n")
+            time.sleep(0.05)  # frame rate : 1 / 0.05 = 20 FPS
+
+    if not "action" in request.args:  # stream
+        return Response(gen(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    elif request.args["action"] in dir(CameraMovement):  # movement
+        system._camerasDict[cameraName].move(
+            CameraMovement[request.args["action"]])
+        return ""
 
 
 @views.route("/restart")

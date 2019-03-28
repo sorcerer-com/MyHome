@@ -71,7 +71,7 @@ function addItem(parent, type, name, value, button = false, line = false) {
 
 function removeItem(sender, level = 1) {
 	var parent = sender;
-	for (i = 0; i < level; i++)
+	for (var i = 0; i < level; i++)
 		parent = parent.parentElement;
 	parent.parentElement.removeChild(parent);
 }
@@ -85,22 +85,30 @@ function toggleDetails(sender) {
 }
 
 
-function openTab(sender) {
+function openTab(sender, callbackName) {
 	var tabContainer = sender.parentElement;
 	var idx = Array.prototype.indexOf.call(tabContainer.children, sender);
 
 	var tabButtons = tabContainer.getElementsByTagName("button");
-	for (i = 0; i < tabButtons.length; i++) {
+	for (var i = 0; i < tabButtons.length; i++) {
 		tabButtons[i].className = tabButtons[i].className.replace("active", "");
 	}
 	sender.className += " active";
 
 	var tabContents = tabContainer.getElementsByClassName("tabContent");
-	for (i = 0; i < tabContents.length; i++) {
+	for (var i = 0; i < tabContents.length; i++) {
 		tabContents[i].className = tabContents[i].className.replace(" active", "");
 		if (i == idx)
 			tabContents[i].className += " active";
 	}
+
+	callIfExists(callbackName, tabContents[idx]);
+}
+
+function callIfExists(func, sender) {
+	if (window[func] == undefined)
+		return;
+	window[func](sender);
 }
 
 
@@ -139,7 +147,7 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 		context.stroke();
 
 		for (i = Math.round(minValue); i <= maxValue; i++) {
-			if (i % Math.max(Math.round(textHeight / heightEps), 1) != 0)
+			if (i % Math.max(Math.round((textHeight + 2) / heightEps), 1) != 0)
 				continue;
 			// draw horizontal line
 			context.beginPath();
@@ -185,7 +193,7 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 	if (drawValues) {
 		context.strokeStyle = textStyle;
 		var prevValue = minValue - delta; // to be sure that first value will be shown
-		for (i = 0; i < values.length; i++) {
+		for (var i = 0; i < values.length; i++) {
 			if (i > 0 && Math.abs(values[i] - prevValue) < delta * 0.1)
 				continue;
 			prevValue = values[i];
@@ -207,14 +215,18 @@ function drawLineChart(canvasId, values, names, drawValues, drawAxis) {
 			var idx = Math.round((canvasPosX - start.x) / withEps);
 			if (idx < 0 || idx >= values.length)
 				return;
-			var chartY = start.y - (values[idx] - minValue) * heightEps;
-			if (Math.abs(chartY - canvasPosY) > 5)
-				return;
+			// Show hint not only over point but the whole vertical
+			//var chartY = start.y - (values[idx] - minValue) * heightEps;
+			//if (Math.abs(chartY - canvasPosY) > 5)
+			//	return;
 
 			tooltip.style.left = e.pageX + "px";
 			tooltip.style.top = (e.pageY + 20) + "px";
 			tooltip.style.visibility = "visible";
 			tooltip.innerHTML = names[idx] + ": " + values[idx];
 		};
+		canvas.onmouseout = function (e) {
+			tooltip.style.visibility = "collapse";
+		}
 	}
 }

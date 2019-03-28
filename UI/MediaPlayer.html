@@ -63,17 +63,17 @@
 		<form id='form' action='' method='post'>
 			<input type='hidden' name='play'/>
 		{% if selected == "" %}
-			<a class='button' href='javascript:;' onclick='submitForm("form");'>Play</a>
+			<a class='button' href='javascript:;' onclick='submitForm("form");' title='Play'>Play</a>
 		{% else %}
-			<a class='button' href='?action=stop'>Stop</a>
+			<a class='button' href='?action=stop' title='Stop'>Stop</a>
 		{% endif %}
-			<a class='button' href='?action=pause'>||</a>
-			<a class='button' href='?action=volumeDown'>-</a>
-			<a class='button' href='?action=volumeUp'>+</a>
-			<a class='button' href='?action=seekBack'><</a>
-			<a class='button' href='?action=seekForward'>></a>
-			<a class='button' href='?action=seekBackFast'><<</a>
-			<a class='button' href='?action=seekForwardFast'>>></a>
+			<a class='button' href='?action=pause' title='Pause'>||</a>
+			<a class='button' href='?action=volumeDown' title='Volume Down'>-</a>
+			<a class='button' href='?action=volumeUp' title='Volume Up'>+</a>
+			<a class='button' href='?action=seekBack' title='Seek Back'><</a>
+			<a class='button' href='?action=seekForward' title='Seek Forward'>></a>
+			<a class='button' href='?action=seekBackFast' title='Seek Back Fast'><<</a>
+			<a class='button' href='?action=seekForwardFast' title='Seek Forward Fast'>>></a>
 			<input type="hidden" name="CSRF" value="{{ csrf }}"/>
 		</form>
 
