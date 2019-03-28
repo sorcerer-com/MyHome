@@ -17,7 +17,7 @@ from Utils.Decorators import try_catch, type_check
 from Utils.Event import Event
 from Utils.Singleton import Singleton
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__.split(".")[-1])
 
 # import all systems
 for importer, modname, ispkg in pkgutil.walk_packages(path=["./Systems"], prefix="Systems."):
@@ -117,8 +117,9 @@ class MyHome(Singleton):
         if os.path.isfile(Config.DataFilePath):
             with open(Config.DataFilePath, 'r', encoding="utf8") as f:
                 data = json.load(f)
-            self._lastBackupTime = Utils.parse(
-                data["LastBackupTime"], datetime)
+            if "LastBackupTime" in data:
+                self._lastBackupTime = Utils.parse(
+                    data["LastBackupTime"], datetime)
 
         self.config.load(configParser)
 
@@ -128,7 +129,7 @@ class MyHome(Singleton):
             if key in self.systems:
                 systemData = {}
                 if self.systems[key].name in data:
-                    systemData = data[self.systems[key].name]
+                    systemData = Utils.deserializable(data[self.systems[key].name])
                 self.systems[key].load(configParser, systemData)
 
         self.systemChanged = False
@@ -158,7 +159,7 @@ class MyHome(Singleton):
             configParser.add_section(self.systems[key].name)
             systemData = {}
             self.systems[key].save(configParser, systemData)
-            data[self.systems[key].name] = systemData
+            data[self.systems[key].name] = Utils.serializable(systemData)
         data = json.dumps(data, indent=4, sort_keys=True, ensure_ascii=True)
 
         logger.debug("Save config to file: %s", Config.ConfigFilePath)

@@ -4,7 +4,7 @@ from configparser import RawConfigParser
 from Utils import Utils
 from Utils.Decorators import type_check
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__.split(".")[-1])
 
 
 class Config:

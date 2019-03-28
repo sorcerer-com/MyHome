@@ -12,7 +12,7 @@ import robobrowser
 
 from Utils.Decorators import try_catch, type_check
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__.split(".")[-1])
 
 
 class LocalService:

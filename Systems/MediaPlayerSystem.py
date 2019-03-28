@@ -1,3 +1,4 @@
+import codecs
 import os
 import socket
 from configparser import RawConfigParser
@@ -54,7 +55,7 @@ class MediaPlayerSystem(BaseSystem):
 
     @type_check
     def save(self, configParser: RawConfigParser, data: dict) -> None:
-        """ Saves settings and data used from the system.
+        """ Saves settings and data used by the system.
 
         Arguments:
                 configParser {RawConfigParser} -- ConfigParser to which the settings will be saved.
@@ -137,17 +138,21 @@ class MediaPlayerSystem(BaseSystem):
 
         # TODO: test
         self._playing = path
+        _type = path[:path.index("\\")]
         path = path[path.index("\\") + 1:]  # remove local/shared/radios prefix
-        if path in self.radios:
+        if _type == "radios":
             self._process = LocalService.openMedia(
                 path, "local", int(self.volume*300*1.5), False)
         else:
-            path = os.path.join(
-                self.mediaPath, path) if not path in self._sharedList else self.sharedPath + path
+            if _type == "local":
+                path = os.path.join(self.mediaPath, path)
+                self._convertSubtitles(path)
+            else:
+                path = self.sharedPath + path
             self._process = LocalService.openMedia(
                 path, volume=self.volume*300, wait=False)
         if (self._process is not None) and (self._process.poll() is None):
-            if self._playing not in self.radios:
+            if _type != "radios":
                 self._markAsWatched(self._playing)
             self._owner.event(self, "MediaPlayed", self._playing)
 
@@ -308,3 +313,20 @@ class MediaPlayerSystem(BaseSystem):
             subPaths.remove(subPaths[0])
         conn.close()
         return result
+
+    @try_catch("Cannot convert subtitles")
+    @type_check
+    def _convertSubtitles(self, path: str) -> None:
+        """ Convert subtitles to utf-8 encoding.
+
+        Arguments:
+            path {str} -- Path to media file.
+        """
+
+        root = os.path.splitext(path)[0]
+        # convert encoding to utf8
+        if os.path.isfile(root + ".srt"):
+            with codecs.open(root + ".srt", "r", encoding="windows-1251") as f1:
+                content = f1.read()
+            with codecs.open(root + ".srt", "w", encoding="utf8") as f2:
+                f2.write(content)

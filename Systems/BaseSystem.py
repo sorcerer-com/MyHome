@@ -4,7 +4,7 @@ from configparser import RawConfigParser
 from Utils import Utils
 from Utils.Decorators import type_check
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__.split(".")[-1])
 
 
 class BaseSystem:
@@ -69,7 +69,7 @@ class BaseSystem:
 
     @type_check
     def save(self, configParser: RawConfigParser, data: dict) -> None:
-        """ Saves settings and data used from the system.
+        """ Saves settings and data used by the system.
 
         Arguments:
                 configParser {RawConfigParser} -- ConfigParser to which the settings will be saved.

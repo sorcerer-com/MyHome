@@ -7,10 +7,12 @@ from flask import Blueprint, abort, redirect, render_template, request, session
 # from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 
+from Config import Config
 from MyHome import MyHome
 from Utils import Utils
 
-logger = logging.getLogger(__name__)
+Utils.setupLogging(Config.LogFilePath)
+logger = logging.getLogger(__name__.split(".")[-1])
 
 views = Blueprint('views', __name__)
 myHome = MyHome()
@@ -50,6 +52,7 @@ def beforeRequest():
                            request.endpoint, request.remote_addr)
 
     session.modified = True
+    return None
 
 
 @views.route("/robots.txt")
@@ -153,6 +156,7 @@ def Schedule():
     system = myHome.getSystemByClassName("ScheduleSystem")
     if request.method == "GET" and len(request.args) == 1:
         system.isEnabled = (request.args["enabled"] == "True")
+        return redirect("/Schedule")
     elif request.method == "POST" and len(request.form) > 0:
         system._schedule = []
         for arg in request.form:

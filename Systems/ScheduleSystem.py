@@ -4,10 +4,9 @@ from configparser import RawConfigParser
 from datetime import datetime, timedelta
 
 from Systems.BaseSystem import BaseSystem
-from Utils import Utils
 from Utils.Decorators import type_check
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__.split(".")[-1])
 
 
 class ScheduleSystem(BaseSystem):
@@ -38,11 +37,11 @@ class ScheduleSystem(BaseSystem):
         super().load(configParser, data)
 
         if "schedule" in data:
-            self._schedule = Utils.deserializable(data["schedule"])
+            self._schedule = data["schedule"]
 
     @type_check
     def save(self, configParser: RawConfigParser, data: dict) -> None:
-        """ Saves settings and data used from the system.
+        """ Saves settings and data used by the system.
 
         Arguments:
                 configParser {RawConfigParser} -- ConfigParser to which the settings will be saved.
@@ -51,7 +50,7 @@ class ScheduleSystem(BaseSystem):
 
         super().save(configParser, data)
 
-        data["schedule"] = Utils.serializable(self._schedule)
+        data["schedule"] = self._schedule
 
     @type_check
     def update(self) -> None:

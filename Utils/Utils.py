@@ -22,6 +22,9 @@ def setupLogging(fileName: str, fileLogLevel: int = logging.INFO, showInConsole:
     """
 
     logger = logging.getLogger()
+    if len(logger.handlers) > 0:  # already setupped
+        return
+
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
         "%(asctime)-20s %(name)-12s %(levelname)-8s %(message)s", "%d/%m/%Y %H:%M:%S")
