@@ -1,0 +1,40 @@
+sudo apt-get install xrdp
+
+sudo rpi-update
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get clean
+
+sudo apt-get remove [name]
+sudo apt-get autoremove
+
+#https://www.raspberrypi.org/documentation/remote-access/ftp.md
+sudo apt-get install pure-ftpd
+
+#http://elinux.org/RPi_Chromium
+sudo apt-get install chromium-browser
+sudo apt-get install ttf-mscorefonts-installer
+#sudo apt-get install midori
+
+#http://elinux.org/R-Pi_NAS
+sudo apt-get install samba samba-common-bin
+
+#https://melgrubb.wordpress.com/2014/08/01/raspberry-pi-home-server-part-5-remote-desktop/
+sudo apt-get install x11vnc
+
+sudo apt-get install vlc
+
+#https://www.raspberrypi.org/documentation/usage/webcams/
+sudo apt-get install fswebcam
+
+sudo apt-get install python-xlib
+
+#https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md
+
+sudo apt-get install git
+
+sudo apt-get install python-opencv
+sudo apt-get install libopencv-photo2.4
+
+#https://rasspberrypi.wordpress.com/2012/09/04/mounting-and-automounting-windows-shares-on-raspberry-pi/
+sudo mount -t cifs -o username=username,password=password "//192.168.0.101/My Videos" /home/pi/Videos/shared
