@@ -96,46 +96,6 @@ def index():
     return render_template("index.html", infos=infos)
 
 
-@views.route("/Settings", methods=["GET", "POST"])
-def settings():
-    if request.method == "POST":
-        for arg in request.form:
-            if arg == "CSRF":
-                continue
-            if arg.endswith("[]"):
-                value = request.form.getlist(arg)[1:]  # skip first dummy item
-                arg = arg[:-2]
-                if arg.endswith(":key"):  # dict
-                    arg = arg[:-4]
-                    temp = request.form.getlist(
-                        arg + ":value[]")[1:]  # get values
-                    value = {value[i]: temp[i] for i in range(len(value))}
-                elif arg.endswith(":value"):  # skip values
-                    continue
-            else:
-                value = str(request.form[arg])
-
-            systemName, prop = arg.split(":")
-            obj = myHome.getSystemByClassName(
-                systemName) if systemName != "Config" else myHome.config
-            if hasattr(obj, prop):
-                uiProperty = myHome.uiManager.containers[obj].properties[prop]
-                if isinstance(value, list):
-                    value = [Utils.parse(v, uiProperty.subtype) for v in value]
-                    setattr(obj, prop, value)
-                elif isinstance(value, dict):
-                    value = {Utils.parse(k, uiProperty.subtype[0]): Utils.parse(
-                        v, uiProperty.subtype[0]) for k, v in value.items()}
-                    setattr(obj, prop, value)
-                else:
-                    setattr(obj, prop, Utils.parse(value, uiProperty.type_))
-
-        myHome.systemChanged = True
-        return redirect("/")
-
-    return render_template("settings.html", uiManager=myHome.uiManager, csrf=session["CSRF"])
-
-
 @views.route("/MediaPlayer", methods=["GET", "POST"])
 def MediaPlayer():
     system = myHome.getSystemByClassName("MediaPlayerSystem")
@@ -235,14 +195,64 @@ def cameras(cameraName):
         return ""
 
 
+@views.route("/Security")
+def Security():
+    system = myHome.getSystemByClassName("SecuritySystem")
+    if len(request.args) == 1:
+        system.isEnabled = (request.args["enabled"] == "True")
+        return redirect("/Security")
+
+    return render_template("Security.html", history=reversed(system._history), enabled=system.isEnabled)
+
+
+@views.route("/Settings", methods=["GET", "POST"])
+def settings():
+    if request.method == "POST":
+        for arg in request.form:
+            if arg == "CSRF":
+                continue
+            if arg.endswith("[]"):
+                value = request.form.getlist(arg)[1:]  # skip first dummy item
+                arg = arg[:-2]
+                if arg.endswith(":key"):  # dict
+                    arg = arg[:-4]
+                    temp = request.form.getlist(
+                        arg + ":value[]")[1:]  # get values
+                    value = {value[i]: temp[i] for i in range(len(value))}
+                elif arg.endswith(":value"):  # skip values
+                    continue
+            else:
+                value = str(request.form[arg])
+
+            systemName, prop = arg.split(":")
+            obj = myHome.getSystemByClassName(
+                systemName) if systemName != "Config" else myHome.config
+            if hasattr(obj, prop):
+                uiProperty = myHome.uiManager.containers[obj].properties[prop]
+                if isinstance(value, list):
+                    value = [Utils.parse(v, uiProperty.subtype) for v in value]
+                    setattr(obj, prop, value)
+                elif isinstance(value, dict):
+                    value = {Utils.parse(k, uiProperty.subtype[0]): Utils.parse(
+                        v, uiProperty.subtype[0]) for k, v in value.items()}
+                    setattr(obj, prop, value)
+                else:
+                    setattr(obj, prop, Utils.parse(value, uiProperty.type_))
+
+        myHome.systemChanged = True
+        return redirect("/")
+
+    return render_template("settings.html", uiManager=myHome.uiManager, csrf=session["CSRF"])
+
+
+@views.route("/Logs")
+def logs():
+    return render_template("logs.html", log=reversed(Utils.getLogs()))
+
+
 @views.route("/restart")
 def restart():
     func = request.environ.get('werkzeug.server.shutdown')
     if func is not None:
         func()
     return redirect("/")
-
-
-@views.route("/Logs")
-def logs():
-    return render_template("logs.html", log=reversed(Utils.getLogs()))

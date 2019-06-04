@@ -59,10 +59,10 @@ def setupLogging(fileName: str, fileLogLevel: int = logging.INFO, showInConsole:
 
 @type_check
 def getLogs() -> list:
-    """ Return list of the last 500 log records.
+    """ Return list of log records.
 
     Returns:
-            list -- List of the last 500 log records.
+            list -- List of log records.
     """
 
     logger = logging.getLogger()

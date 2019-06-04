@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+		<div class='buttonContainer'>
+			<a class='button left' href='/'>back</a>
+			{% if enabled == True %}
+				<a class='button right green' href='?enabled=False'>enabled</a>
+			{% else %}
+				<a class='button right red' href='?enabled=True'>disabled</a>
+			{% endif %}
+			<h2 class='title'>Security</h2>
+		</div>
+		
+		<ul class='logs'>
+		{% for line in history %}
+			<li>{{ line }}</li>
+		{% endfor %}
+		</ul>
+{% endblock %}

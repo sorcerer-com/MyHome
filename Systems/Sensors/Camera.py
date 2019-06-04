@@ -132,9 +132,6 @@ class Camera:
         img = self.getImage(size, timeStamp)
         cv2.imwrite(filename, img)
 
-    # TODO: motion detection from images?
-    # TODO: alert if camera is off (when security system get activated?)
-
     @try_catch("Cannot move camera")
     @type_check
     def move(self, movement: CameraMovement) -> None:

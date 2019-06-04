@@ -37,7 +37,12 @@ function removeText(formId, inputName, count) {
 function addItem(parent, type, name, value, button = false, line = false) {
 	if (type != "bool") {
 		var element = document.createElement("input");
-		element.type = "text"; // TODO: implement other types
+		// TODO: implement other types
+		//console.log(name + ": " + type);
+		if (type == "int")
+			element.type = "number";
+		else
+			element.type = "text";
 		element.value = value;
 		element.title = value;
 	} else {

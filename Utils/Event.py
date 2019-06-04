@@ -47,7 +47,7 @@ class Event:
                 "Handler is not handling this event, so cannot unhandle it.")
         return self
 
-    @type_check
+    # @type_check break args and kargs transferring
     def fire(self, *args, **kargs) -> None:
         """ Trigger the event. """
 

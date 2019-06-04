@@ -189,43 +189,57 @@ class MyHome(Singleton):
                 return self.systems[key]
         return None
 
-    @try_catch("Cannot send alert message")
+    @try_catch("Cannot send alert message", False)
     @type_check
-    def sendAlert(self, msg: str) -> None:
+    def sendAlert(self, msg: str, files: list = None, force: bool = False) -> bool:
         """ Send alert message through sms and email.
 
         Arguments:
             msg {str} -- Message text which will be send.
+
+        Keyword Arguments:
+            files {list} -- List of files to be sent to email. Default - attach images from cameras.  (default: {None})
+            force {bool} -- If true force send sms ignoring the quiet hours. (default: {False})
+
+        Returns:
+            bool -- True if successfully send alert, otherwise false.
         """
 
         logger.info("Send alert '%s'", msg)
         # TODO: remove:
         print("Motion: " + str(self.getSystemByClassName("SensorsSystem").isMotionDetected))
-        return
+        return True
+
+        result = True
         msg = time.strftime("%d/%m/%Y %H:%M:%S") + "\n" + msg + "\n"
         msg += str(self.getSystemByClassName("SensorsSystem").latestData)
-        files = []
-        for camera in self.getSystemByClassName("SensorsSystem")._cameras:
-            if camera.saveImage(Config.BinPath + camera.name + ".jpg"):
-                files.append(Config.BinPath + camera.name + ".jpg")
+
+        files2 = []
+        if files is None:
+            for camera in self.getSystemByClassName("SensorsSystem")._cameras:
+                if camera.saveImage(Config.BinPath + camera.name + ".jpg"):
+                    files2.append(Config.BinPath + camera.name + ".jpg")
 
         smtp_server_info = {"address": self.config.smtpServer, "port": self.config.smtpServerPort,
                             "username": self.config.emailUserName, "password": self.config.emailPassword}
-        InternetService.sendEMail(smtp_server_info, self.config.email, [
-                                  self.config.email], "My Home", msg, files)
-        
-        for file in files:
+        if not InternetService.sendEMail(smtp_server_info, self.config.email, [self.config.email], "My Home", msg, files or files2):
+            result = False
+
+        for file in files2:
             if os.path.isfile(file):
                 os.remove(file)
 
-        # TODO: add property to enable/disable quiet hours, or maybe add force param for security alarm
         # send SMSs only if we are outside of the quiet hours
         quietHours = [int(hour.strip())
                       for hour in self.config.quietHours.split("-")]
+        if force:
+            quietHours = [0, 0]
         if quietHours[0] > quietHours[1] and (datetime.now().hour > quietHours[0] or datetime.now().hour < quietHours[1]):
             logger.info("Quiet hours: %s", self.config.quietHours)
         elif quietHours[0] < quietHours[1] and datetime.now().hour > quietHours[0] and datetime.now().hour < quietHours[1]:
             logger.info("Quiet hours: %s", self.config.quietHours)
         else:
-            InternetService.sendSMS(
-                self.config.gsmNumber, "telenor", self.config.myTelenorPassword, msg)
+            if not InternetService.sendSMS(self.config.gsmNumber, "telenor", self.config.myTelenorPassword, msg):
+                result = False
+
+        return result
