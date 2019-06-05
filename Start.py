@@ -49,8 +49,8 @@ def signal_handler(signal, frame):
 
 # args - Start.py "command" "web address"
 if len(sys.argv) < 3:
-    logger.error("Invalid arguments - command and web address required")
-    sys.exit(1)
+    sys.argv.append("python Main.py")
+    sys.argv.append("http://localhost:5000")
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)

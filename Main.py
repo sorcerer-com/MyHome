@@ -43,7 +43,6 @@ def sensor():
     return ""
 
 
-# TODO: generate requirements.txt and setup.sh -> virtualenv + pip install -r requirements.txt
 if __name__ == "__main__":
     if myHome.config.appSecret == "":
         myHome.config.appSecret = secrets.token_hex(24)

@@ -146,7 +146,7 @@ class MultiSensor
       result += "{'name': 'Temperature', 'value': " + String(temperature) + ", 'aggrType': 'avg', 'desc': 'Current temperature'},";
       result += "{'name': 'Humidity', 'value': " + String((float)round(sqrt(humidity) * 10)) + ", 'aggrType': 'avg', 'desc': 'Current humidity'},";
       result += "{'name': 'Smoke', 'value': " + String((float)round(gasValue * 100)) + ", 'aggrType': 'avg', 'desc': 'Smoke detection'},";
-      result += "{'name': 'Lighting', 'value': " + String((float)round(gasValue * 100)) + ", 'aggrType': 'avg', 'desc': 'Current lighting'}";
+      result += "{'name': 'Lighting', 'value': " + String((float)round(lighting * 100)) + ", 'aggrType': 'avg', 'desc': 'Current lighting'}";
       result += "]";
 
       Serial.println(result);

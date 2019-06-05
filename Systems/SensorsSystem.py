@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__.split(".")[-1])
 
 class SensorsSystem(BaseSystem):
     """ SensorsSystem class """
-    # TODO: import/export functionality - to/from csv?
 
     @type_check
     def __init__(self, owner: None) -> None:
@@ -45,7 +44,7 @@ class SensorsSystem(BaseSystem):
         super().setup()
 
         self._owner.uiManager.containers[self].properties[
-            "alerts"].hint = "Value Name / Threshold \nThe threshold can start with special symbol '>', '<' or '='"
+            "alerts"].hint = "Value Name / Threshold \nThe value can start with '~' to match part of the name. \nThe threshold can start with special symbol '>', '<' or '='"
 
         self._owner.uiManager.containers[self].properties[
             "sensors"].hint = "Name / Address(Token) (leave empty for event based sensor) \nWARNING: If remove sensor, associated data will be lost"
@@ -278,8 +277,8 @@ class SensorsSystem(BaseSystem):
         """
 
         result = []
-        for name, threshold in self.alerts.items():
-            for item in data:
+        for item in data:
+            for name, threshold in self.alerts.items():
                 if "name" not in item or "value" not in item:
                     continue
 

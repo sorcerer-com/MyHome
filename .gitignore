@@ -202,6 +202,15 @@ sdist/
 develop-eggs/
 .installed.cfg
 
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
 # Installer logs
 pip-log.txt
 

@@ -42,7 +42,7 @@ class LocalService:
             return None
 
         call = subprocess.call if wait else subprocess.Popen
-        return call(["omxplayer", "-r", "-o", audioOutput, "--vol", str(volume), path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+        return call(["omxplayer", "-r", "-o", audioOutput, "--vol", str(volume), path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True, encoding="utf-8")
 
 
 class InternetService:

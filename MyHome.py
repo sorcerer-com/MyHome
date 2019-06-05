@@ -26,6 +26,7 @@ for importer, modname, ispkg in pkgutil.walk_packages(path=["./Systems"], prefix
 
 class MyHome(Singleton):
     """ My Home manager class. """
+    # TODO: check github todo list
 
     _UpdateTime = 1  # seconds
     _UpdateWarningTimeout = 0.1  # seconds
@@ -161,7 +162,7 @@ class MyHome(Singleton):
             systemData = {}
             self.systems[key].save(configParser, systemData)
             data[self.systems[key].name] = Utils.serializable(systemData)
-        data = json.dumps(data, indent=4, sort_keys=True, ensure_ascii=True)
+        data = json.dumps(data, indent=4, ensure_ascii=True)
 
         logger.debug("Save config to file: %s", Config.ConfigFilePath)
         with open(Config.ConfigFilePath, 'w') as configFile:
@@ -206,13 +207,14 @@ class MyHome(Singleton):
         """
 
         logger.info("Send alert '%s'", msg)
-        # TODO: remove:
-        print("Motion: " + str(self.getSystemByClassName("SensorsSystem").isMotionDetected))
-        return True
 
         result = True
         msg = time.strftime("%d/%m/%Y %H:%M:%S") + "\n" + msg + "\n"
         msg += str(self.getSystemByClassName("SensorsSystem").latestData)
+        
+        # TODO: remove:
+        print(msg)
+        return True
 
         files2 = []
         if files is None:
