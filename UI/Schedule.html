@@ -53,7 +53,7 @@
 		</script>
 		
 		<form id='form' action='' method='post' class='settings'>
-		{% for item in items|reverse %}
+		{% for item in items %}
 			<script>
 				addSchedule({Name: '{{ item["Name"] }}', Time: '{{ item["Time"] }}', Repeat: '{{ item["Repeat"] }}', Command: '{{ item["Command"] }}', Color: '{{ item["Color"] }}'});
 			</script>

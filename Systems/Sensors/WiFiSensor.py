@@ -1,5 +1,4 @@
 import logging
-import random
 
 from Services import InternetService
 from Systems.Sensors.BaseSensor import BaseSensor
@@ -26,14 +25,4 @@ class WiFiSensor(BaseSensor):
     def _readData(self) -> list:
         """ Read data from the WiFi sensor. """
 
-        return self._temp()
         return InternetService.getJsonContent(f"http://{self.address}/data")
-
-    # TODO: remove:
-    def _temp(self):
-        return [
-            {"name": "Power1", "value": random.randrange(10000, 50000) / 100,
-                "aggrType": "avg", "desc": "description"},
-            {"name": "ConsumedPower1", "value": self._lastReadings["ConsumedPower1"] + random.randrange(10000, 15000) / 100,
-                "aggrType": "sum", "desc": "description"}
-        ]

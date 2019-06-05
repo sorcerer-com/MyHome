@@ -13,7 +13,13 @@
 		
 		{% macro charts(data, metadata, drawValues, drawAxis, name="") -%}
 			{% for (subName, value) in data.items() %}
-				<div title="{{ metadata[subName]['desc'] }} ({{ metadata[subName]['aggrType'] }})">{{ subName }}</div>
+				{% if subName in metadata %}
+				<div title="{{ metadata[subName]['desc'] }} ({{ metadata[subName]['aggrType'] }})">
+				{% else %}
+				<div>
+				{% endif %}
+					{{ subName }}
+				</div>
 				<canvas id='canvas{{ name }}{{ subName }}' width='300' height='150'></canvas>
 				<script type='text/javascript'>
 					// {{ value|count }}

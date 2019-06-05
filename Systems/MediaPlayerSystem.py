@@ -136,7 +136,6 @@ class MediaPlayerSystem(BaseSystem):
         if path == "":
             return
 
-        # TODO: test
         self._playing = path
         _type = path[:path.index("\\")]
         path = path[path.index("\\") + 1:]  # remove local/shared/radios prefix
@@ -163,6 +162,7 @@ class MediaPlayerSystem(BaseSystem):
         self._playing = ""
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write("q")
+            self._process.stdin.flush()
             self._owner.event(self, "MediaStopped")
 
     @type_check
@@ -171,6 +171,7 @@ class MediaPlayerSystem(BaseSystem):
 
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write(" ")  # space
+            self._process.stdin.flush()
             self._owner.event(self, "MediaPaused")
 
     @type_check
@@ -179,6 +180,7 @@ class MediaPlayerSystem(BaseSystem):
 
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write("-")
+            self._process.stdin.flush()
             self.volume -= 1
             self._owner.systemChanged = True
             self._owner.event(self, "MediaVolumeDown")
@@ -189,6 +191,7 @@ class MediaPlayerSystem(BaseSystem):
 
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write("+")
+            self._process.stdin.flush()
             self.volume += 1
             self._owner.systemChanged = True
             self._owner.event(self, "MediaVolumeUp")
@@ -199,6 +202,7 @@ class MediaPlayerSystem(BaseSystem):
 
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write("\027[D")  # left arrow
+            self._process.stdin.flush()
             self._owner.event(self, "MediaSeekBack")
 
     @type_check
@@ -207,6 +211,7 @@ class MediaPlayerSystem(BaseSystem):
 
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write("\027[C")  # right arrow
+            self._process.stdin.flush()
             self._owner.event(self, "MediaSeekForward")
 
     @type_check
@@ -215,6 +220,7 @@ class MediaPlayerSystem(BaseSystem):
 
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write("\027[B")  # down arrow
+            self._process.stdin.flush()
             self._owner.event(self, "MediaSeekBackFast")
 
     @type_check
@@ -223,6 +229,7 @@ class MediaPlayerSystem(BaseSystem):
 
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write("\027[A")  # up arrow
+            self._process.stdin.flush()
             self._owner.event(self, "MediaSeekForwardFast")
 
     @type_check
@@ -231,6 +238,7 @@ class MediaPlayerSystem(BaseSystem):
 
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write(cmd)
+            self._process.stdin.flush()
             self._owner.event(self, "MediaCommand", cmd)
 
     @type_check
@@ -264,7 +272,6 @@ class MediaPlayerSystem(BaseSystem):
             list -- List of media files.
         """
 
-        # TODO: test
         path = self.sharedPath
         # path format should be: smb://username:password@host_ip/folder/
         if not path.startswith("smb://"):
@@ -324,9 +331,12 @@ class MediaPlayerSystem(BaseSystem):
         """
 
         root = os.path.splitext(path)[0]
-        # convert encoding to utf8
+        # convert encoding to utf8 without BOM
         if os.path.isfile(root + ".srt"):
-            with codecs.open(root + ".srt", "r", encoding="windows-1251") as f1:
-                content = f1.read()
-            with codecs.open(root + ".srt", "w", encoding="utf8") as f2:
-                f2.write(content)
+            try:
+                with codecs.open(root + ".srt", "r", encoding="windows-1251") as f1:
+                    content = f1.read()
+                with codecs.open(root + ".srt", "w", encoding="utf8") as f2:
+                    f2.write(content)
+            except UnicodeDecodeError:
+                pass

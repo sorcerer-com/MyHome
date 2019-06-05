@@ -55,6 +55,7 @@ class BaseSystem:
 
         items = configParser.items(self.name)
         for (name, value) in items:
+            valueType = None
             # static fields
             if hasattr(type(self), name):
                 valueType = type(getattr(type(self), name))

@@ -12,7 +12,7 @@ class BaseSensor:
 
     @type_check
     def __init__(self, name: str, address: str) -> None:
-        """ Initialize an instance of the Sensors class.
+        """ Initialize an instance of the BaseSensor class.
 
         Arguments:
             name {str} -- Name of the sensor.
@@ -107,7 +107,7 @@ class BaseSensor:
         if data is not None:
             self.addData(time, data)
         return data
-            
+
     @type_check
     def addData(self, time: datetime, data: list) -> None:
         """ Add data to the sensors data collection.
@@ -129,6 +129,7 @@ class BaseSensor:
                                                    ] if item["name"] in self._lastReadings else 0
                     self._data[time][item["name"]] = item["value"] - prevValue
                     self._lastReadings[item["name"]] = item["value"]
+                    item["value"] -= prevValue  # set real value
                 self.metadata[item["name"]] = {
                     key: value for key, value in item.items() if key not in ("name", "value")}
             else:
@@ -175,6 +176,9 @@ class BaseSensor:
             self._data[newTime] = {}
             for subName in self.subNames:
                 values = [item[subName] for item in items if subName in item]
+                if len(values) == 0:
+                    continue
+
                 aggrType = "avg"
                 if subName in self.metadata and "aggrType" in self.metadata[subName]:
                     aggrType = self.metadata[subName]["aggrType"]

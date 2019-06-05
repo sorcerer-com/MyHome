@@ -15,9 +15,9 @@ itsdangerous
 Jinja2
 lxml
 MarkupSafe
-numpy
+numpy==1.14.4
 onvif-zeep
-opencv-python
+#opencv-python
 pyasn1
 pyserial
 pysmb

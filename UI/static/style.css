@@ -249,7 +249,7 @@ ul.logs li.warning
 	color: #a0a;
 }
 
-ul.logs li.errwarningor:nth-child(odd)
+ul.logs li.warning:nth-child(odd)
 {
 	color: #d0d;
 }

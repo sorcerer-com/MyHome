@@ -52,6 +52,8 @@ class SecuritySystem(BaseSystem):
         if "history" in data:
             self._history = data["history"]
 
+        self._startTime = datetime.now() + self.startDelay
+
     @type_check
     def save(self, configParser: RawConfigParser, data: dict) -> None:
         """ Saves settings and data used by the system.
@@ -75,7 +77,7 @@ class SecuritySystem(BaseSystem):
             data {object} -- Data associated with the event.
         """
 
-        if sender != self or event != "IsEnabledChanged" or data is not False:
+        if sender != self or event != "IsEnabledChanged":
             return
 
         if self._activated:
@@ -118,7 +120,7 @@ class SecuritySystem(BaseSystem):
         if self._activated:
             for camera in self._owner.getSystemByClassName("SensorsSystem")._cameras:
                 if camera.capture.isOpened():
-                    img = camera.getImage()  # TODO: default size of 640x480?
+                    img = camera.getImage()
                     if camera.name not in self._prevImages:  # first image taken
                         self._prevImages[camera.name] = img
                     elif self._findMovement(self._prevImages[camera.name], img):
@@ -187,10 +189,16 @@ class SecuritySystem(BaseSystem):
             bool -- True if there is a movement between the two OpenCV images.
         """
 
-        if image1 is None or image2 is None:
+        if image1 is None or image2 is None or \
+                image1.shape != image2.shape:
             return False
 
         diff = cv2.subtract(image2, image1)
         diff = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)  # to gray
         _, diff = cv2.threshold(diff, 32, 255, cv2.THRESH_BINARY)  # binarize
-        return diff.mean() > 0.1 * 255
+        diffValue = diff.mean() 
+        if diffValue > 0.01 * 255:
+            logger.debug("Camera movement value: %s", diffValue)
+            self._addHistory(f"Camera movement value: {diffValue}")
+            return True
+        return False

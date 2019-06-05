@@ -72,9 +72,10 @@ def login():
     invalid = False
     if request.method == "POST":
         loginType = request.form["loginType"]
-        if check_password_hash(myHome.config.password, request.form[loginType]):
+        value = myHome.config.password if loginType != "token" else myHome.config.token
+        if check_password_hash(value, request.form[loginType]):
             logger.info("LogIn: Correct %s", loginType)
-            session[loginType] = myHome.config.password
+            session[loginType] = value
             return redirect("/")
         else:
             logger.warning("LogIn: Invalid %s", loginType)
@@ -92,7 +93,6 @@ def index():
     infos.sort(key=lambda x: x[0])
     infos.append(("Settings", None))
     infos.append(("Logs", None))
-    # TODO: show somehow that curtain system has UI, not only enable/disable
     return render_template("index.html", infos=infos)
 
 
@@ -140,7 +140,7 @@ def Schedule():
         system._schedule.sort(key=lambda x: x["Time"])
         system._nextTime = datetime.now()
         myHome.systemChanged = True
-        return redirect("/")
+        return redirect("/Schedule")
 
     items = []
     for item in system._schedule:
@@ -172,6 +172,7 @@ def Sensors():
         if sensor.address != "" and not sensor.address.startswith("/") and not sensor.address.startswith("COM"):
             data[sensor.name]["address"] = sensor.address
     if len(system._cameras) > 0:
+        # TODO: maybe add some button to activate camera (raspberry pi hardly handle multiple cameras)
         data["cameras"] = {
             camera.name: camera.isIPCamera for camera in system._cameras}
     return render_template("Sensors.html", data=data, enabled=system.isEnabled)
@@ -240,7 +241,7 @@ def settings():
                     setattr(obj, prop, Utils.parse(value, uiProperty.type_))
 
         myHome.systemChanged = True
-        return redirect("/")
+        return redirect("/Settings")
 
     return render_template("settings.html", uiManager=myHome.uiManager, csrf=session["CSRF"])
 

@@ -3,6 +3,7 @@ import re
 import time
 from datetime import datetime, timedelta
 from enum import Enum
+from threading import Lock
 
 import cv2
 import numpy as np
@@ -42,6 +43,7 @@ class Camera:
         self._lastUse = datetime.now()
 
         self._onvif = None
+        self._mutex = Lock()
 
     @property
     @type_check
@@ -57,8 +59,8 @@ class Camera:
 
         if self._capture is None:
             self._capture = cv2.VideoCapture(self._getRealAddress())
-        # if capture isn't opened try again but only if the previous try was at least 5 minutes ago
-        if not self._capture.isOpened() and datetime.now() - self._lastUse > timedelta(minutes=5):
+        # if capture isn't opened try again but only if the previous try was at least 1 minutes ago
+        if not self._capture.isOpened() and datetime.now() - self._lastUse > timedelta(minutes=1):
             self._capture.open(self._getRealAddress())
             self._lastUse = datetime.now()
         if self._capture.isOpened():
@@ -85,7 +87,8 @@ class Camera:
             object -- OpenCV image.
         """
 
-        img = self.capture.read()[1]
+        with self._mutex:
+            img = self.capture.read()[1]
         if img is None:  # add empty image with red X
             img = np.zeros((480, 640, 3), np.uint8)
             cv2.line(img, (0, 0), (640, 480), (0, 0, 255), 2, cv2.LINE_AA)
@@ -205,7 +208,7 @@ class Camera:
         try:
             self._onvif = {}
             username, password, ip, port = re.split(
-                ':|@', self.address)  # username:password@ip:port
+                ':|@', self.address)  # username:password@ip:port #8899
             self._onvif["Camera"] = ONVIFCamera(ip, port, username, password)
 
             self._onvif["Media"] = self._onvif["Camera"].create_media_service()

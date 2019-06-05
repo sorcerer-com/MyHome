@@ -1,5 +1,6 @@
-#!/usr/bin/env python
+#!/usr/local/bin/python3.7
 import logging
+import os
 import signal
 import subprocess
 import sys
@@ -9,7 +10,6 @@ from datetime import datetime, timedelta
 import robobrowser
 
 from Utils import Utils
-
 
 Utils.setupLogging("bin/starter.log",
                    fileLogLevel=logging.DEBUG, useBufferHandler=False)
@@ -49,8 +49,10 @@ def signal_handler(signal, frame):
 
 # args - Start.py "command" "web address"
 if len(sys.argv) < 3:
-    logger.error("Invalid arguments - command and web address required")
-    sys.exit(1)
+    sys.argv.append("python Main.py")
+    if os.path.isdir("venv"):
+        sys.argv[1] = "venv/bin/" + sys.argv[1]
+    sys.argv.append("http://localhost:5000")
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)

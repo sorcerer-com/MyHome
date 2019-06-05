@@ -1,7 +1,9 @@
 import logging
 import os
+import re
 import smtplib
 import subprocess
+import sys
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -13,6 +15,10 @@ import robobrowser
 from Utils.Decorators import try_catch, type_check
 
 logger = logging.getLogger(__name__.split(".")[-1])
+
+# fix crash in robobrowser in br.get_link("logout")
+if sys.version_info >= (3, 7):
+    re._pattern_type = re.Pattern
 
 
 class LocalService:
@@ -42,7 +48,7 @@ class LocalService:
             return None
 
         call = subprocess.call if wait else subprocess.Popen
-        return call(["omxplayer", "-r", "-o", audioOutput, "--vol", str(volume), path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+        return call(["omxplayer", "-r", "-o", audioOutput, "--vol", str(volume), path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True, encoding="utf-8")
 
 
 class InternetService:
@@ -92,8 +98,8 @@ class InternetService:
             else:
                 logger.warning("Invalid email file attachment - %s", f)
 
-        smtp = smtplib.SMTP_SSL(
-            smtp_server_info["address"], int(smtp_server_info["port"]))
+        smtp = smtplib.SMTP_SSL(smtp_server_info["address"], int(
+            smtp_server_info["port"]), timeout=60)
         smtp.login(smtp_server_info["username"], smtp_server_info["password"])
         smtp.sendmail(send_from, send_to, msg.as_string())
         smtp.close()
