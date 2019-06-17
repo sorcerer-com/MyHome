@@ -75,6 +75,18 @@ select
 	text-decoration: underline dotted;
 }
 
+.upgrade
+{
+	background-color: rgba(0, 128, 0, 0.3);
+	padding: 5px;
+	margin-bottom: 10px;
+}
+
+.upgrade.fail
+{
+	background-color: rgba(128, 0, 0, 0.3);
+}
+
 /* title */
 .title
 {

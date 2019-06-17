@@ -33,6 +33,14 @@
 			onTimer();
 		</script>
 		
+		{% if request.path != "/login" %}
+			{% if upgradeAvailable == True %}
+			<div class="upgrade">There is a system upgrade. Click <a href="/upgrade?CSRF={{ csrf }}">here</a> to proceed.</div>
+			{% elif upgradeAvailable is none %}
+			<div class="upgrade fail">Upgrade failed! Check the <a href="/Logs">logs</a> or click <a href="/upgrade?CSRF={{ csrf }}">here</a> to retry.</div>
+			{% endif %}		
+		{% endif %}
+		
 		<div class='title'>
 			<img src='static/img/MyHome.ico'/>
 			<h1>My Home</h1>
