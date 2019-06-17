@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 from shutil import copyfile
 from threading import Thread
 
+from git import Repo
+
 from Config import Config
 from Services import InternetService
 from Systems.BaseSystem import BaseSystem
@@ -52,6 +54,7 @@ class MyHome(Singleton):
 
         self.setup()
 
+        self.upgradeAvailable = False
         t = Thread(target=self.update)
         t.daemon = True
         t.start()
@@ -97,6 +100,9 @@ class MyHome(Singleton):
 
             if (datetime.now() - start).total_seconds() > MyHome._UpdateWarningTimeout:
                 logger.warning("Update time: %s", (datetime.now() - start))
+
+            if start.minute % 5 == 0 and start.second == 0:
+                self.upgradeAvailable = self.upgrade(True)
 
             if self.systemChanged:
                 self.save()
@@ -241,3 +247,26 @@ class MyHome(Singleton):
                 result = False
 
         return result
+
+    @try_catch("Cannot (check for) system upgrade", False)
+    @type_check
+    def upgrade(self, checkOnly: bool) -> bool:
+        """ Check or upgrade the system from the remote repository.
+
+        Arguments:
+            checkOnly {bool} -- True if only want to check for available upgrade.
+
+        Returns:
+            bool -- If check only for upgrade - True if there is, otherwise False. If upgrade True if it's successfull.
+        """
+
+        with Repo(".") as repo:
+            for info in repo.remote().fetch():
+                if info.name == "origin/" + repo.active_branch.name:
+                    if checkOnly:
+                        return repo.head.commit.hexsha != info.commit.hexsha
+                    else:
+                        logger.info("Upgrading...")
+                        repo.remote().pull()
+                    break
+            return True

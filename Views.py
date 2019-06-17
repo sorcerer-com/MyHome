@@ -58,6 +58,23 @@ def beforeRequest():
     return None
 
 
+@views.context_processor
+def context_processor():
+    return dict(csrf=session["CSRF"], upgradeAvailable=myHome.upgradeAvailable)
+
+
+@views.route("/upgrade")
+def upgrade():
+    if request.args["CSRF"] != session["CSRF"]:
+        abort(403)
+    if myHome.upgrade(False):
+        restart()
+        return "<META http-equiv=\"refresh\" content=\"15;URL=/\">Upgrade was successfull! Rebooting...\n"
+    else:
+        myHome.upgradeAvailable = None
+    return redirect("/")
+
+
 @views.route("/robots.txt")
 def robots():
     return "User-agent: *\nDisallow: /"
@@ -82,7 +99,7 @@ def login():
             invalid = True
 
     loginType = "token" if "token" in request.args else "password"
-    return render_template("login.html", invalid=invalid, loginType=loginType, csrf=session["CSRF"])
+    return render_template("login.html", invalid=invalid, loginType=loginType)
 
 
 @views.route("/")
@@ -112,7 +129,7 @@ def MediaPlayer():
             system.refreshSharedList()
         return redirect("/MediaPlayer")
 
-    return render_template("MediaPlayer.html", tree=system.mediaTree, selected=system.playing, watched=system._watched, csrf=session["CSRF"])
+    return render_template("MediaPlayer.html", tree=system.mediaTree, selected=system.playing, watched=system._watched)
 
 
 @views.route("/Schedule", methods=["GET", "POST"])
@@ -146,8 +163,7 @@ def Schedule():
     for item in system._schedule:
         items.append({key: Utils.string(value)
                       for (key, value) in item.items()})
-    return render_template("Schedule.html", items=items, enabled=system.isEnabled, csrf=session["CSRF"])
-
+    return render_template("Schedule.html", items=items, enabled=system.isEnabled)
 
 @views.route("/Sensors")
 def Sensors():
@@ -243,7 +259,7 @@ def settings():
         myHome.systemChanged = True
         return redirect("/Settings")
 
-    return render_template("settings.html", uiManager=myHome.uiManager, csrf=session["CSRF"])
+    return render_template("settings.html", uiManager=myHome.uiManager)
 
 
 @views.route("/Logs")
