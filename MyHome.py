@@ -22,7 +22,7 @@ from Utils.Singleton import Singleton
 logger = logging.getLogger(__name__.split(".")[-1])
 
 # import all systems
-for importer, modname, ispkg in pkgutil.walk_packages(path=["./Systems"], prefix="Systems."):
+for _, modname, _ in pkgutil.walk_packages(["./Systems"], "Systems."):
     __import__(modname)
 
 

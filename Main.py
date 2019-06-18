@@ -25,6 +25,10 @@ def typeDictSort(value):
     keys = sorted(value.keys(), key=lambda x: type(x).__name__)
     return [(key, value[key]) for key in keys]
 
+@app.template_filter()
+def gettype(value):
+    return type(value).__name__
+
 
 @app.template_filter()
 def toString(value):

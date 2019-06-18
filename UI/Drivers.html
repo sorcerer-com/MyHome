@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+		<div class='buttonContainer'>
+			<a class='button left' href='/'>back</a>
+			<a class='button right hidden'>enabled</a>
+			<h2 class='title'>Drivers</h2>
+		</div>
+
+		<div class='settings'>
+			{% for name, item in items|dictsort %}
+			<details>
+				<summary style="background-color: {{ item['driverColor'] }}">{{ name }} ({{ item['driverType'] }})</summary>
+				<form id='form{{ name }}' action='' method='post'>
+					<input type="hidden" name="action" value="edit"/>
+					<input type="hidden" name="type" value="{{ item['driverType'] }}"/>
+					<input type="hidden" name="originalName" value="{{ name }}"/>
+					<ul>
+					{% for key, value in item|dictsort %}
+						{% if key != "driverType" and key != "driverColor" %}
+						<li>
+							<h3>{{ key }}:</h3>
+							<span>
+								<script>
+									var span = document.currentScript.parentElement;
+									addItem(span, "{{ value|gettype }}", "{{ key }}", "{{ value|toString|safe }}");
+								</script>
+							</span>
+						</li>
+						{% endif %}
+					{% endfor %}
+					</ul>
+					<input type="hidden" name="CSRF" value="{{ csrf }}"/>
+				</form>
+				<form id='form{{ name }}Remove' action='' method='post'>
+					<input type="hidden" name="action" value="remove"/>
+					<input type="hidden" name="originalName" value="{{ name }}"/>
+					<input type="hidden" name="CSRF" value="{{ csrf }}"/>
+				</form>
+		
+				<div class='buttonContainer'>
+					<a class='button' href='javascript:;' onclick='submitForm("form{{ name }}");'>Save</a>
+					<a class='button' href='javascript:;' onclick='submitForm("form{{ name }}Remove");'>Remove</a>
+				</div>
+			</details>
+			{% endfor %}
+			<details>
+				<summary>Add Driver</summary>
+				<form id='formNew' action='' method='post'>
+					<input type="hidden" name="action" value="new"/>
+					<ul>
+						<li>
+							<h3>Name:</h3>
+							<span><input type="text" name="name" title="name"/></span>
+						</li>
+						<li>
+							<h3>Address:</h3>
+							<span><input type="text" name="address" title="address"/></span>
+						</li>
+						<li>
+							<h3>Type:</h3>
+							<span>
+								<select name="type">
+								{% for item in driverTypes %}
+									<option value="{{ item }}">{{ item }}</option>
+								{% endfor %}
+								</select>
+							</span>
+						</li>
+					</ul>
+					<input type="hidden" name="CSRF" value="{{ csrf }}"/>
+				</form>
+		
+				<div class='buttonContainer'>
+					<a class='button' href='javascript:;' onclick='submitForm("formNew");'>Add</a>
+					<a class='button' href='javascript:;' onclick='resetForm("formNew");'>Reset</a>
+				</div>
+			</details>
+		</div>
+		
+{% endblock %}

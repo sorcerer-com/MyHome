@@ -113,6 +113,40 @@ def index():
     return render_template("index.html", infos=infos)
 
 
+@views.route("/Drivers", methods=["GET", "POST"])
+def Drivers():
+    system = myHome.systems["DriversSystem"]
+    if request.method == "POST":
+        # add new driver
+        if request.form["action"] == "new":
+            system.addDriver(
+                request.form["type"], request.form["name"], request.form["address"])
+        # edit driver
+        elif request.form["action"] == "edit":
+            driver = system._driversDict[request.form["originalName"]]
+            for arg in request.form:
+                if hasattr(driver, arg):
+                    if arg == "name" and request.form[arg] in system._driversDict:
+                        continue
+                    value = Utils.parse(request.form[arg], type(getattr(driver, arg)))
+                    setattr(driver, arg, value)
+            myHome.systemChanged = True
+        # remove driver
+        elif request.form["action"] == "remove":
+            driver = system._driversDict[request.form["originalName"]]
+            system._drivers.remove(driver)
+            myHome.systemChanged = True
+        return redirect("/Drivers")
+
+    items = {}
+    for driver in system._drivers:
+        items[driver.name] = {field: getattr(
+            driver, field) for field in Utils.getFields(driver)}
+        items[driver.name]["driverType"] = driver.driverType
+        items[driver.name]["driverColor"] = driver.driverColor
+    return render_template("Drivers.html", items=items, driverTypes=system.driverTypes)
+
+
 @views.route("/MediaPlayer", methods=["GET", "POST"])
 def MediaPlayer():
     system = myHome.systems["MediaPlayerSystem"]
@@ -165,6 +199,17 @@ def Schedule():
                       for (key, value) in item.items()})
     return render_template("Schedule.html", items=items, enabled=system.isEnabled)
 
+
+@views.route("/Security")
+def Security():
+    system = myHome.systems["SecuritySystem"]
+    if len(request.args) == 1:
+        system.isEnabled = (request.args["enabled"] == "True")
+        return redirect("/Security")
+
+    return render_template("Security.html", history=reversed(system._history), enabled=system.isEnabled)
+
+
 @views.route("/Sensors")
 def Sensors():
     system = myHome.systems["SensorsSystem"]
@@ -209,16 +254,6 @@ def cameras(cameraName):
         system._camerasDict[cameraName].move(
             CameraMovement[request.args["action"]])
         return ""
-
-
-@views.route("/Security")
-def Security():
-    system = myHome.systems["SecuritySystem"]
-    if len(request.args) == 1:
-        system.isEnabled = (request.args["enabled"] == "True")
-        return redirect("/Security")
-
-    return render_template("Security.html", history=reversed(system._history), enabled=system.isEnabled)
 
 
 @views.route("/Settings", methods=["GET", "POST"])

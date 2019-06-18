@@ -14,6 +14,10 @@ function submitForm(formId) {
 	document.getElementById(formId).submit()
 }
 
+function resetForm(formId) {
+	document.getElementById(formId).reset()
+}
+
 
 function setText(formId, inputName, text) {
 	var form = document.getElementById(formId);
