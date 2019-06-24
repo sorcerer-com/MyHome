@@ -129,17 +129,17 @@ class SensorsSystem(BaseSystem):
 		if json != None:
 			for i in range(0, 3):
 				try:
-					self._sensors[1].addValue(self._nextTime, "Power" + str(i+1), float(json[i][0]))
-					self._checkData("Power" + str(i+1), float(json[i][0]))
+					self._sensors[1].addValue(self._nextTime, "Power" + str(i+1), float(json[i * 2]["value"]))
+					self._checkData("Power" + str(i+1), float(json[i * 2]["value"]))
 					if i >= len(self._lastPowerReadings):
-						self._lastPowerReadings.append(float(json[i][1]))
-					value = float(json[i][1]) - self._lastPowerReadings[i]
+						self._lastPowerReadings.append(float(json[i * 2 + 1]["value"]))
+					value = float(json[i * 2 + 1]["value"]) - self._lastPowerReadings[i]
 					if value < 0:
 						value = 0
 					self._sensors[1].addValue(self._nextTime, "ConsumedPower" + str(i+1), value)
 					self._checkData("ConsumedPower" + str(i+1), value)
 					if value >= 0:
-						self._lastPowerReadings[i] = float(json[i][1])
+						self._lastPowerReadings[i] = float(json[i * 2 + 1]["value"])
 				except Exception as e:
 					Logger.log("error", "Sensors System: cannot parse json " + str(json))
 					Logger.log("exception", str(e))
