@@ -68,9 +68,9 @@ class ScheduleSystem(BaseSystem):
                 command = item["Command"]
                 if "." in command:
                     command = command.replace("MyHome.", "self._owner.")
-                    for cls, system in self._owner.systems.items():
+                    for name, system in self._owner.systems.items():
                         command = command.replace(
-                            f"{system.name}.", f"self._owner.getSystemByClassName('{cls.__name__}').")
+                            f"{system.name}.", f"self._owner.systems['{name}'].")
 
                 try:
                     exec(command)
