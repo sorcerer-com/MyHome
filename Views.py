@@ -115,7 +115,7 @@ def index():
 
 @views.route("/MediaPlayer", methods=["GET", "POST"])
 def MediaPlayer():
-    system = myHome.getSystemByClassName("MediaPlayerSystem")
+    system = myHome.systems["MediaPlayerSystem"]
     data = request.form if request.method == "POST" else request.args
     if len(data) > 0:
         if "play" in data:
@@ -134,7 +134,7 @@ def MediaPlayer():
 
 @views.route("/Schedule", methods=["GET", "POST"])
 def Schedule():
-    system = myHome.getSystemByClassName("ScheduleSystem")
+    system = myHome.systems["ScheduleSystem"]
     if request.method == "GET" and len(request.args) == 1:
         system.isEnabled = (request.args["enabled"] == "True")
         return redirect("/Schedule")
@@ -167,7 +167,7 @@ def Schedule():
 
 @views.route("/Sensors")
 def Sensors():
-    system = myHome.getSystemByClassName("SensorsSystem")
+    system = myHome.systems["SensorsSystem"]
     if len(request.args) == 1:
         system.isEnabled = (request.args["enabled"] == "True")
         return redirect("/Sensors")
@@ -196,7 +196,7 @@ def Sensors():
 
 @views.route("/cameras/<cameraName>")
 def cameras(cameraName):
-    system = myHome.getSystemByClassName("SensorsSystem")
+    system = myHome.systems["SensorsSystem"]
 
     def gen():
         while True:
@@ -214,7 +214,7 @@ def cameras(cameraName):
 
 @views.route("/Security")
 def Security():
-    system = myHome.getSystemByClassName("SecuritySystem")
+    system = myHome.systems["SecuritySystem"]
     if len(request.args) == 1:
         system.isEnabled = (request.args["enabled"] == "True")
         return redirect("/Security")
@@ -242,8 +242,7 @@ def settings():
                 value = str(request.form[arg])
 
             systemName, prop = arg.split(":")
-            obj = myHome.getSystemByClassName(
-                systemName) if systemName != "Config" else myHome.config
+            obj = myHome.systems[systemName] if systemName != "Config" else myHome.config
             if hasattr(obj, prop):
                 uiProperty = myHome.uiManager.containers[obj].properties[prop]
                 if isinstance(value, list):

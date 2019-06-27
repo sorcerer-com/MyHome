@@ -37,7 +37,7 @@ def sensor():
     if "token" not in request.headers or not request.is_json or not isinstance(request.get_json(), list):
         abort(404)
 
-    system = myHome.getSystemByClassName("SensorsSystem")
+    system = myHome.systems["SensorsSystem"]
     if not system.processData(request.headers["token"], request.get_json()):
         abort(404)
     return ""

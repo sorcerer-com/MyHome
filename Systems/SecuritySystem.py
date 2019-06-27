@@ -108,8 +108,7 @@ class SecuritySystem(BaseSystem):
 
         # check for motion - if not activated and after delay start
         if not self._activated and elapsed > timedelta():
-            self._activated = self._owner.getSystemByClassName(
-                "SensorsSystem").isMotionDetected
+            self._activated = self._owner.systems["SensorsSystem"].isMotionDetected
             if self._activated:
                 logger.info("Alarm Activated")
                 self._addHistory("Alarm activated")
@@ -118,7 +117,7 @@ class SecuritySystem(BaseSystem):
 
         # get images from cameras and check for movement
         if self._activated:
-            for camera in self._owner.getSystemByClassName("SensorsSystem")._cameras:
+            for camera in self._owner.systems["SensorsSystem"]._cameras:
                 if camera.capture.isOpened():
                     img = camera.getImage()
                     if camera.name not in self._prevImages:  # first image taken
@@ -160,7 +159,7 @@ class SecuritySystem(BaseSystem):
     def _checkForOfflineCamera(self) -> bool:
         """ Return true if there is a offline camera. """
 
-        for camera in self._owner.getSystemByClassName("SensorsSystem")._cameras:
+        for camera in self._owner.systems["SensorsSystem"]._cameras:
             if not camera.capture.isOpened():
                 return True
         return False

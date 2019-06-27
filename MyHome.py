@@ -46,7 +46,7 @@ class MyHome(Singleton):
         # systems
         self.systems = {}
         for cls in BaseSystem.__subclasses__():
-            self.systems[cls] = cls(self)
+            self.systems[cls.__name__] = cls(self)
 
         self._lastBackupTime = datetime.now()
         self.systemChanged = False
@@ -131,7 +131,7 @@ class MyHome(Singleton):
         self.config.load(configParser)
 
         # load systems settings
-        keys = sorted(self.systems.keys(), key=lambda x: x.__name__)
+        keys = sorted(self.systems.keys())
         for key in keys:
             if key in self.systems:
                 systemData = {}
@@ -162,7 +162,7 @@ class MyHome(Singleton):
         # save systems settings
         data = {}
         data["LastBackupTime"] = Utils.string(self._lastBackupTime)
-        keys = sorted(self.systems.keys(), key=lambda x: x.__name__)
+        keys = sorted(self.systems.keys())
         for key in keys:
             configParser.add_section(self.systems[key].name)
             systemData = {}
@@ -179,22 +179,6 @@ class MyHome(Singleton):
             dataFile.write(data)
 
         self.event(self, "SettingsSaved")
-
-    @type_check
-    def getSystemByClassName(self, className: str) -> BaseSystem:
-        """ Gets system by set class name.
-
-        Arguments:
-            className {str} -- Class name of the system.
-
-        Returns:
-            BaseSystem -- Instance of the system with the set class name, if there isn't such system None.
-        """
-
-        for key in self.systems:
-            if key.__name__ == className:
-                return self.systems[key]
-        return None
 
     @try_catch("Cannot send alert message", False)
     @type_check
@@ -216,13 +200,13 @@ class MyHome(Singleton):
 
         result = True
         msg = time.strftime("%d/%m/%Y %H:%M:%S") + "\n" + msg + "\n"
-        msg += str(self.getSystemByClassName("SensorsSystem").latestData)
+        msg += str(self.systems["SensorsSystem"].latestData)
         
         files2 = []
         if files is None:
-            for camera in self.getSystemByClassName("SensorsSystem")._cameras:
-                if camera.saveImage(Config.BinPath + camera.name + ".jpg"):
-                    files2.append(Config.BinPath + camera.name + ".jpg")
+            for camera in self.systems["SensorsSystem"]._cameras:
+                camera.saveImage(Config.BinPath + camera.name + ".jpg")
+                files2.append(Config.BinPath + camera.name + ".jpg")
 
         smtp_server_info = {"address": self.config.smtpServer, "port": self.config.smtpServerPort,
                             "username": self.config.emailUserName, "password": self.config.emailPassword}
