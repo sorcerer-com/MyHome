@@ -67,24 +67,35 @@
 				<br/>
 				Sensors Token: {{ value["token"] }}
 			{% else %} {# Cameras #}
-				<script>
-					function open_cameras(sender) {
-						sender.innerHTML = "";
-						{% for name, isIP in value.items() %}
-						sender.innerHTML += "<div>{{ name }}</div>";
-						sender.innerHTML += "<a href='/cameras/{{ name }}' title='Fullscreen'><img src='/cameras/{{ name }}' width='300'/></a>";
+				<div class="settings">
+				{% for name, isIP in value.items() %}
+					<details ontoggle="toggle(this)">
+						<summary>{{ name }}</summary>
+						<br/>
+						<a href="/cameras/{{ name }}" title="Fullscreen"><img alt="/cameras/{{ name }}" width="300"/></a>
 						{% if isIP %}
-						sender.innerHTML += "<a class='button' onclick='request(\"GET\", \"/cameras/{{ name }}?action=UP\")' title='Up'>&uarr;</a>"; // up
-						sender.innerHTML += "<a class='button' onclick='request(\"GET\", \"/cameras/{{ name }}?action=DOWN\")' title='Down'>&darr;</a>"; // down
-						sender.innerHTML += "<a class='button' onclick='request(\"GET\", \"/cameras/{{ name }}?action=LEFT\")' title='Left'>&larr;</a>"; // left
-						sender.innerHTML += "<a class='button' onclick='request(\"GET\", \"/cameras/{{ name }}?action=RIGHT\")' title='Right'>&rarr;</a>"; // right
-						sender.innerHTML += "<a class='button' onclick='request(\"GET\", \"/cameras/{{ name }}?action=ZOOMIN\")' title='ZoomIn'>&#9633;</a>"; // zoom in
-						sender.innerHTML += "<a class='button' onclick='request(\"GET\", \"/cameras/{{ name }}?action=ZOOMOUT\")' title='ZoomOut'>&#9643;</a>"; // zoom out
+						<div class="buttonContainer">
+							<a class="button" onclick="request('GET', '/cameras/{{ name }}?action=UP')" title="Up">&uarr;</a>
+							<a class="button" onclick="request('GET', '/cameras/{{ name }}?action=DOWN')" title="Down">&darr;</a>
+							<a class="button" onclick="request('GET', '/cameras/{{ name }}?action=LEFT')" title="Left">&larr;</a>
+							<a class="button" onclick="request('GET', '/cameras/{{ name }}?action=RIGHT')" title="Right">&rarr;</a>
+							<a class="button" onclick="request('GET', '/cameras/{{ name }}?action=ZOOMIN')" title="ZoomIn">&#9633;</a>
+							<a class="button" onclick="request('GET', '/cameras/{{ name }}?action=ZOOMOUT')" title="ZoomOut">&#9643;</a>
+						</div>
+						{% else %}
+						<br/><br/>
 						{% endif %}
-						sender.innerHTML += "<br/><br/>";
-						{% endfor %}
-					}
-				</script>
+					</details>
+				{% endfor %}
+					<script>
+						function toggle(sender) {
+							if (sender.open)
+								sender.getElementsByTagName("img")[0].src = sender.getElementsByTagName("img")[0].alt;
+							else
+								sender.getElementsByTagName("img")[0].src = "";
+						}
+					</script>
+				</div>
 			{% endif %}
 			</div>
 		{% endfor %}

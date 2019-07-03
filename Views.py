@@ -188,7 +188,6 @@ def Sensors():
         if sensor.address != "" and not sensor.address.startswith("/") and not sensor.address.startswith("COM"):
             data[sensor.name]["address"] = sensor.address
     if len(system._cameras) > 0:
-        # TODO: maybe add some button to activate camera (raspberry pi hardly handle multiple cameras)
         data["cameras"] = {
             camera.name: camera.isIPCamera for camera in system._cameras}
     return render_template("Sensors.html", data=data, enabled=system.isEnabled)

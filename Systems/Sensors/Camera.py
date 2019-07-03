@@ -58,9 +58,11 @@ class Camera:
         """ Get an instance of the cv2.VideoCapture. """
 
         if self._capture is None:
+            logger.info("Opening camera: %s", self.name)
             self._capture = cv2.VideoCapture(self._getRealAddress())
         # if capture isn't opened try again but only if the previous try was at least 1 minutes ago
-        if not self._capture.isOpened() and datetime.now() - self._lastUse > timedelta(minutes=1):
+        elif not self._capture.isOpened() and datetime.now() - self._lastUse > timedelta(minutes=1):
+            logger.info("Opening camera: %s", self.name)
             self._capture.open(self._getRealAddress())
             self._lastUse = datetime.now()
         if self._capture.isOpened():
@@ -73,6 +75,7 @@ class Camera:
 
         # release the capture if it isn't used for more then 1 minutes
         if self._capture is not None and self._capture.isOpened() and datetime.now() - self._lastUse > timedelta(minutes=5):
+            logger.info("Release camera: %s", self.name)
             self._capture.release()
 
     @type_check
