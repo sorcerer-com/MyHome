@@ -25,8 +25,7 @@ class SecuritySystem(BaseSystem):
 
         super().__init__(owner)
 
-        self._owner.event += lambda s, e, d=None: self._onEventReceived(
-            s, e, d)
+        self._owner.event += self._onEventReceived
 
         self.startDelay = timedelta(minutes=15)
         self.sendInterval = timedelta(minutes=5)
@@ -68,7 +67,7 @@ class SecuritySystem(BaseSystem):
         data["history"] = self._history
 
     @type_check
-    def _onEventReceived(self, sender: object, event: str, _: object) -> None:
+    def _onEventReceived(self, sender: object, event: str, data: object = None) -> None:
         """ Event handler.
 
         Arguments:
@@ -77,15 +76,21 @@ class SecuritySystem(BaseSystem):
             data {object} -- Data associated with the event.
         """
 
-        if sender != self or event != "IsEnabledChanged":
-            return
+        if sender == self and event == "IsEnabledChanged":
+            if self._activated:
+                self._addHistory("Alarm deactivated")
+            self._activated = False
+            self._startTime = datetime.now() + self.startDelay
+            self._prevImages.clear()
+            self._clearImages()
 
-        if self._activated:
-            self._addHistory("Alarm deactivated")
-        self._activated = False
-        self._startTime = datetime.now() + self.startDelay
-        self._prevImages.clear()
-        self._clearImages()
+        # if sensor received Motion data after delay start - activate alarm
+        if event == "SensorDataAdded" and "Motion" in data and data["Motion"] and \
+                self.isEnabled and datetime.now() - self._startTime > timedelta():
+            self._activated = True
+            logger.info("Alarm Activated")
+            self._addHistory("Alarm activated")
+            self._owner.event(self, "AlarmActivated")
 
     @type_check
     def update(self) -> None:
@@ -106,13 +111,8 @@ class SecuritySystem(BaseSystem):
             else:
                 self._addHistory("Skip alert sending")
 
-        # check for motion - if not activated and after delay start
+        # reset timer if not activated and after delay start
         if not self._activated and elapsed > timedelta():
-            self._activated = self._owner.systems["SensorsSystem"].isMotionDetected
-            if self._activated:
-                logger.info("Alarm Activated")
-                self._addHistory("Alarm activated")
-                self._owner.event(self, "AlarmActivated")
             self._startTime = datetime.now()
 
         # get images from cameras and check for movement

@@ -192,9 +192,9 @@ class SensorsSystem(BaseSystem):
                          "" and address in (sensor.address, sensor.token)]
                 if len(match) == 0:  # new sensor
                     if address.startswith("/") or address.startswith("COM"):
-                        self._sensors.append(SerialSensor(name, address))
+                        self._sensors.append(SerialSensor(self, name, address))
                     else:
-                        self._sensors.append(WiFiSensor(name, address))
+                        self._sensors.append(WiFiSensor(self, name, address))
                 else:  # rename sensor
                     match[0].name = name
             elif self._sensorsDict[name].address != "":  # address changed

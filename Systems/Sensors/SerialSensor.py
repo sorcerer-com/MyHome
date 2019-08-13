@@ -14,15 +14,16 @@ class SerialSensor(BaseSensor):
     """ SerialSensor class """
 
     @type_check
-    def __init__(self, name: str, address: str) -> None:
+    def __init__(self, owner: None, name: str, address: str) -> None:
         """ Initialize an instance of the Sensors class.
 
         Arguments:
+            owner {SensorSystem} -- SensorSystem object which is the owner of the sensor.
             name {str} -- Name of the sensor.
             address {str} -- (IP) Address of the sensor.
         """
 
-        super().__init__(name, address)
+        super().__init__(owner, name, address)
 
         self._serial = None
 
@@ -66,7 +67,7 @@ class SerialSensor(BaseSensor):
             self._serial.reset_input_buffer()  # clear input buffer
             self._serial.write("getdata".encode("utf-8"))
             self._serial.flush()
-            self._serial.readline() # comment "// Received: ..."
+            self._serial.readline()  # comment "// Received: ..."
             return json.loads(self._serial.readline().decode("utf-8").replace("'", "\""))
         except Exception:
             logger.exception(

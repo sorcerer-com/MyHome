@@ -11,14 +11,16 @@ class BaseSensor:
     """ BaseSensor class """
 
     @type_check
-    def __init__(self, name: str, address: str) -> None:
+    def __init__(self, owner: None, name: str, address: str) -> None:
         """ Initialize an instance of the BaseSensor class.
 
         Arguments:
+            owner {SensorSystem} -- SensorSystem object which is the owner of the sensor.
             name {str} -- Name of the sensor.
             address {str} -- (IP) Address of the sensor.
         """
 
+        self._owner = owner
         self.name = name
         self.address = address
         self.token = secrets.token_hex(16)
@@ -129,13 +131,16 @@ class BaseSensor:
                                                    ] if item["name"] in self._lastReadings else 0
                     self._data[time][item["name"]] = item["value"] - prevValue
                     self._lastReadings[item["name"]] = item["value"]
-                    item["value"] -= prevValue  # set real value
+                    # set real value to return in readData
+                    item["value"] -= prevValue
                 self.metadata[item["name"]] = {
                     key: value for key, value in item.items() if key not in ("name", "value")}
             else:
                 logger.warning(
                     "Try to add invalid data item(%s) in sensor(%s)", item, self.name)
 
+        self._owner._owner.event(self, "SensorDataAdded", {
+                                 item["name"]: item["value"] for item in data})
         self._archiveData()
 
     @type_check
