@@ -100,3 +100,20 @@ class DriversSystem(BaseSystem):
                 self._owner.systemChanged = True
                 return True
         return False
+
+    @type_check
+    def getDriversByType(self, type_: str) -> list:
+        """ Return list with drivers of the set type.
+
+        Arguments:
+            type_ {str} -- Type of the drivers.
+
+        Returns:
+            list -- List with drivers of the set type.
+        """
+
+        result = []
+        for driver in self._drivers:
+            if driver.driverType == type_:
+                result.append(driver)
+        return result

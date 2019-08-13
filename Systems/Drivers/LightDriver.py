@@ -42,13 +42,13 @@ class LightDriver(BaseDriver):
     def light(self) -> WifiLedBulb:
         """ Gets an instance of WifiLedBulb. """
 
-        if self._light is None and datetime.now() - self._lastUse > timedelta(minutes=1):
+        # try to reconnect every 1 minute (even if it's connected successfully)
+        if datetime.now() - self._lastUse > timedelta(minutes=1):
             self._lastUse = datetime.now()
             try:
                 self._light = WifiLedBulb(self.address, timeout=1)
             except Exception:
                 logger.exception("Cannot connect to the light")
-        self._lastUse = datetime.now()
         return self._light
 
     @property

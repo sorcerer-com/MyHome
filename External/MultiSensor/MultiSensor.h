@@ -49,6 +49,10 @@ class MultiSensor
       {
         Serial.println("[{'name': 'Motion', 'value': true, 'aggrType': 'avg', 'desc': 'Motion detection'}]");
       }
+      else if (!motion && prevMotion)
+      {
+        Serial.println("[{'name': 'Motion', 'value': false, 'aggrType': 'avg', 'desc': 'Motion detection'}]");
+      }
       prevMotion = motion;
 
       // check the LED state
