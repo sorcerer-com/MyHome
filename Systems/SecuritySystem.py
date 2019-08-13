@@ -68,7 +68,7 @@ class SecuritySystem(BaseSystem):
         data["history"] = self._history
 
     @type_check
-    def _onEventReceived(self, sender: object, event: str, data: object) -> None:
+    def _onEventReceived(self, sender: object, event: str, _: object) -> None:
         """ Event handler.
 
         Arguments:

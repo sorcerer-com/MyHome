@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__.split(".")[-1])
 
 # fix crash in robobrowser in br.get_link("logout")
 if sys.version_info >= (3, 7):
+    # pylint: disable=no-member
     re._pattern_type = re.Pattern
 
 

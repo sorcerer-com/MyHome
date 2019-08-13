@@ -64,7 +64,8 @@ disable=
     format,
     # project
     no-else-return,
-    len-as-condition
+    len-as-condition,
+    no-self-use
 
 
 [REPORTS]

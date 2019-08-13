@@ -203,6 +203,7 @@ def deserializable(value: object, valueType: type = type(None)) -> object:
         object -- Deserializable object.
     """
 
+    # pylint: disable=eval-used
     if valueType == type(None):
         valueType = type(value)
 

@@ -41,7 +41,7 @@ class BaseSystem:
         logger.debug("Stop system: %s", self.name)
 
     @type_check
-    def load(self, configParser: RawConfigParser, data: dict) -> None:
+    def load(self, configParser: RawConfigParser, _: dict) -> None:
         """ Loads settings and data for the system.
 
         Arguments:
@@ -69,7 +69,7 @@ class BaseSystem:
                          self.name, name, value, valueType)
 
     @type_check
-    def save(self, configParser: RawConfigParser, data: dict) -> None:
+    def save(self, configParser: RawConfigParser, _: dict) -> None:
         """ Saves settings and data used by the system.
 
         Arguments:

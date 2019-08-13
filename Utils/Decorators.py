@@ -1,7 +1,7 @@
 import logging
 from functools import wraps
 from inspect import getfullargspec
-from typing import get_type_hints, Union
+from typing import get_type_hints
 
 
 # https://aboutsimon.com/blog/2018/04/04/Python3-Type-Checking-And-Data-Validation-With-Type-Hints.html

@@ -151,7 +151,7 @@ class Camera:
             return
 
         self._setupOnvifCamera()
-        if self._onvif == None:
+        if self._onvif is None:
             return
 
         self._onvif["Moverequest"].Velocity.PanTilt.x = 0

@@ -73,6 +73,7 @@ class ScheduleSystem(BaseSystem):
                             f"{system.name}.", f"self._owner.systems['{name}'].")
 
                 try:
+                    # pylint: disable=exec-used
                     exec(command)
                 except Exception:
                     logger.exception("Cannot execute '%s'", command)

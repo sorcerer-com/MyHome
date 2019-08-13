@@ -1,4 +1,5 @@
 #!/usr/local/bin/python3.7
+# pylint: disable=global-statement
 import logging
 import os
 import signal
@@ -27,9 +28,9 @@ def killProc():
             proc.send_signal(signal.SIGINT)
         # check one second for exit
         waitSeconds = 2
-        for i in range(0, waitSeconds * 10):
+        for j in range(0, waitSeconds * 10):
             time.sleep(0.1)
-            if i == waitSeconds * 10 / 2:  # if process isn't closed in half of the time, call terminate
+            if j == waitSeconds * 10 / 2:  # if process isn't closed in half of the time, call terminate
                 proc.terminate()
             if proc.poll() is not None:
                 break
@@ -41,7 +42,7 @@ def killProc():
         time.sleep(0.5)
 
 
-def signal_handler(signal, frame):
+def signal_handler(_, __):
     global proc
     killProc()
     sys.exit(0)
