@@ -73,6 +73,7 @@ class ScheduleSystem(BaseSystem):
                             f"{system.name}.", f"self._owner.systems['{name}'].")
 
                 try:
+                    logger.debug("Execute command: %s", command)
                     # pylint: disable=exec-used
                     exec(command)
                 except Exception:

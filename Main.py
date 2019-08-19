@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import logging
 import secrets
+import sys
 from datetime import timedelta
 
 from flask import Flask, abort, request
@@ -10,7 +11,8 @@ from MyHome import MyHome
 from Utils import Utils
 from Views import views
 
-Utils.setupLogging(Config.LogFilePath)
+debugLevel = logging.INFO if "debug" not in sys.argv else logging.DEBUG
+Utils.setupLogging(Config.LogFilePath, debugLevel)
 logger = logging.getLogger("main")
 
 
@@ -24,6 +26,7 @@ myHome = MyHome()
 def typeDictSort(value):
     keys = sorted(value.keys(), key=lambda x: type(x).__name__)
     return [(key, value[key]) for key in keys]
+
 
 @app.template_filter()
 def gettype(value):
@@ -53,6 +56,7 @@ if __name__ == "__main__":
 
     app.secret_key = myHome.config.appSecret
     app.permanent_session_lifetime = timedelta(minutes=15)
-    app.config['TEMPLATES_AUTO_RELOAD'] = True  # TODO: if debug
+    app.config['TEMPLATES_AUTO_RELOAD'] = "debug" in sys.argv # in debug mode
     app.run(debug=False, host="0.0.0.0", threaded=True)
     myHome.stop()
+    logger.info("")

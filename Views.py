@@ -1,5 +1,6 @@
 import logging
 import secrets
+import sys
 import time
 from datetime import datetime, timedelta
 
@@ -14,7 +15,8 @@ from MyHome import MyHome
 from Systems.Sensors.Camera import CameraMovement
 from Utils import Utils
 
-Utils.setupLogging(Config.LogFilePath)
+debugLevel = logging.INFO if "debug" not in sys.argv else logging.DEBUG
+Utils.setupLogging(Config.LogFilePath, debugLevel)
 logger = logging.getLogger(__name__.split(".")[-1])
 
 views = Blueprint('views', __name__)
@@ -128,7 +130,8 @@ def Drivers():
                 if hasattr(driver, arg):
                     if arg == "name" and request.form[arg] in system._driversDict:
                         continue
-                    value = Utils.parse(request.form[arg], type(getattr(driver, arg)))
+                    value = Utils.parse(
+                        request.form[arg], type(getattr(driver, arg)))
                     setattr(driver, arg, value)
             myHome.systemChanged = True
         # remove driver

@@ -37,6 +37,8 @@ class BaseSensor:
                 data {dict} -- Dictionary from which the sensor data will be loaded.
         """
 
+        logger.debug("Load sensor: %s", self.name)
+
         if "token" in data:
             self.token = data["token"]
             if self.address == self.token:
@@ -55,6 +57,8 @@ class BaseSensor:
         Arguments:
                 data {dict} -- Dictionary to which the sensor data will be saved.
         """
+
+        logger.debug("Save sensor: %s", self.name)
 
         # Note: address is saved by the config and SensorsSystem's sensors dict
         data["token"] = self.token
@@ -106,6 +110,7 @@ class BaseSensor:
         """
 
         data = self._readData()  # read data from sensor
+        logger.debug("Sensor '%s' read data: %s", self.name, data)
         if data is not None:
             self.addData(time, data)
         return data
@@ -118,6 +123,8 @@ class BaseSensor:
             time {datetime} -- Time when the data is collected.
             data {list} -- Data which will be added.
         """
+
+        logger.debug("Sensor '%s' add data at %s: %s", self.name, time, data)
 
         if time not in self._data:
             self._data[time] = {}

@@ -21,24 +21,24 @@ class BaseDriver:
         self.address = address
 
     @type_check
-    def load(self, data: dict) -> None:
+    def load(self, _: dict) -> None:
         """ Loads driver's data.
 
         Arguments:
                 data {dict} -- Dictionary from which the driver data will be loaded.
         """
 
-        pass
+        logger.debug("Load driver: %s", self.name)
 
     @type_check
-    def save(self, data: dict) -> None:
+    def save(self, _: dict) -> None:
         """ Saves driver's data.
 
         Arguments:
                 data {dict} -- Dictionary to which the driver data will be saved.
         """
 
-        pass
+        logger.debug("Save driver: %s", self.name)
 
     @property
     @type_check

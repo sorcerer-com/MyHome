@@ -87,7 +87,8 @@ class BaseSystem:
     @type_check
     def update(self) -> None:
         """ Update current system's state. """
-        logger.debug("Update system: %s", self.name)
+        #logger.debug("Update system: %s", self.name)
+        pass
 
     @property
     @type_check

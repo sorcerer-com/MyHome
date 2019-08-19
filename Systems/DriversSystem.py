@@ -89,6 +89,8 @@ class DriversSystem(BaseSystem):
             bool -- True if successfully create the driver, otherwise False.
         """
 
+        logger.debug("Add driver '%s' (%s, %s)", name, type_, address)
+
         if name in self._driversDict:
             logger.warning(
                 "Try to add driver with name (%s) that already exists", name)

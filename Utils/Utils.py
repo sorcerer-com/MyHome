@@ -9,14 +9,14 @@ from Utils.LoggingFilter import LoggingFilter
 
 
 @type_check
-def setupLogging(fileName: str, fileLogLevel: int = logging.INFO, showInConsole: bool = True, useBufferHandler: bool = True) -> None:
+def setupLogging(fileName: str, logLevel: int = logging.INFO, showInConsole: bool = True, useBufferHandler: bool = True) -> None:
     """ Setup Logging module.
 
     Arguments:
             fileName {str} -- Path to the file which will contains the logs.
 
     Keyword Arguments:
-            fileLogLevel {int} -- Log level of the file handler. (default: {logging.INFO})
+            logLevel {int} -- Log level of the file and consol handlers. (default: {logging.INFO})
             showInConsole {bool} -- Indicate whether the logs will be shown in the standart output. (default: {True})
             useBufferHandler {bool} -- Indicate whether the logs will be collected in the buffer. (default: {True})
     """
@@ -34,7 +34,7 @@ def setupLogging(fileName: str, fileLogLevel: int = logging.INFO, showInConsole:
     # add RotatingFileHandler
     file = logging.handlers.RotatingFileHandler(
         fileName, maxBytes=1024*1024, backupCount=3)
-    file.setLevel(fileLogLevel)
+    file.setLevel(logLevel)
     file.setFormatter(formatter)
     logger.addHandler(file)
 
@@ -43,7 +43,7 @@ def setupLogging(fileName: str, fileLogLevel: int = logging.INFO, showInConsole:
     if showInConsole:
         # add Console handler
         console = logging.StreamHandler()
-        console.setLevel(logging.INFO)
+        console.setLevel(logLevel)
         console.setFormatter(formatter)
         console.addFilter(noWerkzeugInfoFilter)
         logger.addHandler(console)

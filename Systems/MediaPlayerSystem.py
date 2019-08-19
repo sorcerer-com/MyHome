@@ -1,4 +1,5 @@
 import codecs
+import logging
 import os
 import socket
 from configparser import RawConfigParser
@@ -9,6 +10,8 @@ from smb.SMBConnection import SMBConnection
 from Services import LocalService
 from Systems.BaseSystem import BaseSystem
 from Utils.Decorators import try_catch, type_check
+
+logger = logging.getLogger(__name__.split(".")[-1])
 
 
 class MediaPlayerSystem(BaseSystem):
@@ -133,6 +136,8 @@ class MediaPlayerSystem(BaseSystem):
             path {str} -- Media file to be played.
         """
 
+        logger.debug("Play media: %s", path)
+
         if path == "":
             return
 
@@ -159,6 +164,7 @@ class MediaPlayerSystem(BaseSystem):
     def stop(self) -> None:
         """ Stop the current playing. """
 
+        logger.debug("Stop media: %s", self._playing)
         self._playing = ""
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write("q")
@@ -169,6 +175,7 @@ class MediaPlayerSystem(BaseSystem):
     def pause(self) -> None:
         """ Pause the current playing. """
 
+        logger.debug("Pause media: %s", self._playing)
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write(" ")  # space
             self._process.stdin.flush()
@@ -178,6 +185,7 @@ class MediaPlayerSystem(BaseSystem):
     def volumeDown(self) -> None:
         """ Volume down the current playing. """
 
+        logger.debug("Volume down media: %s", self.volume)
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write("-")
             self._process.stdin.flush()
@@ -189,6 +197,7 @@ class MediaPlayerSystem(BaseSystem):
     def volumeUp(self) -> None:
         """ Volume up the current playing. """
 
+        logger.debug("Volume up media: %s", self.volume)
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write("+")
             self._process.stdin.flush()
@@ -200,6 +209,7 @@ class MediaPlayerSystem(BaseSystem):
     def seekBack(self) -> None:
         """ Seek back the current playing. """
 
+        logger.debug("Seek back media")
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write("\027[D")  # left arrow
             self._process.stdin.flush()
@@ -209,6 +219,7 @@ class MediaPlayerSystem(BaseSystem):
     def seekForward(self) -> None:
         """ Seek forward the current playing. """
 
+        logger.debug("Seek forward media")
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write("\027[C")  # right arrow
             self._process.stdin.flush()
@@ -218,6 +229,7 @@ class MediaPlayerSystem(BaseSystem):
     def seekBackFast(self) -> None:
         """ Seek back fast the current playing. """
 
+        logger.debug("Seek back fast media")
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write("\027[B")  # down arrow
             self._process.stdin.flush()
@@ -227,6 +239,7 @@ class MediaPlayerSystem(BaseSystem):
     def seekForwardFast(self) -> None:
         """ Seek forward fast the current playing. """
 
+        logger.debug("Seek forward fast media")
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write("\027[A")  # up arrow
             self._process.stdin.flush()
@@ -236,6 +249,7 @@ class MediaPlayerSystem(BaseSystem):
     def command(self, cmd: str) -> None:
         """ Send command to the media player. """
 
+        logger.debug("Send command: %s", cmd)
         if (self._process is not None) and (self._process.poll() is None):
             self._process.stdin.write(cmd)
             self._process.stdin.flush()
@@ -245,6 +259,7 @@ class MediaPlayerSystem(BaseSystem):
     def refreshSharedList(self) -> None:
         """ Refresh the list with shared files. """
 
+        logger.debug("Refresh shared list")
         self._sharedList = self._listShared()
         self._owner.systemChanged = True
 
@@ -256,6 +271,7 @@ class MediaPlayerSystem(BaseSystem):
             path {str} -- Path to be set as watched.
         """
 
+        logger.debug("Mark as watched: %s", path)
         # cleanup watched list from nonexistent files
         self._watched = [w for w in self._watched if w in self.mediaList]
 
@@ -333,6 +349,7 @@ class MediaPlayerSystem(BaseSystem):
         root = os.path.splitext(path)[0]
         # convert encoding to utf8 without BOM
         if os.path.isfile(root + ".srt"):
+            logger.debug("Convert subtitles to utf-8: %s.srt", root)
             try:
                 with codecs.open(root + ".srt", "r", encoding="windows-1251") as f1:
                     content = f1.read()

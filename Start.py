@@ -13,7 +13,9 @@ import robobrowser
 from Utils import Utils
 
 Utils.setupLogging("bin/starter.log",
-                   fileLogLevel=logging.DEBUG, useBufferHandler=False)
+                   logLevel=logging.DEBUG,
+                   showInConsole=False,
+                   useBufferHandler=False)
 logger = logging.getLogger()
 
 proc = None

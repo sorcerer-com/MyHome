@@ -135,6 +135,8 @@ class Camera:
             timeStamp {bool} -- If true time stamp will be added to the image. (default: {True})
         """
 
+        logger.debug("Camera '%s' save image: %s", self.name, filename)
+
         img = self.getImage(size, timeStamp)
         cv2.imwrite(filename, img)
 
@@ -146,6 +148,8 @@ class Camera:
         Arguments:
             movement {CameraMovement} -- Movement direction.
         """
+
+        logger.debug("Camera '%s' move: %s", self.name, movement)
 
         if not self.isIPCamera:
             return
@@ -204,6 +208,8 @@ class Camera:
     @type_check
     def _setupOnvifCamera(self) -> None:
         """ Setup ONVIF Camera environment. """
+
+        logger.debug("Camera '%s' setup onvif", self.name)
 
         if not self.isIPCamera or self._onvif is not None:
             return

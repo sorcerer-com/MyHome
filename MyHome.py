@@ -71,6 +71,7 @@ class MyHome(Singleton):
     def setup(self) -> None:
         """ Setup all sub-components. """
 
+        logger.info("Setup My Home")
         self.config.setup()
         for system in self.systems.values():
             system.setup()
@@ -201,7 +202,7 @@ class MyHome(Singleton):
         result = True
         msg = time.strftime("%d/%m/%Y %H:%M:%S") + "\n" + msg + "\n"
         msg += str(self.systems["SensorsSystem"].latestData)
-        
+
         files2 = []
         if files is None:
             for camera in self.systems["SensorsSystem"]._cameras:
@@ -243,6 +244,9 @@ class MyHome(Singleton):
         Returns:
             bool -- If check only for upgrade - True if there is, otherwise False. If upgrade True if it's successfull.
         """
+
+        if checkOnly:
+            logger.debug("Check for system update")
 
         with Repo(".") as repo:
             for info in repo.remote().fetch():

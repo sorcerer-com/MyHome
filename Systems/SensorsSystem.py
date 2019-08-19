@@ -191,15 +191,22 @@ class SensorsSystem(BaseSystem):
                 match = [sensor for sensor in self._sensors if address !=
                          "" and address in (sensor.address, sensor.token)]
                 if len(match) == 0:  # new sensor
+                    logger.debug("Add new sensor '%s' (%s)", name, address)
                     if address.startswith("/") or address.startswith("COM"):
                         self._sensors.append(SerialSensor(self, name, address))
                     else:
                         self._sensors.append(WiFiSensor(self, name, address))
                 else:  # rename sensor
+                    logger.debug("Rename sensor '%s' to '%s'",
+                                 match[0].name, name)
                     match[0].name = name
             elif self._sensorsDict[name].address != "":  # address changed
+                logger.debug("Change sensor(%s) address '%s' to '%s'",
+                             name, self._sensorsDict[name].address, address)
                 self._sensorsDict[name].address = address
             else:  # token changed
+                logger.debug("Change sensor(%s) token '%s' to '%s'",
+                             name, self._sensorsDict[name].token, address)
                 self._sensorsDict[name].token = address
 
         for name in list(self._sensorsDict.keys()):
@@ -231,10 +238,15 @@ class SensorsSystem(BaseSystem):
                 match = [
                     camera for camera in self._cameras if address == camera.address]
                 if len(match) == 0:  # new camera
+                    logger.debug("Add new camera '%s' (%s)", name, address)
                     self._cameras.append(Camera(name, address))
                 else:  # renamed camera
+                    logger.debug("Rename camera '%s' to '%s'",
+                                 match[0].name, name)
                     match[0].name = name
             else:  # address changed
+                logger.debug("Change camera(%s) address '%s' to '%s'",
+                             name, self._camerasDict[name].address, address)
                 self._camerasDict[name].address = address
 
         for name in list(self.cameras.keys()):

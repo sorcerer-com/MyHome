@@ -69,9 +69,11 @@ class LightDriver(BaseDriver):
 
         if self.light is not None and self.isOn != value:
             if value:
+                logger.debug("Light '%s' is turned on", self.name)
                 self.light.turnOn()
                 self._isOn = True
             else:
+                logger.debug("Light '%s' is turned off", self.name)
                 self.light.turnOff()
                 self._isOn = False
 
@@ -92,6 +94,8 @@ class LightDriver(BaseDriver):
         """ Sets the red component of the color. """
 
         if self.light is not None and self.red != value:
+            logger.debug(
+                "Light '%s' red color component is set to %s", self.name, value)
             self.light.setRgb(value, self._color[1], self._color[2])
             self._color[0] = value
 
@@ -112,6 +116,8 @@ class LightDriver(BaseDriver):
         """ Sets the green component of the color. """
 
         if self.light is not None and self.green != value:
+            logger.debug(
+                "Light '%s' green color component is set to %s", self.name, value)
             self.light.setRgb(self._color[0], value, self._color[2])
             self._color[1] = value
 
@@ -132,6 +138,8 @@ class LightDriver(BaseDriver):
         """ Sets the blue component of the color. """
 
         if self.light is not None and self.blue != value:
+            logger.debug(
+                "Light '%s' blue color component is set to %s", self.name, value)
             self.light.setRgb(self._color[0], self._color[1], value)
             self._color[2] = value
 
@@ -152,5 +160,7 @@ class LightDriver(BaseDriver):
         """ Sets the warm white level. """
 
         if self.light is not None and self.warmWhite != value:
+            logger.debug(
+                "Light '%s' warm white brightness is set to %s", self.name, value)
             self.light.setWarmWhite255(value)
             self._warmWhite = value
