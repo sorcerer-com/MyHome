@@ -308,4 +308,11 @@ def restart():
     func = request.environ.get('werkzeug.server.shutdown')
     if func is not None:
         func()
+    else:
+        import os
+        import signal
+        from threading import Timer
+        myHome.stop()
+        # kill after 10 sec
+        Timer(10, lambda: os.kill(os.getpid(), signal.SIGILL)).start()
     return redirect("/")

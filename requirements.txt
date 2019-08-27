@@ -30,5 +30,6 @@ six
 smmap2
 soupsieve
 urllib3
+waitress
 Werkzeug
 zeep
