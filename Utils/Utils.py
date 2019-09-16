@@ -170,7 +170,6 @@ def parse(value: str, valueType: type) -> object:
     raise Exception(f"Unsupported type to parse: {valueType}")
 
 
-@try_catch("Cannot make serializable object")
 @type_check
 def serializable(value: object) -> object:
     """ Convert to serializable object.
@@ -191,7 +190,6 @@ def serializable(value: object) -> object:
     return string(value)
 
 
-@try_catch("Cannot make deserializable object")
 @type_check
 def deserializable(value: object, valueType: type = type(None)) -> object:
     """ Convert to deserializable object.

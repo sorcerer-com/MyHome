@@ -149,7 +149,6 @@ class MyHome(Singleton):
         """ Save configurations and systems settings and data. """
 
         logger.info("Save settings and data")
-        # TODO: retry if fail
         # backup config and data file every day
         if (datetime.now() - self._lastBackupTime) > timedelta(days=1):
             self._lastBackupTime = datetime.now()

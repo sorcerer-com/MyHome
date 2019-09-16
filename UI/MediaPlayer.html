@@ -32,6 +32,10 @@
 				<span class='treeIndent'>+</span>
 			{% endfor %}
 
+			{% if fullname in watched %}
+				*
+			{% endif%}
+
 			{% if fullname == selected %}
 				<span class='selected' title='{{ fullname }}'>{{ name }}</span>
 			{% elif children|length == 0 %}
@@ -46,10 +50,6 @@
 			{% else %}
 				<span title='{{ fullname }}'>{{ name }}</span>
 			{% endif %}
-
-			{% if fullname in watched %}
-				*
-			{% endif%}
 			</div>
 
 			{# recursion #}

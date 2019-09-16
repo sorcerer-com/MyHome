@@ -166,7 +166,6 @@ def MediaPlayer():
             system.refreshSharedList()
         return redirect("/MediaPlayer")
 
-    # TODO: striketrough text if item is watched
     return render_template("MediaPlayer.html", tree=system.mediaTree, selected=system.playing, watched=system._watched)
 
 

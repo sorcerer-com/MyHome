@@ -52,7 +52,8 @@ class SerialSensor(BaseSensor):
         except Exception:
             logger.exception(
                 "Cannot read data from serial sensor: %s(%s)", self.name, self.address)
-            self._serial.close()
+            if self._serial:
+                self._serial.close()
             self._serial = None
 
     @type_check

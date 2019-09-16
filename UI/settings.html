@@ -36,7 +36,7 @@
 							<span>
 							<script>
 								var span = document.currentScript.parentElement;
-								addItem(span, "{{ property.type_.__name__ }}", "{{ container.name }}:{{ key }}", "{{ value|toString|safe }}");
+								addItem(span, "{{ property.type_.__name__ }}", "{{ container.name }}:{{ key }}", "{{ value|toString|safe|replace('\\', '\\\\') }}");
 							</script>
 							</span>
 						{% elif property.subtype is not sequence %} {# list type #}
