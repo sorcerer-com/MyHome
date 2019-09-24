@@ -38,6 +38,12 @@ class MyHome(Singleton):
         """ Initialize an instance of the MyHome class. """
 
         logger.info("Start My Home")
+        try:
+            with Repo(".") as repo:
+                logger.info("Version: %s %s", Utils.string(
+                    repo.head.commit.committed_datetime), repo.head.commit.message.strip())
+        except Exception:
+            pass
 
         self.uiManager = UIManager(self)
         self.config = Config(self)
