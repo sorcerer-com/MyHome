@@ -132,8 +132,10 @@ class InternetService:
             # login
             br.open("http://my.telenor.bg")
             form = br.get_form()
-            form["username"] = number
-            form["password"] = password
+            form["account"] = number[1:]  # +359number
+            br.submit_form(form)
+            form = br.get_form()
+            form["pin"] = password
             br.submit_form(form)
             # go to sms
             br.follow_link(br.get_link(href="compose"))

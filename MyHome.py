@@ -231,6 +231,9 @@ class MyHome(Singleton):
             if not InternetService.sendSMS(self.config.gsmNumber, "telenor", self.config.myTelenorPassword, msg):
                 result = False
 
+        if result is False:
+            InternetService.sendEMail(smtp_server_info, self.config.email, [
+                                      self.config.email], "My Home", "Alert sending failed")
         return result
 
     @try_catch("Cannot (check for) system upgrade", False)
