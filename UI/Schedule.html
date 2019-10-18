@@ -2,7 +2,7 @@
 
 {% block content %}
 		<div class='buttonContainer'>
-			<a class='button left hidden' href='/'>back</a>
+			<a class='button left hidden' href='./'>back</a>
 		{% if enabled == True %}
 			<a class='button right green' href='?enabled=False'>enabled</a>
 		{% else %}
@@ -66,7 +66,7 @@
 			
 			<div class='buttonContainer'>
 				<a class='button' href='javascript:;' onclick='submitForm("form");'>Save</a>
-				<a class='button' href='/'>Cancel</a>
+				<a class='button' href='./'>Cancel</a>
 			</div>
 		</form>
 {% endblock %}

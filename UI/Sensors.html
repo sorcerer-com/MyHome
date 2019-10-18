@@ -2,7 +2,7 @@
 
 {% block content %}
 		<div class='buttonContainer'>
-			<a class='button left' href='/'>back</a>
+			<a class='button left' href='./'>back</a>
 		{% if enabled == True %}
 			<a class='button right green' href='?enabled=False'>enabled</a>
 		{% else %}
@@ -51,7 +51,7 @@
 			{% endif %}
 			{% if key != "cameras" %} {# Sensors #}
 				{% if value["address"] %}
-					<a href="http://{{ value['address'] }}" target="_blank" class="right" style="margin-right:30px;font-style: italic;">Open UI</a>
+					<a href='http://{{ value["address"] }}' target='_blank' class='right' style="margin-right:30px;font-style: italic;">Open UI</a>
 					<br/><br/>
 				{% endif %}
 
@@ -67,20 +67,20 @@
 				<br/>
 				Sensors Token: {{ value["token"] }}
 			{% else %} {# Cameras #}
-				<div class="settings">
+				<div class='settings'>
 				{% for name, isIP in value.items() %}
 					<details ontoggle="toggle(this)">
 						<summary>{{ name }}</summary>
 						<br/>
-						<a href="/cameras/{{ name }}" title="Fullscreen"><img alt="/cameras/{{ name }}" width="300"/></a>
+						<a href='./cameras/{{ name }}' title="Fullscreen"><img alt='./cameras/{{ name }}' width="300"/></a>
 						{% if isIP %}
 						<div class="buttonContainer">
-							<a class="button" onclick="request('GET', '/cameras/{{ name }}?action=UP')" title="Up">&uarr;</a>
-							<a class="button" onclick="request('GET', '/cameras/{{ name }}?action=DOWN')" title="Down">&darr;</a>
-							<a class="button" onclick="request('GET', '/cameras/{{ name }}?action=LEFT')" title="Left">&larr;</a>
-							<a class="button" onclick="request('GET', '/cameras/{{ name }}?action=RIGHT')" title="Right">&rarr;</a>
-							<a class="button" onclick="request('GET', '/cameras/{{ name }}?action=ZOOMIN')" title="ZoomIn">&#9633;</a>
-							<a class="button" onclick="request('GET', '/cameras/{{ name }}?action=ZOOMOUT')" title="ZoomOut">&#9643;</a>
+							<a class="button" onclick="request('GET', './cameras/{{ name }}?action=UP')" title="Up">&uarr;</a>
+							<a class="button" onclick="request('GET', './cameras/{{ name }}?action=DOWN')" title="Down">&darr;</a>
+							<a class="button" onclick="request('GET', './cameras/{{ name }}?action=LEFT')" title="Left">&larr;</a>
+							<a class="button" onclick="request('GET', './cameras/{{ name }}?action=RIGHT')" title="Right">&rarr;</a>
+							<a class="button" onclick="request('GET', './cameras/{{ name }}?action=ZOOMIN')" title="ZoomIn">&#9633;</a>
+							<a class="button" onclick="request('GET', './cameras/{{ name }}?action=ZOOMOUT')" title="ZoomOut">&#9643;</a>
 						</div>
 						{% else %}
 						<br/><br/>
