@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# copy to /etc/init.d/
+# sudo chmod +x myhome.sh
+# sudo update-rc.d myhome.sh defaults
+
 ### BEGIN INIT INFO
 # Provides:          myservice
 # Required-Start:    $remote_fs $syslog
@@ -16,7 +20,7 @@ DAEMON=$DIR/Start.py
 DAEMON_NAME=MyHome
 
 # Add any command line options for your daemon here
-DAEMON_OPTS="\"python3.6 Main.py\" http://localhost:5000"
+DAEMON_OPTS=""
 
 # This next line determines what user the script runs as.
 # Root generally not recommended but necessary if you are using the Raspberry Pi GPIO from Python.

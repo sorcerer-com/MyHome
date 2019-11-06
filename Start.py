@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3.7
+#!/usr/bin/python3.7
 # pylint: disable=global-statement
 import logging
 import os
@@ -52,7 +52,7 @@ def signal_handler(_, __):
 
 # args - Start.py "command" "web address"
 if len(sys.argv) < 3:
-    sys.argv.append("python Main.py")
+    sys.argv.append("python3 Main.py")
     if os.path.isdir("venv"):
         sys.argv[1] = "venv/bin/" + sys.argv[1]
     sys.argv.append("http://localhost:5000")
