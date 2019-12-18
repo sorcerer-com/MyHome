@@ -160,13 +160,12 @@ def MediaPlayer():
         if "action" in data and hasattr(system, data["action"]):
             # call function with set action name
             getattr(system, data["action"])()
-        if "command" in data:
-            system.command(data["command"])
         if "refreshSharedList" in data:
             system.refreshSharedList()
         return redirect("/MediaPlayer")
 
-    return render_template("MediaPlayer.html", tree=system.mediaTree, selected=system.playing, watched=system._watched)
+    volume = 100 + system.volume * 5
+    return render_template("MediaPlayer.html", tree=system.mediaTree, selected=system.playing, watched=system._watched, volume=volume, timeDetails=system.timeDetails)
 
 
 @views.route("/Schedule", methods=["GET", "POST"])

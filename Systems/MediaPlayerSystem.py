@@ -3,11 +3,12 @@ import logging
 import os
 import socket
 from configparser import RawConfigParser
+from datetime import datetime, timedelta
 
+import vlc
 from nmb.NetBIOS import NetBIOS
 from smb.SMBConnection import SMBConnection
 
-from Services import LocalService
 from Systems.BaseSystem import BaseSystem
 from Utils.Decorators import try_catch, type_check
 
@@ -35,10 +36,11 @@ class MediaPlayerSystem(BaseSystem):
         self.volume = 0
         self.radios = []
 
+        self._timer = datetime.now() - timedelta(minutes=1)
+        self._player = vlc.MediaPlayer()
         self._sharedList = []
         self._playing = ""
         self._watched = []
-        self._process = None
 
     @type_check
     def load(self, configParser: RawConfigParser, data: dict) -> None:
@@ -69,6 +71,20 @@ class MediaPlayerSystem(BaseSystem):
 
         data["sharedList"] = self._sharedList
         data["watched"] = self._watched
+
+    @type_check
+    def update(self) -> None:
+        """ Update current system's state. """
+
+        super().update()
+
+        if datetime.now() - self._timer < timedelta(minutes=1):
+            return
+        self._timer = datetime.now()
+
+        # stop if end reached
+        if self._player.get_state() == vlc.State.Ended:
+            self._player.stop()
 
     @property
     @type_check
@@ -123,10 +139,27 @@ class MediaPlayerSystem(BaseSystem):
             str -- The playing file.
         """
 
-        if (self._process is None) or (self._process.poll() is not None):
+        if self._player.get_state() == vlc.State.Stopped:
             self._playing = ""
-            self._process = None
         return self._playing
+
+    @property
+    @type_check
+    def timeDetails(self) -> str:
+        """ Gets timing details (current time / length).
+
+        Returns:
+            str -- The timing details (current time / length).
+        """
+        def getTime(ms):
+            s = ms / 1000
+            m, s = divmod(s, 60)
+            h, m = divmod(m, 60)
+            return int(h), int(m), int(s)
+
+        time = getTime(self._player.get_time())
+        length = getTime(self._player.get_length())
+        return f"{time[0]}:{time[1]:02} / {length[0]}:{length[1]:02}"
 
     @type_check
     def play(self, path: str) -> None:
@@ -145,20 +178,24 @@ class MediaPlayerSystem(BaseSystem):
         _type = path[:path.index("\\")]
         path = path[path.index("\\") + 1:]  # remove local/shared/radios prefix
         if _type == "radios":
-            self._process = LocalService.openMedia(
-                path, "local", int(self.volume*300*1.5), False)
+            # TODO: set audio output
+            print(self._player.get_instance().audio_output_enumerate_devices())
+            self._player.set_mrl(path)
+            self._player.audio_set_volume(100 + self.volume * 5 * 1.5)
         else:
             if _type == "local":
                 path = os.path.join(self.mediaPath, path)
                 self._convertSubtitles(path)
             else:
                 path = self.sharedPath + path
-            self._process = LocalService.openMedia(
-                path, volume=self.volume*300, wait=False)
-        if (self._process is not None) and (self._process.poll() is None):
-            if _type != "radios":
-                self._markAsWatched(self._playing)
-            self._owner.event(self, "MediaPlayed", self._playing)
+            self._player.set_mrl(path)
+            self._player.audio_set_volume(100 + self.volume * 5)
+
+        self._player.set_fullscreen(True)
+        self._player.play()
+        if _type != "radios":
+            self._markAsWatched(self._playing)
+        self._owner.event(self, "MediaPlayed", self._playing)
 
     @type_check
     def stop(self) -> None:
@@ -166,94 +203,72 @@ class MediaPlayerSystem(BaseSystem):
 
         logger.debug("Stop media: %s", self._playing)
         self._playing = ""
-        if (self._process is not None) and (self._process.poll() is None):
-            self._process.stdin.write("q")
-            self._process.stdin.flush()
-            self._owner.event(self, "MediaStopped")
+        self._player.stop()
+        self._owner.event(self, "MediaStopped")
 
     @type_check
     def pause(self) -> None:
         """ Pause the current playing. """
 
         logger.debug("Pause media: %s", self._playing)
-        if (self._process is not None) and (self._process.poll() is None):
-            self._process.stdin.write(" ")  # space
-            self._process.stdin.flush()
-            self._owner.event(self, "MediaPaused")
+        self._player.pause()
+        self._owner.event(self, "MediaPaused")
 
     @type_check
     def volumeDown(self) -> None:
         """ Volume down the current playing. """
 
         logger.debug("Volume down media: %s", self.volume)
-        if (self._process is not None) and (self._process.poll() is None):
-            self._process.stdin.write("-")
-            self._process.stdin.flush()
-            self.volume -= 1
-            self._owner.systemChanged = True
-            self._owner.event(self, "MediaVolumeDown")
+        self._player.audio_set_volume(self._player.audio_get_volume() - 5)
+        self.volume -= 1
+        self._owner.systemChanged = True
+        self._owner.event(self, "MediaVolumeDown")
 
     @type_check
     def volumeUp(self) -> None:
         """ Volume up the current playing. """
 
         logger.debug("Volume up media: %s", self.volume)
-        if (self._process is not None) and (self._process.poll() is None):
-            self._process.stdin.write("+")
-            self._process.stdin.flush()
-            self.volume += 1
-            self._owner.systemChanged = True
-            self._owner.event(self, "MediaVolumeUp")
+        self._player.audio_set_volume(self._player.audio_get_volume() + 5)
+        self.volume += 1
+        self._owner.systemChanged = True
+        self._owner.event(self, "MediaVolumeUp")
 
     @type_check
     def seekBack(self) -> None:
         """ Seek back the current playing. """
 
         logger.debug("Seek back media")
-        if (self._process is not None) and (self._process.poll() is None):
-            self._process.stdin.write("\027[D")  # left arrow
-            self._process.stdin.flush()
-            self._owner.event(self, "MediaSeekBack")
+        self._player.set_time(self._player.get_time() -
+                              30 * 1000)  # -30 seconds
+        self._owner.event(self, "MediaSeekBack")
 
     @type_check
     def seekForward(self) -> None:
         """ Seek forward the current playing. """
 
         logger.debug("Seek forward media")
-        if (self._process is not None) and (self._process.poll() is None):
-            self._process.stdin.write("\027[C")  # right arrow
-            self._process.stdin.flush()
-            self._owner.event(self, "MediaSeekForward")
+        self._player.set_time(self._player.get_time() +
+                              30 * 1000)  # +30 seconds
+        self._owner.event(self, "MediaSeekForward")
 
     @type_check
     def seekBackFast(self) -> None:
         """ Seek back fast the current playing. """
 
         logger.debug("Seek back fast media")
-        if (self._process is not None) and (self._process.poll() is None):
-            self._process.stdin.write("\027[B")  # down arrow
-            self._process.stdin.flush()
-            self._owner.event(self, "MediaSeekBackFast")
+        self._player.set_time(self._player.get_time() -
+                              600 * 1000)  # -600 seconds
+        self._owner.event(self, "MediaSeekBackFast")
 
     @type_check
     def seekForwardFast(self) -> None:
         """ Seek forward fast the current playing. """
 
         logger.debug("Seek forward fast media")
-        if (self._process is not None) and (self._process.poll() is None):
-            self._process.stdin.write("\027[A")  # up arrow
-            self._process.stdin.flush()
-            self._owner.event(self, "MediaSeekForwardFast")
-
-    @type_check
-    def command(self, cmd: str) -> None:
-        """ Send command to the media player. """
-
-        logger.debug("Send command: %s", cmd)
-        if (self._process is not None) and (self._process.poll() is None):
-            self._process.stdin.write(cmd)
-            self._process.stdin.flush()
-            self._owner.event(self, "MediaCommand", cmd)
+        self._player.set_time(self._player.get_time() +
+                              600 * 1000)  # +600 seconds
+        self._owner.event(self, "MediaSeekBackFast")
 
     @type_check
     def refreshSharedList(self) -> None:
@@ -300,7 +315,7 @@ class MediaPlayerSystem(BaseSystem):
         username = path.split(":")[0]
         path = path[len(username)+1:]
 
-        password = path.split("@")[0]
+        password = "@".join(path.split("@")[:-1])
         path = path[len(password)+1:]
 
         server_ip = path.split("/")[0]

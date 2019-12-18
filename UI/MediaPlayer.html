@@ -8,10 +8,6 @@
 		</div>
 		
 		<script>
-			document.onkeypress = function(e) {
-				window.location.href = "?command=" + e.key;
-			};
-
 			function select(sender, fullname) {
 				setText("form", "play", fullname);
 				// deselect previous selected element
@@ -58,7 +54,9 @@
 			{% endfor %}
 		{%- endmacro %}
 		
-		<div class='buttonContainer'>{{ selected }}</div>
+		{% if selected != "" %}
+			<div class='buttonContainer'>{{ selected }} ({{volume}}, {{timeDetails}})</div>
+		{% endif %}
 		
 		<form id='form' action='' method='post'>
 			<input type='hidden' name='play'/>

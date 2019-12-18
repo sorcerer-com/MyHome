@@ -102,7 +102,7 @@ class MyHome(Singleton):
             start = datetime.now()
             # update systems
             for system in self.systems.values():
-                if system.isEnabled:
+                if system.isEnabled or system.isEnabled is None:
                     system.update()
 
             if (datetime.now() - start).total_seconds() > MyHome._UpdateWarningTimeout:

@@ -91,7 +91,7 @@ class SensorsSystem(BaseSystem):
         for camera in self._cameras:
             camera.update()
 
-        if datetime.now() < self._nextTime:
+        if datetime.now() < self._nextTime.replace(second=59):  # at the end of the minute
             return
 
         # if checkInterval is changed
@@ -144,12 +144,13 @@ class SensorsSystem(BaseSystem):
                 "Try to process data(%s) with invalid token: %s", data, token)
             return False
 
-        logger.info("Process external data(%s) for sensor(%s)",
-                    data, sensors[0].name)
-
         time = datetime.now().replace(microsecond=0)
-        if sensors[0].address != "":  # if it's a pull data sensor modify last data
+        if sensors[0].address != "":  # if it's a pull data sensor modify last data and don't log
             time = sensors[0].latestTime
+        else:
+            logger.info("Process external data(%s) for sensor(%s)",
+                        data, sensors[0].name)
+
         sensors[0].addData(time, data)
         self._owner.systemChanged = True
         alert = self._check_data(data)
