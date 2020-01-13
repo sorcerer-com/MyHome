@@ -367,3 +367,13 @@ div.tabContent.active {
 	cursor: unset;
 	color: #66747F;
 }
+
+/* collapse */
+.collapsed {
+	font-style: italic;
+	cursor: pointer;
+}
+
+.expanded {
+	cursor: pointer;
+}

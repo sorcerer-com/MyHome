@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import logging
+import os
 import secrets
 import sys
 from datetime import timedelta
@@ -30,13 +31,18 @@ def typeDictSort(value):
 
 
 @app.template_filter()
-def gettype(value):
+def getTypeName(value):
     return type(value).__name__
 
 
 @app.template_filter()
 def toString(value):
     return Utils.string(value)
+
+
+@app.template_filter()
+def joinPath(value):
+    return os.path.join(*value)
 
 
 @app.route("/sensor/data", methods=["POST"])

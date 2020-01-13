@@ -25,12 +25,16 @@
 		{% macro genTree(name, fullname, children, indent) -%}
 			<div>
 			{% for i in range(indent) %}
-				<span class='treeIndent'>+</span>
+				<span class='treeIndent'>
+					{% if i == indent - 1 %}
+					+
+					{% endif %}
+				</span>
 			{% endfor %}
 
 			{% if fullname in watched %}
 				*
-			{% endif%}
+			{% endif %}
 
 			{% if fullname == selected %}
 				<span class='selected' title='{{ fullname }}'>{{ name }}</span>
@@ -44,14 +48,22 @@
 			{% elif indent == 0 %}
 				<span class='treeRoot' title='{{ fullname }}'>{{ name }}</span>
 			{% else %}
-				<span title='{{ fullname }}'>{{ name }}</span>
+				<span title='{{ fullname }}' onclick='toggleCollapse(this)' class="collapsed">{{ name }}</span>
+			{% endif %}
+
+			{% if children|length != 0 %}
+				{% if indent > 0 %}
+				<div style='display: none;'>
+				{% else %}
+				<div>
+				{% endif %}
+				{# recursion #}
+				{% for key, child in children|dictsort %}
+					{{ genTree(key, [fullname, key]|joinPath, child, indent + 1) }}
+				{% endfor %}
+				</div>
 			{% endif %}
 			</div>
-
-			{# recursion #}
-			{% for key, child in children|dictsort %}
-				{{ genTree(key, fullname + '\\' + key, child, indent + 1) }}
-			{% endfor %}
 		{%- endmacro %}
 		
 		{% if selected != "" %}

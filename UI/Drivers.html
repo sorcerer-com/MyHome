@@ -23,7 +23,7 @@
 							<span>
 								<script>
 									var span = document.currentScript.parentElement;
-									addItem(span, "{{ value|gettype }}", "{{ key }}", "{{ value|toString|safe }}");
+									addItem(span, "{{ value|getTypeName }}", "{{ key }}", "{{ value|toString|safe }}");
 								</script>
 							</span>
 						</li>

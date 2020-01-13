@@ -93,6 +93,23 @@ function toggleDetails(sender) {
 			details[i].removeAttribute("open");
 }
 
+function toggleCollapse(sender) {
+	var parent = sender.parentElement;
+	var idx = Array.prototype.indexOf.call(parent.children, sender);
+	if (parent.children[idx + 1].style.display == "" || parent.children[idx + 1].style.display == "block") {
+		parent.children[idx - 1].innerHTML = "+";
+		parent.children[idx].classList.add("collapsed");
+		parent.children[idx].classList.remove("expanded");
+		parent.children[idx + 1].style.display = "none";
+	}
+	else {
+		parent.children[idx - 1].innerHTML = "-";
+		parent.children[idx].classList.add("expanded");
+		parent.children[idx].classList.remove("collapsed");
+		parent.children[idx + 1].style.display = "block";
+	}
+}
+
 
 function openTab(sender, callbackName) {
 	var tabContainer = sender.parentElement;

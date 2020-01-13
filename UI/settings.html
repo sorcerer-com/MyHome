@@ -45,7 +45,7 @@
 							<span>
 							<script>
 								var span = document.currentScript.parentElement;
-								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}[]", "{{ item|toString|safe }}", true);
+								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}[]", "{{ item|toString|safe|replace('\\', '\\\\') }}", true);
 							</script>
 							</span>
 						{% endfor %}
@@ -62,8 +62,8 @@
 							<span>
 							<script>
 								var span = document.currentScript.parentElement;
-								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}:key[]", "{{ itemKey|toString|safe }}");
-								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}:value[]", "{{ itemValue|toString|safe }}", true, true);
+								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}:key[]", "{{ itemKey|toString|safe|replace('\\', '\\\\') }}");
+								addItem(span, "{{ property.subtype.__name__ }}", "{{ container.name }}:{{ key }}:value[]", "{{ itemValue|toString|safe|replace('\\', '\\\\') }}", true, true);
 							</script>
 							</span>
 						{% endfor %}

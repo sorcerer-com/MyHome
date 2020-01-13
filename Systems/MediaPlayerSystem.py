@@ -31,7 +31,7 @@ class MediaPlayerSystem(BaseSystem):
         super().__init__(owner)
         self._isEnabled = None
 
-        self.mediaPath = "."
+        self.mediaPaths = ["."]
         self.sharedPath = ""
         self.volume = 0
         self.radios = []
@@ -96,19 +96,21 @@ class MediaPlayerSystem(BaseSystem):
         """
 
         result = []
-        if os.path.isdir(self.mediaPath):
-            for root, subFolders, files in os.walk(self.mediaPath):
-                subFolders.sort()
-                files.sort()
-                for f in files:
-                    if os.path.splitext(f)[1] in self.SupportedFormats:
-                        path = os.path.join(root, f)
-                        result.append(
-                            "local\\" + os.path.relpath(path, self.mediaPath))
+        for i, mediaPath in enumerate(self.mediaPaths):
+            if os.path.isdir(mediaPath):
+                for root, subFolders, files in os.walk(mediaPath):
+                    subFolders.sort()
+                    files.sort()
+                    for f in files:
+                        if os.path.splitext(f)[1] in self.SupportedFormats:
+                            path = os.path.join(root, f)
+                            prefix = f"local{i+1}" + os.path.sep
+                            result.append(
+                                prefix + os.path.relpath(path, mediaPath))
         # shared
-        result.extend(["shared\\" + i for i in self._sharedList])
+        result.extend(["shared" + os.path.sep + i for i in self._sharedList])
         # add radios
-        result.extend(["radios\\" + i for i in self.radios])
+        result.extend(["radios" + os.path.sep + i for i in self.radios])
         return result
 
     @property
@@ -122,7 +124,7 @@ class MediaPlayerSystem(BaseSystem):
 
         tree = {}
         for f in self.mediaList:
-            split = f.split("\\")
+            split = f.split(os.path.sep)
             currItem = tree
             for s in split:
                 if s not in currItem:
@@ -175,21 +177,23 @@ class MediaPlayerSystem(BaseSystem):
             return
 
         self._playing = path
-        _type = path[:path.index("\\")]
-        path = path[path.index("\\") + 1:]  # remove local/shared/radios prefix
+        _type = path[:path.index(os.path.sep)]
+        # remove local/shared/radios prefix
+        path = path[path.index(os.path.sep) + 1:]
         if _type == "radios":
             # TODO: set audio output
             print(self._player.get_instance().audio_output_enumerate_devices())
             self._player.set_mrl(path)
-            self._player.audio_set_volume(100 + self.volume * 5 * 1.5)
+            self._player.audio_set_volume(int(100 + self.volume * 5 * 1.5))
         else:
-            if _type == "local":
-                path = os.path.join(self.mediaPath, path)
+            if _type.startswith("local"):
+                mediaPath = self.mediaPaths[int(_type[5:]) - 1]
+                path = os.path.join(mediaPath, path)
                 self._convertSubtitles(path)
             else:
                 path = self.sharedPath + path
             self._player.set_mrl(path)
-            self._player.audio_set_volume(100 + self.volume * 5)
+            self._player.audio_set_volume(int(100 + self.volume * 5))
 
         self._player.set_fullscreen(True)
         self._player.play()
