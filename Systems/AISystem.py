@@ -1,10 +1,17 @@
 import logging
-from datetime import datetime, timedelta
+import pkgutil
+from configparser import RawConfigParser
 
 from Systems.BaseSystem import BaseSystem
-from Utils.Decorators import try_catch, type_check
+from Systems.Skills.BaseSkill import BaseSkill
+from Utils import Utils
+from Utils.Decorators import type_check
 
 logger = logging.getLogger(__name__.split(".")[-1])
+
+# import all skills
+for _, modname, _ in pkgutil.walk_packages(["./Systems/Skills"], "Systems.Skills."):
+    __import__(modname)
 
 
 class AISystem(BaseSystem):
@@ -20,64 +27,109 @@ class AISystem(BaseSystem):
 
         super().__init__(owner)
 
-        self._owner.event += self._onEventReceived
+        # skills
+        self._skills = {}
+        for cls in BaseSkill.__subclasses__():
+            self._skills[cls.__name__] = cls(self)
 
-        self.lightOnThreshold = 15
-        self.lightOnDuration = 60  # seconds
+    @type_check
+    def load(self, configParser: RawConfigParser, data: dict) -> None:
+        """ Loads settings and data for the system.
 
-        self._lightsOn = {}  # light driver / turn on time
+        Arguments:
+                configParser {RawConfigParser} -- ConfigParser from which the settings will be loaded.
+                data {dict} -- Dictionary from which the system data will be loaded.
+        """
+
+        super().load(configParser, data)
+
+        keys = sorted(self._skills.keys())
+        for key in keys:
+            if key in self._skills:
+                skillData = {}
+                if self._skills[key].name in data:
+                    skillData = Utils.deserializable(
+                        data[self._skills[key].name])
+                self._skills[key].load(skillData)
+
+    @type_check
+    def save(self, configParser: RawConfigParser, data: dict) -> None:
+        """ Saves settings and data used by the system.
+
+        Arguments:
+                configParser {RawConfigParser} -- ConfigParser to which the settings will be saved.
+                data {dict} -- Dictionary to which the system data will be saved.
+        """
+
+        super().save(configParser, data)
+
+        keys = sorted(self._skills.keys())
+        for key in keys:
+            skillData = {}
+            self._skills[key].save(skillData)
+            data[key] = Utils.serializable(skillData)
 
     @type_check
     def update(self) -> None:
         """ Update current system's state. """
 
-        toRemove = []
-        for driver, time in self._lightsOn.items():
-            if datetime.now() > time:
-                logger.debug("Light '%s' turn off", driver.name)
-                driver.isOn = False
-                toRemove.append(driver)
-        for item in toRemove:
-            del self._lightsOn[item]
+        # update skills
+        for skill in self._skills.values():
+            if skill.isEnabled:
+                skill.update()
 
-    @try_catch("Lighting automation error")
     @type_check
-    def _onEventReceived(self, sender: object, event: str, data: object = None) -> None:
-        """ Event handler.
+    def __dir__(self) -> list:
+        """ Return all attributes.
 
-        Arguments:
-                sender {object} -- Sender of the event.
-                event {str} -- Event type.
-                data {object} -- Data associated with the event.
+        Returns:
+            list -- List of all attributes.
         """
 
-        # only motion in data, skip get all data
-        if event == "SensorDataAdded" and "Motion" in data and len(data) == 1:
-            latestData = sender._readData()  # try to read current data from the sensor
-            if latestData is not None:
-                latestData = {data["name"]: data["value"]
-                              for data in latestData}
-            else:
-                latestData = sender.latestData
-            logger.debug("lighting: %s", latestData["Lighting"])
-            if "Lighting" in latestData and latestData["Lighting"] < self.lightOnThreshold:
-                lightDrivers = self._owner.systems["DriversSystem"].getDriversByType(
-                    "Light")
-                for driver in lightDrivers:
-                    logger.debug("Light %s: %s (%s)", driver.name, driver.isOn, driver in self._lightsOn)
-                    # only light drivers with same name as the sensor
-                    if not driver.name.startswith(sender.name):
-                        continue
-                    # if light is on, but not by the automation
-                    if driver.isOn and driver not in self._lightsOn:
-                        continue
-                    # if end of the motion, but the light isn't turned on by the automation
-                    if not data["Motion"] and driver not in self._lightsOn:
-                        continue
+        result = super().__dir__()
+        for skill in self._skills.values():
+            items = Utils.getFields(skill)
+            for name in items:
+                result.append(skill.name + "." + name)
+        return sorted(set(result))
 
-                    driver.isOn = True
-                    duration = self.lightOnDuration * \
-                        2 if data["Motion"] else self.lightOnDuration
-                    self._lightsOn[driver] = datetime.now() + \
-                        timedelta(seconds=duration)
-                    logger.debug("Light '%s' turn on until: %s", driver.name, self._lightsOn[driver])
+    @type_check
+    def __getattr__(self, attr: str) -> object:
+        """ If attribute is part of the skill return its value.
+
+        Arguments:
+            attr {str} -- Attribute to get its value.
+
+        Raises:
+            AttributeError: If attribute isn't part of the skill.
+
+        Returns:
+            object -- Value of the attribute.
+        """
+
+        if "." in attr and hasattr(self, "_skills"):
+            for skill in self._skills.values():
+                items = Utils.getFields(skill)
+                for name in items:
+                    if skill.name + "." + name == attr:
+                        return getattr(skill, name)
+        raise AttributeError("%r object has no attribute %r" %
+                             (self.__class__.__name__, attr))
+
+    @type_check
+    def __setattr__(self, attr: str, value: object) -> None:
+        """ Set attribute value.
+
+        Arguments:
+            attr {str} -- Attribute name.
+            value {object} -- Value to be set.
+        """
+
+        if "." in attr and hasattr(self, "_skills"):
+            for skill in self._skills.values():
+                items = Utils.getFields(skill)
+                for name in items:
+                    if skill.name + "." + name == attr:
+                        setattr(skill, name, value)
+                        return
+        super().__setattr__(attr, value)
