@@ -92,6 +92,12 @@ class SecuritySystem(BaseSystem):
             self._addHistory("Alarm activated")
             self._owner.event(self, "AlarmActivated")
 
+        # if sensor received data from the Garage after delay start - activate alarm
+        if event == "SensorDataAdded" and sender.name == "Garage" and True in data.values() and \
+                self.isEnabled and datetime.now() - self._startTime > timedelta():
+            self._owner.sendAlert(
+                "Garage Security Alarm Activated!", None, True)
+
     @type_check
     def update(self) -> None:
         """ Update current system's state. """
@@ -195,7 +201,7 @@ class SecuritySystem(BaseSystem):
         diff = cv2.subtract(image2, image1)
         diff = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)  # to gray
         _, diff = cv2.threshold(diff, 32, 255, cv2.THRESH_BINARY)  # binarize
-        diffValue = diff.mean() 
+        diffValue = diff.mean()
         if diffValue > 0.01 * 255:
             logger.debug("Camera movement value: %s", diffValue)
             self._addHistory(f"Camera movement value: {diffValue}")
