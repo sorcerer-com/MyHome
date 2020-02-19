@@ -115,6 +115,22 @@ def index():
     return render_template("index.html", infos=infos)
 
 
+@views.route("/AI", methods=["GET", "POST"])
+def AI():
+    system = myHome.systems["AISystem"]
+    if request.method == "GET" and len(request.args) == 1:
+        if "enabled" in request.args:
+            system.isEnabled = (request.args["enabled"] == "True")
+        elif list(request.args.keys())[0] in system._skills:
+            system._skills[list(request.args.keys())[0]].isEnabled = (
+                list(request.args.values())[0] == "True")
+            myHome.systemChanged = True
+        return redirect("/AI")
+    if request.method == "POST":
+        return system.processRecognition(request.form["transcript"].trim(), float(request.form["confidence"]))
+    return render_template("AI.html", skills=system._skills, enabled=system.isEnabled)
+
+
 @views.route("/Drivers", methods=["GET", "POST"])
 def Drivers():
     system = myHome.systems["DriversSystem"]

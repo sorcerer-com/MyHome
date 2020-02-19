@@ -124,7 +124,7 @@ class MyHome(Singleton):
         logger.info("Load settings and data")
         configParser = RawConfigParser()
         configParser.optionxform = str
-        if Config.ConfigFilePath not in configParser.read(Config.ConfigFilePath):
+        if Config.ConfigFilePath not in configParser.read(Config.ConfigFilePath, encoding="utf-8"):
             return
 
         data = {}
@@ -178,11 +178,11 @@ class MyHome(Singleton):
         data = json.dumps(data, indent=4, ensure_ascii=True)
 
         logger.debug("Save config to file: %s", Config.ConfigFilePath)
-        with open(Config.ConfigFilePath, 'w') as configFile:
+        with open(Config.ConfigFilePath, 'w', encoding="utf-8") as configFile:
             configParser.write(configFile)
 
         logger.debug("Save data to file: %s", Config.DataFilePath)
-        with open(Config.DataFilePath, 'w') as dataFile:
+        with open(Config.DataFilePath, 'w', encoding="utf-8") as dataFile:
             dataFile.write(data)
 
         self.event(self, "SettingsSaved")

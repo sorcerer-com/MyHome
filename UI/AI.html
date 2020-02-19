@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+		<div class='buttonContainer'>
+			<a class='button left' href='./'>back</a>
+		{% if enabled == True %}
+			<a class='button right green' href='?enabled=False'>enabled</a>
+		{% else %}
+			<a class='button right red' href='?enabled=True'>disabled</a>
+		{% endif %}
+			<h2 class='title'>AI</h2>
+		</div>
+		
+		<div class='buttonContainer'>
+		{% for name, skill in skills|dictsort %}
+			{% if skill.isEnabled == True %}
+				<a class='button green' href='?{{name}}=False'>{{name}}</a>
+			{% else %}
+				<a class='button red' href='?{{name}}=True'>{{name}}</a>
+			{% endif %}
+		{% endfor %}
+		</div>
+
+		{% if skills['SpeechSkill'].isEnabled %}
+		<ul class="logs" id="history">
+			<li class="interimResult">Speek</li>
+		</ul>
+
+		<script>
+			if ("webkitSpeechRecognition" in window) {
+				var stopListenAfter = "{{skills['SpeechSkill'].stopListenAfter}}";
+				var startListen = new Date(new Date().getTime() - stopListenAfter);
+				var recognition = new webkitSpeechRecognition();
+				recognition.continuous = true;
+				recognition.interimResults = !navigator.userAgent.match(/Android/i);
+		
+				recognition.onerror = function(event) {
+					setTimeout(function() { recognition.start(); }, 100);
+				};
+				
+				recognition.onresult = function(event) {
+					var historyElem = document.getElementById("history");
+					for (var i = event.resultIndex; i < event.results.length; ++i) {
+						var transcript = event.results[i][0].transcript.trim();
+						var confidence = event.results[i][0].confidence;
+						
+						if (event.results[i].isFinal) {
+							if (transcript.toLowerCase() == "{{skills['SpeechSkill'].startListenKeyword}}".toLowerCase() &&
+								confidence > 0.5) {
+								startListen = new Date();
+							}
+							if (new Date().getTime() - startListen < stopListenAfter) {
+								startListen = new Date();
+
+								var d = new Date();
+								historyElem.removeChild(historyElem.firstElementChild);
+								historyElem.innerHTML = "<li>" + d.toLocaleString("bg") + " -> " + transcript + " (" + confidence + ")" + "</li>" + historyElem.innerHTML;
+								historyElem.innerHTML = "<li class=\"interimResult\">Speek</li>" + historyElem.innerHTML;
+
+								request("POST", location.href, function() {
+									if (this.readyState == 4 && this.status == 200) {
+										var d = new Date();
+										historyElem.removeChild(historyElem.firstElementChild);
+										historyElem.innerHTML = "<li>" + d.toLocaleString("bg") + " <- " + this.responseText + "</li>" + historyElem.innerHTML;
+										historyElem.innerHTML = "<li class=\"interimResult\">Speek</li>" + historyElem.innerHTML;
+									}
+								}, "CSRF={{ csrf }}&transcript=" + event.results[i][0].transcript +"&confidence=" + event.results[i][0].confidence);
+							}
+						}
+						else {
+							var intermElem = historyElem.getElementsByClassName("interimResult")[0];
+							if (i == event.resultIndex) intermElem.innerHTML = "";
+							intermElem.innerHTML += transcript + "(" + confidence + ")";
+						}
+					}
+				};
+				recognition.lang = "bg";
+				recognition.start();
+			}
+		</script>
+		{% endif %}
+{% endblock %}

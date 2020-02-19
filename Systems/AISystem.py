@@ -133,3 +133,15 @@ class AISystem(BaseSystem):
                         setattr(skill, name, value)
                         return
         super().__setattr__(attr, value)
+
+    @type_check
+    def processRecognition(self, transcript: str, confidence: float) -> None:
+        """ Process speech recognition.
+        
+        Arguments:
+            transcript {str} -- Transcription of the speech.
+            confidence {float} -- Confidence of the transcription (between 0 and 1)
+        """
+        
+        # TODO:
+        return "OK"
