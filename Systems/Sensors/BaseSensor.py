@@ -2,7 +2,7 @@ import logging
 import secrets
 from datetime import datetime, timedelta
 
-from Utils.Decorators import type_check
+from Utils.Decorators import try_catch, type_check
 
 logger = logging.getLogger(__name__.split(".")[-1])
 
@@ -155,6 +155,7 @@ class BaseSensor:
         """ Abstract method to read data from the sensor. """
         return []
 
+    @try_catch("Cannot archive data")
     @type_check
     def _archiveData(self) -> None:
         """ Archive old data. """
