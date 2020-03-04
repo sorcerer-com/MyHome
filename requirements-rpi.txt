@@ -16,6 +16,8 @@ chardet
 defusedxml
 flux_led
 gitdb2
+gTTS
+gTTS-token
 idna
 isodate
 itsdangerous

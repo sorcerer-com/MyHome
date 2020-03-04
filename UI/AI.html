@@ -23,7 +23,7 @@
 
 		{% if skills['SpeechSkill'].isEnabled %}
 		<ul class="logs" id="history">
-			<li class="interimResult">Speek</li>
+			<li class="interimResult">Speak</li>
 		</ul>
 
 		<script>
@@ -55,22 +55,22 @@
 								var d = new Date();
 								historyElem.removeChild(historyElem.firstElementChild);
 								historyElem.innerHTML = "<li>" + d.toLocaleString("bg") + " -> " + transcript + " (" + confidence + ")" + "</li>" + historyElem.innerHTML;
-								historyElem.innerHTML = "<li class=\"interimResult\">Speek</li>" + historyElem.innerHTML;
+								historyElem.innerHTML = "<li class=\"interimResult\">Speak</li>" + historyElem.innerHTML;
 
 								request("POST", location.href, function() {
 									if (this.readyState == 4 && this.status == 200) {
 										var d = new Date();
 										historyElem.removeChild(historyElem.firstElementChild);
 										historyElem.innerHTML = "<li>" + d.toLocaleString("bg") + " <- " + this.responseText + "</li>" + historyElem.innerHTML;
-										historyElem.innerHTML = "<li class=\"interimResult\">Speek</li>" + historyElem.innerHTML;
+										historyElem.innerHTML = "<li class=\"interimResult\">Speak</li>" + historyElem.innerHTML;
 									}
 								}, "CSRF={{ csrf }}&transcript=" + event.results[i][0].transcript +"&confidence=" + event.results[i][0].confidence);
 							}
 						}
 						else {
-							var intermElem = historyElem.getElementsByClassName("interimResult")[0];
-							if (i == event.resultIndex) intermElem.innerHTML = "";
-							intermElem.innerHTML += transcript + "(" + confidence + ")";
+							var interimElem = historyElem.getElementsByClassName("interimResult")[0];
+							if (i == event.resultIndex) interimElem.innerHTML = "";
+							interimElem.innerHTML += transcript + "(" + confidence + ")";
 						}
 					}
 				};
