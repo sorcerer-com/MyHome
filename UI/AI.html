@@ -21,7 +21,7 @@
 		{% endfor %}
 		</div>
 
-		{% if skills['SpeechSkill'].isEnabled %}
+		{% if enabled and skills['SpeechSkill'].isEnabled %}
 		<ul class="logs" id="history">
 			<li class="interimResult">Speak</li>
 		</ul>
@@ -45,7 +45,7 @@
 						var confidence = event.results[i][0].confidence;
 						
 						if (event.results[i].isFinal) {
-							if (transcript.toLowerCase() == "{{skills['SpeechSkill'].startListenKeyword}}".toLowerCase() &&
+							if (transcript.toLowerCase().startsWith("{{skills['SpeechSkill'].startListenKeyword}}".toLowerCase()) &&
 								confidence > 0.5) {
 								startListen = new Date();
 							}

@@ -34,6 +34,7 @@ class SpeechSkill(BaseSkill):
     @type_check
     def say(text: str) -> None:
         """ Generate and play the speech from the text asynchronous. """
+
         t = threading.Thread(target=lambda: SpeechSkill._say(text))
         t.daemon = True
         t.start()
@@ -42,14 +43,16 @@ class SpeechSkill(BaseSkill):
     @type_check
     def _say(text: str) -> None:
         """ Generate and play the speech from the text. """
+
+        logger.info("Saying: %s", text)
+
         text = SpeechSkill.symbolsToText(text)
         text = SpeechSkill.digitToText(text)
         text = SpeechSkill.cyrToLat(text)
-        # TODO: text = "bee eep %s bee eep" % text
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
 
-            tts = gTTS(text=text, lang="cs")  # pl/cs
+            tts = gTTS(text=text, lang="cs", lang_check=False)  # pl/cs
             tts.save(Config.BinPath + "say.mp3")
 
         LocalService.openMedia(os.path.join(
@@ -63,29 +66,29 @@ class SpeechSkill(BaseSkill):
         """ Translate the text on cyrillic to latin. """
 
         symbols = (
-            u"абвгдезийклмнопрстуфхАБВГДЕЗИЙКЛМНОПРСТУФХ",
-            u"abwgdeziyklmnoprstufhABWGDEZIYKLMNOPRSTUFH")
+            "абвгдезийклмнопрстуфхАБВГДЕЗИЙКЛМНОПРСТУФХ",
+            "abwgdeziyklmnoprstufhABWGDEZIYKLMNOPRSTUFH")
         tr = {ord(a): ord(b) for a, b in zip(*symbols)}
         text = text.translate(tr)
 
         specialChars = {
-            u"ж": u"zh",
-            u"ц": u"c",
-            u"ч": u"ch",
-            u"ш": u"sh",
-            u"щ": u"sht",
-            u"ъ": u"а",
-            u"ь": u"y",
-            u"ю": u"yu",
-            u"я": u"ya",
-            u"Ж": u"Zh",
-            u"Ц": u"Ts",
-            u"Ч": u"Ch",
-            u"Ш": u"Sh",
-            u"Щ": u"Sht",
-            u"Ъ": u"A",
-            u"Ю": u"Yu",
-            u"Я": u"Ya"}
+            "ж": "zh",
+            "ц": "c",
+            "ч": "ch",
+            "ш": "sh",
+            "щ": "sht",
+            "ъ": "а",
+            "ь": "y",
+            "ю": "y",
+            "я": "ya",
+            "Ж": "Zh",
+            "Ц": "Ts",
+            "Ч": "Ch",
+            "Ш": "Sh",
+            "Щ": "Sht",
+            "Ъ": "A",
+            "Ю": "Y",
+            "Я": "Ya"}
         for (key, value) in specialChars.items():
             text = text.replace(key, value)
         return text
@@ -97,30 +100,30 @@ class SpeechSkill(BaseSkill):
 
         nums = [s for s in re.findall(r"[-+]?\d*\.?\d+", text)]
         for num in sorted(nums, reverse=True):
-            s = u""
+            s = ""
             for n in num.split('.'):
                 if len(s) > 0:
-                    s += u" цяло и "
+                    s += " цяло и "
                 if float(n) < 0:
-                    s += u"минус "
+                    s += "минус "
                 absNum = abs(float(n))
                 if absNum >= 100:
                     continue
                 if absNum >= 20:
-                    temp = [u"двайсет", u"трийсет", u"четиресет", u"педесет",
-                            u"шейсет", u"седемдесет", u"осемдесет", u"деведесет"]
+                    temp = ["двайсет", "трийсет", "четиресет", "педесет",
+                            "шейсет", "седемдесет", "осемдесет", "деведесет"]
                     s += temp[int(absNum / 10) - 2]
                     if (absNum % 10) != 0:
-                        s += u" и "
+                        s += " и "
                 if absNum >= 0 and (absNum == 10 or absNum % 10 != 0):
-                    temp = [u"едно", u"две", u"три", u"четири", u"пет", u"шест", u"седем", u"осем", u"девет", u"десет",
-                            u"единайсет", u"дванайсет", u"тринайсет", u"четиринайсет", u"петнайсет", u"шестнайсет", u"седемнайсет", u"осемнайсет", u"деветнайсет"]
+                    temp = ["едно", "две", "три", "четири", "пет", "шест", "седем", "осем", "девет", "десет",
+                            "единайсет", "дванайсет", "тринайсет", "четиринайсет", "петнайсет", "шестнайсет", "седемнайсет", "осемнайсет", "деветнайсет"]
                     if absNum < 20:
                         s += temp[int(absNum % 20) - 1]
                     else:
                         s += temp[int(absNum % 10) - 1]
                 if absNum == 0:
-                    s += u"нула"
+                    s += "нула"
             text = text.replace(str(num), s)
 
         return text
@@ -129,7 +132,8 @@ class SpeechSkill(BaseSkill):
     @type_check
     def symbolsToText(text: str) -> str:
         """ Convert special symbols in the text with their text representation. """
-        symbols = {u"%": u" процента", u"°": u" градуса"}
+
+        symbols = {"%": " процента", "°": " градуса"}
 
         for (key, value) in symbols.items():
             text = text.replace(key, value)

@@ -172,3 +172,49 @@ class InternetService:
         if r.status_code == requests.codes.ok:
             return r.json()
         return None
+
+    @staticmethod
+    @try_catch("Cannot get weather", [None, None])
+    @type_check
+    def getWeather() -> list:
+        """ Weather info about current and next day.
+
+        Returns:
+            list -- The weather info about current and next day.
+        """
+
+        def getNumberOnly(text: str) -> object:
+            temp = "".join(
+                [s for s in text if s.isdigit() or s == '.' or s == '-'])
+            return float(temp) if temp.find('.') > -1 else int(temp)
+
+        def getDayWeather(elem: object) -> dict:
+            result = {}
+            temp = elem.find("span", class_="wfNonCurrentTemp")
+            result["minTemp"] = getNumberOnly(temp.next.strip().lower())
+            temp = elem.find("span", class_="wfNonCurrentTemp").find("span")
+            result["maxTemp"] = getNumberOnly(temp.next.strip().lower())
+            temp = elem.find("strong", class_="wfNonCurrentCond")
+            result["condition"] = temp.next.strip().lower()
+            temp = elem.find("span", class_="wfNonCurrentBottom")
+            result["wind"] = temp.contents[1].attrs["title"].strip().lower()
+            result["rainProb"] = getNumberOnly(
+                temp.contents[3].next.strip().lower())
+            result["rainAmount"] = getNumberOnly(
+                temp.contents[5].next.strip().lower())
+            result["stormProb"] = getNumberOnly(
+                temp.contents[7].next.strip().lower())
+            result["cloudiness"] = getNumberOnly(
+                temp.contents[9].next.strip().lower())
+            return result
+
+        br = robobrowser.RoboBrowser(parser="html.parser")
+        br.open("https://www.sinoptik.bg/sofia-bulgaria-100727011")
+        result = []
+        result.append(getDayWeather(
+            br.find("a", class_="wfTodayContent wfNonCurrentContent")))
+        temp = br.find("span", class_="wfCurrentTemp")
+        result[0]["curTemp"] = getNumberOnly(temp.next.strip().lower())
+        result.append(getDayWeather(
+            br.find("a", class_="wfTomorrowContent wfNonCurrentContent")))
+        return result

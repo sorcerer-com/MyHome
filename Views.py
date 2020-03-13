@@ -127,7 +127,7 @@ def AI():
             myHome.systemChanged = True
         return redirect("/AI")
     if request.method == "POST":
-        return system.processRecognition(request.form["transcript"].trim(), float(request.form["confidence"]))
+        return system.processRecognition(request.form["transcript"].strip().lower(), float(request.form["confidence"]))
     return render_template("AI.html", skills=system._skills, enabled=system.isEnabled)
 
 

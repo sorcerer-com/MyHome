@@ -181,7 +181,7 @@ class MediaPlayerSystem(BaseSystem):
         # remove local/shared/radios prefix
         path = path[path.index(os.path.sep) + 1:]
         if _type == "radios":
-            # TODO: set audio output
+            # TODO: set local audio output
             print(self._player.get_instance().audio_output_enumerate_devices())
             self._player.set_mrl(path)
             self._player.audio_set_volume(int(100 + self.volume * 5 * 1.5))

@@ -33,7 +33,7 @@ def setupLogging(fileName: str, logLevel: int = logging.INFO, showInConsole: boo
 
     # add RotatingFileHandler
     file = logging.handlers.RotatingFileHandler(
-        fileName, maxBytes=1024*1024, backupCount=3)
+        fileName, maxBytes=1024*1024, backupCount=3, encoding="utf-8")
     file.setLevel(logLevel)
     file.setFormatter(formatter)
     logger.addHandler(file)

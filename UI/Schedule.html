@@ -55,7 +55,7 @@
 		<form id='form' action='' method='post' class='settings'>
 		{% for item in items %}
 			<script>
-				addSchedule({Name: '{{ item["Name"] }}', Time: '{{ item["Time"] }}', Repeat: '{{ item["Repeat"] }}', Command: '{{ item["Command"]|safe }}', Color: '{{ item["Color"] }}'});
+				addSchedule({Name: '{{ item["Name"] }}', Time: '{{ item["Time"] }}', Repeat: '{{ item["Repeat"] }}', Command: '{{ item["Command"]|safe|replace("\n", "\\n") }}', Color: '{{ item["Color"] }}'});
 			</script>
 		{% endfor %}
 			<input type="hidden" name="CSRF" value="{{ csrf }}"/>

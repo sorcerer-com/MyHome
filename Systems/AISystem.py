@@ -3,7 +3,9 @@ import pkgutil
 from configparser import RawConfigParser
 
 from Systems.BaseSystem import BaseSystem
+from Systems.Skills.AssistenSkill import AssistenSkill
 from Systems.Skills.BaseSkill import BaseSkill
+from Systems.Skills.SpeechSkill import SpeechSkill
 from Utils import Utils
 from Utils.Decorators import type_check
 
@@ -137,11 +139,14 @@ class AISystem(BaseSystem):
     @type_check
     def processRecognition(self, transcript: str, confidence: float) -> None:
         """ Process speech recognition.
-        
+
         Arguments:
             transcript {str} -- Transcription of the speech.
             confidence {float} -- Confidence of the transcription (between 0 and 1)
         """
-        
-        # TODO:
-        return "OK"
+
+        transcript = transcript.replace(self._skills["SpeechSkill"].startListenKeyword.lower(), "").strip()
+        response = self._skills[AssistenSkill.__name__].processVoiceCommand(
+            transcript, confidence)
+        SpeechSkill.say(response)
+        return response
