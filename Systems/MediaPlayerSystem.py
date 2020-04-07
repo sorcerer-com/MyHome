@@ -37,7 +37,7 @@ class MediaPlayerSystem(BaseSystem):
         self.radios = []
 
         self._timer = datetime.now() - timedelta(minutes=1)
-        self._player = vlc.MediaPlayer()
+        self._player = vlc.MediaListPlayer()
         self._sharedList = []
         self._playing = ""
         self._watched = []
@@ -159,8 +159,8 @@ class MediaPlayerSystem(BaseSystem):
             h, m = divmod(m, 60)
             return int(h), int(m), int(s)
 
-        time = getTime(self._player.get_time())
-        length = getTime(self._player.get_length())
+        time = getTime(self._player.get_media_player().get_time())
+        length = getTime(self._player.get_media_player().get_length())
         return f"{time[0]}:{time[1]:02} / {length[0]}:{length[1]:02}"
 
     @type_check
@@ -177,14 +177,18 @@ class MediaPlayerSystem(BaseSystem):
             return
 
         self._playing = path
-        _type = path[:path.index(os.path.sep)]
-        # remove local/shared/radios prefix
-        path = path[path.index(os.path.sep) + 1:]
+        if not path.startswith("http") and not path.startswith("https"):  # URL
+            _type = path[:path.index(os.path.sep)]
+            # remove local/shared/radios prefix
+            path = path[path.index(os.path.sep) + 1:]
+        else:
+            _type = "radios"
         if _type == "radios":
             # TODO: set local audio output
             print(self._player.get_instance().audio_output_enumerate_devices())
-            self._player.set_mrl(path)
-            self._player.audio_set_volume(int(100 + self.volume * 5 * 1.5))
+            self._player.set_media_list(vlc.MediaList([path]))
+            self._player.get_media_player().audio_set_volume(
+                int(100 + self.volume * 5 * 1.5))
         else:
             if _type.startswith("local"):
                 mediaPath = self.mediaPaths[int(_type[5:]) - 1]
@@ -192,10 +196,10 @@ class MediaPlayerSystem(BaseSystem):
                 self._convertSubtitles(path)
             else:
                 path = self.sharedPath + path
-            self._player.set_mrl(path)
-            self._player.audio_set_volume(int(100 + self.volume * 5))
+            self._player.set_media_list(vlc.MediaList([path]))
+            self._player.get_media_player().audio_set_volume(int(100 + self.volume * 5))
 
-        self._player.set_fullscreen(True)
+        self._player.get_media_player().set_fullscreen(True)
         self._player.play()
         if _type != "radios":
             self._markAsWatched(self._playing)
@@ -223,7 +227,8 @@ class MediaPlayerSystem(BaseSystem):
         """ Volume down the current playing. """
 
         logger.debug("Volume down media: %s", self.volume)
-        self._player.audio_set_volume(self._player.audio_get_volume() - 5)
+        self._player.get_media_player().audio_set_volume(
+            self._player.get_media_player().audio_get_volume() - 5)
         self.volume -= 1
         self._owner.systemChanged = True
         self._owner.event(self, "MediaVolumeDown")
@@ -233,7 +238,8 @@ class MediaPlayerSystem(BaseSystem):
         """ Volume up the current playing. """
 
         logger.debug("Volume up media: %s", self.volume)
-        self._player.audio_set_volume(self._player.audio_get_volume() + 5)
+        self._player.get_media_player().audio_set_volume(
+            self._player.get_media_player().audio_get_volume() + 5)
         self.volume += 1
         self._owner.systemChanged = True
         self._owner.event(self, "MediaVolumeUp")
@@ -243,8 +249,8 @@ class MediaPlayerSystem(BaseSystem):
         """ Seek back the current playing. """
 
         logger.debug("Seek back media")
-        self._player.set_time(self._player.get_time() -
-                              30 * 1000)  # -30 seconds
+        self._player.get_media_player().set_time(
+            self._player.get_media_player().get_time() - 30 * 1000)  # -30 seconds
         self._owner.event(self, "MediaSeekBack")
 
     @type_check
@@ -252,8 +258,8 @@ class MediaPlayerSystem(BaseSystem):
         """ Seek forward the current playing. """
 
         logger.debug("Seek forward media")
-        self._player.set_time(self._player.get_time() +
-                              30 * 1000)  # +30 seconds
+        self._player.get_media_player().set_time(
+            self._player.get_media_player().get_time() + 30 * 1000)  # +30 seconds
         self._owner.event(self, "MediaSeekForward")
 
     @type_check
@@ -261,8 +267,8 @@ class MediaPlayerSystem(BaseSystem):
         """ Seek back fast the current playing. """
 
         logger.debug("Seek back fast media")
-        self._player.set_time(self._player.get_time() -
-                              600 * 1000)  # -600 seconds
+        self._player.get_media_player().set_time(
+            self._player.get_media_player().get_time() - 600 * 1000)  # -600 seconds
         self._owner.event(self, "MediaSeekBackFast")
 
     @type_check
@@ -270,8 +276,8 @@ class MediaPlayerSystem(BaseSystem):
         """ Seek forward fast the current playing. """
 
         logger.debug("Seek forward fast media")
-        self._player.set_time(self._player.get_time() +
-                              600 * 1000)  # +600 seconds
+        self._player.get_media_player().set_time(
+            self._player.get_media_player().get_time() + 600 * 1000)  # +600 seconds
         self._owner.event(self, "MediaSeekBackFast")
 
     @type_check

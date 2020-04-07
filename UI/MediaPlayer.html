@@ -71,7 +71,6 @@
 		{% endif %}
 		
 		<form id='form' action='' method='post'>
-			<input type='hidden' name='play'/>
 		{% if selected == "" %}
 			<a class='button' href='javascript:;' onclick='submitForm("form");' title='Play'>Play</a>
 		{% else %}
@@ -85,6 +84,8 @@
 			<a class='button' href='?action=seekBackFast' title='Seek Back Fast'><<</a>
 			<a class='button' href='?action=seekForwardFast' title='Seek Forward Fast'>>></a>
 			<input type="hidden" name="CSRF" value="{{ csrf }}"/>
+			</br></br>
+			URL: <input type='text' name='play'/>
 		</form>
 
 		<div class='treeContainer'>
