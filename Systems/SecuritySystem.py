@@ -30,6 +30,8 @@ class SecuritySystem(BaseSystem):
         self.startDelay = timedelta(minutes=15)
         self.sendInterval = timedelta(minutes=5)
         self.numImages = 30
+        self.camMovementThreshold = 0.01
+        self.powerConsumptionThreshold = 200
 
         self._activated = False
         self._startTime = datetime.now() + self.startDelay
@@ -84,19 +86,27 @@ class SecuritySystem(BaseSystem):
             self._prevImages.clear()
             self._clearImages()
 
-        # if sensor received Motion data after delay start - activate alarm
-        if event == "SensorDataAdded" and "Motion" in data and data["Motion"] and \
-                self.isEnabled and datetime.now() - self._startTime > timedelta():
-            self._activated = True
-            logger.info("Alarm Activated")
-            self._addHistory("Alarm activated")
-            self._owner.event(self, "AlarmActivated")
+        if event == "SensorDataAdded" and self.isEnabled and datetime.now() - self._startTime > timedelta():
+            # if sensor received Motion data after delay start - activate alarm
+            if "Motion" in data and data["Motion"]:
+                self._activated = True
+                logger.info("Alarm Activated")
+                self._addHistory("Alarm activated")
+                self._owner.event(self, "AlarmActivated")
 
-        # if sensor received data from the Garage after delay start - activate alarm
-        if event == "SensorDataAdded" and sender.name == "Garage" and True in data.values() and \
-                self.isEnabled and datetime.now() - self._startTime > timedelta():
-            self._owner.sendAlert(
-                "Garage Security Alarm Activated!", None, True)
+            # if sensor received data from the Garage after delay start - activate alarm
+            if sender.name == "Garage" and True in data.values():
+                self._owner.sendAlert(
+                    "Garage Security Alarm Activated!", None, True)
+
+            if sender.name == "PowerConsumption":
+                for key in data.keys():
+                    if key.startswith("ConsumedPower") and data[key] > self.powerConsumptionThreshold:
+                        self._activated = True
+                        logger.info("Alarm Activated")
+                        self._addHistory("Alarm activated")
+                        self._owner.event(self, "AlarmActivated")
+                        break
 
     @type_check
     def update(self) -> None:
@@ -108,12 +118,15 @@ class SecuritySystem(BaseSystem):
         # send alert
         if elapsed > self.sendInterval:
             self._activated = False
+            self._prevImages.clear()
             if len(self._imageFiles) > 0 or self._checkForOfflineCamera():
                 self._addHistory("Send alert")
                 files = [Config.BinPath + item for _,
                          value in self._imageFiles.items() for item in value]
                 if self._owner.sendAlert("Security Alarm Activated!", files, True):
                     self._clearImages()
+                else:
+                    self._addHistory("Send alert fails")
             else:
                 self._addHistory("Skip alert sending")
 
@@ -178,6 +191,7 @@ class SecuritySystem(BaseSystem):
             entry {str} -- Entry message which will be added.
         """
 
+        logger.debug(entry)
         self._history.append(f"{datetime.now():%Y-%m-%d %H:%M:%S} {entry}")
         self._history = self._history[-500:]  # keep last 500 entries
         self._owner.systemChanged = True
@@ -202,8 +216,7 @@ class SecuritySystem(BaseSystem):
         diff = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)  # to gray
         _, diff = cv2.threshold(diff, 32, 255, cv2.THRESH_BINARY)  # binarize
         diffValue = diff.mean()
-        if diffValue > 0.01 * 255:
-            logger.debug("Camera movement value: %s", diffValue)
+        if diffValue > self.camMovementThreshold * 255:
             self._addHistory(f"Camera movement value: {diffValue}")
             return True
         return False

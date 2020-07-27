@@ -73,7 +73,7 @@ class Camera:
     def update(self) -> None:
         """ Update current camera's state. """
 
-        # release the capture if it isn't used for more then 1 minutes
+        # release the capture if it isn't used for more then 5 minutes
         if self._capture is not None and self._capture.isOpened() and datetime.now() - self._lastUse > timedelta(minutes=5):
             logger.info("Release camera: %s", self.name)
             self._capture.release()
@@ -93,6 +93,8 @@ class Camera:
         with self._mutex:
             img = self.capture.read()[1]
         if img is None:  # add empty image with red X
+            self._capture.release() # try to release the camera and open it again next time
+            self._lastUse = datetime.now() - timedelta(minutes=1)
             img = np.zeros((480, 640, 3), np.uint8)
             cv2.line(img, (0, 0), (640, 480), (0, 0, 255), 2, cv2.LINE_AA)
             cv2.line(img, (640, 0), (0, 480), (0, 0, 255), 2, cv2.LINE_AA)

@@ -1,7 +1,6 @@
 import logging
 import secrets
 import sys
-import time
 from datetime import datetime, timedelta
 
 from flask import (Blueprint, Response, abort, redirect, render_template,
@@ -259,12 +258,13 @@ def Sensors():
 @views.route("/cameras/<cameraName>")
 def cameras(cameraName):
     system = myHome.systems["SensorsSystem"]
+    if cameraName not in system._camerasDict:
+        abort(404)
 
     def gen():
         while True:
             imgData = system._camerasDict[cameraName].getImageData()
             yield (b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + imgData + b"\r\n")
-            time.sleep(0.05)  # frame rate : 1 / 0.05 = 20 FPS
 
     if not "action" in request.args:  # stream
         return Response(gen(), mimetype='multipart/x-mixed-replace; boundary=frame')
