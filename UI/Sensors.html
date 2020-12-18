@@ -68,12 +68,12 @@
 				Sensors Token: {{ value["token"] }}
 			{% else %} {# Cameras #}
 				<div class='settings'>
-				{% for name, isIP in value.items() %}
+				{% for name, camera in value.items() %}
 					<details ontoggle="toggle(this)">
 						<summary>{{ name }}</summary>
 						<br/>
 						<a href='./cameras/{{ name }}' title="Fullscreen"><img alt='./cameras/{{ name }}' width="300"/></a>
-						{% if isIP %}
+						{% if camera["isIPCamera"] %}
 						<div class="buttonContainer">
 							<a class="button" onclick="request('GET', './cameras/{{ name }}?action=UP')" title="Up">&uarr;</a>
 							<a class="button" onclick="request('GET', './cameras/{{ name }}?action=DOWN')" title="Down">&darr;</a>
@@ -85,6 +85,16 @@
 						{% else %}
 						<br/><br/>
 						{% endif %}
+
+						{{ charts(camera["day"], camera["metadata"], True, False, key + name) }}
+						
+						<div class='settings'>
+							<details>
+								<summary>Older</summary>
+								<br/>
+								{{ charts(camera["older"], camera["metadata"], False, True, key + name + "1") }}
+							</details>
+						</div>
 					</details>
 				{% endfor %}
 					<script>

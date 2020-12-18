@@ -38,6 +38,8 @@ def setupLogging(fileName: str, logLevel: int = logging.INFO, showInConsole: boo
     file.setFormatter(formatter)
     logger.addHandler(file)
 
+    logging.getLogger("zeep").setLevel(logging.INFO) # don't show a lot of DEBUG logs of zeep
+
     noWerkzeugInfoFilter = LoggingFilter(lambda r: not (
         r.name == "werkzeug" and r.levelno == logging.INFO))
     if showInConsole:

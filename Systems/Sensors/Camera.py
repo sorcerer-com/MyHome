@@ -10,6 +10,7 @@ import numpy as np
 # https://github.com/FalkTannhaeuser/python-onvif-zeep
 from onvif import ONVIFCamera
 
+from Systems.Sensors.BaseSensor import BaseSensor
 from Utils.Decorators import try_catch, type_check
 
 logger = logging.getLogger(__name__.split(".")[-1])
@@ -24,23 +25,24 @@ class CameraMovement(Enum):
     ZOOMOUT = 6
 
 
-class Camera:
+class Camera(BaseSensor):
     """ Camera class """
 
     @type_check
-    def __init__(self, name: str, address: str) -> None:
+    def __init__(self, owner: None, name: str, address: str) -> None:
         """ Initialize an instance of the Camera class.
 
         Arguments:
+            owner {SensorSystem} -- SensorSystem object which is the owner of the sensor.
             name {str} -- Name of the camera.
             address {str} -- (IP) Address / local number of the camera.
         """
 
-        self.name = name
-        self.address = address
+        super().__init__(owner, name, address)
 
         self._capture = None
         self._lastUse = datetime.now()
+        self._nextDataRead = datetime.now()
 
         self._onvif = None
         self._mutex = Lock()
@@ -60,6 +62,8 @@ class Camera:
         if self._capture is None:
             logger.info("Opening camera: %s", self.name)
             self._capture = cv2.VideoCapture(self._getRealAddress())
+            if self.isIPCamera:
+                self._capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         # if capture isn't opened try again but only if the previous try was at least 1 minutes ago
         elif not self._capture.isOpened() and datetime.now() - self._lastUse > timedelta(minutes=1):
             logger.info("Opening camera: %s", self.name)
@@ -78,6 +82,11 @@ class Camera:
             logger.info("Release camera: %s", self.name)
             self._capture.release()
 
+        # read sensor data every 15 seconds
+        if self.isIPCamera and datetime.now() > self._nextDataRead:
+            self.readData(self.latestTime, True)
+            self._nextDataRead = datetime.now() + timedelta(seconds=15)
+
     @type_check
     def getImage(self, size: tuple = None, timeStamp: bool = True) -> object:
         """ Get current image from the camera.
@@ -93,7 +102,7 @@ class Camera:
         with self._mutex:
             img = self.capture.read()[1]
         if img is None:  # add empty image with red X
-            self._capture.release() # try to release the camera and open it again next time
+            self._capture.release()  # try to release the camera and open it again next time
             self._lastUse = datetime.now() - timedelta(minutes=1)
             img = np.zeros((480, 640, 3), np.uint8)
             cv2.line(img, (0, 0), (640, 480), (0, 0, 255), 2, cv2.LINE_AA)
@@ -238,6 +247,34 @@ class Camera:
             if self._onvif["Moverequest"].Velocity is None:
                 self._onvif["Moverequest"].Velocity = self._onvif["PTZ"].GetStatus(
                     {'ProfileToken': self._onvif["MediaProfile"].token}).Position
+
+            self._onvif["Pullpoint"] = self._onvif["Camera"].create_pullpoint_service()
         except Exception:
             logger.exception("Cannot setup ONVIF camera")
             self._onvif = None
+
+    @try_catch("Cannot read data from camera", None)
+    @type_check
+    def _readData(self) -> list:
+        """ Read data from the Camera. """
+
+        if not self.isIPCamera:
+            logger.debug("Not IP camera, so no data to read")
+            return None
+
+        self._setupOnvifCamera()
+
+        request = self._onvif["Pullpoint"].create_type('PullMessages')
+        request.MessageLimit = 100
+        request.Timeout = timedelta(seconds=5)
+        response = self._onvif["Pullpoint"].PullMessages(request)
+
+        data = response['NotificationMessage'][0]['Message']['_value_1'][1][0]
+        result = []
+        for i in range(0, len(data.values()), 2):
+            name = "Motion" if "motion" in data.values()[i].lower() else data.values()[i]
+            value = data.values()[i+1]
+            if value in ("true", "false"):
+                value = (value == "true")
+            result.append({"name": name, "value": value})
+        return result

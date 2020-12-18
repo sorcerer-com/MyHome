@@ -11,7 +11,7 @@ from werkzeug.security import check_password_hash
 
 from Config import Config
 from MyHome import MyHome
-from Systems.Sensors.Camera import CameraMovement
+from Systems.Sensors.Camera import Camera, CameraMovement
 from Utils import Utils
 
 debugLevel = logging.INFO if "debug" not in sys.argv else logging.DEBUG
@@ -236,22 +236,27 @@ def Sensors():
 
     now = datetime.now()
     data = {}
-    for sensor in system._sensors:
-        data[sensor.name] = {"day": {}, "older": {}}  # 1st day data / older
+    for sensor in system._sensors + system._cameras:
+        sensorData = {"day": {}, "older": {}}  # 1st day data / older
         for subName in sensor.subNames:
             subData = {time: sensor._data[time][subName]
                        for time in sensor._data if subName in sensor._data[time]}
-            data[sensor.name]["day"][subName] = {
+            sensorData["day"][subName] = {
                 time: value for time, value in subData.items() if time >= now - timedelta(days=1)}
-            data[sensor.name]["older"][subName] = {time: value for time, value in subData.items() if time < now.replace(
+            sensorData["older"][subName] = {time: value for time, value in subData.items() if time < now.replace(
                 hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1)}
-        data[sensor.name]["metadata"] = sensor.metadata
-        data[sensor.name]["token"] = sensor.token
+        sensorData["metadata"] = sensor.metadata
+        sensorData["token"] = sensor.token
         if sensor.address != "" and not sensor.address.startswith("/") and not sensor.address.startswith("COM"):
-            data[sensor.name]["address"] = sensor.address
-    if len(system._cameras) > 0:
-        data["cameras"] = {
-            camera.name: camera.isIPCamera for camera in system._cameras}
+            sensorData["address"] = sensor.address
+
+        if not isinstance(sensor, Camera):
+            data[sensor.name] = sensorData
+        else:
+            if "cameras" not in data:
+                data["cameras"] = {}
+            sensorData["isIPCamera"] = sensor.isIPCamera
+            data["cameras"][sensor.name] = sensorData
     return render_template("Sensors.html", data=data, enabled=system.isEnabled)
 
 

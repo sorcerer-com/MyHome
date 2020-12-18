@@ -153,7 +153,7 @@ class InternetService:
     @staticmethod
     @try_catch("Cannot get json content", None)
     @type_check
-    def getJsonContent(url: str) -> str:
+    def getJsonContent(url: str) -> object:
         """ Gets JSON content after a request to the set URL.
 
         Arguments:

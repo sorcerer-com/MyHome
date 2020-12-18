@@ -59,7 +59,8 @@ class LightingSkill(BaseSkill):
                               for data in latestData}
             else:
                 latestData = sender.latestData
-            logger.debug("lighting: %s", latestData["Lighting"])
+            if "Lighting" in latestData:
+                logger.debug("lighting: %s", latestData["Lighting"])
             if "Lighting" in latestData and latestData["Lighting"] < self.lightOnThreshold:
                 lightDrivers = self._owner._owner.systems["DriversSystem"].getDriversByType(
                     "Light")

@@ -102,29 +102,34 @@ class BaseSensor:
         pass
 
     @type_check
-    def readData(self, time: datetime) -> list:
+    def readData(self, time: datetime, addBiggerOnly: bool = False) -> list:
         """ Read and store data from the sensor into data collection.
 
         Arguments:
             time {datetime} -- Time when the data is collected.
+            addBiggerOnly {bool} -- Add only data with bigger value. (default: {False})
         """
 
         data = self._readData()  # read data from sensor
         logger.debug("Sensor '%s' read data: %s", self.name, data)
         if data is not None:
-            self.addData(time, data)
+            self.addData(time, data, addBiggerOnly)
         return data
 
     @type_check
-    def addData(self, time: datetime, data: list) -> None:
+    def addData(self, time: datetime, data: list, addBiggerOnly: bool = False) -> None:
         """ Add data to the sensors data collection.
 
         Arguments:
             time {datetime} -- Time when the data is collected.
             data {list} -- Data which will be added.
+            addBiggerOnly {bool} -- Add only data with bigger value. (default: {False})
         """
 
-        logger.debug("Sensor '%s' add data at %s: %s", self.name, time, data)
+        if time is None:
+            time = datetime.now()
+
+        logger.debug("Sensor '%s' add data at %s: %s (%s)", self.name, time, data, addBiggerOnly)
 
         if time not in self._data:
             self._data[time] = {}
@@ -132,10 +137,17 @@ class BaseSensor:
             if "name" in item and "value" in item:
                 aggrType = item["aggrType"] if "aggrType" in item else "avg"
                 if aggrType == "avg":
-                    self._data[time][item["name"]] = item["value"]
+                    if addBiggerOnly and item["name"] in self._data[time] and self._data[time][item["name"]] > item["value"]:
+                        # if add only bigger and there is bigger previous value
+                        logger.debug("Sensor '%s' skip adding '%s' data with value '%s' smaller than previous '%s'",
+                                     self.name, item["name"], item["value"], self._data[time][item["name"]])
+                    else:
+                        self._data[time][item["name"]] = item["value"]
                 else:  # sum type - differentiate
                     prevValue = self._lastReadings[item["name"]
                                                    ] if item["name"] in self._lastReadings else 0
+                    if prevValue > item["value"]: # if the new value is smaller than previous - it's reset
+                        prevValue = 0
                     self._data[time][item["name"]] = item["value"] - prevValue
                     self._lastReadings[item["name"]] = item["value"]
                     # set real value to return in readData

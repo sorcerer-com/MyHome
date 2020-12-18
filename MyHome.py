@@ -31,7 +31,7 @@ class MyHome(Singleton):
     # TODO: check github todo list
 
     _UpdateTime = 1  # seconds
-    _UpdateWarningTimeout = 3  # seconds
+    _UpdateWarningTimeout = 5  # seconds
 
     @type_check
     def __init__(self) -> None:

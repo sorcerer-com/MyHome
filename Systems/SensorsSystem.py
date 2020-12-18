@@ -30,11 +30,6 @@ class SensorsSystem(BaseSystem):
         self._sensors = []
         self._cameras = []
 
-        self._nextTime = datetime.now().replace(minute=0, second=0, microsecond=0)
-        # the exact self.checkInterval minute in the hour
-        while self._nextTime < datetime.now():
-            self._nextTime += timedelta(minutes=self.checkInterval)
-
     @type_check
     def setup(self) -> None:
         """ Setup the system. """
@@ -50,6 +45,11 @@ class SensorsSystem(BaseSystem):
         self._owner.uiManager.containers[self].properties[
             "cameras"].hint = "Name / Address(Device Index) \nThe address for ONVIF cameras should be - username:password@ip:port, or direct rtsp url"
 
+        self._nextTime = datetime.now().replace(minute=0, second=0, microsecond=0)
+        # the exact self.checkInterval minute in the hour
+        while self._nextTime < datetime.now():
+            self._nextTime += timedelta(minutes=self.checkInterval)
+
     @type_check
     def load(self, configParser: RawConfigParser, data: dict) -> None:
         """ Loads settings and data for the system.
@@ -62,8 +62,10 @@ class SensorsSystem(BaseSystem):
         super().load(configParser, data)
 
         for name in data:
-            if name in self._sensorsDict:
-                self._sensorsDict[name].load(data[name])
+            if name.endswith("Sensor") and name[:-len("Sensor")] in self._sensorsDict:
+                self._sensorsDict[name[:-len("Sensor")]].load(data[name])
+            elif name.endswith("Camera") and name[:-len("Camera")] in self._camerasDict:
+                self._camerasDict[name[:-len("Camera")]].load(data[name])
 
     @type_check
     def save(self, configParser: RawConfigParser, data: dict) -> None:
@@ -77,8 +79,12 @@ class SensorsSystem(BaseSystem):
         super().save(configParser, data)
 
         for name, sensor in self._sensorsDict.items():
-            data[name] = {}
-            sensor.save(data[name])
+            data[name + "Sensor"] = {}
+            sensor.save(data[name + "Sensor"])
+
+        for name, camera in self._camerasDict.items():
+            data[name + "Camera"] = {}
+            camera.save(data[name + "Camera"])
 
     @type_check
     def update(self) -> None:
@@ -91,7 +97,7 @@ class SensorsSystem(BaseSystem):
         for camera in self._cameras:
             camera.update()
 
-        if datetime.now() < self._nextTime.replace(second=59):  # at the end of the minute
+        if datetime.now() < self._nextTime.replace(second=59):
             return
 
         # if checkInterval is changed
@@ -101,7 +107,7 @@ class SensorsSystem(BaseSystem):
                 self._nextTime += timedelta(minutes=self.checkInterval)
 
         alertMsg = ""
-        for sensor in self._sensors:
+        for sensor in self._sensors + self._cameras:
             if sensor.address == "":
                 continue
 
@@ -113,7 +119,8 @@ class SensorsSystem(BaseSystem):
                 alert = self._check_data(data)
                 if alert and alert != "":
                     alertMsg += f"{sensor.name}({alert}) "
-            else:  # alert if the sensor isn't active for more then 4 check intervals
+            elif not isinstance(sensor, Camera) or not sensor.isIPCamera:
+                # alert if the sensor isn't active for more then 4 check intervals
                 logger.warning("No data from %s sensor", sensor.name)
                 if (sensor.latestTime is not None and
                     sensor.latestTime <= self._nextTime - timedelta(minutes=self.checkInterval*4) and
@@ -145,13 +152,15 @@ class SensorsSystem(BaseSystem):
             return False
 
         time = datetime.now().replace(microsecond=0)
-        if sensors[0].address != "":  # if it's a pull data sensor modify last data and don't log
+        addBiggerOnly = False
+        if sensors[0].address != "":  # if it's a pull data sensor modify last data, don't log and add only bigger value
             time = sensors[0].latestTime
+            addBiggerOnly = True
         else:
             logger.info("Process external data(%s) for sensor(%s)",
                         data, sensors[0].name)
 
-        sensors[0].addData(time, data)
+        sensors[0].addData(time, data, addBiggerOnly)
         self._owner.systemChanged = True
         alert = self._check_data(data)
         if alert and alert != "":
@@ -240,7 +249,7 @@ class SensorsSystem(BaseSystem):
                     camera for camera in self._cameras if address == camera.address]
                 if len(match) == 0:  # new camera
                     logger.debug("Add new camera '%s' (%s)", name, address)
-                    self._cameras.append(Camera(name, address))
+                    self._cameras.append(Camera(self, name, address))
                 else:  # renamed camera
                     logger.debug("Rename camera '%s' to '%s'",
                                  match[0].name, name)
