@@ -2,12 +2,14 @@ import logging
 import pkgutil
 from configparser import RawConfigParser
 
+from Utils import Utils
+from Utils.Decorators import type_check
+from Utils.TaskManager import TaskManager
+
 from Systems.BaseSystem import BaseSystem
 from Systems.Skills.AssistenSkill import AssistenSkill
 from Systems.Skills.BaseSkill import BaseSkill
 from Systems.Skills.SpeechSkill import SpeechSkill
-from Utils import Utils
-from Utils.Decorators import type_check
 
 logger = logging.getLogger(__name__.split(".")[-1])
 
@@ -75,10 +77,12 @@ class AISystem(BaseSystem):
     def update(self) -> None:
         """ Update current system's state. """
 
+        super.update()
+
         # update skills
         for skill in self._skills.values():
             if skill.isEnabled:
-                skill.update()
+                TaskManager().execute(skill, skill.update)
 
     @type_check
     def __dir__(self) -> list:

@@ -38,6 +38,8 @@ class SerialSensor(BaseSensor):
     def update(self) -> None:
         """ Update current sensor's state. """
 
+        super().update()
+
         if self._serial is None:
             return
 

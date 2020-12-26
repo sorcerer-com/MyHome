@@ -18,6 +18,7 @@ from Utils import Utils
 from Utils.Decorators import try_catch, type_check
 from Utils.Event import Event
 from Utils.Singleton import Singleton
+from Utils.TaskManager import TaskManager
 
 logger = logging.getLogger(__name__.split(".")[-1])
 
@@ -30,8 +31,8 @@ class MyHome(Singleton):
     """ My Home manager class. """
     # TODO: check github todo list
 
-    _UpdateTime = 1  # seconds
-    _UpdateWarningTimeout = 5  # seconds
+    _UpdateInterval = 3  # seconds
+    _UpgradeCheckInterval = 5  # minutes
 
     @type_check
     def __init__(self) -> None:
@@ -87,7 +88,7 @@ class MyHome(Singleton):
         """ Save and stop MyHome. """
 
         self.event(self, "Stop")
-        MyHome._UpdateTime = 0
+        MyHome._UpdateInterval = 0
 
         self.save()
         for system in self.systems.values():
@@ -98,24 +99,21 @@ class MyHome(Singleton):
     def update(self) -> None:
         """ Update all the systems rapidly. """
 
-        while MyHome._UpdateTime > 0:
+        while MyHome._UpdateInterval > 0:
             start = datetime.now()
             # update systems
             for system in self.systems.values():
                 if system.isEnabled or system.isEnabled is None:
-                    system.update()
+                    TaskManager().execute(system, system.update)
 
-            if (datetime.now() - start).total_seconds() > MyHome._UpdateWarningTimeout:
-                logger.warning("Update time: %s", (datetime.now() - start))
-
-            if start.minute % 5 == 0 and start.second == 0:
-                self.upgradeAvailable = self.upgrade(True)
+            if start.minute % MyHome._UpgradeCheckInterval == 0 and start.second < MyHome._UpdateInterval:
+                TaskManager().execute(self, self.upgrade, [True])
 
             if self.systemChanged:
                 self.save()
                 self.systemChanged = False
 
-            time.sleep(MyHome._UpdateTime)
+            time.sleep(MyHome._UpdateInterval)
 
     @type_check
     def load(self) -> None:
@@ -261,9 +259,11 @@ class MyHome(Singleton):
             for info in repo.remote().fetch():
                 if info.name == "origin/" + repo.active_branch.name:
                     if checkOnly:
-                        return repo.head.commit.hexsha != info.commit.hexsha
+                        self.upgradeAvailable = (
+                            repo.head.commit.hexsha != info.commit.hexsha)
+                        return self.upgradeAvailable
                     else:
                         logger.info("Upgrading...")
                         repo.remote().pull()
                     break
-            return True
+        return True

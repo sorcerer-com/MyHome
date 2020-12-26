@@ -2,11 +2,13 @@ import logging
 from configparser import RawConfigParser
 from datetime import datetime, timedelta
 
+from Utils.Decorators import try_catch, type_check
+from Utils.TaskManager import TaskManager
+
 from Systems.BaseSystem import BaseSystem
 from Systems.Sensors.Camera import Camera
 from Systems.Sensors.SerialSensor import SerialSensor
 from Systems.Sensors.WiFiSensor import WiFiSensor
-from Utils.Decorators import try_catch, type_check
 
 logger = logging.getLogger(__name__.split(".")[-1])
 
@@ -93,9 +95,9 @@ class SensorsSystem(BaseSystem):
         super().update()
 
         for sensor in self._sensors:
-            sensor.update()
+            TaskManager().execute(sensor, sensor.update)
         for camera in self._cameras:
-            camera.update()
+            TaskManager().execute(camera, camera.update)
 
         if datetime.now() < self._nextTime.replace(second=59):
             return

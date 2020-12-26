@@ -77,6 +77,8 @@ class Camera(BaseSensor):
     def update(self) -> None:
         """ Update current camera's state. """
 
+        super().update()
+
         # release the capture if it isn't used for more then 5 minutes
         if self._capture is not None and self._capture.isOpened() and datetime.now() - self._lastUse > timedelta(minutes=5):
             logger.info("Release camera: %s", self.name)
