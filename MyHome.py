@@ -110,6 +110,7 @@ class MyHome(Singleton):
                 TaskManager().execute(self, self.upgrade, [True])
 
             if self.systemChanged:
+                TaskManager().waitAll()  # wait all tasks to finish before save
                 self.save()
                 self.systemChanged = False
 

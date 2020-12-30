@@ -77,7 +77,7 @@ class AISystem(BaseSystem):
     def update(self) -> None:
         """ Update current system's state. """
 
-        super.update()
+        super().update()
 
         # update skills
         for skill in self._skills.values():
@@ -149,7 +149,8 @@ class AISystem(BaseSystem):
             confidence {float} -- Confidence of the transcription (between 0 and 1)
         """
 
-        transcript = transcript.replace(self._skills["SpeechSkill"].startListenKeyword.lower(), "").strip()
+        transcript = transcript.replace(
+            self._skills["SpeechSkill"].startListenKeyword.lower(), "").strip()
         response = self._skills[AssistenSkill.__name__].processVoiceCommand(
             transcript, confidence)
         SpeechSkill.say(response)

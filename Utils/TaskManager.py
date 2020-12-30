@@ -40,6 +40,40 @@ class TaskManager(Singleton):
         args = args or []
         kwargs = kwargs or {}
 
-        result = self._threadPool.apply_async(func, args, kwargs, callback, errorCallback)
+        result = self._threadPool.apply_async(
+            func, args, kwargs, callback, errorCallback)
         self._taskResults[service] = result
+        return result
+
+    @type_check
+    def wait(self, service: object, timeout: float = None) -> object:
+        """Wait service task to finish.
+
+        Args:
+            service (object): Service that the task belongs to.
+            timeout ([float], optional): Wait timeout in seconds. Defaults to None.
+
+        Returns:
+            object: Result of the task execution.
+        """
+
+        if service is not None and service in self._taskResults:
+            return self._taskResults[service].get(timeout)
+
+        return None
+
+    @type_check
+    def waitAll(self, timeout: float = None) -> {}:
+        """ Wait all tasks to finish.
+
+        Args:
+            timeout (float, optional): Wait timeout in seconds. Defaults to None.
+
+        Returns:
+            {}: Results of all tasks per service.
+        """
+
+        result = {}
+        for service in self._taskResults:
+            result[service] = self.wait(service, timeout)
         return result
