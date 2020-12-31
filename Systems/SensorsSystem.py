@@ -162,12 +162,12 @@ class SensorsSystem(BaseSystem):
             logger.info("Process external data(%s) for sensor(%s)",
                         data, sensors[0].name)
 
-        sensors[0].addData(time, data, addBiggerOnly)
-        self._owner.systemChanged = True
-        alert = self._check_data(data)
-        if alert and alert != "":
-            self._owner.sendAlert(
-                f"{sensors[0].name}({alert.strip()}) Alarm Activated!")
+        if sensors[0].addData(time, data, addBiggerOnly):
+            self._owner.systemChanged = True
+            alert = self._check_data(data)
+            if alert and alert != "":
+                self._owner.sendAlert(
+                    f"{sensors[0].name}({alert.strip()}) Alarm Activated!")
         return True
 
     @property

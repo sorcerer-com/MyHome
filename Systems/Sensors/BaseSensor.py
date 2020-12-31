@@ -117,13 +117,16 @@ class BaseSensor:
         return data
 
     @type_check
-    def addData(self, time: datetime, data: list, addBiggerOnly: bool = False) -> None:
+    def addData(self, time: datetime, data: list, addBiggerOnly: bool = False) -> bool:
         """ Add data to the sensors data collection.
 
         Arguments:
             time {datetime} -- Time when the data is collected.
             data {list} -- Data which will be added.
             addBiggerOnly {bool} -- Add only data with bigger value. (default: {False})
+
+        Returns:
+            bool -- True if data was added, otherwise False.
         """
 
         if time is None:
@@ -131,6 +134,7 @@ class BaseSensor:
 
         logger.debug("Sensor '%s' add data at %s: %s (%s)", self.name, time, data, addBiggerOnly)
 
+        result = False
         if time not in self._data:
             self._data[time] = {}
         for item in data:
@@ -143,6 +147,7 @@ class BaseSensor:
                                      self.name, item["name"], item["value"], self._data[time][item["name"]])
                     else:
                         self._data[time][item["name"]] = item["value"]
+                        result = True
                 else:  # sum type - differentiate
                     prevValue = self._lastReadings[item["name"]
                                                    ] if item["name"] in self._lastReadings else 0
@@ -152,15 +157,18 @@ class BaseSensor:
                     self._lastReadings[item["name"]] = item["value"]
                     # set real value to return in readData
                     item["value"] -= prevValue
+                    result = True
                 self.metadata[item["name"]] = {
                     key: value for key, value in item.items() if key not in ("name", "value")}
             else:
                 logger.warning(
                     "Try to add invalid data item(%s) in sensor(%s)", item, self.name)
 
-        self._owner._owner.event(self, "SensorDataAdded", {
-                                 item["name"]: item["value"] for item in data})
-        self._archiveData()
+        if result:
+            self._owner._owner.event(self, "SensorDataAdded", {
+                                    item["name"]: item["value"] for item in data})
+            self._archiveData()
+        return result
 
     @type_check
     def _readData(self) -> list:
