@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NLog;
+using NLog.Targets;
+using NLog.Web;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +15,8 @@ namespace MyHome
 {
     public class Startup
     {
+        private readonly ILogger logger = LogManager.GetCurrentClassLogger();
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
@@ -32,7 +37,12 @@ namespace MyHome
             {
                 endpoints.MapGet("/", async context =>
                 {
-                    await context.Response.WriteAsync("Hello World!");
+                    logger.Info("Test");
+                    var result = "Hello World!\n";
+
+                    var logs = LogManager.Configuration.FindTargetByName<MemoryTarget>("memory").Logs;
+                    result += string.Join("\n", logs);
+                    await context.Response.WriteAsync(result);
                 });
             });
         }
