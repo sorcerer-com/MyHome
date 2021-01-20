@@ -5,11 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NLog;
 using NLog.Targets;
-using NLog.Web;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MyHome
 {
@@ -21,6 +16,7 @@ namespace MyHome
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<MyHome>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -35,6 +31,8 @@ namespace MyHome
 
             app.UseEndpoints(endpoints =>
             {
+                // TODO: remove
+                var myHome = new MyHome();
                 endpoints.MapGet("/", async context =>
                 {
                     logger.Info("Test");
@@ -42,7 +40,13 @@ namespace MyHome
 
                     var logs = LogManager.Configuration.FindTargetByName<MemoryTarget>("memory").Logs;
                     result += string.Join("\n", logs);
+                    myHome.Save();
                     await context.Response.WriteAsync(result);
+                });
+                endpoints.MapGet("/save", async context =>
+                {
+                    myHome.Save();
+                    await context.Response.WriteAsync("OK");
                 });
             });
         }
