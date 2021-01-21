@@ -40,7 +40,6 @@ namespace MyHome
 
                     var logs = LogManager.Configuration.FindTargetByName<MemoryTarget>("memory").Logs;
                     result += string.Join("\n", logs);
-                    myHome.Save();
                     await context.Response.WriteAsync(result);
                 });
                 endpoints.MapGet("/save", async context =>
