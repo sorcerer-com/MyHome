@@ -10,7 +10,6 @@ using System.Net.Http;
 using System.Net.Mail;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace MyHome
 {
@@ -38,7 +37,7 @@ namespace MyHome
                 }
                 using var smtp = new SmtpClient(host, port)
                 {
-                    Timeout = 20000, // 20 sec
+                    Timeout = 20 * 1000, // 20 sec
                     Credentials = new NetworkCredential(sender, password)
                 };
                 smtp.EnableSsl = (smtp.Port == 465);
@@ -60,8 +59,7 @@ namespace MyHome
                 logger.Info($"Send SMS '{message.Replace("\n", " ")}' to {number}");
                 if (provider.ToLower() == "telenor")
                 {
-                    var browser = new ScrapingBrowser();
-                    browser.Encoding = Encoding.UTF8;
+                    var browser = new ScrapingBrowser { Encoding = Encoding.UTF8 };
                     var page = browser.NavigateToPage(new Uri("https://my.telenor.bg"));
                     // login
                     var form = new PageWebForm(page.Find("form", ScrapySharp.Html.By.Class("form")).First(), browser);

@@ -5,22 +5,24 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NLog;
 using NLog.Targets;
+using System;
 
 namespace MyHome
 {
     public class Startup
     {
-        private readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<MyHome>();
+            services.AddSingleton(new MyHome());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, IWebHostEnvironment env,
+            MyHome myHome)
         {
             if (env.IsDevelopment())
             {
@@ -32,7 +34,6 @@ namespace MyHome
             app.UseEndpoints(endpoints =>
             {
                 // TODO: remove
-                var myHome = new MyHome();
                 endpoints.MapGet("/", async context =>
                 {
                     logger.Info("Test");
@@ -42,12 +43,14 @@ namespace MyHome
                     result += string.Join("\n", logs);
                     await context.Response.WriteAsync(result);
                 });
-                endpoints.MapGet("/save", async context =>
+                endpoints.MapGet("/stop", async context =>
                 {
-                    myHome.Save();
+                    Environment.Exit(0);
                     await context.Response.WriteAsync("OK");
                 });
             });
+
+            applicationLifetime.ApplicationStopping.Register(() => myHome.Stop());
         }
     }
 }
