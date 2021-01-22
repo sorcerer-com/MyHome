@@ -1,9 +1,11 @@
-﻿using LibVLCSharp.Shared;
-using NLog;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
+using LibVLCSharp.Shared;
+
+using NLog;
 
 namespace MyHome.Systems
 {
@@ -24,20 +26,20 @@ namespace MyHome.Systems
         public List<string> Watched { get; }
 
 
-        public List<string> MediaList => GetMediaList();
+        public List<string> MediaList => this.GetMediaList();
 
         private string playing;
         public string Playing
         {
             get
             {
-                if (player.State == VLCState.Ended || player.State == VLCState.Stopped)
-                    playing = "";
-                return playing;
+                if (this.player.State == VLCState.Ended || this.player.State == VLCState.Stopped)
+                    this.playing = "";
+                return this.playing;
             }
         }
 
-        public string TimeDetails => GetTimeDetails();
+        public string TimeDetails => this.GetTimeDetails();
 
         private readonly LibVLC libVLC;
         private readonly MediaPlayer player;
@@ -45,14 +47,14 @@ namespace MyHome.Systems
 
         public MediaPlayerSystem(MyHome owner) : base(owner)
         {
-            Volume = 50;
-            MediaPaths = new List<string> { "." };
-            Radios = new List<string>();
-            Watched = new List<string>();
+            this.Volume = 50;
+            this.MediaPaths = new List<string> { "." };
+            this.Radios = new List<string>();
+            this.Watched = new List<string>();
 
-            libVLC = new LibVLC();
-            player = new MediaPlayer(libVLC); // TODO: media list player
-            playing = "";
+            this.libVLC = new LibVLC();
+            this.player = new MediaPlayer(this.libVLC); // TODO: media list player
+            this.playing = "";
         }
 
         public void Play(string path)
@@ -61,84 +63,84 @@ namespace MyHome.Systems
             if (string.IsNullOrEmpty(path))
                 return;
 
-            playing = path;
+            this.playing = path;
             if (!path.StartsWith("http")) // if not URL remove local/shared/radios prefix
                 path = path[(path.IndexOf(":") + 1)..];
 
-            player.Media = new Media(libVLC, new Uri(path));
-            player.Volume = Volume;
-            player.Fullscreen = true;
-            player.Play();
-            MarkWatched(playing);
+            this.player.Media = new Media(this.libVLC, new Uri(path));
+            this.player.Volume = this.Volume;
+            this.player.Fullscreen = true;
+            this.player.Play();
+            this.MarkWatched(this.playing);
         }
 
         public override void Stop()
         {
-            logger.Debug($"Stop media: {playing}");
-            player.Stop();
+            logger.Debug($"Stop media: {this.playing}");
+            this.player.Stop();
         }
 
         public void Pause()
         {
-            logger.Debug($"Pause media: {playing}");
-            player.Pause();
+            logger.Debug($"Pause media: {this.playing}");
+            this.player.Pause();
         }
 
         public void VolumeDown()
         {
-            logger.Debug($"Volume down media: {playing}");
-            Volume -= 5;
-            player.Volume = Volume;
-            Owner.SystemChanged = true;
+            logger.Debug($"Volume down media: {this.playing}");
+            this.Volume -= 5;
+            this.player.Volume = this.Volume;
+            this.Owner.SystemChanged = true;
         }
 
         public void VolumeUp()
         {
-            logger.Debug($"Volume up media: {playing}");
-            Volume += 5;
-            player.Volume = Volume;
-            Owner.SystemChanged = true;
+            logger.Debug($"Volume up media: {this.playing}");
+            this.Volume += 5;
+            this.player.Volume = this.Volume;
+            this.Owner.SystemChanged = true;
         }
 
         public void SeekBack()
         {
-            logger.Debug($"Seek back media: {playing}");
-            player.Time -= 30 * 1000; // -30 seconds
+            logger.Debug($"Seek back media: {this.playing}");
+            this.player.Time -= 30 * 1000; // -30 seconds
         }
 
         public void SeekForward()
         {
-            logger.Debug($"Seek forward media: {playing}");
-            player.Time += 30 * 1000; // +30 seconds
+            logger.Debug($"Seek forward media: {this.playing}");
+            this.player.Time += 30 * 1000; // +30 seconds
         }
 
         public void SeekBackFast()
         {
-            logger.Debug($"Seek back fast media: {playing}");
-            player.Time -= 600 * 1000; // -600 seconds
+            logger.Debug($"Seek back fast media: {this.playing}");
+            this.player.Time -= 600 * 1000; // -600 seconds
         }
 
         public void SeekForwardFast()
         {
-            logger.Debug($"Seek forward fast media: {playing}");
-            player.Time += 600 * 1000; // +600 seconds
+            logger.Debug($"Seek forward fast media: {this.playing}");
+            this.player.Time += 600 * 1000; // +600 seconds
         }
 
 
         private List<string> GetMediaList()
         {
             var result = new List<string>();
-            for (int i = 0; i < MediaPaths.Count; i++)
+            for (int i = 0; i < this.MediaPaths.Count; i++)
             {
-                if (!Directory.Exists(MediaPaths[i]))
+                if (!Directory.Exists(this.MediaPaths[i]))
                     continue;
 
-                var filePaths = Directory.EnumerateFiles(MediaPaths[i], "*.*", SearchOption.AllDirectories)
+                var filePaths = Directory.EnumerateFiles(this.MediaPaths[i], "*.*", SearchOption.AllDirectories)
                     .Where(p => supportedFormats.Any(f => p.EndsWith(f)));
                 result.AddRange(filePaths.Select(p => $"local{i + 1}:" + p));
             }
             result.Sort();
-            result.AddRange(Radios.Select(r => "radios:" + r));
+            result.AddRange(this.Radios.Select(r => "radios:" + r));
             return result;
         }
 
@@ -153,8 +155,8 @@ namespace MyHome.Systems
                 return (hours: h, minutes: m, seconds: s);
             }
 
-            var time = GetTime(player.Time);
-            var length = GetTime(player.Length);
+            var time = GetTime(this.player.Time);
+            var length = GetTime(this.player.Length);
             return $"{time.minutes:00}:{time.seconds:00} / {length.minutes:00}:{length.seconds:00}";
         }
 
@@ -162,13 +164,13 @@ namespace MyHome.Systems
         {
             logger.Debug($"Mark as watched: {path}");
 
-            if (!Watched.Contains(path))
-                Watched.Add(path);
+            if (!this.Watched.Contains(path))
+                this.Watched.Add(path);
 
             // cleanup watched list from nonexistent files
-            var mediaList = GetMediaList();
-            Watched.RemoveAll(w => !mediaList.Contains(w));
-            Owner.SystemChanged = true;
+            var mediaList = this.GetMediaList();
+            this.Watched.RemoveAll(w => !mediaList.Contains(w));
+            this.Owner.SystemChanged = true;
         }
     }
 }

@@ -1,7 +1,9 @@
-﻿using MyHome.Utils;
-using NLog;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
+
+using MyHome.Utils;
+
+using NLog;
 
 namespace MyHome.Systems
 {
@@ -13,23 +15,23 @@ namespace MyHome.Systems
         [JsonIgnore]
         public MyHome Owner { get; }
 
-        public string Name => GetType().Name[..^"System".Length];
+        public string Name => this.GetType().Name[..^"System".Length];
 
 
         public BaseSystem(MyHome owner)
         {
-            Owner = owner;
+            this.Owner = owner;
             // TODO: ops synchronization
         }
 
         public virtual void Setup()
         {
-            logger.Debug($"Setup system: {Name}");
+            logger.Debug($"Setup system: {this.Name}");
         }
 
         public virtual void Stop()
         {
-            logger.Debug($"Stop system: {Name}");
+            logger.Debug($"Stop system: {this.Name}");
         }
 
         public virtual void Update()
