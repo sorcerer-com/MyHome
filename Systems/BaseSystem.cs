@@ -7,12 +7,14 @@ namespace MyHome.Systems
 {
     public abstract class BaseSystem
     {
-        private readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+
 
         [JsonIgnore]
         public MyHome Owner { get; }
 
         public string Name => GetType().Name[..^"System".Length];
+
 
         public BaseSystem(MyHome owner)
         {
@@ -20,27 +22,27 @@ namespace MyHome.Systems
             // TODO: ops synchronization
         }
 
-        public void Setup()
+        public virtual void Setup()
         {
             logger.Debug($"Setup system: {Name}");
         }
 
-        public void Stop()
+        public virtual void Stop()
         {
             logger.Debug($"Stop system: {Name}");
         }
 
-        public void Update()
+        public virtual void Update()
         {
             //logger.Debug($"Update system: {Name}");
         }
 
-        public void Load(Dictionary<string, object> data)
+        public virtual void Load(Dictionary<string, object> data)
         {
             this.SetJsonValues(data);
         }
 
-        public Dictionary<string, object> Save()
+        public virtual Dictionary<string, object> Save()
         {
             return this.GetJsonValues();
         }

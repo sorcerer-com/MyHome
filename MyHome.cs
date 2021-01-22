@@ -13,7 +13,7 @@ namespace MyHome
     // TODO: docstrings?
     public class MyHome : IDisposable
     {
-        private readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         private readonly Thread thread;
         private int updateInterval = 3; // seconds
