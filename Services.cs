@@ -5,9 +5,8 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Mail;
 using System.Text;
-using System.Text.Json;
 
-using MyHome.Utils;
+using Newtonsoft.Json.Linq;
 
 using NLog;
 
@@ -102,7 +101,7 @@ namespace MyHome
             }
         }
 
-        public static object GetJsonContent(string url)
+        public static JToken GetJsonContent(string url)
         {
             try
             {
@@ -113,14 +112,7 @@ namespace MyHome
                 };
                 var json = client.GetStringAsync(url).Result;
 
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    AllowTrailingCommas = true,
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                };
-                options.Converters.Add(new GenericJsonConverter());
-                return JsonSerializer.Deserialize<object>(json, options);
+                return JToken.Parse(json);
             }
             catch (Exception e)
             {

@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text.Json;
 using System.Threading;
 
 using MyHome.Systems;
 using MyHome.Utils;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using NLog;
 
@@ -22,7 +24,7 @@ namespace MyHome
         private readonly int upgradeCheckInterval = 5; // minutes
         private DateTime lastBackupTime;
 
-        public Config Config { get; }
+        public Config Config { get; private set; }
 
         public Dictionary<string, BaseSystem> Systems { get; }
 
@@ -112,23 +114,22 @@ namespace MyHome
                 return;
             }
 
-            var options = new JsonSerializerOptions
+            var serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
             {
-                WriteIndented = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            };
-            options.Converters.Add(new GenericJsonConverter());
+                TypeNameHandling = TypeNameHandling.All,
+                Formatting = Formatting.Indented
+            });
 
             var json = File.ReadAllText(Config.DataFilePath);
-            var data = JsonSerializer.Deserialize<Dictionary<string, object>>(json, options);
+            var data = JObject.Parse(json);
             if (data.ContainsKey("LastBackupTime"))
                 this.lastBackupTime = (DateTime)data["LastBackupTime"];
-            if (data.ContainsKey("Config"))
-                this.Config.Load((Dictionary<string, object>)data["Config"]);
-            foreach (var system in this.Systems.Values)
+            if (data.ContainsKey(nameof(this.Config)))
+                this.Config = data[nameof(this.Config)].ToObject<Config>(serializer);
+            foreach (var kvp in data)
             {
-                if (data.ContainsKey(system.Name))
-                    system.Load((Dictionary<string, object>)data[system.Name]);
+                if (this.Systems.ContainsKey(kvp.Key))
+                    this.Systems[kvp.Key] = (BaseSystem)kvp.Value.ToObject(this.Systems[kvp.Key].GetType(), serializer);
             }
 
             this.SystemChanged = false;
@@ -145,21 +146,21 @@ namespace MyHome
                 File.Copy(Config.DataFilePath, Config.DataFilePath + ".bak");
             }
 
-            var data = new Dictionary<string, object>
+            var serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
             {
-                { "LastBackupTime", this.lastBackupTime },
-                { "Config", this.Config.Save() }
-            };
-            foreach (var system in this.Systems.Values)
-                data.Add(system.Name, system.Save());
+                TypeNameHandling = TypeNameHandling.All,
+                Formatting = Formatting.Indented
+            });
 
-            var options = new JsonSerializerOptions
+            var data = new JObject
             {
-                WriteIndented = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                ["LastBackupTime"] = this.lastBackupTime,
+                [nameof(this.Config)] = JToken.FromObject(this.Config, serializer)
             };
-            options.Converters.Add(new GenericJsonConverter());
-            var json = JsonSerializer.Serialize(data, options);
+            foreach (var kvp in this.Systems)
+                data.Add(kvp.Key, JToken.FromObject(kvp.Value, serializer));
+
+            var json = data.ToString();
             File.WriteAllText(Config.DataFilePath, json);
 
             this.SystemChanged = false;

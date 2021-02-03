@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
-
-using MyHome.Utils;
+﻿
+using Newtonsoft.Json;
 
 using NLog;
 
@@ -37,16 +35,6 @@ namespace MyHome.Systems
         public virtual void Update()
         {
             //logger.Debug($"Update system: {Name}");
-        }
-
-        public virtual void Load(Dictionary<string, object> data)
-        {
-            this.SetJsonValues(data);
-        }
-
-        public virtual Dictionary<string, object> Save()
-        {
-            return this.GetJsonValues();
         }
     }
 }

@@ -5,6 +5,8 @@ using System.Linq;
 
 using LibVLCSharp.Shared;
 
+using Newtonsoft.Json;
+
 using NLog;
 
 namespace MyHome.Systems
@@ -26,9 +28,11 @@ namespace MyHome.Systems
         public List<string> Watched { get; }
 
 
+        [JsonIgnore]
         public List<string> MediaList => this.GetMediaList();
 
         private string playing;
+        [JsonIgnore]
         public string Playing
         {
             get
@@ -39,6 +43,7 @@ namespace MyHome.Systems
             }
         }
 
+        [JsonIgnore]
         public string TimeDetails => this.GetTimeDetails();
 
         private readonly LibVLC libVLC;
@@ -48,7 +53,7 @@ namespace MyHome.Systems
         public MediaPlayerSystem(MyHome owner) : base(owner)
         {
             this.Volume = 50;
-            this.MediaPaths = new List<string> { "." };
+            this.MediaPaths = new List<string>();
             this.Radios = new List<string>();
             this.Watched = new List<string>();
 
