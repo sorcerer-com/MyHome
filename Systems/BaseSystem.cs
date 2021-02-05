@@ -13,6 +13,7 @@ namespace MyHome.Systems
         [JsonIgnore]
         public MyHome Owner { get; }
 
+        [JsonIgnore]
         public string Name => this.GetType().Name[..^"System".Length];
 
 

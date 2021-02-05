@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
+using MyHome.Systems;
+using MyHome.Systems.Devices;
+
 using NLog;
 using NLog.Targets;
 
@@ -36,6 +39,9 @@ namespace MyHome
             app.UseEndpoints(endpoints =>
             {
                 // TODO: remove
+                var system = (DevicesSystem)myHome.Systems["DevicesSystem"];
+                if (system.Devices.Count == 0)
+                    system.Devices.Add(new MyMultiSensor(system, "test", "test", "test"));
                 endpoints.MapGet("/", async context =>
                 {
                     logger.Info("Test");

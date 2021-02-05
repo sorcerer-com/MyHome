@@ -69,7 +69,7 @@ namespace MyHome.Systems
                 return;
 
             this.playing = path;
-            if (!path.StartsWith("http")) // if not URL remove local/shared/radios prefix
+            if (!path.StartsWith("http")) // if not URL remove media/radios prefix
                 path = path[(path.IndexOf(":") + 1)..];
 
             this.player.Media = new Media(this.libVLC, new Uri(path));
@@ -142,7 +142,7 @@ namespace MyHome.Systems
 
                 var filePaths = Directory.EnumerateFiles(this.MediaPaths[i], "*.*", SearchOption.AllDirectories)
                     .Where(p => supportedFormats.Any(f => p.EndsWith(f)));
-                result.AddRange(filePaths.Select(p => $"local{i + 1}:" + p));
+                result.AddRange(filePaths.Select(p => $"media{i + 1}:" + p));
             }
             result.Sort();
             result.AddRange(this.Radios.Select(r => "radios:" + r));
