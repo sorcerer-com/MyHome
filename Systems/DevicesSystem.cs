@@ -14,12 +14,15 @@ namespace MyHome.Systems
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
-        public int GetSensorDataInterval { get; set; } // minutes
+        public int ReadSensorDataInterval { get; set; } // minutes
 
         public List<Device> Devices { get; }
 
         [JsonIgnore]
         public IEnumerable<BaseSensor> Sensors => this.Devices.OfType<BaseSensor>();
+
+        [JsonIgnore]
+        public IEnumerable<Camera> Cameras => this.Devices.OfType<Camera>();
 
 
         private DateTime nextGetDataTime;
@@ -27,7 +30,7 @@ namespace MyHome.Systems
 
         public DevicesSystem(MyHome owner) : base(owner)
         {
-            this.GetSensorDataInterval = 1;// TODO: 15;
+            this.ReadSensorDataInterval = 1;// TODO: 15;
             this.Devices = new List<Device>();
         }
 
@@ -37,7 +40,7 @@ namespace MyHome.Systems
             base.Setup();
 
             // set after loading the GetSensorDataInterval
-            this.nextGetDataTime = this.GetNextGetDataTime();
+            this.nextGetDataTime = this.GetNextReadDataTime();
         }
 
         public override void Update()
@@ -51,8 +54,8 @@ namespace MyHome.Systems
                 return;
 
             // if GetSensorDataInterval is changed
-            if (this.nextGetDataTime.Minute % this.GetSensorDataInterval != 0)
-                this.nextGetDataTime = this.GetNextGetDataTime();
+            if (this.nextGetDataTime.Minute % this.ReadSensorDataInterval != 0)
+                this.nextGetDataTime = this.GetNextReadDataTime();
 
             var alertMsg = "";
             foreach (var sensor in this.Sensors)
@@ -67,8 +70,8 @@ namespace MyHome.Systems
                 {
                     logger.Warn($"No data from {sensor.Name} sensor");
                     if (sensor.LastTime.HasValue &&
-                        sensor.LastTime.Value <= this.nextGetDataTime.AddMinutes(this.GetSensorDataInterval * 4) &&
-                        sensor.LastTime.Value <= this.nextGetDataTime.AddMinutes(this.GetSensorDataInterval * 5))
+                        sensor.LastTime.Value <= this.nextGetDataTime.AddMinutes(this.ReadSensorDataInterval * 4) &&
+                        sensor.LastTime.Value <= this.nextGetDataTime.AddMinutes(this.ReadSensorDataInterval * 5))
                     {
                         alertMsg += $"{sensor.Name}(inactive) ";
                     }
@@ -78,16 +81,16 @@ namespace MyHome.Systems
             if (!string.IsNullOrEmpty(alertMsg))
                 this.Owner.SendAlert($"{alertMsg.Trim()} Alarm Activated!");
 
-            this.nextGetDataTime += TimeSpan.FromMinutes(this.GetSensorDataInterval);
+            this.nextGetDataTime += TimeSpan.FromMinutes(this.ReadSensorDataInterval);
         }
 
 
-        private DateTime GetNextGetDataTime()
+        private DateTime GetNextReadDataTime()
         {
             var now = DateTime.Now;
             var time = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0, 0);
             while (time < now)
-                time += TimeSpan.FromMinutes(this.GetSensorDataInterval);
+                time += TimeSpan.FromMinutes(this.ReadSensorDataInterval);
             return time;
         }
     }

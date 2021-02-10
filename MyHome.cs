@@ -42,7 +42,7 @@ namespace MyHome
             foreach (Type type in typeof(BaseSystem).GetSubClasses())
                 this.Systems.Add(type.Name, (BaseSystem)Activator.CreateInstance(type, this));
             // TODO: RoomSystem/Manager - list of devices (different types - driver, sensor, camera; maybe subtype - motion, multi, light, switch)
-            // TODO: SensorsSystem - get data from sensors devices in different rooms
+            // TODO: here - list of <Room>, Room links to devices, security status...
             // TOOD: SecuritySystem - per room enablement and activation by room sensors
             // TODO: Trigger-Action system (migrate Schedule system to it - time trigger; sensor data alerts and light on skill also)
 
@@ -186,12 +186,28 @@ namespace MyHome
                 var latestData = deviceSystem.Sensors.ToDictionary(s => s.Name, s => s.LastValues);
                 msg = $"{DateTime.Now:dd/MM/yyyy HH:mm:ss}\n{msg}\n{JsonConvert.SerializeObject(latestData)}";
 
-                // TODO: add camera images
+                var images = new List<string>();
+                if (fileNames == null)
+                {
+                    foreach (var camera in deviceSystem.Cameras)
+                    {
+                        var filename = Path.Combine(Config.BinPath, camera.Room + camera.Name + ".jpg");
+                        camera.SaveImage(filename);
+                        images.Add(filename);
+                    }
+                    fileNames = images;
+                }
 
                 if (!Services.SendEMail(this.Config.SmtpServerAddress, this.Config.Email, this.Config.EmailPassword,
                     this.Config.Email, "My Home", msg, fileNames))
                 {
                     result = false;
+                }
+
+                foreach (var file in images)
+                {
+                    if (File.Exists(file))
+                        File.Delete(file);
                 }
 
                 var quietHours = this.Config.QuietHours.Split("-", StringSplitOptions.TrimEntries).Select(h => int.Parse(h)).ToArray();

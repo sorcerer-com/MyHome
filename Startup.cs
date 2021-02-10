@@ -42,6 +42,8 @@ namespace MyHome
                 var system = (DevicesSystem)myHome.Systems["DevicesSystem"];
                 if (system.Devices.Count == 0)
                     system.Devices.Add(new MyMultiSensor(system, "test", "test", "test"));
+                if (system.Devices.Count == 1)
+                    system.Devices.Add(new Camera(system, "camera", "camera", "username:password@http://192.168.0.120:8899"));
                 endpoints.MapGet("/", async context =>
                 {
                     logger.Info("Test");

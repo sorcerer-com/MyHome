@@ -32,6 +32,9 @@ namespace MyHome.Systems.Devices
         [JsonIgnore]
         public List<string> SubNames => this.LastValues.Keys.ToList();
 
+        // TODO: add sensor calibration values - (realValue + const1) * const2
+        // TODO: add subsensor name map - realName -> mappedName
+
 
         public BaseSensor(DevicesSystem owner, string name, string room, string address) : base(owner, name, room)
         {

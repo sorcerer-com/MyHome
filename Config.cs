@@ -4,7 +4,8 @@ namespace MyHome
 {
     public class Config
     {
-        public static readonly string DataFilePath = Path.Join("bin", "data.json");
+        public static readonly string BinPath = "bin";
+        public static readonly string DataFilePath = Path.Join(BinPath, "data.json");
 
         public string QuietHours { get; set; } = "";
 

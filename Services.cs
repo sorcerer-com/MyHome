@@ -27,7 +27,7 @@ namespace MyHome
             {
                 logger.Info($"Send email to '{recipient}' subject: '{subject}'");
 
-                var mail = new MailMessage(sender, recipient, subject, content);
+                using var mail = new MailMessage(sender, recipient, subject, content);
                 fileNames?.ForEach(f => mail.Attachments.Add(new Attachment(f)));
 
                 string host = server;
