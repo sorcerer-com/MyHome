@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace MyHome
+namespace MyHome.Models
 {
     public class Config
     {

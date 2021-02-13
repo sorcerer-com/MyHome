@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using MyHome.Models;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -36,7 +38,7 @@ namespace MyHome.Systems.Devices
         // TODO: add subsensor name map - realName -> mappedName
 
 
-        public BaseSensor(DevicesSystem owner, string name, string room, string address) : base(owner, name, room)
+        public BaseSensor(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room)
         {
             this.Address = address;
             this.Data = new Dictionary<DateTime, SensorValue>();

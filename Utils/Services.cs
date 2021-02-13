@@ -13,7 +13,7 @@ using NLog;
 using ScrapySharp.Html.Forms;
 using ScrapySharp.Network;
 
-namespace MyHome
+namespace MyHome.Utils
 {
     public static class Services
     {

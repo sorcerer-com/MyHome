@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
+using MyHome.Models;
 using MyHome.Systems;
 using MyHome.Utils;
 
@@ -23,13 +24,22 @@ namespace MyHome
         private readonly Thread thread;
         private int updateInterval = 3; // seconds
         private readonly int upgradeCheckInterval = 5; // minutes
+        [JsonRequired]
         private DateTime lastBackupTime;
 
         public Config Config { get; private set; }
 
+        public List<Room> Rooms { get; private set; }
+
         public Dictionary<string, BaseSystem> Systems { get; }
 
+        [JsonIgnore]
         public bool SystemChanged { get; set; }
+
+
+        [JsonIgnore]
+        public DevicesSystem DevicesSystem => this.Systems.Values.OfType<DevicesSystem>().FirstOrDefault();
+
 
         public MyHome()
         {
@@ -38,11 +48,11 @@ namespace MyHome
 
             this.Config = new Config();
 
+            this.Rooms = new List<Room>();
+
             this.Systems = new Dictionary<string, BaseSystem>();
             foreach (Type type in typeof(BaseSystem).GetSubClasses())
                 this.Systems.Add(type.Name, (BaseSystem)Activator.CreateInstance(type, this));
-            // TODO: RoomSystem/Manager - list of devices (different types - driver, sensor, camera; maybe subtype - motion, multi, light, switch)
-            // TODO: here - list of <Room>, Room links to devices, security status...
             // TOOD: SecuritySystem - per room enablement and activation by room sensors
             // TODO: Trigger-Action system (migrate Schedule system to it - time trigger; sensor data alerts and light on skill also)
 
@@ -103,18 +113,7 @@ namespace MyHome
 
             var json = File.ReadAllText(Config.DataFilePath);
             var data = JObject.Parse(json);
-            if (data.ContainsKey("LastBackupTime"))
-                this.lastBackupTime = (DateTime)data["LastBackupTime"];
-            if (data.ContainsKey(nameof(this.Config)))
-                this.Config = data[nameof(this.Config)].ToObject<Config>(serializer);
-            foreach (var kvp in data)
-            {
-                if (this.Systems.ContainsKey(kvp.Key))
-                {
-                    var reader = kvp.Value.CreateReader();
-                    serializer.Populate(reader, this.Systems[kvp.Key]);
-                }
-            }
+            serializer.Populate(data.CreateReader(), this);
 
             this.SystemChanged = false;
         }
@@ -137,14 +136,7 @@ namespace MyHome
                 Formatting = Formatting.Indented
             });
 
-            var data = new JObject
-            {
-                ["LastBackupTime"] = this.lastBackupTime,
-                [nameof(this.Config)] = JToken.FromObject(this.Config, serializer)
-            };
-            foreach (var kvp in this.Systems)
-                data.Add(kvp.Key, JToken.FromObject(kvp.Value, serializer));
-
+            var data = JObject.FromObject(this, serializer);
             var json = data.ToString();
             File.WriteAllText(Config.DataFilePath, json);
 
@@ -179,17 +171,17 @@ namespace MyHome
         {
             try
             {
+                // TODO: maybe alerts per room?, email/gsm per room?
                 logger.Info($"Send alert {msg}");
 
                 bool result = true;
-                var deviceSystem = (DevicesSystem)this.Systems["DevicesSystem"];
-                var latestData = deviceSystem.Sensors.ToDictionary(s => s.Name, s => s.LastValues);
+                var latestData = this.DevicesSystem.Sensors.ToDictionary(s => s.Name, s => s.LastValues);
                 msg = $"{DateTime.Now:dd/MM/yyyy HH:mm:ss}\n{msg}\n{JsonConvert.SerializeObject(latestData)}";
 
                 var images = new List<string>();
                 if (fileNames == null)
                 {
-                    foreach (var camera in deviceSystem.Cameras)
+                    foreach (var camera in this.DevicesSystem.Cameras)
                     {
                         var filename = Path.Combine(Config.BinPath, camera.Room + camera.Name + ".jpg");
                         camera.SaveImage(filename);

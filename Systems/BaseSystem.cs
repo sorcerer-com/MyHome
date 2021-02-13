@@ -10,7 +10,6 @@ namespace MyHome.Systems
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
 
-        [JsonIgnore]
         public MyHome Owner { get; }
 
         [JsonIgnore]

@@ -1,4 +1,6 @@
-﻿namespace MyHome.Systems.Devices
+﻿using MyHome.Models;
+
+namespace MyHome.Systems.Devices
 {
     public abstract class Device
     {
@@ -6,10 +8,10 @@
 
         public string Name { get; }
 
-        public string Room { get; set; } // TODO: should be in the list of rooms?
+        public Room Room { get; set; }
 
 
-        public Device(DevicesSystem owner, string name, string room)
+        public Device(DevicesSystem owner, string name, Room room)
         {
             this.Owner = owner;
             this.Name = name;

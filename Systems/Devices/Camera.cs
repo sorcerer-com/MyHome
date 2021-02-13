@@ -7,6 +7,8 @@ using Mictlanix.DotNet.Onvif.Imaging;
 using Mictlanix.DotNet.Onvif.Media;
 using Mictlanix.DotNet.Onvif.Ptz;
 
+using MyHome.Models;
+
 using Newtonsoft.Json.Linq;
 
 using NLog;
@@ -69,7 +71,7 @@ namespace MyHome.Systems.Devices
         private readonly Dictionary<Type, object> onvif;
 
 
-        public Camera(DevicesSystem owner, string name, string room, string address) : base(owner, name, room, address)
+        public Camera(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room, address)
         {
             this.IsOnvifSupported = true;
 

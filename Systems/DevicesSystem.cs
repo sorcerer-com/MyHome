@@ -68,12 +68,12 @@ namespace MyHome.Systems
                 }
                 else
                 {
-                    logger.Warn($"No data from {sensor.Name} sensor");
+                    logger.Warn($"No data from {sensor.Name} ({sensor.Room.Name}) sensor");
                     if (sensor.LastTime.HasValue &&
                         sensor.LastTime.Value <= this.nextGetDataTime.AddMinutes(this.ReadSensorDataInterval * 4) &&
                         sensor.LastTime.Value <= this.nextGetDataTime.AddMinutes(this.ReadSensorDataInterval * 5))
                     {
-                        alertMsg += $"{sensor.Name}(inactive) ";
+                        alertMsg += $"{sensor.Name}({sensor.Room.Name}) inactive ";
                     }
                 }
             }

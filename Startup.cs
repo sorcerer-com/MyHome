@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-using MyHome.Systems;
+using MyHome.Models;
 using MyHome.Systems.Devices;
 
 using NLog;
@@ -39,11 +39,13 @@ namespace MyHome
             app.UseEndpoints(endpoints =>
             {
                 // TODO: remove
-                var system = (DevicesSystem)myHome.Systems["DevicesSystem"];
+                if (myHome.Rooms.Count == 0)
+                    myHome.Rooms.Add(new Room(myHome, "Room"));
+                var system = myHome.DevicesSystem;
                 if (system.Devices.Count == 0)
-                    system.Devices.Add(new MyMultiSensor(system, "test", "test", "test"));
+                    system.Devices.Add(new MyMultiSensor(system, "MyMultiSensor", myHome.Rooms[0], "http://192.168.0.110:5000/data"));
                 if (system.Devices.Count == 1)
-                    system.Devices.Add(new Camera(system, "camera", "camera", "username:password@http://192.168.0.120:8899"));
+                    system.Devices.Add(new Camera(system, "Camera", myHome.Rooms[0], "username:password@192.168.0.120:8899"));
                 endpoints.MapGet("/", async context =>
                 {
                     logger.Info("Test");

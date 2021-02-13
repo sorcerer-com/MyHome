@@ -1,10 +1,13 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using MyHome.Models;
+using MyHome.Utils;
+
+using Newtonsoft.Json.Linq;
 
 namespace MyHome.Systems.Devices
 {
     public class MyMultiSensor : BaseSensor
     {
-        public MyMultiSensor(DevicesSystem owner, string name, string room, string address) : base(owner, name, room, address)
+        public MyMultiSensor(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room, address)
         {
         }
 
