@@ -41,11 +41,11 @@ namespace MyHome
                 // TODO: remove
                 if (myHome.Rooms.Count == 0)
                     myHome.Rooms.Add(new Room(myHome, "Room"));
-                var system = myHome.DevicesSystem;
-                if (system.Devices.Count == 0)
-                    system.Devices.Add(new MyMultiSensor(system, "MyMultiSensor", myHome.Rooms[0], "http://192.168.0.110:5000/data"));
-                if (system.Devices.Count == 1)
-                    system.Devices.Add(new Camera(system, "Camera", myHome.Rooms[0], "username:password@192.168.0.120:8899"));
+                if (myHome.DevicesSystem.Devices.Count == 0)
+                    myHome.DevicesSystem.Devices.Add(new MyMultiSensor(myHome.DevicesSystem, "MyMultiSensor", myHome.Rooms[0], "http://192.168.0.110:5000/data"));
+                if (myHome.DevicesSystem.Devices.Count == 1)
+                    myHome.DevicesSystem.Devices.Add(new Camera(myHome.DevicesSystem, "Camera", myHome.Rooms[0], "username:password@192.168.0.120:8899"));
+
                 endpoints.MapGet("/", async context =>
                 {
                     logger.Info("Test");

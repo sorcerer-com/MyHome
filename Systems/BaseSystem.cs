@@ -10,11 +10,13 @@ namespace MyHome.Systems
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
 
-        public MyHome Owner { get; }
+        public MyHome Owner { get; set; }
 
         [JsonIgnore]
         public string Name => this.GetType().Name[..^"System".Length];
 
+
+        private BaseSystem() : this(null) { } // for json deserialization
 
         public BaseSystem(MyHome owner)
         {

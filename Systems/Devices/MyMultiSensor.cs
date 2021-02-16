@@ -7,6 +7,8 @@ namespace MyHome.Systems.Devices
 {
     public class MyMultiSensor : BaseSensor
     {
+        private MyMultiSensor() : this(null, null, null, null) { } // for json deserialization
+
         public MyMultiSensor(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room, address)
         {
         }

@@ -9,6 +9,7 @@ using Mictlanix.DotNet.Onvif.Ptz;
 
 using MyHome.Models;
 
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using NLog;
@@ -32,6 +33,10 @@ namespace MyHome.Systems.Devices
         }
 
         public bool IsOnvifSupported { get; set; }
+
+        [JsonIgnore]
+        public bool IsOpened => this.Capture.IsOpened();
+
 
         private VideoCapture capture;
         private VideoCapture Capture
@@ -70,6 +75,8 @@ namespace MyHome.Systems.Devices
 
         private readonly Dictionary<Type, object> onvif;
 
+
+        private Camera() : this(null, null, null, null) { } // for json deserialization
 
         public Camera(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room, address)
         {

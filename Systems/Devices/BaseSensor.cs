@@ -38,6 +38,8 @@ namespace MyHome.Systems.Devices
         // TODO: add subsensor name map - realName -> mappedName
 
 
+        private BaseSensor() : this(null, null, null, null) { } // for json deserialization
+
         public BaseSensor(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room)
         {
             this.Address = address;
@@ -69,6 +71,7 @@ namespace MyHome.Systems.Devices
             if (!this.Data.ContainsKey(time))
                 this.Data.Add(time, new SensorValue());
 
+            var addedData = new Dictionary<string, double>();
             foreach (var item in data.OfType<JObject>())
             {
                 if (!item.ContainsKey("name") && !item.ContainsKey("value"))
@@ -90,12 +93,13 @@ namespace MyHome.Systems.Devices
                     if (prevValue > value) // if the new value is smaller than previous - it's reset
                         prevValue = 0;
                     this.Data[time][name] = value - prevValue;
-                    //TODO: value -= prevValue;
                 }
+                addedData[name] = this.Data[time][name];
                 item.Remove("name");
                 item.Remove("value");
                 this.Metadata[name] = item.ToObject<Dictionary<string, object>>();//.Where(kvp => kvp.Key != "name" && kvp.Key != "value").ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
             }
+            this.Owner.Owner.Events.Fire(this, "SensorDataAdded", addedData);
             this.ArchiveData();
         }
 

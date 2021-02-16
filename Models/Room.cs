@@ -23,8 +23,25 @@ namespace MyHome.Models
         [JsonIgnore]
         public IEnumerable<Camera> Cameras => this.Devices.OfType<Camera>();
 
+
+        [JsonIgnore]
+        public bool IsSecuritySystemEnabled
+        {
+            get => this.Owner.SecuritySystem.ActivatedRooms.ContainsKey(this);
+            set => this.Owner.SecuritySystem.SetEnable(this, value);
+        }
+
+        [JsonIgnore]
+        public bool IsSecuritySystemActivated
+        {
+            get => this.Owner.SecuritySystem.ActivatedRooms.GetValueOrDefault(this);
+            set => this.Owner.SecuritySystem.Activate(this);
+        }
+
         // TODO: add other references too: maybe subtype devices (motion, multi, light, switch), security status, trigger/actions, sounds
 
+
+        private Room() : this(null, null) { } // for json deserialization
 
         public Room(MyHome owner, string name)
         {

@@ -28,6 +28,8 @@ namespace MyHome.Systems
         private DateTime nextGetDataTime;
 
 
+        private DevicesSystem() : this(null) { }  // for json deserialization
+
         public DevicesSystem(MyHome owner) : base(owner)
         {
             this.ReadSensorDataInterval = 1;// TODO: 15;

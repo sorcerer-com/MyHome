@@ -29,6 +29,9 @@ namespace MyHome
 
         public Config Config { get; private set; }
 
+        [JsonIgnore]
+        public GlobalEvent Events { get; }
+
         public List<Room> Rooms { get; private set; }
 
         public Dictionary<string, BaseSystem> Systems { get; }
@@ -40,6 +43,9 @@ namespace MyHome
         [JsonIgnore]
         public DevicesSystem DevicesSystem => this.Systems.Values.OfType<DevicesSystem>().FirstOrDefault();
 
+        [JsonIgnore]
+        public SecuritySystem SecuritySystem => this.Systems.Values.OfType<SecuritySystem>().FirstOrDefault();
+
 
         public MyHome()
         {
@@ -47,6 +53,7 @@ namespace MyHome
             // TODO: log current version (commit info)
 
             this.Config = new Config();
+            this.Events = new GlobalEvent();
 
             this.Rooms = new List<Room>();
 
@@ -69,6 +76,8 @@ namespace MyHome
                 IsBackground = true
             };
             this.thread.Start();
+
+            this.Events.Fire(this, "Start");
         }
 
         void IDisposable.Dispose()
@@ -86,7 +95,7 @@ namespace MyHome
 
         public void Stop()
         {
-            // TODO: event?
+            this.Events.Fire(this, "Stop");
             this.updateInterval = 0;
 
             this.Save();
@@ -108,7 +117,8 @@ namespace MyHome
             {
                 TypeNameHandling = TypeNameHandling.All,
                 PreserveReferencesHandling = PreserveReferencesHandling.All,
-                Formatting = Formatting.Indented
+                Formatting = Formatting.Indented,
+                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
             });
 
             var json = File.ReadAllText(Config.DataFilePath);
@@ -116,6 +126,7 @@ namespace MyHome
             serializer.Populate(data.CreateReader(), this);
 
             this.SystemChanged = false;
+            this.Events.Fire(this, "Loaded");
         }
 
         public void Save()
@@ -133,7 +144,8 @@ namespace MyHome
             {
                 TypeNameHandling = TypeNameHandling.All,
                 PreserveReferencesHandling = PreserveReferencesHandling.All,
-                Formatting = Formatting.Indented
+                Formatting = Formatting.Indented,
+                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
             });
 
             var data = JObject.FromObject(this, serializer);
@@ -141,6 +153,7 @@ namespace MyHome
             File.WriteAllText(Config.DataFilePath, json);
 
             this.SystemChanged = false;
+            this.Events.Fire(this, "Saved");
         }
 
         private void Update()
@@ -171,7 +184,7 @@ namespace MyHome
         {
             try
             {
-                // TODO: maybe alerts per room?, email/gsm per room?
+                // TODO: maybe alerts per room?, email/gsm per room? or multiple receivers
                 logger.Info($"Send alert {msg}");
 
                 bool result = true;
