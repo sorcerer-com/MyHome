@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Mail;
 using System.Text;
+
+using MailKit.Net.Smtp;
+
+using MimeKit;
 
 using Newtonsoft.Json.Linq;
 
@@ -22,13 +25,19 @@ namespace MyHome.Utils
         public static bool SendEMail(string server, string sender, string password,
             string recipient, string subject, string content, List<string> fileNames = null)
         {
-            // TODO: need to be tested
             try
             {
                 logger.Info($"Send email to '{recipient}' subject: '{subject}'");
 
-                using var mail = new MailMessage(sender, recipient, subject, content);
-                fileNames?.ForEach(f => mail.Attachments.Add(new Attachment(f)));
+
+                var mail = new MimeMessage();
+                mail.From.Add(MailboxAddress.Parse("sorcerer_com@abv.bg"));
+                mail.To.Add(MailboxAddress.Parse("sorcerer_com@abv.bg"));
+                mail.Subject = subject;
+
+                var builder = new BodyBuilder { TextBody = content };
+                fileNames?.ForEach(f => builder.Attachments.Add(f));
+                mail.Body = builder.ToMessageBody();
 
                 string host = server;
                 int port = 465;
@@ -37,13 +46,11 @@ namespace MyHome.Utils
                     host = server.Split(':')[0];
                     port = int.Parse(server.Split(':')[1]);
                 }
-                using var smtp = new SmtpClient(host, port)
-                {
-                    Timeout = 20 * 1000, // 20 sec
-                    Credentials = new NetworkCredential(sender, password)
-                };
-                smtp.EnableSsl = (smtp.Port == 465);
+                using var smtp = new SmtpClient { Timeout = 20 * 1000 };
+                smtp.Connect(host, port, (port == 465 || port == 587));
+                smtp.Authenticate(sender, password);
                 smtp.Send(mail);
+                smtp.Disconnect(true);
 
                 return true;
             }
