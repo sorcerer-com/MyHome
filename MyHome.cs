@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
+using LibGit2Sharp;
+
 using MyHome.Models;
 using MyHome.Systems;
 using MyHome.Utils;
@@ -22,7 +24,7 @@ namespace MyHome
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         private readonly Thread thread;
-        private int updateInterval = 3; // seconds
+        private int updateInterval = 1; // seconds
         private readonly int upgradeCheckInterval = 5; // minutes
         [JsonRequired]
         private DateTime lastBackupTime;
@@ -39,6 +41,9 @@ namespace MyHome
         [JsonIgnore]
         public bool SystemChanged { get; set; }
 
+        [JsonIgnore]
+        public bool UpgradeAvailable { get; private set; }
+
 
         [JsonIgnore]
         public DevicesSystem DevicesSystem => this.Systems.Values.OfType<DevicesSystem>().FirstOrDefault();
@@ -50,7 +55,13 @@ namespace MyHome
         public MyHome()
         {
             logger.Info("Start My Home");
-            // TODO: log current version (commit info)
+
+
+            using (var repo = new Repository("."))
+            {
+                logger.Info($"Version: {repo.Head.Tip.Author.When.ToLocalTime():dd/MM/yyyy HH:mm:ss} {repo.Head.Tip.MessageShort}");
+            }
+            // TODO: UI
 
             this.Config = new Config();
             this.Events = new GlobalEvent();
@@ -60,7 +71,6 @@ namespace MyHome
             this.Systems = new Dictionary<string, BaseSystem>();
             foreach (Type type in typeof(BaseSystem).GetSubClasses())
                 this.Systems.Add(type.Name, (BaseSystem)Activator.CreateInstance(type, this));
-            // TOOD: SecuritySystem - per room enablement and activation by room sensors
             // TODO: Trigger-Action system (migrate Schedule system to it - time trigger; sensor data alerts and light on skill also)
 
             this.lastBackupTime = DateTime.Now;
@@ -164,19 +174,22 @@ namespace MyHome
                 stopwatch.Restart();
 
                 foreach (var system in this.Systems.Values)
-                    system.Update(); // TODO: thread pool
+                    system.Update(); // TODO: thread pool?
 
                 var now = DateTime.Now;
                 if (now.Minute % this.upgradeCheckInterval == 0 && now.Second < this.updateInterval)
-                {
-                    // TODO: check for upgrade in thread pool task
-                }
+                    this.Upgrade(true);
 
                 if (this.SystemChanged)
                     this.Save();
 
-                // TODO: logger.Debug(stopwatch.Elapsed);
-                Thread.Sleep(this.updateInterval);
+                if (stopwatch.Elapsed > TimeSpan.FromSeconds(this.updateInterval))
+                {
+                    logger.Warn($"Update time: {stopwatch.Elapsed}");
+                    Thread.Sleep(TimeSpan.FromSeconds(this.updateInterval));
+                }
+                else
+                    Thread.Sleep(TimeSpan.FromSeconds(this.updateInterval) - stopwatch.Elapsed);
             }
         }
 
@@ -184,7 +197,6 @@ namespace MyHome
         {
             try
             {
-                // TODO: maybe alerts per room?, email/gsm per room? or multiple receivers
                 logger.Info($"Send alert {msg}");
 
                 bool result = true;
@@ -242,6 +254,38 @@ namespace MyHome
             catch (Exception e)
             {
                 logger.Error(e, "Cannot send alert message");
+                return false;
+            }
+        }
+
+        private bool Upgrade(bool checkOnly)
+        {
+            if (checkOnly)
+                logger.Debug("Checking for system update");
+
+            try
+            {
+                using var repo = new Repository(".");
+                Commands.Fetch(repo, repo.Head.RemoteName, Array.Empty<string>(), null, "");
+                if (checkOnly)
+                {
+                    this.UpgradeAvailable = repo.Head.TrackingDetails.BehindBy.GetValueOrDefault() > 0;
+                    return this.UpgradeAvailable;
+                }
+                else
+                {
+                    logger.Info("Upgrading...");
+                    var signature = repo.Config.BuildSignature(DateTimeOffset.Now);
+                    Commands.Pull(repo, signature, null);
+                }
+                return true;
+            }
+            catch (Exception e)
+            {
+                if (checkOnly)
+                    logger.Error(e, "Cannot check for system update");
+                else
+                    logger.Error(e, "Cannot update the system");
                 return false;
             }
         }

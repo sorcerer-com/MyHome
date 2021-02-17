@@ -38,8 +38,6 @@ namespace MyHome.Models
             set => this.Owner.SecuritySystem.Activate(this);
         }
 
-        // TODO: add other references too: maybe subtype devices (motion, multi, light, switch), security status, trigger/actions, sounds
-
 
         private Room() : this(null, null) { } // for json deserialization
 
