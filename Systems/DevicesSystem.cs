@@ -52,7 +52,7 @@ namespace MyHome.Systems
             foreach (var device in this.Devices)
                 device.Update();
 
-            if (DateTime.Now < this.nextGetDataTime) // TODO: seconds = 59 for end of the minute?
+            if (DateTime.Now < this.nextGetDataTime.AddSeconds(59)) // to be in the end of the minute
                 return;
 
             // if GetSensorDataInterval is changed

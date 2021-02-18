@@ -24,6 +24,10 @@ namespace MyHome.Systems.Devices
 
         public Dictionary<string, Dictionary<string, object>> Metadata { get; }
 
+        public Dictionary<string, string> SubNamesMap { get; } // map sensor subname to custom subname
+
+        public Dictionary<string, (double addition, double multiplier)> Calibration { get; } // calibration values per subname - newValue = (realValue + addition) * mutiplier
+
 
         [JsonIgnore]
         public DateTime? LastTime => this.Data.Count > 0 ? this.Data.Max(d => d.Key) : null;
@@ -34,9 +38,6 @@ namespace MyHome.Systems.Devices
         [JsonIgnore]
         public List<string> SubNames => this.LastValues.Keys.ToList();
 
-        // TODO: add sensor calibration values - (realValue + const1) * const2
-        // TODO: add subsensor name map - realName -> mappedName
-
 
         private BaseSensor() : this(null, null, null, null) { } // for json deserialization
 
@@ -45,6 +46,8 @@ namespace MyHome.Systems.Devices
             this.Address = address;
             this.Data = new Dictionary<DateTime, SensorValue>();
             this.Metadata = new Dictionary<string, Dictionary<string, object>>();
+            this.SubNamesMap = new Dictionary<string, string>();
+            this.Calibration = new Dictionary<string, (double addition, double multiplier)>();
         }
 
 
@@ -80,7 +83,11 @@ namespace MyHome.Systems.Devices
                     continue;
                 }
                 var name = (string)item["name"];
+                if (this.SubNamesMap.ContainsKey(name))
+                    name = this.SubNamesMap[name];
                 var value = (item["value"].Type == JTokenType.Boolean) ? ((bool)item["value"] ? 1 : 0) : (double)item["value"];
+                if (this.Calibration.ContainsKey(name)) // mapped name
+                    value = (value + this.Calibration[name].addition) * this.Calibration[name].multiplier;
                 var aggrType = item.ContainsKey("aggrType") ? (string)item["aggrType"] : "avg";
                 if (aggrType == "avg")
                 {

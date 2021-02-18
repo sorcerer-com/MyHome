@@ -60,7 +60,7 @@ namespace MyHome.Systems
             this.Watched = new List<string>();
 
             this.libVLC = new LibVLC();
-            this.player = new MediaPlayer(this.libVLC); // TODO: media list player
+            this.player = new MediaPlayer(this.libVLC);
             this.playing = "";
         }
 

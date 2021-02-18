@@ -208,7 +208,7 @@ namespace MyHome
                 {
                     foreach (var camera in this.DevicesSystem.Cameras)
                     {
-                        var filename = Path.Combine(Config.BinPath, camera.Room + camera.Name + ".jpg");
+                        var filename = Path.Combine(Config.BinPath, $"{camera.Room.Name}_{camera.Name}.jpg");
                         camera.SaveImage(filename);
                         images.Add(filename);
                     }
