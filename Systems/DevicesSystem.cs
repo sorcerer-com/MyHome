@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using MyHome.Systems.Devices;
+using MyHome.Utils;
 
 using Newtonsoft.Json;
 
@@ -49,8 +50,7 @@ namespace MyHome.Systems
         {
             base.Update();
 
-            foreach (var device in this.Devices)
-                device.Update();
+            this.Devices.RunForEach(device => device.Update());
 
             if (DateTime.Now < this.nextGetDataTime.AddSeconds(59)) // to be in the end of the minute
                 return;
@@ -60,9 +60,9 @@ namespace MyHome.Systems
                 this.nextGetDataTime = this.GetNextReadDataTime();
 
             var alertMsg = "";
-            foreach (var sensor in this.Sensors)
+            this.Sensors.RunForEach(sensor =>
             {
-                logger.Debug($"Requesting data from {sensor.Name}({sensor.Room}, {sensor.Address}) sensor");
+                logger.Debug($"Requesting data from {sensor.Name}({sensor.Room.Name}, {sensor.Address}) sensor");
 
                 if (sensor.ReadData(this.nextGetDataTime))
                 {
@@ -72,13 +72,13 @@ namespace MyHome.Systems
                 {
                     logger.Warn($"No data from {sensor.Name} ({sensor.Room.Name}) sensor");
                     if (sensor.LastTime.HasValue &&
-                        sensor.LastTime.Value <= this.nextGetDataTime.AddMinutes(this.ReadSensorDataInterval * 4) &&
-                        sensor.LastTime.Value <= this.nextGetDataTime.AddMinutes(this.ReadSensorDataInterval * 5))
+                        sensor.LastTime.Value <= this.nextGetDataTime.AddMinutes(-this.ReadSensorDataInterval * 4) &&
+                        sensor.LastTime.Value > this.nextGetDataTime.AddMinutes(-this.ReadSensorDataInterval * 5))
                     {
                         alertMsg += $"{sensor.Name}({sensor.Room.Name}) inactive ";
                     }
                 }
-            }
+            });
 
             if (!string.IsNullOrEmpty(alertMsg))
                 this.Owner.SendAlert($"{alertMsg.Trim()} Alarm Activated!");

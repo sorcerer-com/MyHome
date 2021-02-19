@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace MyHome.Utils
 {
@@ -13,6 +14,11 @@ namespace MyHome.Utils
                 .GetAssembly(type)
                 .GetTypes()
                 .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(type));
+        }
+
+        public static void RunForEach<T>(this IEnumerable<T> source, Action<T> action)
+        {
+            Task.WaitAll(source.Select(i => Task.Run(() => action.Invoke(i))).ToArray());
         }
     }
 }

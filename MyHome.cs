@@ -72,6 +72,7 @@ namespace MyHome
             foreach (Type type in typeof(BaseSystem).GetSubClasses())
                 this.Systems.Add(type.Name, (BaseSystem)Activator.CreateInstance(type, this));
             // TODO: Trigger-Action system (migrate Schedule system to it - time trigger; sensor data alerts and light on skill also)
+            // TODO: SecuritySystem - enable for all rooms, define zones - group of rooms
 
             this.lastBackupTime = DateTime.Now;
             this.SystemChanged = false;
@@ -116,6 +117,7 @@ namespace MyHome
 
         public void Load()
         {
+            // TODO: transfer the old data to new format
             logger.Info("Load settings and data");
             if (!File.Exists(Config.DataFilePath))
             {
@@ -173,8 +175,7 @@ namespace MyHome
             {
                 stopwatch.Restart();
 
-                foreach (var system in this.Systems.Values)
-                    system.Update(); // TODO: thread pool?
+                this.Systems.Values.RunForEach(system => system.Update());
 
                 var now = DateTime.Now;
                 if (now.Minute % this.upgradeCheckInterval == 0 && now.Second < this.updateInterval)
@@ -186,7 +187,6 @@ namespace MyHome
                 if (stopwatch.Elapsed > TimeSpan.FromSeconds(this.updateInterval))
                 {
                     logger.Warn($"Update time: {stopwatch.Elapsed}");
-                    Thread.Sleep(TimeSpan.FromSeconds(this.updateInterval));
                 }
                 else
                     Thread.Sleep(TimeSpan.FromSeconds(this.updateInterval) - stopwatch.Elapsed);
