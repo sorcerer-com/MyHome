@@ -55,7 +55,7 @@ namespace MyHome.Systems.Devices
         {
         }
 
-        public bool ReadData(DateTime time) // TODO: add bigger only?
+        public bool ReadData(DateTime time)
         {
             var data = this.ReadDataInternal(); // read data from sensor
             logger.Debug($"Sensor '{this.Name}' read data: '{data}'");
@@ -90,10 +90,7 @@ namespace MyHome.Systems.Devices
                     value = (value + this.Calibration[name].addition) * this.Calibration[name].multiplier;
                 var aggrType = item.ContainsKey("aggrType") ? (string)item["aggrType"] : "avg";
                 if (aggrType == "avg")
-                {
-                    // TODO: addBiggerOnly?
                     this.Data[time][name] = value;
-                }
                 else // sum type - differentiate
                 {
                     var prevValue = this.LastValues[name];
@@ -104,26 +101,17 @@ namespace MyHome.Systems.Devices
                 addedData[name] = this.Data[time][name];
                 item.Remove("name");
                 item.Remove("value");
-                this.Metadata[name] = item.ToObject<Dictionary<string, object>>();//.Where(kvp => kvp.Key != "name" && kvp.Key != "value").ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                this.Metadata[name] = item.ToObject<Dictionary<string, object>>();
             }
             this.Owner.Owner.Events.Fire(this, "SensorDataAdded", addedData);
             this.ArchiveData();
         }
 
-        private void ArchiveData()
+        public void AggregateData(IEnumerable<IGrouping<DateTime, DateTime>> groupedDates)
         {
-            var now = DateTime.Now;
-            // delete entries older then 1 year
-            var times = this.Data.Keys.Where(t => t < now.AddYears(-1));
-            foreach (var time in times)
-                this.Data.Remove(time);
-
-            // for older then 24 hour, save only 1 per day
-            times = this.Data.Keys.Where(t => t < now.Date.AddHours(now.Hour).AddDays(-1));
-            var groupedDate = times.GroupBy(t => t.Date);
-            foreach (var group in groupedDate) // date / times
+            foreach (var group in groupedDates) // new time / list of times to be grouped
             {
-                if (group.Count() == 1) // already archived
+                if (group.Count() == 1) // already grouped
                     continue;
 
                 var items = group.Select(t => this.Data[t]).ToList();
@@ -150,6 +138,20 @@ namespace MyHome.Systems.Devices
                     this.Data[group.Key][subName] = newValue;
                 }
             }
+        }
+
+        private void ArchiveData()
+        {
+            var now = DateTime.Now;
+            // delete entries older then 1 year
+            var times = this.Data.Keys.Where(t => t < now.AddYears(-1));
+            foreach (var time in times)
+                this.Data.Remove(time);
+
+            // for older then 24 hour, save only 1 per day
+            times = this.Data.Keys.Where(t => t < now.Date.AddHours(now.Hour).AddDays(-1));
+            var groupedDates = times.GroupBy(t => t.Date);
+            this.AggregateData(groupedDates);
         }
 
         protected abstract JToken ReadDataInternal();

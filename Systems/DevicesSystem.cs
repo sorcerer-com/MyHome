@@ -66,6 +66,12 @@ namespace MyHome.Systems
 
                 if (sensor.ReadData(this.nextGetDataTime))
                 {
+                    // aggregate one value per ReadSensorDataInterval
+                    var now = DateTime.Now;
+                    var times = sensor.Data.Keys.Where(t => t < now.AddHours(-1) && t >= now.Date.AddHours(now.Hour).AddDays(-1)); // last 24 hours
+                    var groupedDates = times.GroupBy(t => new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute / this.ReadSensorDataInterval * this.ReadSensorDataInterval, 0));
+                    sensor.AggregateData(groupedDates);
+
                     this.Owner.SystemChanged = true;
                 }
                 else
@@ -85,6 +91,8 @@ namespace MyHome.Systems
 
             this.nextGetDataTime += TimeSpan.FromMinutes(this.ReadSensorDataInterval);
         }
+
+        // TODO: processData
 
 
         private DateTime GetNextReadDataTime()

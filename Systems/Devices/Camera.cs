@@ -103,8 +103,7 @@ namespace MyHome.Systems.Devices
             // read sensor data every 15 seconds
             if (this.IsOnvifSupported && DateTime.Now > this.nextDataRead)
             {
-                if (this.LastTime.HasValue)
-                    this.ReadData(this.LastTime.Value);
+                this.ReadData(DateTime.Now);
                 this.nextDataRead = DateTime.Now.AddSeconds(15); // TODO: maybe extract as param, maybe often
             }
         }
@@ -275,7 +274,8 @@ namespace MyHome.Systems.Devices
             {
                 // TODO: no events in OnvifClient.Core, maybe add python tool (sensor) to get camera data
                 // Can try to add event.wsdl as Service Reference and https://github.com/BogdanovKirill/OnvifEventsReceiver/tree/master
-                return null;
+                var json = "[{\"name\": \"IsMotion\", \"value\": true}]";
+                return JToken.Parse(json);
             }
             catch (Exception e)
             {
