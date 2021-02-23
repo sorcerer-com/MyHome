@@ -51,10 +51,6 @@ namespace MyHome.Systems.Devices
         }
 
 
-        public override void Update()
-        {
-        }
-
         public bool ReadData(DateTime time)
         {
             var data = this.ReadDataInternal(); // read data from sensor
@@ -82,15 +78,20 @@ namespace MyHome.Systems.Devices
                     logger.Warn($"Try to add invalid data item({item}) in sensor({this.Name})");
                     continue;
                 }
+
                 var name = (string)item["name"];
                 if (this.SubNamesMap.ContainsKey(name))
                     name = this.SubNamesMap[name];
+
                 var value = (item["value"].Type == JTokenType.Boolean) ? ((bool)item["value"] ? 1 : 0) : (double)item["value"];
                 if (this.Calibration.ContainsKey(name)) // mapped name
                     value = (value + this.Calibration[name].addition) * this.Calibration[name].multiplier;
+
                 var aggrType = item.ContainsKey("aggrType") ? (string)item["aggrType"] : "avg";
                 if (aggrType == "avg")
+                {
                     this.Data[time][name] = value;
+                }
                 else // sum type - differentiate
                 {
                     var prevValue = this.LastValues[name];
@@ -98,6 +99,7 @@ namespace MyHome.Systems.Devices
                         prevValue = 0;
                     this.Data[time][name] = value - prevValue;
                 }
+
                 addedData[name] = this.Data[time][name];
                 item.Remove("name");
                 item.Remove("value");

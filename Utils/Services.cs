@@ -117,9 +117,7 @@ namespace MyHome.Utils
                 {
                     Timeout = TimeSpan.FromSeconds(5)
                 };
-                // TODO: simple result
-                //var json = client.GetStringAsync(url).Result;
-                var json = "[{\"name\": \"Motion\", \"value\": false, \"aggrType\": \"avg\", \"desc\": \"Motion detection\"},{\"name\": \"Temperature\", \"value\": 24.00, \"aggrType\": \"avg\", \"desc\": \"Current temperature\"},{\"name\": \"Humidity\", \"value\": 48.00, \"aggrType\": \"avg\", \"desc\": \"Current humidity\"},{\"name\": \"Smoke\", \"value\": 35.00, \"aggrType\": \"avg\", \"desc\": \"Smoke detection\"},{\"name\": \"Lighting\", \"value\": 52.00, \"aggrType\": \"avg\", \"desc\": \"Current lighting\"}]";
+                var json = client.GetStringAsync(url).Result;
 
                 return JToken.Parse(json);
             }

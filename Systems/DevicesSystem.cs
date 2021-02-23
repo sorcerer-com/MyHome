@@ -33,7 +33,7 @@ namespace MyHome.Systems
 
         public DevicesSystem(MyHome owner) : base(owner)
         {
-            this.ReadSensorDataInterval = 1;// TODO: 15;
+            this.ReadSensorDataInterval = 15;
             this.Devices = new List<Device>();
         }
 

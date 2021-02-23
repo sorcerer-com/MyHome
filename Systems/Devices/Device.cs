@@ -20,6 +20,8 @@ namespace MyHome.Systems.Devices
             this.Room = room;
         }
 
-        public abstract void Update();
+        public virtual void Update()
+        {
+        }
     }
 }

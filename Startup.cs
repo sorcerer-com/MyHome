@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -44,7 +45,10 @@ namespace MyHome
                 if (myHome.DevicesSystem.Devices.Count == 0)
                     myHome.DevicesSystem.Devices.Add(new MyMultiSensor(myHome.DevicesSystem, "MyMultiSensor", myHome.Rooms[0], "http://192.168.0.110:5000/data"));
                 if (myHome.DevicesSystem.Devices.Count == 1)
+                {
                     myHome.DevicesSystem.Devices.Add(new Camera(myHome.DevicesSystem, "Camera", myHome.Rooms[0], "username:password@192.168.0.120:8899"));
+                    myHome.DevicesSystem.Cameras.First().SubNamesMap.Add("IsMotion", "Motion");
+                }
 
                 endpoints.MapGet("/", async context =>
                 {

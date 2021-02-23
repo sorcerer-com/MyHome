@@ -21,7 +21,6 @@ namespace MyHome.Systems
         public BaseSystem(MyHome owner)
         {
             this.Owner = owner;
-            // TODO: ops synchronization
         }
 
         public virtual void Setup()

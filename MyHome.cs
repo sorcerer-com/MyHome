@@ -24,7 +24,7 @@ namespace MyHome
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         private readonly Thread thread;
-        private int updateInterval = 1; // seconds
+        private int updateInterval = 3; // seconds
         private readonly int upgradeCheckInterval = 5; // minutes
         [JsonRequired]
         private DateTime lastBackupTime;
@@ -189,7 +189,9 @@ namespace MyHome
                     logger.Warn($"Update time: {stopwatch.Elapsed}");
                 }
                 else
+                {
                     Thread.Sleep(TimeSpan.FromSeconds(this.updateInterval) - stopwatch.Elapsed);
+                }
             }
         }
 

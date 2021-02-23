@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Xml;
 
 using Mictlanix.DotNet.Onvif;
 using Mictlanix.DotNet.Onvif.Device;
@@ -8,11 +9,14 @@ using Mictlanix.DotNet.Onvif.Media;
 using Mictlanix.DotNet.Onvif.Ptz;
 
 using MyHome.Models;
+using MyHome.Utils;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using NLog;
+
+using OnvifEvents;
 
 using OpenCvSharp;
 
@@ -84,7 +88,7 @@ namespace MyHome.Systems.Devices
 
             this.capture = null;
             this.lastUse = DateTime.Now;
-            this.nextDataRead = DateTime.Now;
+            this.nextDataRead = DateTime.Now.AddMinutes(1); // start reading 1 minute after start
 
             this.onvif = new Dictionary<Type, object>();
         }
@@ -258,6 +262,10 @@ namespace MyHome.Systems.Devices
                     var token = this.GetOnvif<Mictlanix.DotNet.Onvif.Common.Profile>().token;
                     this.onvif.Add(typeof(T), this.GetOnvif<PTZClient>().GetConfigurationOptionsAsync(token).Result);
                 }
+                else if (typeof(T) == typeof(PullPointSubscriptionClient))
+                {
+                    this.onvif.Add(typeof(T), OnvifEventsHelper.CreateEventsAsync(this.GetOnvif<DeviceClient>(), username, password).Result);
+                }
             }
             return (T)this.onvif[typeof(T)];
         }
@@ -272,10 +280,32 @@ namespace MyHome.Systems.Devices
 
             try
             {
-                // TODO: no events in OnvifClient.Core, maybe add python tool (sensor) to get camera data
-                // Can try to add event.wsdl as Service Reference and https://github.com/BogdanovKirill/OnvifEventsReceiver/tree/master
-                var json = "[{\"name\": \"IsMotion\", \"value\": true}]";
-                return JToken.Parse(json);
+                var pullPointClient = this.GetOnvif<PullPointSubscriptionClient>();
+                var request = new PullMessagesRequest("PT5S", 100, null);
+                var response = pullPointClient.PullMessagesAsync(request).Result;
+
+                var data = response.NotificationMessage[0].Message.ChildNodes[3];
+                var result = new JArray();
+                foreach (XmlNode child in data.ChildNodes)
+                {
+                    if (child == null || child.Attributes == null)
+                        continue;
+
+                    var item = new JObject
+                    {
+                        ["name"] = child.Attributes["Name"].Value
+                    };
+
+                    var value = child.Attributes["Value"].Value.ToLower();
+                    if (value == "true" || value == "false")
+                        item["value"] = (value == "true");
+                    else if (double.TryParse(value, out double d))
+                        item["value"] = d;
+                    else
+                        logger.Warn($"Unknown camera value: {value}");
+                    result.Add(item);
+                }
+                return result;
             }
             catch (Exception e)
             {
