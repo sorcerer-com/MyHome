@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name='viewport' content='initial-scale=1.0, width=device-width' />
+
+    <title>My Home</title>
+    <link rel='icon' type='image/ico' href='./images/MyHome.ico' />
+
+    <link rel="stylesheet" href="./external/material-icons.css" />
+    <link rel="stylesheet" href="./external/w3.css" />
+
+    <script src="./external/jquery.min.js"></script>
+    <!--<script src="./external/vue.min.js"></script>-->
+    <!-- for debug: -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+
+    <script src="./components/roomCardComponent.js"></script>
+
+    <link rel='stylesheet' href='./style.css' />
+    <script src='./scripts.js'></script>
+</head>
+<body class="w3-text-white">
+    <!-- Navigation bar -->
+    <div class="w3-bar w3-padding w3-gray">
+        <div class="w3-right">
+            <a href="/"><span class="material-icons">home</span></a>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="w3-content w3-padding-16" id="vue-content">
+        <div class="w3-col m3 w3-margin w3-gray" v-for="roomName of roomNames">
+            <room-card v-bind:name="roomName"></room-card>
+        </div>
+    </div>
+</body>
+</html>
