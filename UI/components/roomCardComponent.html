@@ -1,0 +1,17 @@
+﻿<div>
+    <h3 class="reset-margin margin-left-8">{{room.Name}}</h3>
+    <!-- Sensors data -->
+    <div class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-4 w3-hover-light-gray"
+         v-for="(value, name) of room.SensorsValues">
+        <div class="w3-xlarge">{{value}}</div>
+        <div class="w3-tiny" v-bind:title="metadata(room.SensorsMetadata[name])">{{name}}</div>
+    </div>
+    <!-- Security system -->
+    <div class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-4 w3-hover-light-gray">
+        <span class="material-icons w3-xxlarge"
+              v-bind:class="{'w3-text-light-green': room.IsSecuritySystemEnabled, 'w3-text-red': room.IsSecuritySystemActivated}">
+            security
+        </span>
+        <div class="w3-tiny">Security</div>
+    </div>
+</div>

@@ -2,7 +2,9 @@
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace MyHome.ViewModels
+using MyHome.Utils;
+
+namespace MyHome
 {
 
     [Route("[controller]")]
@@ -19,7 +21,7 @@ namespace MyHome.ViewModels
         [HttpGet("rooms")]
         public ActionResult GetRooms()
         {
-            return this.Ok(this.myHome.Rooms.Select(r => r.Name));
+            return this.Ok(this.myHome.Rooms.Select(r => r.ToUiObject()));
         }
     }
 }

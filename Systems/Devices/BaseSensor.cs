@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using MyHome.Models;
+using MyHome.Utils;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -18,25 +19,28 @@ namespace MyHome.Systems.Devices
         public class SensorValue : Dictionary<string, double> { }; // subName / value
 
 
+        [UiProperty]
         public string Address { get; set; }
 
         public Dictionary<DateTime, SensorValue> Data { get; }
 
+        [UiProperty]
         public Dictionary<string, Dictionary<string, object>> Metadata { get; }
 
+        [UiProperty]
         public Dictionary<string, string> SubNamesMap { get; } // map sensor subname to custom subname
 
+        [UiProperty]
         public Dictionary<string, (double addition, double multiplier)> Calibration { get; } // calibration values per subname - newValue = (realValue + addition) * mutiplier
 
 
         [JsonIgnore]
+        [UiProperty]
         public DateTime? LastTime => this.Data.Count > 0 ? this.Data.Max(d => d.Key) : null;
 
         [JsonIgnore]
+        [UiProperty]
         public SensorValue LastValues => this.LastTime.HasValue ? this.Data[this.LastTime.Value] : null;
-
-        [JsonIgnore]
-        public List<string> SubNames => this.LastValues.Keys.ToList();
 
 
         private BaseSensor() : this(null, null, null, null) { } // for json deserialization
@@ -103,6 +107,7 @@ namespace MyHome.Systems.Devices
                 addedData[name] = this.Data[time][name];
                 item.Remove("name");
                 item.Remove("value");
+                // TODO: add units to metadata - temp C, humidity %, etc.; Or allow set by setting like subNamesMap
                 this.Metadata[name] = item.ToObject<Dictionary<string, object>>();
             }
             this.Owner.Owner.Events.Fire(this, "SensorDataAdded", addedData);
@@ -122,7 +127,8 @@ namespace MyHome.Systems.Devices
                     this.Data.Remove(t);
                 // add one new
                 this.Data[group.Key] = new SensorValue();
-                foreach (var subName in this.SubNames)
+                var subNames = items.Select(i => i.Keys).SelectMany(x => x).Distinct();
+                foreach (var subName in subNames)
                 {
                     var values = items.Where(i => i.ContainsKey(subName)).Select(i => i[subName]);
                     if (!values.Any())

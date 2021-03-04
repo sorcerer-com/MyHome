@@ -1,7 +1,11 @@
+using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
@@ -20,6 +24,13 @@ namespace MyHome
         {
             services.AddSingleton(new MyHome());
             services.AddControllers();
+            services.AddDistributedMemoryCache();
+            services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(15);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -32,13 +43,20 @@ namespace MyHome
                 app.UseDeveloperExceptionPage();
             }
 
-            var fileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "Views"));
+            app.UseSession();
+
+            app.Use(async (context, next) =>
+            {
+                if (Login(context, myHome))
+                    await next();
+            });
+
+            var fileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "UI"));
             app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = fileProvider });
             app.UseStaticFiles(new StaticFileOptions { FileProvider = fileProvider });
 
             app.UseRouting();
 
-            // TODO: login / authentication
             // TODO: startup - dotnet run -c Release -launch-profile "MyHome"
             app.UseEndpoints(endpoints =>
             {
@@ -46,6 +64,40 @@ namespace MyHome
             });
 
             applicationLifetime.ApplicationStopping.Register(() => myHome.Stop());
+        }
+
+        private static bool Login(HttpContext context, MyHome myHome)
+        {
+            if (context.Request.Path == "/login" && context.Request.Method == "POST")
+            {
+                using var shar256 = SHA256.Create();
+                var hash = shar256.ComputeHash(Encoding.UTF8.GetBytes(context.Request.Form["password"]));
+                var hashStr = BitConverter.ToString(hash).Replace("-", string.Empty);
+                if (myHome.Config.Password == hashStr)
+                {
+                    logger.Info("LogIn: Correct password");
+                    context.Session.SetString("password", hashStr);
+                    context.Response.Redirect("/");
+                }
+                else
+                {
+                    context.Response.Redirect("/login.html?invalid");
+                }
+
+                return false;
+            }
+            else if ((context.Session.GetString("password") ?? "") != myHome.Config.Password && !IsResouce(context.Request.Path))
+            {
+                context.Response.Redirect("/login.html");
+                return false;
+            }
+            return true;
+        }
+
+        private static bool IsResouce(string path)
+        {
+            return path.StartsWith("/external/") || path.StartsWith("/images/") ||
+                path == "/scripts.js" || path == "/style.css" || path == "/login.html";
         }
     }
 }

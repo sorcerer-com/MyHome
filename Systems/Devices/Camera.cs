@@ -36,6 +36,7 @@ namespace MyHome.Systems.Devices
             ZOOMOUT
         }
 
+        [UiProperty]
         public bool IsOnvifSupported { get; set; }
 
         [JsonIgnore]
@@ -107,8 +108,10 @@ namespace MyHome.Systems.Devices
             // read sensor data every 15 seconds
             if (this.IsOnvifSupported && DateTime.Now > this.nextDataRead)
             {
-                this.ReadData(DateTime.Now);
-                this.nextDataRead = DateTime.Now.AddSeconds(15); // TODO: maybe extract as param, maybe often
+                if (this.ReadData(DateTime.Now))
+                    this.nextDataRead = DateTime.Now.AddSeconds(15); // TODO: maybe extract as param, maybe often
+                else
+                    this.nextDataRead = DateTime.Now.AddMinutes(1);
             }
         }
 

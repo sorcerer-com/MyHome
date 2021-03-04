@@ -1,0 +1,56 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+
+    <title>My Home</title>
+    <link rel="icon" type="image/ico" href="./images/MyHome.ico" />
+
+    <link rel="stylesheet" href="./external/material-icons.css" />
+    <link rel="stylesheet" href="./external/w3.css" />
+
+    <script src="./external/jquery.min.js"></script>
+    <!--<script src="./external/vue.min.js"></script>-->
+    <!-- TODO: for debug: -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+
+    <script src="./components/roomCardComponent.js"></script>
+
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./scripts.js"></script>
+
+    <script>
+        $(_ => {
+            $.get("/api/rooms", rooms =>
+                window.vue = new Vue({
+                    el: "#vue-content",
+                    data: {
+                        rooms: rooms
+                    }
+                })
+            );
+        });
+    </script>
+</head>
+<body>
+    <!-- Title bar -->
+    <div class="w3-bar w3-padding w3-display-container title-bar">
+        <div class="w3-display-middle w3-cell">
+            <img src="./images/MyHome.ico" width="32" class="w3-cell-middle" />
+            <h3 class="w3-cell-middle w3-padding-small inline-block">My Home</h3>
+        </div>
+        <div class="w3-display-right w3-padding">
+            <a href="/"><span class="material-icons">home</span></a>
+            <a href="./settings.html"><span class="material-icons w3-text-gray w3-hover-text-white">settings</span></a>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="w3-content w3-padding-16" id="vue-content">
+        <div class="w3-col m3 w3-margin" v-for="room of rooms">
+            <room-card v-bind:room="room"></room-card>
+        </div>
+    </div>
+</body>
+</html>

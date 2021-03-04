@@ -7,6 +7,7 @@ namespace MyHome.Models
         public static readonly string BinPath = "bin";
         public static readonly string DataFilePath = Path.Join(BinPath, "data.json");
 
+        public string Password { get; set; } = "";
         public string QuietHours { get; set; } = "";
 
         public string GsmNumber { get; set; } = "";

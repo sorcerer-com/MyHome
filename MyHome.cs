@@ -61,7 +61,6 @@ namespace MyHome
             {
                 logger.Info($"Version: {repo.Head.Tip.Author.When.ToLocalTime():dd/MM/yyyy HH:mm:ss} {repo.Head.Tip.MessageShort}");
             }
-            // TODO: UI
 
             this.Config = new Config();
             this.Events = new GlobalEvent();

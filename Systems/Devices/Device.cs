@@ -1,4 +1,5 @@
 ﻿using MyHome.Models;
+using MyHome.Utils;
 
 namespace MyHome.Systems.Devices
 {
@@ -6,6 +7,7 @@ namespace MyHome.Systems.Devices
     {
         public DevicesSystem Owner { get; set; }
 
+        [UiProperty]
         public string Name { get; set; }
 
         public Room Room { get; set; }
