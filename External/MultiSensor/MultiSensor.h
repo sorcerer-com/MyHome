@@ -138,6 +138,7 @@ class MultiSensor
       float lighting = (float)analogRead(lightingSensorPin) / 1024;
       lighting = 1.0f - lighting;
 
+      // TODO: add units - temp C, humidity %, etc.
       // [
       //  {'name': 'Motion', 'value': False, 'aggrType': 'avg', 'desc': 'description'}, 
       //  {'name': 'Temperature', 'value': 114.3, 'aggrType': 'avg', 'desc': 'description'}, 

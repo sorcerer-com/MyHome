@@ -1,4 +1,6 @@
-﻿namespace MyHome.Utils
+﻿using System;
+
+namespace MyHome.Utils
 {
     public static class Utils
     {
@@ -28,6 +30,14 @@
 
             backingField = value;
             return true;
+        }
+
+        public static string GenerateRandomToken(int bytesCount)
+        {
+            var rand = new Random();
+            var buffer = new byte[bytesCount];
+            rand.NextBytes(buffer);
+            return BitConverter.ToString(buffer).ToLower().Replace("-", string.Empty);
         }
     }
 }

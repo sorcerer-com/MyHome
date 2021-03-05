@@ -44,9 +44,11 @@ namespace MyHome.Models
         }
 
 
+        [JsonIgnore]
         [UiProperty]
         public Dictionary<string, double> SensorsValues => this.GetSensorsValues();
 
+        [JsonIgnore]
         [UiProperty]
         public Dictionary<string, Dictionary<string, string>> SensorsMetadata => this.GetSensorsMetadata();
 

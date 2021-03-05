@@ -21,6 +21,7 @@
     <script src="./scripts.js"></script>
 
     <script>
+        // TODO: data autorefresh
         $(_ => {
             $.get("/api/rooms", rooms =>
                 window.vue = new Vue({
@@ -51,6 +52,7 @@
         <div class="w3-col m3 w3-margin" v-for="room of rooms">
             <room-card v-bind:room="room"></room-card>
         </div>
+        <!-- TODO: add full security system status -->
     </div>
 </body>
 </html>

@@ -22,6 +22,9 @@ namespace MyHome.Systems.Devices
         [UiProperty]
         public string Address { get; set; }
 
+        [UiProperty]
+        public string Token { get; set; }
+
         public Dictionary<DateTime, SensorValue> Data { get; }
 
         [UiProperty]
@@ -31,7 +34,10 @@ namespace MyHome.Systems.Devices
         public Dictionary<string, string> SubNamesMap { get; } // map sensor subname to custom subname
 
         [UiProperty]
-        public Dictionary<string, (double addition, double multiplier)> Calibration { get; } // calibration values per subname - newValue = (realValue + addition) * mutiplier
+        public Dictionary<string, (double addition, double multiplier)> Calibration { get; } // calibration values per subname - newValue = (realValue + addition) * multiplier
+
+        [UiProperty]
+        public Dictionary<string, string> Units { get; } // subname unit name (if not provide by metadata)
 
 
         [JsonIgnore]
@@ -48,10 +54,12 @@ namespace MyHome.Systems.Devices
         public BaseSensor(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room)
         {
             this.Address = address;
+            this.Token = Utils.Utils.GenerateRandomToken(16);
             this.Data = new Dictionary<DateTime, SensorValue>();
             this.Metadata = new Dictionary<string, Dictionary<string, object>>();
             this.SubNamesMap = new Dictionary<string, string>();
             this.Calibration = new Dictionary<string, (double addition, double multiplier)>();
+            this.Units = new Dictionary<string, string>();
         }
 
 
@@ -107,7 +115,8 @@ namespace MyHome.Systems.Devices
                 addedData[name] = this.Data[time][name];
                 item.Remove("name");
                 item.Remove("value");
-                // TODO: add units to metadata - temp C, humidity %, etc.; Or allow set by setting like subNamesMap
+                if (this.Units.ContainsKey(name))
+                    item.Add("unit", this.Units[name]);
                 this.Metadata[name] = item.ToObject<Dictionary<string, object>>();
             }
             this.Owner.Owner.Events.Fire(this, "SensorDataAdded", addedData);

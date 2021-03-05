@@ -105,12 +105,12 @@ namespace MyHome.Systems.Devices
                 this.capture.Release();
             }
 
-            // read sensor data every 15 seconds
+            // read sensor data
             if (this.IsOnvifSupported && DateTime.Now > this.nextDataRead)
             {
                 if (this.ReadData(DateTime.Now))
                     this.nextDataRead = DateTime.Now.AddSeconds(15); // TODO: maybe extract as param, maybe often
-                else
+                else // if doesn't succeed wait more before next try
                     this.nextDataRead = DateTime.Now.AddMinutes(1);
             }
         }

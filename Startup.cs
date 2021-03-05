@@ -53,7 +53,19 @@ namespace MyHome
 
             var fileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "UI"));
             app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = fileProvider });
-            app.UseStaticFiles(new StaticFileOptions { FileProvider = fileProvider });
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = fileProvider,
+                OnPrepareResponse = context =>
+                {
+                    var path = context.Context.Request.Path.Value;
+                    if (path.EndsWith(".html") && path.LastIndexOf("/") == 0) // disable cache for pages only
+                    {
+                        context.Context.Response.Headers.Add("Cache-Control", "no-cache, no-store");
+                        context.Context.Response.Headers.Add("Expires", "-1");
+                    }
+                }
+            });
 
             app.UseRouting();
 
@@ -86,7 +98,8 @@ namespace MyHome
 
                 return false;
             }
-            else if ((context.Session.GetString("password") ?? "") != myHome.Config.Password && !IsResouce(context.Request.Path))
+            else if ((context.Session.GetString("password") ?? "") != myHome.Config.Password && !IsResouce(context.Request.Path) &&
+                context.Request.Path != "/api/sensor/data")
             {
                 context.Response.Redirect("/login.html");
                 return false;

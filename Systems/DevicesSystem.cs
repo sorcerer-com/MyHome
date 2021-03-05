@@ -6,6 +6,7 @@ using MyHome.Systems.Devices;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using NLog;
 
@@ -92,7 +93,19 @@ namespace MyHome.Systems
             this.nextGetDataTime += TimeSpan.FromMinutes(this.ReadSensorDataInterval);
         }
 
-        // TODO: processData
+        public bool ProcessSensorData(string token, JArray data)
+        {
+            var sensor = this.Sensors.FirstOrDefault(s => s.Token == token);
+            if (sensor == null)
+            {
+                logger.Warn($"Try to process data({data}) with invalid token: {token}");
+                return false;
+            }
+
+            sensor.AddData(DateTime.Now, data);
+            this.Owner.SystemChanged = true;
+            return true;
+        }
 
 
         private DateTime GetNextReadDataTime()
