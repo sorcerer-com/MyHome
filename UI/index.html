@@ -49,10 +49,32 @@
 
     <!-- Content -->
     <div class="w3-content w3-padding-16" id="vue-content">
+        <!-- Rooms info -->
         <div class="w3-col m3 w3-margin" v-for="room of rooms">
             <room-card v-bind:room="room"></room-card>
         </div>
-        <!-- TODO: add full security system status -->
+
+        <!-- Security system -->
+        <div class="w3-col m3 w3-margin">
+            <h3 class="reset-margin margin-left-8">Security</h3>
+            <div class="w3-padding w3-round-large margin-8 bg-gray-opacity-4">
+                <!-- TODO: Enable all -->
+                <div class="w3-tiny w3-right-align w3-hover-text-light-green"><a href="#">Enable All</a></div>
+                <div class="w3-cell" v-for="room of rooms">
+                    <span class="w3-cell-middle w3-small material-icons">
+                        <span v-show="room.IsSecuritySystemEnabled" class="w3-text-light-green">check_circle</span>
+                        <span v-show="!room.IsSecuritySystemEnabled" class="w3-text-red">cancel</span>
+                    </span>
+                    <span class="w3-cell-middle">{{room.Name}}</span>
+                    <span class="w3-cell-middle w3-large w3-text-red w3-animate-fading margin-left-8 material-icons"
+                          v-show="room.IsSecuritySystemActivated">
+                        warning
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TODO: add media player card -->
     </div>
 </body>
 </html>

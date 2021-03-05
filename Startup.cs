@@ -69,6 +69,7 @@ namespace MyHome
 
             app.UseRouting();
 
+            // TODO: git squash commits to Remove python into Initial commit
             // TODO: startup - dotnet run -c Release -launch-profile "MyHome"
             app.UseEndpoints(endpoints =>
             {

@@ -40,7 +40,11 @@ namespace MyHome.Models
         public bool IsSecuritySystemActivated
         {
             get => this.Owner.SecuritySystem.ActivatedRooms.GetValueOrDefault(this);
-            set => this.Owner.SecuritySystem.Activate(this);
+            set
+            {
+                if (value)
+                    this.Owner.SecuritySystem.Activate(this);
+            }
         }
 
 

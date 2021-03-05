@@ -12,7 +12,8 @@
     <!-- TODO: enable security system by click? -->
     <div class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-4 w3-hover-light-gray">
         <span class="material-icons w3-xxlarge"
-              v-bind:class="{'w3-text-light-green': room.IsSecuritySystemEnabled, 'w3-text-red': room.IsSecuritySystemActivated}">
+              v-bind:class="{'w3-text-light-green': room.IsSecuritySystemEnabled,
+                             'w3-text-red': room.IsSecuritySystemActivated}">
             security
         </span>
         <div class="w3-tiny">Security</div>

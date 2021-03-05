@@ -21,16 +21,19 @@ namespace MyHome
 
         private readonly MyHome myHome;
 
+
         public ApiController(MyHome myHome)
         {
             this.myHome = myHome;
         }
+
 
         [HttpGet("rooms")]
         public ActionResult GetRooms()
         {
             return this.Ok(this.myHome.Rooms.Select(r => r.ToUiObject()));
         }
+
 
         [HttpPost("sensor/data")]
         public ActionResult ProcessSensorData()
