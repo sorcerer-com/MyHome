@@ -10,6 +10,14 @@
     margin-left: 8px !important;
 }
 
+.margin-right-8 {
+    margin-right: 8px !important;
+}
+
+.margin-bottom-8 {
+    margin-bottom: 8px !important;
+}
+
 .bg-gray-opacity-4 {
     background-color: #88888888 !important;
 }
@@ -20,6 +28,11 @@
 
 .height-100 {
     height: 100%;
+}
+
+.dropdown-top-right {
+    bottom: 30px;
+    right: -10px;
 }
 
 
@@ -34,6 +47,10 @@ body {
     color: white;
 }
 
+a {
+    text-decoration: none;
+}
+
 
 .title-bar {
     height: 50px;
@@ -43,12 +60,12 @@ body {
     margin-top: -50px;
 }
 
-#login .w3-button {
-    width: 45px;
-    height: 45px;
-}
+    #login .w3-button {
+        width: 45px;
+        height: 45px;
+    }
 
-#login .material-icons {
-    font-size: 24px !important;
-    padding: 10px;
-}
+    #login .material-icons {
+        font-size: 24px !important;
+        padding: 10px;
+    }

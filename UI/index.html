@@ -21,60 +21,104 @@
     <script src="./scripts.js"></script>
 
     <script>
-        // TODO: data autorefresh
-        $(_ => {
-            $.get("/api/rooms", rooms =>
-                window.vue = new Vue({
-                    el: "#vue-content",
-                    data: {
-                        rooms: rooms
-                    }
-                })
-            );
+        $(() => {
+            function update() {
+                $.get("/api/rooms", rooms => {
+                    updateVue({ rooms: rooms });
+                    setTimeout(update, 3000);
+                }).fail(() => setTimeout(update, 1000));
+            }
+
+            update();
         });
     </script>
 </head>
 <body>
-    <!-- Title bar -->
-    <div class="w3-bar w3-padding w3-display-container title-bar">
-        <div class="w3-display-middle w3-cell">
-            <img src="./images/MyHome.ico" width="32" class="w3-cell-middle" />
-            <h3 class="w3-cell-middle w3-padding-small inline-block">My Home</h3>
-        </div>
-        <div class="w3-display-right w3-padding">
-            <a href="/"><span class="material-icons">home</span></a>
-            <a href="./settings.html"><span class="material-icons w3-text-gray w3-hover-text-white">settings</span></a>
-        </div>
-    </div>
-
-    <!-- Content -->
-    <div class="w3-content w3-padding-16" id="vue-content">
-        <!-- Rooms info -->
-        <div class="w3-col m3 w3-margin" v-for="room of rooms">
-            <room-card v-bind:room="room"></room-card>
-        </div>
-
-        <!-- Security system -->
-        <div class="w3-col m3 w3-margin">
-            <h3 class="reset-margin margin-left-8">Security</h3>
-            <div class="w3-padding w3-round-large margin-8 bg-gray-opacity-4">
-                <!-- TODO: Enable all -->
-                <div class="w3-tiny w3-right-align w3-hover-text-light-green"><a href="#">Enable All</a></div>
-                <div class="w3-cell" v-for="room of rooms">
-                    <span class="w3-cell-middle w3-small material-icons">
-                        <span v-show="room.IsSecuritySystemEnabled" class="w3-text-light-green">check_circle</span>
-                        <span v-show="!room.IsSecuritySystemEnabled" class="w3-text-red">cancel</span>
-                    </span>
-                    <span class="w3-cell-middle">{{room.Name}}</span>
-                    <span class="w3-cell-middle w3-large w3-text-red w3-animate-fading margin-left-8 material-icons"
-                          v-show="room.IsSecuritySystemActivated">
-                        warning
-                    </span>
-                </div>
+    <div id="vue-content">
+        <!-- Title bar -->
+        <div class="w3-bar w3-padding w3-display-container title-bar">
+            <div class="w3-display-middle w3-cell">
+                <img src="./images/MyHome.ico" width="32" class="w3-cell-middle" />
+                <h3 class="w3-cell-middle w3-padding-small inline-block">My Home</h3>
+            </div>
+            <div class="w3-display-right w3-padding w3-padding-top-24">
+                <a href="/"><span class="material-icons">home</span></a>
+                <a href="#"><span class="material-icons w3-text-gray w3-hover-text-white">add_circle_outline</span></a>
+                <a href="./settings.html"><span class="material-icons w3-text-gray w3-hover-text-white">settings</span></a>
             </div>
         </div>
 
-        <!-- TODO: add media player card -->
+        <!-- Content -->
+        <div class="w3-content w3-padding-16">
+            <!-- Rooms info -->
+            <div class="w3-col m3 w3-margin" v-for="room of rooms">
+                <room-card v-bind:room="room"></room-card>
+            </div>
+        </div>
+
+        <!-- Bottom bar -->
+        <div class="w3-padding-large w3-bottom w3-margin-bottom w3-right-align">
+            <!-- Media Player -->
+            <div class="w3-dropdown-hover w3-transparent margin-left-8">
+                <span class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons">video_library</span>
+                <div class="w3-dropdown-content w3-transparent dropdown-top-right">
+                    <div class="w3-padding-small w3-round-large w3-animate-opacity margin-8 bg-gray-opacity-4"
+                         style="width: 250px">
+                        <!-- TODO: how to select what to play / disabled if not playing? -->
+                        <div class="w3-center margin-8">
+                            <!-- TODO: playing text / auto scrolling from right to left -->
+                            playing
+                        </div>
+                        <div class="margin-right-8">
+                            <a class="w3-small w3-text-black w3-hover-text-white w3-cell-middle material-icons"
+                               href="#">volume_up</a>
+                            <span class="w3-small w3-text-black">/</span>
+                            <a class="w3-small w3-text-black w3-hover-text-white w3-cell-middle material-icons"
+                               href="#">volume_down</a>
+                        </div>
+                        <div class="w3-center margin-bottom-8">
+                            <!-- TODO: light while playing -->
+                            <!-- TODO: fast by hold-->
+                            <a class="w3-button w3-large w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
+                               title="Hold for faster"
+                               href="#">fast_rewind</a>
+                            <!-- TODO: press to pause, hold to stop-->
+                            <a class="w3-button w3-xlarge w3-padding-small w3-round-xxlarge w3-grey w3-hover-light-grey padding-4 material-icons"
+                               href="#">play_arrow</a>
+                            <a class="w3-button w3-large w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
+                               title="Hold for faster"
+                               href="#">fast_forward</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security -->
+            <div class="w3-dropdown-hover w3-transparent margin-left-8">
+                <!-- TODO: maybe different status - different icon color - lime, green -->
+                <!-- TODO: maybe enable/disable all by clicking on the icon -->
+                <span class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons">security</span>
+                <div class="w3-dropdown-content w3-transparent dropdown-top-right">
+                    <div class="w3-padding-small w3-round-large w3-animate-opacity margin-8 bg-gray-opacity-4">
+                        <div class="w3-cell" v-for="room of rooms">
+                            <span class="w3-cell-middle w3-small material-icons">
+                                <span v-show="room.IsSecuritySystemEnabled" class="w3-text-light-green">check_circle</span>
+                                <span v-show="!room.IsSecuritySystemEnabled" class="w3-text-red">cancel</span>
+                            </span>
+                            <span class="w3-cell-middle">{{room.Name}}</span>
+                            <span class="w3-cell-middle w3-large w3-text-red w3-animate-fading margin-left-8 material-icons"
+                                  v-show="room.IsSecuritySystemActivated">
+                                warning
+                            </span>
+                        </div>
+                        <!-- TODO: Enable all -->
+                        <div class="w3-tiny w3-right-align">
+                            <a class="w3-hover-text-light-green" href="#">Enable All</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
