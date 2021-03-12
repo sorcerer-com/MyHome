@@ -18,12 +18,8 @@
     margin-bottom: 8px !important;
 }
 
-.bg-gray-opacity-4 {
-    background-color: #88888888 !important;
-}
-
-.inline-block {
-    display: inline-block;
+.padding-4 {
+    padding: 4px !important;
 }
 
 .height-100 {
@@ -33,6 +29,22 @@
 .dropdown-top-right {
     bottom: 30px;
     right: -10px;
+}
+
+.bg-gray-opacity-4 {
+    background-color: #88888888 !important;
+}
+
+.disabled {
+    pointer-events: none;
+}
+
+.overflow-y-auto {
+    overflow-y: auto;
+}
+
+.font-size-normal {
+    font-size: initial !important;
 }
 
 
@@ -49,6 +61,7 @@ body {
 
 a {
     text-decoration: none;
+    cursor: pointer;
 }
 
 
@@ -68,4 +81,26 @@ a {
     #login .material-icons {
         font-size: 24px !important;
         padding: 10px;
+    }
+
+
+/* Scrollbar*/
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+/* handle */
+::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+    /* handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+        background: #555;
     }

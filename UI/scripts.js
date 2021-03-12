@@ -1,28 +1,23 @@
-﻿function updateVue(data) {
-	if (!window.vue) {
-		window.vue = new Vue({
-			el: "#vue-content",
-			data: data
-		});
-	} else {
-		for (let key in data) {
-			Vue.set(window.vue, key, data[key]);
-        }
+﻿function getRooms() {
+    return $.get("/api/rooms");
+}
+
+function setRoom(roomName, data) {
+    return $.post(`/api/rooms/${roomName}`, data);
+}
+
+function getSystem(systemName) {
+    return $.get(`/api/systems/${systemName}`);
+}
+
+function callSystem(systemName, funcName, ...args) {
+    var data = Object.assign({}, args);
+    return $.post(`/api/systems/${systemName}/${funcName}`, data);
+}
+
+
+function updateVue(data) {
+    for (let key in data) {
+        Vue.set(window.vue, key, data[key]);
     }
-}
-
-function addTextToForm(formId, inputName, text) {
-	var form = document.getElementById(formId);
-	var element = form.elements[inputName];
-	element.value += text;
-}
-
-function removeTextFromForm(formId, inputName, count) {
-	var form = document.getElementById(formId);
-	var element = form.elements[inputName];
-	element.value = element.value.substr(0, element.value.length - count);
-}
-
-function submitForm(formId) {
-	document.getElementById(formId).submit()
 }

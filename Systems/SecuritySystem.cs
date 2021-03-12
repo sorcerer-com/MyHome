@@ -55,8 +55,15 @@ namespace MyHome.Systems
 
         public void SetEnable(Room room, bool enable)
         {
+            var roomInfo = this.RoomsInfo.FirstOrDefault(r => r.Room == room);
             if (enable)
             {
+                if (roomInfo != null)
+                {
+                    logger.Warn($"Try to enable security alarm for '{room.Name}' room, but it's already enabled");
+                    return;
+                }
+
                 logger.Info($"Enable security alarm for '{room.Name}' room");
                 this.RoomsInfo.Add(new RoomInfo()
                 {
@@ -68,7 +75,6 @@ namespace MyHome.Systems
             }
             else
             {
-                var roomInfo = this.RoomsInfo.FirstOrDefault(r => r.Room == room);
                 if (roomInfo == null)
                 {
                     logger.Warn($"Try to disable security alarm for '{room.Name}' room, but it's not enabled");

@@ -5,6 +5,8 @@ using System.Linq;
 
 using LibVLCSharp.Shared;
 
+using MyHome.Utils;
+
 using Newtonsoft.Json;
 
 using NLog;
@@ -19,33 +21,45 @@ namespace MyHome.Systems
             ".mkv", ".avi", ".mov", ".wmv", ".mp4", ".mpg", ".mpeg", ".m4v", ".3gp", ".mp3" };
 
 
+        [UiProperty]
         public int Volume { get; set; }
 
+        [UiProperty]
         public List<string> MediaPaths { get; }
 
+        [UiProperty]
         public List<string> Radios { get; }
 
+        [UiProperty]
         public List<string> Watched { get; }
 
 
         [JsonIgnore]
+        [UiProperty]
         public List<string> MediaList => this.GetMediaList();
 
         private string playing;
         [JsonIgnore]
+        [UiProperty]
         public string Playing
         {
             get
             {
-                if (this.player.State == VLCState.Ended || this.player.State == VLCState.Stopped)
+                if (this.player.State == VLCState.Stopped)
                     this.playing = "";
                 return this.playing;
             }
         }
 
         [JsonIgnore]
+        [UiProperty]
+        public bool Paused => this.player.State == VLCState.Paused;
+
+        [JsonIgnore]
+        [UiProperty]
         public string TimeDetails => this.GetTimeDetails();
 
+        private DateTime timer;
         private readonly LibVLC libVLC;
         private readonly MediaPlayer player;
 
@@ -59,9 +73,23 @@ namespace MyHome.Systems
             this.Radios = new List<string>();
             this.Watched = new List<string>();
 
+            this.timer = DateTime.Now - TimeSpan.FromMinutes(1);
             this.libVLC = new LibVLC();
             this.player = new MediaPlayer(this.libVLC);
             this.playing = "";
+        }
+
+        public override void Update()
+        {
+            base.Update();
+
+            if (DateTime.Now - this.timer < TimeSpan.FromMinutes(1))
+                return;
+            this.timer = DateTime.Now;
+
+            // stop if end reached
+            if (this.player.State == VLCState.Ended)
+                this.player.Stop();
         }
 
         public void Play(string path)
@@ -98,7 +126,7 @@ namespace MyHome.Systems
 
         public void VolumeDown()
         {
-            logger.Debug($"Volume down media: {this.playing}");
+            logger.Debug($"Volume down media: {this.playing} to {this.Volume - 5}");
             this.Volume -= 5;
             this.player.Volume = this.Volume;
             this.Owner.SystemChanged = true;
@@ -107,7 +135,7 @@ namespace MyHome.Systems
 
         public void VolumeUp()
         {
-            logger.Debug($"Volume up media: {this.playing}");
+            logger.Debug($"Volume up media: {this.playing} to {this.Volume + 5}");
             this.Volume += 5;
             this.player.Volume = this.Volume;
             this.Owner.SystemChanged = true;
@@ -165,7 +193,7 @@ namespace MyHome.Systems
         {
             static (long hours, long minutes, long seconds) GetTime(long millis)
             {
-                var s = millis / 100;
+                var s = millis / 1000;
                 var m = Math.DivRem(s, 60, out s);
                 var h = Math.DivRem(m, 60, out m);
                 return (hours: h, minutes: m, seconds: s);
@@ -173,7 +201,7 @@ namespace MyHome.Systems
 
             var time = GetTime(this.player.Time);
             var length = GetTime(this.player.Length);
-            return $"{time.minutes:00}:{time.seconds:00} / {length.minutes:00}:{length.seconds:00}";
+            return $"{time.hours:00}:{time.minutes:00} / {length.hours:00}:{length.minutes:00}";
         }
 
         private void MarkWatched(string path)

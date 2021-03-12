@@ -16,6 +16,20 @@
     <script src="./scripts.js"></script>
 
     <script>
+        function addTextToPassword(text) {
+            let input = $("input[name='password']");
+            input.val(input.val() + text);
+        }
+
+        function removeLastFromPassword(count) {
+            let input = $("input[name='password']");
+            input.val(input.val().slice(0, -count));
+        }
+
+        function submitForm() {
+            $("#login").submit();
+        }
+
         $(() => {
             if (window.location.search != "?invalid") {
                 $("#error").hide();
@@ -24,12 +38,11 @@
     </script>
 </head>
 <body>
-    <!-- TODO: convert <a> to <button> -->
     <!-- Title bar -->
     <div class="w3-bar w3-padding w3-display-container title-bar">
         <div class="w3-display-middle w3-cell">
             <img src="./images/MyHome.ico" width="32" class="w3-cell-middle" />
-            <h3 class="w3-cell-middle w3-padding-small inline-block">My Home</h3>
+            <h3 class="w3-cell-middle w3-padding-small w3-show-inline-block">My Home</h3>
         </div>
     </div>
 
@@ -42,35 +55,35 @@
                 <input class="w3-margin" type="password" name="password" autofocus />
                 <div class="w3-bar w3-center">
                     <a class="w3-button w3-large w3-light-grey w3-hover-grey margin-8"
-                       href="javascript:;" onclick="addTextToForm('login', 'password', this.text)">1</a>
+                       onclick="addTextToPassword(this.text)">1</a>
                     <a class="w3-button w3-large w3-light-grey w3-hover-grey margin-8"
-                       href="javascript:;" onclick="addTextToForm('login', 'password', this.text)">2</a>
+                       onclick="addTextToPassword(this.text)">2</a>
                     <a class="w3-button w3-large w3-light-grey w3-hover-grey margin-8"
-                       href="javascript:;" onclick="addTextToForm('login', 'password', this.text)">3</a>
+                       onclick="addTextToPassword(this.text)">3</a>
                 </div>
                 <div class="w3-bar w3-center">
                     <a class="w3-button w3-large w3-light-grey w3-hover-grey margin-8"
-                       href="javascript:;" onclick="addTextToForm('login', 'password', this.text)">4</a>
+                       onclick="addTextToPassword(this.text)">4</a>
                     <a class="w3-button w3-large w3-light-grey w3-hover-grey margin-8"
-                       href="javascript:;" onclick="addTextToForm('login', 'password', this.text)">5</a>
+                       onclick="addTextToPassword(this.text)">5</a>
                     <a class="w3-button w3-large w3-light-grey w3-hover-grey margin-8"
-                       href="javascript:;" onclick="addTextToForm('login', 'password', this.text)">6</a>
+                       onclick="addTextToPassword(this.text)">6</a>
                 </div>
                 <div class="w3-bar w3-center">
                     <a class="w3-button w3-large w3-light-grey w3-hover-grey margin-8"
-                       href="javascript:;" onclick="addTextToForm('login', 'password', this.text)">7</a>
+                       onclick="addTextToPassword(this.text)">7</a>
                     <a class="w3-button w3-large w3-light-grey w3-hover-grey margin-8"
-                       href="javascript:;" onclick="addTextToForm('login', 'password', this.text)">8</a>
+                       onclick="addTextToPassword(this.text)">8</a>
                     <a class="w3-button w3-large w3-light-grey w3-hover-grey margin-8"
-                       href="javascript:;" onclick="addTextToForm('login', 'password', this.text)">9</a>
+                       onclick="addTextToPassword(this.text)">9</a>
                 </div>
                 <div class="w3-bar w3-center w3-margin-bottom">
                     <a class="w3-button w3-large w3-light-grey w3-hover-grey margin-8 material-icons"
-                       href="javascript:;" onclick="removeTextFromForm('login', 'password', 1)">backspace</a>
+                       onclick="removeLastFromPassword(1)">backspace</a>
                     <a class="w3-button w3-large w3-light-grey w3-hover-grey margin-8"
-                       href="javascript:;" onclick="addTextToForm('login', 'password', this.text)">0</a>
+                       onclick="addTextToPassword(this.text)">0</a>
                     <a class="w3-button w3-large w3-light-grey w3-hover-grey margin-8 material-icons w3-text-green"
-                       href="javascript:;" onclick="submitForm('login')">done</a>
+                       onclick="submitForm()">done</a>
                 </div>
             </div>
         </form>
