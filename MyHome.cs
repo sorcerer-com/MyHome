@@ -71,7 +71,7 @@ namespace MyHome
             foreach (Type type in typeof(BaseSystem).GetSubClasses())
                 this.Systems.Add(type.Name, (BaseSystem)Activator.CreateInstance(type, this));
             // TODO: Trigger-Action system (migrate Schedule system to it - time trigger; sensor data alerts and light on skill also)
-            // TODO: SecuritySystem - enable for all rooms, define zones - group of rooms
+            // TODO: SecuritySystem - define zones - group of rooms
 
             this.lastBackupTime = DateTime.Now;
             this.SystemChanged = false;

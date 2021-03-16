@@ -143,8 +143,6 @@ namespace MyHome.Systems.Devices
             }
         }
 
-        // TODO: getImageData
-
         public bool SaveImage(string fileName, Size? size = null, bool timestamp = true)
         {
             logger.Debug($"Camera '{this.Name}' save image: {fileName}");
@@ -234,40 +232,43 @@ namespace MyHome.Systems.Devices
             if (!this.IsOnvifSupported)
                 return null;
 
-            if (!this.onvif.ContainsKey(typeof(T)))
+            lock (this.onvif)
             {
-                logger.Debug($"Creating Onvif {typeof(T).Name}");
-                var address = this.Address.Split('@')[1]; // username:password@ip:port #8899
-                var username = this.Address.Split('@')[0].Split(':')[0];
-                var password = this.Address.Split('@')[0].Split(':')[1];
-                if (typeof(T) == typeof(DeviceClient))
+                if (!this.onvif.ContainsKey(typeof(T)))
                 {
-                    this.onvif.Add(typeof(T), OnvifClientFactory.CreateDeviceClientAsync(address, username, password).Result);
-                }
-                else if (typeof(T) == typeof(ImagingClient))
-                {
-                    this.onvif.Add(typeof(T), OnvifClientFactory.CreateImagingClientAsync(address, username, password).Result);
-                }
-                else if (typeof(T) == typeof(MediaClient))
-                {
-                    this.onvif.Add(typeof(T), OnvifClientFactory.CreateMediaClientAsync(address, username, password).Result);
-                }
-                else if (typeof(T) == typeof(PTZClient))
-                {
-                    this.onvif.Add(typeof(T), OnvifClientFactory.CreatePTZClientAsync(address, username, password).Result);
-                }
-                else if (typeof(T) == typeof(Mictlanix.DotNet.Onvif.Common.Profile))
-                {
-                    this.onvif.Add(typeof(T), this.GetOnvif<MediaClient>().GetProfilesAsync().Result.Profiles[0]);
-                }
-                else if (typeof(T) == typeof(Mictlanix.DotNet.Onvif.Common.PTZConfigurationOptions))
-                {
-                    var token = this.GetOnvif<Mictlanix.DotNet.Onvif.Common.Profile>().token;
-                    this.onvif.Add(typeof(T), this.GetOnvif<PTZClient>().GetConfigurationOptionsAsync(token).Result);
-                }
-                else if (typeof(T) == typeof(PullPointSubscriptionClient))
-                {
-                    this.onvif.Add(typeof(T), OnvifEventsHelper.CreateEventsAsync(this.GetOnvif<DeviceClient>(), username, password).Result);
+                    logger.Debug($"Creating Onvif {typeof(T).Name}");
+                    var address = this.Address.Split('@')[1]; // username:password@ip:port #8899
+                    var username = this.Address.Split('@')[0].Split(':')[0];
+                    var password = this.Address.Split('@')[0].Split(':')[1];
+                    if (typeof(T) == typeof(DeviceClient))
+                    {
+                        this.onvif.Add(typeof(T), OnvifClientFactory.CreateDeviceClientAsync(address, username, password).Result);
+                    }
+                    else if (typeof(T) == typeof(ImagingClient))
+                    {
+                        this.onvif.Add(typeof(T), OnvifClientFactory.CreateImagingClientAsync(address, username, password).Result);
+                    }
+                    else if (typeof(T) == typeof(MediaClient))
+                    {
+                        this.onvif.Add(typeof(T), OnvifClientFactory.CreateMediaClientAsync(address, username, password).Result);
+                    }
+                    else if (typeof(T) == typeof(PTZClient))
+                    {
+                        this.onvif.Add(typeof(T), OnvifClientFactory.CreatePTZClientAsync(address, username, password).Result);
+                    }
+                    else if (typeof(T) == typeof(Mictlanix.DotNet.Onvif.Common.Profile))
+                    {
+                        this.onvif.Add(typeof(T), this.GetOnvif<MediaClient>().GetProfilesAsync().Result.Profiles[0]);
+                    }
+                    else if (typeof(T) == typeof(Mictlanix.DotNet.Onvif.Common.PTZConfigurationOptions))
+                    {
+                        var token = this.GetOnvif<Mictlanix.DotNet.Onvif.Common.Profile>().token;
+                        this.onvif.Add(typeof(T), this.GetOnvif<PTZClient>().GetConfigurationOptionsAsync(token).Result);
+                    }
+                    else if (typeof(T) == typeof(PullPointSubscriptionClient))
+                    {
+                        this.onvif.Add(typeof(T), OnvifEventsHelper.CreateEventsAsync(this.GetOnvif<DeviceClient>(), username, password).Result);
+                    }
                 }
             }
             return (T)this.onvif[typeof(T)];

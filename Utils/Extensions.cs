@@ -56,6 +56,7 @@ namespace MyHome.Utils
                 var pis = obj.GetType().GetProperties().Where(pi => pi.GetCustomAttribute<UiProperty>() != null);
                 foreach (var pi in pis)
                     result.Add(pi.Name, pi.GetValue(obj).ToUiObject());
+                result.Add("$type", obj.GetType().ToString());
                 return result;
             }
         }

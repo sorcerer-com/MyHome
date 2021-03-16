@@ -31,7 +31,11 @@
     right: -10px;
 }
 
-.bg-gray-opacity-4 {
+.bg-gray {
+    background-color: #888888 !important;
+}
+
+.bg-gray-opacity-88 {
     background-color: #88888888 !important;
 }
 

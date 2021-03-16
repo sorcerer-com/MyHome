@@ -1,0 +1,35 @@
+﻿<div>
+    <div v-for="camera of cameras">
+        <h4 class="reset-margin">{{camera.Name}}</h4>
+        <hr class="reset-margin margin-bottom-8" />
+        <img v-bind:id="'camera' + camera.Name + 'Image'" v-bind:src="'/api/cameras/' + camera.Name + '/image'"
+             width="100%" class="w3-margin-bottom"/>
+        <!-- Movement controls -->
+        <div class="w3-center margin-bottom-8" v-if="camera.IsOnvifSupported">
+            <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
+               v-on:click="moveCamera(camera.Name, 'left')">
+                keyboard_arrow_left
+            </a>
+            <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
+               v-on:click="moveCamera(camera.Name, 'Up')">
+                keyboard_arrow_up
+            </a>
+            <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
+               v-on:click="moveCamera(camera.Name, 'Down')">
+                keyboard_arrow_down
+            </a>
+            <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
+               v-on:click="moveCamera(camera.Name, 'Right')">
+                keyboard_arrow_right
+            </a>
+            <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
+               v-on:click="moveCamera(camera.Name, 'ZoomIn')">
+                zoom_in
+            </a>
+            <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
+               v-on:click="moveCamera(camera.Name, 'ZoomOut')">
+                zoom_out
+            </a>
+        </div>
+    </div>
+</div>

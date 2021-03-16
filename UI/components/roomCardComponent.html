@@ -1,21 +1,54 @@
 ﻿<div>
     <h3 class="reset-margin margin-left-8">{{room.Name}}</h3>
     <!-- Sensors data -->
-    <!-- TODO: Click to see the whole information, hover for a day graphic? Multiple device for one value? -->
-    <div class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-4 w3-hover-light-gray"
-         v-for="(value, name) of room.SensorsValues">
+    <!-- TODO: show all sensors data on a single chart somewhere -->
+    <a class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-light-gray"
+       v-for="(value, name) of room.SensorsValues"
+       v-on:click="selectedValueType = name">
         <span class="w3-xlarge">{{value}}</span>
         <span>{{room.SensorsMetadata[name]['unit']}}</span>
         <div class="w3-tiny" v-bind:title="metadata(room.SensorsMetadata[name])">{{name}}</div>
-    </div>
+    </a>
+
+    <!-- Cameras -->
+    <a class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-light-gray"
+       v-if="getCameras().length > 0"
+       v-on:click="selectedValueType = 'Cameras'">
+        <span class="material-icons w3-xxlarge">
+            videocam
+        </span>
+        <div class="w3-tiny">Cameras</div>
+    </a>
+
     <!-- Security system -->
-    <!-- TODO: enable security system by click? -->
-    <div class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-4 w3-hover-light-gray">
+    <a class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-light-gray"
+       v-on:click="setRoomSecuritySystemEnabled(room.Name, !room.IsSecuritySystemEnabled);">
         <span class="material-icons w3-xxlarge"
               v-bind:class="{'w3-text-light-green': room.IsSecuritySystemEnabled,
                              'w3-text-red': room.IsSecuritySystemActivated}">
             security
         </span>
         <div class="w3-tiny">Security</div>
+    </a>
+
+    <!-- Sensors Data / Cameras Modal -->
+    <div class="w3-modal" v-if="selectedValueType"
+         v-bind:class="{'w3-show-block': selectedValueType}"
+         v-on:click="selectedValueType = ''">
+        <div class="w3-modal-content w3-card-4 w3-transparent" style="width:600px" v-on:click.stop="">
+            <header class="w3-container w3-blue-gray">
+                <span class="w3-button w3-display-topright" v-on:click="selectedValueType = ''">&times;</span>
+                <h2>{{selectedValueType}}</h2>
+            </header>
+            <div class="w3-container bg-gray">
+                <!-- Sensors Data -->
+                <sensors-data v-if="selectedValueType != 'Cameras'"
+                              v-bind:sensors="getSensorsBySelectedValueType()"
+                              v-bind:value-type="selectedValueType"></sensors-data>
+                <!-- Cameras -->
+                <cameras v-if="selectedValueType == 'Cameras'"
+                         v-bind:cameras="getCameras()"></cameras>
+            </div>
+        </div>
     </div>
 </div>

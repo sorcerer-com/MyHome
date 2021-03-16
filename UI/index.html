@@ -14,8 +14,11 @@
     <!--<script src="./external/vue.min.js"></script>-->
     <!-- TODO: for debug: -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+    <script src="../external/Chart.bundle.min.js"></script>
 
     <script src="./components/roomCardComponent.js"></script>
+    <script src="./components/sensorsDataComponent.js"></script>
+    <script src="./components/camerasComponent.js"></script>
     <script src="./components/mediaPlayerComponent.js"></script>
     <script src="./components/securityListComponent.js"></script>
 
@@ -23,7 +26,7 @@
     <script src="./scripts.js"></script>
 
     <script>
-        $(window).on('load', function () {
+        $(window).on("load", function () {
             window.vue = new Vue({
                 el: "#vue-content",
                 data: {
@@ -52,6 +55,11 @@
                     updateVue({ rooms: rooms });
                     setTimeout(update, 3000);
                 }).fail(() => setTimeout(update, 1000));
+
+                // update media player if is opened
+                if (window.vue.ui.mediaPlayerHover) {
+                    getSystem("MediaPlayer").done(mediaPlayer => updateVue({ mediaPlayer: mediaPlayer }));
+                }
             }
 
             update();

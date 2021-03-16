@@ -1,9 +1,9 @@
 ﻿var scriptSrc = document.currentScript.src;
 var templateUrl = scriptSrc.substr(0, scriptSrc.lastIndexOf(".")) + ".html";
 $.get(templateUrl, template => {
-    Vue.component('media-player', {
+    Vue.component("media-player", {
         template: template,
-        props: ['media-player'],
+        props: ["mediaPlayer"],
         data: function () {
             return {
                 selectedMediaItem: ""
