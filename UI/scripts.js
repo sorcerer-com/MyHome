@@ -48,7 +48,8 @@ function showLineChart(canvas, data, label) {
                 backgroundColor: Chart.helpers.color("blue").alpha(0.1).rgbString(),
                 borderColor: Chart.helpers.color("blue").alpha(0.5).rgbString(),
                 data: data,
-                type: 'line',
+                type: "line",
+                lineTension: 0,
                 pointRadius: 0,
                 borderWidth: 2
             }]
@@ -56,16 +57,20 @@ function showLineChart(canvas, data, label) {
         options: {
             scales: {
                 xAxes: [{
-                    type: 'time',
+                    type: "time",
                     ticks: {
-                        beginAtZero: true,
-                        fontColor: 'white'
+                        fontColor: "white"
+                    },
+                    time: {
+                        displayFormats: {
+                            hour: "HH"
+                        },
+                        tooltipFormat: "DD MMM YYYY, HH:mm:ss"
                     }
                 }],
                 yAxes: [{
                     ticks: {
-                        beginAtZero: true,
-                        fontColor: 'white'
+                        fontColor: "white"
                     }
                 }]
             },

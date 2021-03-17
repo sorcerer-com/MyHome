@@ -40,6 +40,10 @@ namespace MyHome.Systems.Devices
         public Dictionary<string, string> Units { get; } // subname unit name (if not provide by metadata)
 
 
+        [JsonRequired]
+        private Dictionary<string, double> LastReadings { get; } // subname / value
+
+
         [JsonIgnore]
         [UiProperty]
         public DateTime? LastTime => this.Data.Count > 0 ? this.Data.Max(d => d.Key) : null;
@@ -60,6 +64,8 @@ namespace MyHome.Systems.Devices
             this.SubNamesMap = new Dictionary<string, string>();
             this.Calibration = new Dictionary<string, (double addition, double multiplier)>();
             this.Units = new Dictionary<string, string>();
+
+            this.LastReadings = new Dictionary<string, double>();
         }
 
 
@@ -106,10 +112,11 @@ namespace MyHome.Systems.Devices
                 }
                 else // sum type - differentiate
                 {
-                    var prevValue = this.LastValues[name];
-                    if (prevValue > value) // if the new value is smaller than previous - it's reset
+                    this.LastReadings.TryGetValue(name, out var prevValue);
+                    if (prevValue - 1 > value) // if the new value is smaller (with epsilon - 1) than previous - it's reset
                         prevValue = 0;
-                    this.Data[time][name] = value - prevValue;
+                    this.Data[time][name] = Math.Round(value - prevValue, 2); // round to 2 decimals after the point
+                    this.LastReadings[name] = value;
                 }
 
                 addedData[name] = this.Data[time][name];
@@ -149,7 +156,7 @@ namespace MyHome.Systems.Devices
 
                     double newValue = 0.0;
                     if (aggrType == "avg")
-                        newValue = values.Average();
+                        newValue = Math.Round(values.Average(), 2); // round to 2 decimals after the point
                     else if (aggrType == "sum")
                         newValue = values.Sum();
                     this.Data[group.Key][subName] = newValue;

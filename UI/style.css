@@ -52,6 +52,16 @@
 }
 
 
+.w3-modal {
+    padding-bottom: 50px;
+}
+
+.w3-modal-content {
+    width: 600px;
+    height: 90%;
+}
+
+
 body, html {
     height: 100%;
 }

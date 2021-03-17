@@ -5,11 +5,11 @@ using Newtonsoft.Json.Linq;
 
 namespace MyHome.Systems.Devices
 {
-    public class MyMultiSensor : BaseSensor
+    public class MySensor : BaseSensor
     {
-        private MyMultiSensor() : this(null, null, null, null) { } // for json deserialization
+        private MySensor() : this(null, null, null, null) { } // for json deserialization
 
-        public MyMultiSensor(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room, address)
+        public MySensor(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room, address)
         {
         }
 

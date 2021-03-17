@@ -61,7 +61,7 @@ namespace MyHome.Systems
                 this.nextGetDataTime = this.GetNextReadDataTime();
 
             var alertMsg = "";
-            this.Sensors.RunForEach(sensor =>
+            this.Sensors.Where(s => !string.IsNullOrEmpty(s.Address)).RunForEach(sensor =>
             {
                 logger.Debug($"Requesting data from {sensor.Name}({sensor.Room.Name}, {sensor.Address}) sensor");
 

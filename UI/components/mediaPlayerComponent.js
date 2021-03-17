@@ -10,6 +10,9 @@ $.get(templateUrl, template => {
             }
         },
         methods: {
+            lastIndexOfPathSeparator: function (path) {
+                return Math.max(path.lastIndexOf("\\"), path.lastIndexOf("/"));
+            },
             getMediaList: function () {
                 if (Object.keys(this.mediaPlayer).length == 0)
                     return {};
@@ -17,7 +20,7 @@ $.get(templateUrl, template => {
                     let key = x.substr(0, x.indexOf(":"));
                     let watched = this.mediaPlayer.Watched.includes(x);
                     (pv[key] = pv[key] || []).push({
-                        name: x.substr(x.lastIndexOf("\\") + 1),
+                        name: x.substr(this.lastIndexOfPathSeparator(x) + 1),
                         path: x.substr(x.indexOf(":") + 1),
                         watched: watched
                     });

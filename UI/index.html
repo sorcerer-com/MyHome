@@ -37,8 +37,12 @@
                     }
                 },
                 methods: {
+                    allRoomsSecuritySystemEnabled: function () {
+                        return this.rooms.length > 0 && this.rooms.filter(r => 'Motion' in r.SensorsValues).every(r => r.IsSecuritySystemEnabled)
+                    },
                     someRoomSecuritySystemEnabled: function () {
-                        return this.rooms.some(r => r.IsSecuritySystemEnabled) && !this.rooms.every(r => r.IsSecuritySystemEnabled)
+                        let roomsWithSecurity = this.rooms.filter(r => 'Motion' in r.SensorsValues);
+                        return roomsWithSecurity.some(r => r.IsSecuritySystemEnabled) && !roomsWithSecurity.every(r => r.IsSecuritySystemEnabled)
                     },
 
                     mediaPlayerHover: function () {
@@ -54,7 +58,12 @@
                 getRooms().done(rooms => {
                     updateVue({ rooms: rooms });
                     setTimeout(update, 3000);
-                }).fail(() => setTimeout(update, 1000));
+                }).fail((response) => {
+                    if (response.status == 401) // unauthorized
+                        window.location.replace("/login.html");
+                    else
+                        setTimeout(update, 1000)
+                });
 
                 // update media player if is opened
                 if (window.vue.ui.mediaPlayerHover) {
@@ -106,7 +115,7 @@
             <!-- Security -->
             <div class="w3-dropdown-hover w3-transparent margin-left-8">
                 <span class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
-                      v-bind:class="{'w3-text-lime': someRoomSecuritySystemEnabled(), 'w3-text-green': rooms.every(r => r.IsSecuritySystemEnabled)}">
+                      v-bind:class="{'w3-text-lime': someRoomSecuritySystemEnabled(), 'w3-text-green': allRoomsSecuritySystemEnabled()}">
                     security
                 </span>
                 <div class="w3-dropdown-content w3-transparent dropdown-top-right">

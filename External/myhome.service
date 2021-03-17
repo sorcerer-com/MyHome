@@ -1,0 +1,13 @@
+﻿[Unit]
+Description=My Home
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=pi
+WorkingDirectory=/home/pi/MyHome
+ExecStart=/usr/bin/python3 /home/pi/MyHome/Start.py
+
+[Install]
+WantedBy=multi-user.target

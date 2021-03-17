@@ -72,6 +72,9 @@ namespace MyHome
                 this.Systems.Add(type.Name, (BaseSystem)Activator.CreateInstance(type, this));
             // TODO: Trigger-Action system (migrate Schedule system to it - time trigger; sensor data alerts and light on skill also)
             // TODO: SecuritySystem - define zones - group of rooms
+            // TODO: login UI - android pin screen
+
+            // TODO: Improve media player list searching
 
             this.lastBackupTime = DateTime.Now;
             this.SystemChanged = false;
@@ -116,11 +119,11 @@ namespace MyHome
 
         public void Load()
         {
-            // TODO: transfer the old data to new format
             logger.Info("Load settings and data");
             if (!File.Exists(Config.DataFilePath))
             {
                 logger.Warn("Data file doesn't exist");
+                this.Save();
                 return;
             }
 

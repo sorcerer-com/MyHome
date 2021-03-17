@@ -4,12 +4,12 @@ $.get(templateUrl, template => {
     Vue.component("cameras", {
         template: template,
         props: ["cameras"],
-        methods: {
-            moveCamera: moveCamera
-        },
         data: function () {
             return {
             }
+        },
+        methods: {
+            moveCamera: moveCamera
         }
     });
 });

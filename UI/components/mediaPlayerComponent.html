@@ -8,7 +8,7 @@
         <div class="margin-right-8 margin-bottom-8" v-for="(items, media) of getMediaList()">
             <h4 class="reset-margin">{{media}}</h4>
             <hr class="reset-margin margin-bottom-8" />
-            <a class="w3-show-block w3-hover-blue-gray padding-4"
+            <a class="w3-show-block w3-hover-blue-gray padding-4 overflow-wrap-break-word"
                v-for="item of items" v-bind:title="media + ':' + item.path"
                v-bind:class="{'w3-text-dark-gray': item.watched}"
                v-on:click="selectMediaItem">
@@ -20,7 +20,7 @@
     <!-- playing -->
     <div class="w3-center w3-text-white margin-8"
          v-if="mediaPlayer.Playing">
-        {{mediaPlayer.Playing.substr(mediaPlayer.Playing.lastIndexOf("\\") + 1)}}
+        {{mediaPlayer.Playing.substr(lastIndexOfPathSeparator(mediaPlayer.Playing) + 1)}}
     </div>
 
     <!-- buttons -->

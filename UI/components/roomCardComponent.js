@@ -4,7 +4,27 @@ $.get(templateUrl, template => {
     Vue.component("room-card", {
         template: template,
         props: ["room"],
+        data: function () {
+            return {
+                selectedValueType: ""
+            }
+        },
         methods: {
+            autoResizeFontSize: function () {
+                // auto resize text font if it's larger
+                $(".room-sensor-value").each((_, el) => {
+                    if (el.textContent.length > 2 && el.nextElementSibling.tagName == "SPAN") // if there is a unit text
+                        $(el).removeClass("w3-xlarge").addClass("w3-large");
+                    else
+                        $(el).removeClass("w3-large").addClass("w3-xlarge");
+                });
+                $(".room-sensor-value-unit").each((_, el) => {
+                    if (el.textContent.length > 2)
+                        $(el).addClass("w3-small");
+                    else
+                        $(el).removeClass("w3-small");
+                });
+            },
             metadata: function (obj) {
                 let result = "";
                 for (let key in obj)
@@ -20,9 +40,12 @@ $.get(templateUrl, template => {
 
             setRoomSecuritySystemEnabled: setRoomSecuritySystemEnabled
         },
-        data: function () {
-            return {
-                selectedValueType: ""
+        mounted: function () {
+            this.autoResizeFontSize();
+        },
+        watch: {
+            room: function () {
+                this.autoResizeFontSize();
             }
         }
     });

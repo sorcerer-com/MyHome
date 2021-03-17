@@ -10,12 +10,6 @@ from datetime import datetime, timedelta
 
 import robobrowser
 
-from Utils import Utils
-
-Utils.setupLogging("bin/starter.log",
-                   logLevel=logging.DEBUG,
-                   showInConsole=False,
-                   useBufferHandler=False)
 logger = logging.getLogger()
 
 proc = None
@@ -52,9 +46,7 @@ def signal_handler(_, __):
 
 # args - Start.py "command" "web address"
 if len(sys.argv) < 3:
-    sys.argv.append("python3 Main.py")
-    if os.path.isdir("venv"):
-        sys.argv[1] = "venv/bin/" + sys.argv[1]
+    sys.argv.append("dotnet run -c Release -launch-profile \"MyHome\"")
     sys.argv.append("http://localhost:5000")
 
 signal.signal(signal.SIGINT, signal_handler)

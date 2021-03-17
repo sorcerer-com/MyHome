@@ -21,8 +21,6 @@ namespace MyHome.Systems
 
         public int SendInterval { get; set; } // minutes
 
-        public int ImagesCount { get; set; }
-
         [JsonIgnore]
         public Dictionary<Room, bool> ActivatedRooms => this.RoomsInfo.ToDictionary(r => r.Room, r => r.Activated);
 
@@ -47,7 +45,6 @@ namespace MyHome.Systems
         {
             this.ActivationDelay = 15;
             this.SendInterval = 5;
-            this.ImagesCount = 30;
 
             this.RoomsInfo = new List<RoomInfo>();
             // TODO: camera motion check?
@@ -87,6 +84,7 @@ namespace MyHome.Systems
                 ClearImages(roomInfo);
                 this.RoomsInfo.Remove(roomInfo);
             }
+            this.Owner.SystemChanged = true;
         }
 
         public void Activate(Room room)
@@ -108,6 +106,7 @@ namespace MyHome.Systems
             roomInfo.StartTime = DateTime.Now;
             logger.Info($"Alarm security activated in '{room.Name}' room");
             this.Owner.Events.Fire(this, "SecurityAlarmActivated", roomInfo.Room);
+            this.Owner.SystemChanged = true;
         }
 
         private void Events_Handler(object sender, GlobalEvent.GlobalEventArgs e)
@@ -153,6 +152,7 @@ namespace MyHome.Systems
                     roomInfo.Activated = false;
                     if (roomInfo.ImageFiles.Count > 0 || CheckForOfflineCamera(roomInfo.Room))
                     {
+                        // TODO: reduce "similar" images before send
                         if (this.Owner.SendAlert($"{roomInfo.Room.Name} room security alarm activated!", roomInfo.ImageFiles, true))
                             ClearImages(roomInfo);
                     }
@@ -167,6 +167,7 @@ namespace MyHome.Systems
                     if (camera.IsOpened) // try to open the camera and if succeed
                         SaveImage(camera, roomInfo);
                 }
+                this.Owner.SystemChanged = true;
             }
         }
 

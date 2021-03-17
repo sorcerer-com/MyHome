@@ -102,7 +102,10 @@ namespace MyHome
             else if ((context.Session.GetString("password") ?? "") != myHome.Config.Password && !IsResouce(context.Request.Path) &&
                 context.Request.Path != "/api/sensor/data")
             {
-                context.Response.Redirect("/login.html");
+                if (!context.Request.Path.StartsWithSegments("/api")) // pages only
+                    context.Response.Redirect("/login.html");
+                else
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return false;
             }
             return true;
