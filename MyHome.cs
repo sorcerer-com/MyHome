@@ -75,6 +75,8 @@ namespace MyHome
             // TODO: login UI - android pin screen
 
             // TODO: Improve media player list searching
+            // TODO: when receive only "Motion" sensor data - LastValues and the UI shows only it without the rest of the sub values
+            // TODO: migrate external sensors data (garage) through nginx; disable port direct forwarding to myhome
 
             this.lastBackupTime = DateTime.Now;
             this.SystemChanged = false;
@@ -188,7 +190,7 @@ namespace MyHome
 
                 if (stopwatch.Elapsed > TimeSpan.FromSeconds(this.updateInterval))
                 {
-                    logger.Warn($"Update time: {stopwatch.Elapsed}");
+                    logger.Warn($"Update time: {stopwatch.Elapsed}"); // TODO: too often
                 }
                 else
                 {

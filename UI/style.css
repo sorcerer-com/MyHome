@@ -47,6 +47,10 @@
     overflow-y: auto;
 }
 
+.overflow-wrap-break-word {
+    overflow-wrap: break-word;
+}
+
 .font-size-normal {
     font-size: initial !important;
 }
@@ -57,7 +61,7 @@
 }
 
 .w3-modal-content {
-    width: 600px;
+    width: 40%;
     height: 90%;
 }
 
@@ -70,6 +74,7 @@ body {
     width: 100%;
     height: 100%;
     background: radial-gradient(circle at top, #63777F, #313B3F);
+    background-attachment: fixed;
     color: white;
 }
 

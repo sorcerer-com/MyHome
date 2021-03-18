@@ -10,6 +10,7 @@ using MyHome.Utils;
 using Newtonsoft.Json.Linq;
 
 using NLog;
+using NLog.Targets;
 
 namespace MyHome
 {
@@ -125,6 +126,7 @@ namespace MyHome
         [HttpPost("sensor/data")]
         public ActionResult ProcessSensorData()
         {
+            // curl "http://127.0.0.1:5000/api/sensor/data" -i -X POST -H "token: c9dd348f9b48020e5d0a7204d5ce6eb8" -H "Content-Type: application/json" -d '[{"name": "test", "value": '$((1 + RANDOM % 100))'}]'
             try
             {
                 if (this.Request.Headers.ContainsKey("token"))
@@ -198,6 +200,14 @@ namespace MyHome
                 logger.Error(e, $"Failed to move '{cameraName}' camera to '${movementType}'");
                 return this.BadRequest(e.Message);
             }
+        }
+
+
+        [HttpGet("logs")]
+        public ActionResult GetLogs()
+        {
+            var memoryTarget = LogManager.Configuration.FindTargetByName<MemoryTarget>("memory");
+            return this.Ok(memoryTarget.Logs);
         }
     }
 }

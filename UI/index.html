@@ -32,8 +32,10 @@
                 data: {
                     rooms: [],
                     mediaPlayer: {},
+                    logs: [],
                     ui: {
-                        mediaPlayerHover: false
+                        mediaPlayerHover: false,
+                        modal: ""
                     }
                 },
                 methods: {
@@ -43,6 +45,11 @@
                     someRoomSecuritySystemEnabled: function () {
                         let roomsWithSecurity = this.rooms.filter(r => 'Motion' in r.SensorsValues);
                         return roomsWithSecurity.some(r => r.IsSecuritySystemEnabled) && !roomsWithSecurity.every(r => r.IsSecuritySystemEnabled)
+                    },
+
+                    showLogsModal: function () {
+                        this.ui.modal = "logs";
+                        getLogs().done(logs => this.logs = logs.reverse());
                     },
 
                     mediaPlayerHover: function () {
@@ -60,12 +67,17 @@
                     setTimeout(update, 3000);
                 }).fail((response) => {
                     if (response.status == 401) // unauthorized
-                        window.location.replace("/login.html");
+                        window.location.replace("./login.html");
                     else
                         setTimeout(update, 1000)
                 });
 
-                // update media player if is opened
+                // update logs if the modal is opened
+                if (window.vue.ui.modal == "logs") {
+                    getLogs().done(logs => updateVue({ logs: logs.reverse() }));
+                }
+
+                // update media player if it is opened
                 if (window.vue.ui.mediaPlayerHover) {
                     getSystem("MediaPlayer").done(mediaPlayer => updateVue({ mediaPlayer: mediaPlayer }));
                 }
@@ -84,9 +96,10 @@
                 <h3 class="w3-cell-middle w3-padding-small w3-show-inline-block">My Home</h3>
             </div>
             <div class="w3-display-right w3-padding w3-padding-top-24">
-                <a href="/"><span class="material-icons">home</span></a>
-                <a href="#"><span class="material-icons w3-text-gray w3-hover-text-white">add_circle_outline</span></a>
-                <a href="./settings.html"><span class="material-icons w3-text-gray w3-hover-text-white">settings</span></a>
+                <a href="./" class="material-icons">home</a>
+                <a class="material-icons w3-text-gray w3-hover-text-white">add_circle_outline</a>
+                <a class="material-icons w3-text-gray w3-hover-text-white">settings</a>
+                <a v-on:click="showLogsModal()" class="material-icons w3-text-gray w3-hover-text-white">assignment</a>
             </div>
         </div>
 
@@ -120,6 +133,26 @@
                 </span>
                 <div class="w3-dropdown-content w3-transparent dropdown-top-right">
                     <security-list v-bind:rooms="rooms"></security-list>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="w3-modal" v-if="ui.modal"
+             v-bind:class="{'w3-show-block': ui.modal}"
+             v-on:click="ui.modal = ''">
+            <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">
+                <header class="w3-container w3-blue-gray">
+                    <span class="w3-button w3-display-topright" v-on:click="ui.modal = ''">&times;</span>
+                    <h2 v-if="ui.modal == 'logs'">Logs</h2>
+                </header>
+                <div class="w3-container w3-padding-16 height-100 overflow-y-auto bg-gray">
+                    <ul class="w3-ul w3-monospace" v-if="ui.modal == 'logs'">
+                        <li v-for="log of logs" class="w3-hover-opacity overflow-wrap-break-word"
+                            v-bind:class="{'w3-red': log.includes('ERROR'), 'w3-purple': log.includes('WARN')}">
+                            {{log}}
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>

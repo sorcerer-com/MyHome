@@ -102,6 +102,9 @@ namespace MyHome.Systems
                 return;
             }
 
+            if (roomInfo.Activated)
+                return;
+
             roomInfo.Activated = true;
             roomInfo.StartTime = DateTime.Now;
             logger.Info($"Alarm security activated in '{room.Name}' room");

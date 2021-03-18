@@ -1,31 +1,35 @@
 ﻿function getRooms() {
-    return $.get("/api/rooms");
+    return $.get("./api/rooms");
 }
 
 function setRoom(roomName, data) {
-    return $.post(`/api/rooms/${roomName}`, data);
+    return $.post(`./api/rooms/${roomName}`, data);
 }
 
 function getSystem(systemName) {
-    return $.get(`/api/systems/${systemName}`);
+    return $.get(`./api/systems/${systemName}`);
 }
 
 function callSystem(systemName, funcName, ...args) {
     let data = Object.assign({}, args);
-    return $.post(`/api/systems/${systemName}/${funcName}`, data);
+    return $.post(`./api/systems/${systemName}/${funcName}`, data);
 }
 
 function getSensorData(sensorName, valueType) {
-    return $.get(`/api/sensors/${sensorName}/data/${valueType}`);
+    return $.get(`./api/sensors/${sensorName}/data/${valueType}`);
 }
 
 function getCameraImage(cameraName) {
-    return $.get(`/api/cameras/${cameraName}/image`);
+    return $.get(`./api/cameras/${cameraName}/image`);
 }
 
 function moveCamera(cameraName, movementType) {
-    return $.post(`/api/cameras/${cameraName}/move?movementType=${movementType}`)
+    return $.post(`./api/cameras/${cameraName}/move?movementType=${movementType}`)
 }
+
+function getLogs() {
+    return $.get("./api/logs");
+} 
 
 
 function setRoomSecuritySystemEnabled(roomName, isEnabled) {
@@ -76,6 +80,12 @@ function showLineChart(canvas, data, label) {
             },
             tooltips: {
                 intersect: false,
+                mode: "x"
+            },
+            legend: {
+                labels: {
+                    fontColor: "white"
+                }
             }
         }
     };
