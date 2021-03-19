@@ -80,7 +80,7 @@ function showLineChart(canvas, data, label) {
             },
             tooltips: {
                 intersect: false,
-                mode: "x"
+                mode: "index"
             },
             legend: {
                 labels: {

@@ -156,7 +156,7 @@ namespace MyHome.Systems
                     if (roomInfo.ImageFiles.Count > 0 || CheckForOfflineCamera(roomInfo.Room))
                     {
                         // TODO: reduce "similar" images before send
-                        if (this.Owner.SendAlert($"{roomInfo.Room.Name} room security alarm activated!", roomInfo.ImageFiles, true))
+                        if (this.Owner.SendAlert($"'{roomInfo.Room.Name}' room security alarm activated!", roomInfo.ImageFiles, true))
                             ClearImages(roomInfo);
                     }
                     else

@@ -6,7 +6,7 @@
     <a class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-light-gray" style="min-height: 72px"
        v-for="(value, name) of room.SensorsValues"
        v-on:click="selectedValueType = name">
-        <span class="w3-xlarge room-sensor-value">{{parseInt(value, 10)}}</span>
+        <span class="w3-xlarge room-sensor-value">{{Math.round(value, 2)}}</span>
         <span v-if="room.SensorsMetadata[name]" class="w3-small room-sensor-value-unit">{{room.SensorsMetadata[name]['unit']}}</span>
         <div class="w3-tiny" v-bind:title="metadata(room.SensorsMetadata[name])">{{name}}</div>
     </a>

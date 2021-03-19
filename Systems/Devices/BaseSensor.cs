@@ -46,11 +46,7 @@ namespace MyHome.Systems.Devices
 
         [JsonIgnore]
         [UiProperty]
-        public DateTime? LastTime => this.Data.Count > 0 ? this.Data.Max(d => d.Key) : null;
-
-        [JsonIgnore]
-        [UiProperty]
-        public SensorValue LastValues => this.LastTime.HasValue ? this.Data[this.LastTime.Value] : null;
+        public Dictionary<string, double> LastValues => this.GetLastValues();
 
 
         private BaseSensor() : this(null, null, null, null) { } // for json deserialization
@@ -80,6 +76,8 @@ namespace MyHome.Systems.Devices
             }
             return false;
         }
+
+        protected abstract JToken ReadDataInternal();
 
         public void AddData(DateTime time, JToken data)
         {
@@ -178,6 +176,12 @@ namespace MyHome.Systems.Devices
             this.AggregateData(groupedDates);
         }
 
-        protected abstract JToken ReadDataInternal();
+        private Dictionary<string, double> GetLastValues()
+        {
+            return this.Data.OrderBy(kvp => kvp.Key)
+                .SelectMany(x => x.Value)
+                .GroupBy(x => x.Key)
+                .ToDictionary(g => g.Key, g => g.Last().Value);
+        }
     }
 }
