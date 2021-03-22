@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using MyHome.Systems.Devices;
@@ -146,11 +147,15 @@ namespace MyHome
         }
 
         [HttpGet("cameras/{cameraName}/image")]
-        public ActionResult GetCameraImage(string cameraName)
+        public void GetCameraImage(string cameraName)
         {
             var camera = this.myHome.DevicesSystem.Cameras.FirstOrDefault(c => c.Name == cameraName);
             if (camera == null)
-                return this.NotFound("Camera not found");
+            {
+                this.Response.StatusCode = StatusCodes.Status404NotFound;
+                this.Response.Body.WriteAsync(System.Text.Encoding.UTF8.GetBytes("Camera not found")).AsTask();
+                return;
+            }
 
             try
             {
@@ -176,7 +181,7 @@ namespace MyHome
             {
                 // connection closed, no need to report this
             }
-            return this.Ok();
+            return;
         }
 
         [HttpPost("cameras/{cameraName}/move")]

@@ -1,6 +1,7 @@
 #!/usr/bin/python3.7
 # pylint: disable=global-statement
 import logging
+import logging.handlers
 import os
 import signal
 import subprocess
@@ -9,6 +10,14 @@ import time
 from datetime import datetime, timedelta
 
 import robobrowser
+
+logging_stdout_handler = logging.StreamHandler()
+logging_file_handler = logging.handlers.RotatingFileHandler(
+    "bin/starter.log", maxBytes=1024)
+logging.root.handlers.clear()
+logging.basicConfig(format="%(asctime)s.%(msecs)03d %(levelname)-7s %(message)s",
+                    datefmt="%Y-%m-%d %H:%M:%S", level=logging.INFO,
+                    handlers=[logging_stdout_handler, logging_file_handler])
 
 logger = logging.getLogger()
 
@@ -46,7 +55,7 @@ def signal_handler(_, __):
 
 # args - Start.py "command" "web address"
 if len(sys.argv) < 3:
-    sys.argv.append("dotnet run -c Release -launch-profile \"MyHome\"")
+    sys.argv.append("/home/pi/.dotnet/dotnet run -c Release -launch-profile \"MyHome\"")
     sys.argv.append("http://localhost:5000")
 
 signal.signal(signal.SIGINT, signal_handler)

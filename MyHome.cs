@@ -74,8 +74,14 @@ namespace MyHome
             // TODO: SecuritySystem - define zones - group of rooms
             // TODO: login UI - android pin screen
 
+            // TODO: git squash commits to Remove python into Initial commit; move to master
             // TODO: Improve media player list searching
-            // TODO: migrate external sensors data (garage) through nginx; disable port direct forwarding to myhome
+            // TODO: migrate external sensors data (garage) through nginx; disable direct port forwarding to myhome
+            // TODO: open camera/Onfiv async and not release it after 5 minutes
+            // TODO: restart button
+            // TODO: fix mobile UI
+            // TODO: investigate the deatlock
+            // TODO: allow upgrade by UI
 
             this.lastBackupTime = DateTime.Now;
             this.SystemChanged = false;
@@ -189,7 +195,7 @@ namespace MyHome
 
                 if (stopwatch.Elapsed > TimeSpan.FromSeconds(this.updateInterval))
                 {
-                    logger.Warn($"Update time: {stopwatch.Elapsed}"); // TODO: too often
+                    logger.Warn($"Update time: {stopwatch.Elapsed}"); // TODO: too often, check networking?
                 }
                 else
                 {

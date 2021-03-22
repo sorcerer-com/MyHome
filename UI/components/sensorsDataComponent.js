@@ -29,7 +29,7 @@ $.get(templateUrl, template => {
                     });
                     allRequests.push(request);
                 }
-                $.when(allRequests).done(() => setTimeout(this.refreshData, 3000)); // auto-refresh data every 3 seconds
+                $.when(...allRequests).done(() => setTimeout(this.refreshData, 3000)); // auto-refresh data every 3 seconds
             }
         },
         mounted: function () {

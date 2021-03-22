@@ -1,4 +1,6 @@
-﻿[Unit]
+﻿# copy to /etc/systemd/system/
+
+[Unit]
 Description=My Home
 
 [Service]
@@ -8,6 +10,10 @@ RestartSec=1
 User=pi
 WorkingDirectory=/home/pi/MyHome
 ExecStart=/usr/bin/python3 /home/pi/MyHome/Start.py
+
+# This environment variable is necessary when dotnet isn't loaded for the specified user.
+# To figure out this value, run 'env | grep DOTNET_ROOT' when dotnet has been loaded into your shell.
+Environment=DOTNET_ROOT=/home/pi/.dotnet
 
 [Install]
 WantedBy=multi-user.target
