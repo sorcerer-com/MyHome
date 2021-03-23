@@ -83,6 +83,18 @@ a {
     cursor: pointer;
 }
 
+summary {
+    cursor: pointer;
+    overflow-wrap: break-word;
+}
+
+    summary > * {
+        display: inline-block;
+        width: 93%;
+        vertical-align: middle;
+        margin-left: 3px;
+    }
+
 
 .title-bar {
     height: 50px;

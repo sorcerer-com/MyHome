@@ -3,39 +3,32 @@
 
     <!-- media list -->
     <div class="w3-small w3-left-align w3-text-white margin-8 overflow-y-auto"
-         style="max-height:300px;"
+         id="media-list" style="max-height:300px;"
          v-if="!mediaPlayer.Playing">
-        <div class="margin-right-8 margin-bottom-8" v-for="(items, media) of getMediaList()">
+        <div class="margin-right-8 margin-bottom-8" v-for="(tree, media) of getMediaTree()">
             <h4 class="reset-margin">{{media}}</h4>
             <hr class="reset-margin margin-bottom-8" />
-            <a class="w3-show-block w3-hover-blue-gray padding-4 overflow-wrap-break-word"
-               v-for="item of items" v-bind:title="media + ':' + item.path"
-               v-bind:class="{'w3-text-dark-gray': item.watched}"
-               v-on:click="selectMediaItem">
-                {{item.name}}
-            </a>
+            <media-tree-item v-bind:tree="tree" v-bind:media="media" v-on:change="onMediaChange"></media-tree-item>
         </div>
     </div>
 
     <!-- playing -->
-    <div class="w3-center w3-text-white margin-8"
+    <div class="w3-center w3-text-white margin-8 overflow-wrap-break-word"
          v-if="mediaPlayer.Playing">
         {{mediaPlayer.Playing.substr(lastIndexOfPathSeparator(mediaPlayer.Playing) + 1)}}
     </div>
 
     <!-- buttons -->
-    <div class="w3-text-black margin-right-8">
-        <span class="w3-small w3-left" v-if="mediaPlayer.Playing">{{mediaPlayer.TimeDetails}}</span>
-        <a class="w3-small w3-cell-middle material-icons"
-           v-bind:class="{'w3-hover-text-white': mediaPlayer.Playing, 'disabled': !mediaPlayer.Playing}"
-           v-on:click="callMediaPlayer('VolumeUp')">
-            volume_up
-        </a>
-        <span class="w3-small">/</span>
+    <div class="w3-text-black margin-right-8" v-if="mediaPlayer.Playing">
+        <span class="w3-small w3-left">{{mediaPlayer.TimeDetails}}</span>
         <a class="w3-small w3-hover-text-white w3-cell-middle material-icons"
-           v-bind:class="{'w3-hover-text-white': mediaPlayer.Playing, 'disabled': !mediaPlayer.Playing}"
            v-on:click="callMediaPlayer('VolumeDown')">
             volume_down
+        </a>
+        <span class="w3-tiny">{{mediaPlayer.Volume}}</span>
+        <a class="w3-small w3-hover-text-white w3-cell-middle material-icons"
+           v-on:click="callMediaPlayer('VolumeUp')">
+            volume_up
         </a>
     </div>
 

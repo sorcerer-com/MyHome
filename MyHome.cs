@@ -75,12 +75,11 @@ namespace MyHome
             // TODO: login UI - android pin screen
 
             // TODO: git squash commits to Remove python into Initial commit; move to master
-            // TODO: Improve media player list searching
             // TODO: migrate external sensors data (garage) through nginx; disable direct port forwarding to myhome
             // TODO: open camera/Onfiv async and not release it after 5 minutes
             // TODO: restart button
             // TODO: fix mobile UI
-            // TODO: investigate the deatlock
+            // TODO: investigate the deatlock (only on release?)
             // TODO: allow upgrade by UI
 
             this.lastBackupTime = DateTime.Now;
