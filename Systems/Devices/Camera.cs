@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Xml;
 
 using Mictlanix.DotNet.Onvif;
@@ -50,32 +51,26 @@ namespace MyHome.Systems.Devices
             {
                 if (this.capture == null)
                 {
-                    logger.Info($"Opening camera: {this.Name}");
-                    var address = this.GetStreamAddress();
-                    if (int.TryParse(address, out int device))
-                        this.capture = new VideoCapture(device);
-                    else
-                        this.capture = new VideoCapture(address);
+                    this.capture = new VideoCapture();
                     this.capture.Set(CaptureProperty.BufferSize, 1);
                 }
-                else if (!this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(1))
+
+                // if capture isn't opened try again but only if the previous try was at least 1 minute ago
+                if (!this.capture.IsOpened() && DateTime.Now - this.lastOpen > TimeSpan.FromMinutes(1))
                 {
-                    // if capture isn't opened try again but only if the previous try was at least 1 minutes ago
-                    logger.Info($"Opening camera: {this.Name}");
-                    var address = this.GetStreamAddress();
-                    if (int.TryParse(address, out int device))
-                        this.capture = new VideoCapture(device);
+                    logger.Debug($"Opening camera: {this.Name}");
+                    if (int.TryParse(this.Address, out int device))
+                        this.capture.Open(device);
                     else
-                        this.capture = new VideoCapture(address);
-                    this.lastUse = DateTime.Now;
+                        this.capture.Open(this.GetStreamAddress());
+                    this.lastOpen = DateTime.Now;
                 }
-                if (this.capture.IsOpened())
-                    this.lastUse = DateTime.Now;
+
                 return this.capture;
             }
         }
 
-        private DateTime lastUse;
+        private DateTime lastOpen;
         private DateTime nextDataRead;
 
         private readonly Dictionary<Type, object> onvif;
@@ -88,22 +83,17 @@ namespace MyHome.Systems.Devices
             this.IsOnvifSupported = true;
 
             this.capture = null;
-            this.lastUse = DateTime.Now;
+            this.lastOpen = DateTime.Now.AddMinutes(-1);
             this.nextDataRead = DateTime.Now.AddMinutes(1); // start reading 1 minute after start
 
             this.onvif = new Dictionary<Type, object>();
+
+            Task.Run(() => this.Capture); // open capture
         }
 
         public override void Update()
         {
             base.Update();
-
-            //release the capture if it isn't used for more then 5 minutes
-            if (this.capture != null && this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(5))
-            {
-                logger.Info($"Release camera: {this.Name}");
-                this.capture.Release();
-            }
 
             // read sensor data
             if (this.IsOnvifSupported && DateTime.Now > this.nextDataRead)
@@ -124,7 +114,7 @@ namespace MyHome.Systems.Devices
                 if (image == null || image.Empty())
                 {
                     this.Capture.Release(); // try to release the camera and open it again next time
-                    this.lastUse = DateTime.Now.AddMinutes(-1);
+                    this.lastOpen = DateTime.Now.AddMinutes(-1);
                     image = new Mat(480, 640, MatType.CV_8UC3);
                     image.Line(0, 0, 640, 480, Scalar.Red, 2, LineTypes.AntiAlias);
                     image.Line(640, 0, 0, 480, Scalar.Red, 2, LineTypes.AntiAlias);
@@ -155,10 +145,10 @@ namespace MyHome.Systems.Devices
         {
             try
             {
-                logger.Debug($"Camera '{this.Name}' move: {movement}");
-
                 if (!this.IsOnvifSupported)
                     return;
+
+                logger.Debug($"Camera '{this.Name}' move: {movement}");
 
                 var speed = new Mictlanix.DotNet.Onvif.Common.PTZSpeed
                 {
@@ -199,7 +189,7 @@ namespace MyHome.Systems.Devices
         private string GetStreamAddress()
         {
             // rtsp://192.168.0.120:554/user=admin_password=12345_channel=1_stream=0.sdp?real_stream
-            if (this.Address.StartsWith("rtsp://"))
+            if (this.Address.StartsWith("rtsp://") || !this.IsOnvifSupported)
                 return this.Address;
 
             try
@@ -223,8 +213,8 @@ namespace MyHome.Systems.Devices
             catch (Exception e)
             {
                 logger.Error(e, "Cannot get stream address");
-                return "0";
             }
+            return null;
         }
 
         private T GetOnvif<T>() where T : class
