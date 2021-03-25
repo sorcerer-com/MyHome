@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 
     <title>My Home</title>
     <link rel="icon" type="image/ico" href="./images/MyHome.ico" />
@@ -100,12 +100,12 @@
 <body>
     <div id="vue-content">
         <!-- Title bar -->
-        <div class="w3-bar w3-padding w3-display-container title-bar">
-            <div class="w3-display-middle w3-cell">
+        <div class="w3-bar">
+            <div class="w3-center display-center">
                 <img src="./images/MyHome.ico" width="32" class="w3-cell-middle" />
                 <h3 class="w3-cell-middle w3-padding-small w3-show-inline-block">My Home</h3>
             </div>
-            <div class="w3-display-right w3-padding w3-padding-top-24">
+            <div class="w3-right w3-padding w3-padding-top-24">
                 <a href="./" class="material-icons">home</a>
                 <a class="material-icons w3-text-gray w3-hover-text-white">add_circle_outline</a>
                 <a class="material-icons w3-text-gray w3-hover-text-white">settings</a>
@@ -114,6 +114,7 @@
         </div>
         <!-- Upgrade -->
         <a class="w3-right w3-tiny w3-cell-middle margin-right-8"
+           v-if="upgradeAvailable != false"
            v-on:click="upgrade">
             <span v-if="upgradeAvailable">
                 <span class="w3-cell-middle material-icons font-size-normal">assignment_late</span>
@@ -126,10 +127,12 @@
         </a>
 
         <!-- Content -->
-        <div class="w3-content w3-padding-16">
-            <!-- Rooms info -->
-            <div class="w3-col m3 w3-margin" v-for="room of rooms">
-                <room-card v-bind:room="room"></room-card>
+        <div id="scrollable-content">
+            <div class="w3-content w3-padding-16">
+                <!-- Rooms info -->
+                <div class="w3-col m3 w3-margin" v-for="room of rooms">
+                    <room-card v-bind:room="room"></room-card>
+                </div>
             </div>
         </div>
 

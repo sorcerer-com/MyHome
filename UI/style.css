@@ -26,6 +26,12 @@
     height: 100%;
 }
 
+.display-center {
+    position: absolute;
+    left: 0;
+    right: 0;
+}
+
 .dropdown-top-right {
     bottom: 30px;
     right: -10px;
@@ -68,6 +74,7 @@
 
 body, html {
     height: 100%;
+    overflow-y: hidden;
 }
 
 body {
@@ -96,10 +103,6 @@ summary {
     }
 
 
-.title-bar {
-    height: 50px;
-}
-
 #login {
     margin-top: -50px;
 }
@@ -114,24 +117,59 @@ summary {
         padding: 10px;
     }
 
-
-/* Scrollbar*/
-/* width */
-::-webkit-scrollbar {
-    width: 10px;
+#vue-content {
+    height: 100%;
 }
 
-/* track */
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
+#scrollable-content {
+    height: 89%;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
-/* handle */
-::-webkit-scrollbar-thumb {
-    background: #666;
-}
 
-    /* handle on hover */
-    ::-webkit-scrollbar-thumb:hover {
-        background: #444;
+/* Scrollbar - Large */
+@media (min-width:601px) {
+    /* width */
+    ::-webkit-scrollbar {
+        width: 10px;
     }
+
+    /* track */
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    /* handle */
+    ::-webkit-scrollbar-thumb {
+        background: #666;
+    }
+
+        /* handle on hover */
+        ::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+}
+
+/* Mobile */
+@media (max-width:600px) {
+    .display-center {
+        position: initial;
+    }
+
+    .w3-margin-bottom {
+        margin-bottom: inherit !important;
+    }
+
+    .w3-padding-top-24 {
+        padding-top: inherit !important;
+    }
+
+    .w3-padding-16 {
+        padding: inherit !important;
+    }
+
+    #scrollable-content {
+        height: 75%;
+    }
+}
