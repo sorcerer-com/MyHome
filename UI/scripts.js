@@ -29,7 +29,15 @@ function moveCamera(cameraName, movementType) {
 
 function getLogs() {
     return $.get("./api/logs");
-} 
+}
+
+function getUpgradeAvailable() {
+    return $.get("./api/upgrade");
+}
+
+function upgrade() {
+    return $.post("./api/upgrade");
+}
 
 
 function setRoomSecuritySystemEnabled(roomName, isEnabled) {

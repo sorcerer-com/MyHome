@@ -214,5 +214,28 @@ namespace MyHome
             var memoryTarget = LogManager.Configuration.FindTargetByName<MemoryTarget>("memory");
             return this.Ok(memoryTarget.Logs);
         }
+
+        [HttpGet("upgrade")]
+        public ActionResult GetUpgradeAvailable()
+        {
+            return this.Ok(this.myHome.UpgradeAvailable);
+        }
+
+        [HttpPost("upgrade")]
+        public ActionResult Upgrade()
+        {
+            if (this.myHome.Upgrade(false))
+            {
+                System.Threading.Tasks.Task.Delay(100).ContinueWith(_ => Environment.Exit(0));
+                return this.Ok();
+            }
+            return this.Conflict();
+        }
+
+        [HttpPost("restart")]
+        public void Restart()
+        {
+            Environment.Exit(0);
+        }
     }
 }

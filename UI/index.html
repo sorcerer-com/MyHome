@@ -33,6 +33,7 @@
                     rooms: [],
                     mediaPlayer: {},
                     logs: [],
+                    upgradeAvailable: false,
                     ui: {
                         mediaPlayerHover: false,
                         modal: ""
@@ -50,6 +51,12 @@
                     showLogsModal: function () {
                         this.ui.modal = "logs";
                         getLogs().done(logs => this.logs = logs.reverse());
+                    },
+                    upgrade: function () {
+                        upgrade().done(() => {
+                            $("#vue-content").html("Upgrade was successfull! Rebooting...");
+                            setTimeout(() => window.location.reload(true), 30000);
+                        });
                     },
 
                     mediaPlayerHover: function () {
@@ -71,6 +78,8 @@
                     else
                         setTimeout(update, 1000)
                 });
+
+                getUpgradeAvailable().done(value => updateVue({ upgradeAvailable: value }));
 
                 // update logs if the modal is opened
                 if (window.vue.ui.modal == "logs") {
@@ -103,6 +112,18 @@
                 <a v-on:click="showLogsModal()" class="material-icons w3-text-gray w3-hover-text-white">assignment</a>
             </div>
         </div>
+        <!-- Upgrade -->
+        <a class="w3-right w3-tiny w3-cell-middle margin-right-8"
+           v-on:click="upgrade">
+            <span v-if="upgradeAvailable">
+                <span class="w3-cell-middle material-icons font-size-normal">assignment_late</span>
+                Upgrade Available
+            </span>
+            <span v-if="upgradeAvailable == null">
+                <span class="w3-cell-middle material-icons font-size-normal">error</span>
+                Upgrade failed
+            </span>
+        </a>
 
         <!-- Content -->
         <div class="w3-content w3-padding-16">

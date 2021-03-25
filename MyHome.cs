@@ -42,7 +42,7 @@ namespace MyHome
         public bool SystemChanged { get; set; }
 
         [JsonIgnore]
-        public bool UpgradeAvailable { get; private set; }
+        public bool? UpgradeAvailable { get; private set; }
 
 
         [JsonIgnore]
@@ -78,8 +78,7 @@ namespace MyHome
             // TODO: migrate external sensors data (garage) through nginx; disable direct port forwarding to myhome
             // TODO: restart button
             // TODO: fix mobile UI
-            // TODO: investigate the deatlock (only on release?)
-            // TODO: allow upgrade by UI
+            // TODO: investigate the deatlock (only on release?) - run here for a long period
 
             this.lastBackupTime = DateTime.Now;
             this.SystemChanged = false;
@@ -177,6 +176,7 @@ namespace MyHome
 
         private void Update()
         {
+            this.Upgrade(true);
             Stopwatch stopwatch = new Stopwatch();
             while (this.updateInterval > 0)
             {
@@ -267,7 +267,7 @@ namespace MyHome
             }
         }
 
-        private bool Upgrade(bool checkOnly)
+        public bool Upgrade(bool checkOnly)
         {
             if (checkOnly)
                 logger.Debug("Checking for system update");
@@ -279,7 +279,7 @@ namespace MyHome
                 if (checkOnly)
                 {
                     this.UpgradeAvailable = repo.Head.TrackingDetails.BehindBy.GetValueOrDefault() > 0;
-                    return this.UpgradeAvailable;
+                    return this.UpgradeAvailable.Value;
                 }
                 else
                 {
@@ -295,6 +295,7 @@ namespace MyHome
                     logger.Error(e, "Cannot check for system update");
                 else
                     logger.Error(e, "Cannot update the system");
+                this.UpgradeAvailable = null;
                 return false;
             }
         }
