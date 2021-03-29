@@ -56,21 +56,23 @@ namespace MyHome.Systems.Devices
                 }
 
                 // if capture isn't opened try again but only if the previous try was at least 1 minute ago
-                if (!this.capture.IsOpened() && DateTime.Now - this.lastOpen > TimeSpan.FromMinutes(1))
+                if (!this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(1))
                 {
                     logger.Debug($"Opening camera: {this.Name}");
                     if (int.TryParse(this.Address, out int device))
                         this.capture.Open(device);
                     else
                         this.capture.Open(this.GetStreamAddress());
-                    this.lastOpen = DateTime.Now;
+                    this.lastUse = DateTime.Now;
                 }
+                if (this.capture.IsOpened())
+                    this.lastUse = DateTime.Now;
 
                 return this.capture;
             }
         }
 
-        private DateTime lastOpen;
+        private DateTime lastUse;
         private DateTime nextDataRead;
 
         private readonly Dictionary<Type, object> onvif;
@@ -83,17 +85,24 @@ namespace MyHome.Systems.Devices
             this.IsOnvifSupported = true;
 
             this.capture = null;
-            this.lastOpen = DateTime.Now.AddMinutes(-1);
+            this.lastUse = DateTime.Now.AddMinutes(-1);
             this.nextDataRead = DateTime.Now.AddMinutes(1); // start reading 1 minute after start
 
             this.onvif = new Dictionary<Type, object>();
 
-            Task.Run(() => this.Capture); // open capture
+            Task.Run(() => this.Capture.Release()); // prepare capture for opening
         }
 
         public override void Update()
         {
             base.Update();
+
+            // release the capture if it isn't used for more then 5 minutes
+            if (this.capture != null && this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(5))
+            {
+                logger.Info($"Release camera: {this.Name}");
+                this.capture.Release();
+            }
 
             // read sensor data
             if (this.IsOnvifSupported && DateTime.Now > this.nextDataRead)
@@ -114,7 +123,7 @@ namespace MyHome.Systems.Devices
                 if (image == null || image.Empty())
                 {
                     this.Capture.Release(); // try to release the camera and open it again next time
-                    this.lastOpen = DateTime.Now.AddMinutes(-1);
+                    this.lastUse = DateTime.Now.AddMinutes(-1);
                     image = new Mat(480, 640, MatType.CV_8UC3);
                     image.Line(0, 0, 640, 480, Scalar.Red, 2, LineTypes.AntiAlias);
                     image.Line(640, 0, 0, 480, Scalar.Red, 2, LineTypes.AntiAlias);
