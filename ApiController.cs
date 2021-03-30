@@ -245,7 +245,7 @@ namespace MyHome
         [HttpPost("upgrade")]
         public ActionResult Upgrade()
         {
-            if (this.myHome.Upgrade(false))
+            if (this.myHome.Upgrade())
             {
                 System.Threading.Tasks.Task.Delay(100).ContinueWith(_ => Environment.Exit(0));
                 return this.Ok();

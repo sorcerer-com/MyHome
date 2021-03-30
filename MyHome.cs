@@ -70,15 +70,16 @@ namespace MyHome
             this.Systems = new Dictionary<string, BaseSystem>();
             foreach (Type type in typeof(BaseSystem).GetSubClasses())
                 this.Systems.Add(type.Name, (BaseSystem)Activator.CreateInstance(type, this));
-            // TODO: Trigger-Action system (migrate Schedule system to it - time trigger; sensor data alerts and light on skill also)
-            // TODO: SecuritySystem - define zones - group of rooms
-            // TODO: login UI - android pin screen
-
-            // TODO: git squash commits to Remove python into Initial commit; move to master
-            // TODO: migrate external sensors data (garage) through nginx; disable direct port forwarding to myhome
-            // TODO: restart button
-            // TODO: fix mobile UI
-            // TODO: investigate the deatlock (only on release?) - run here for a long period
+            // TODO list 
+            // * Trigger-Action system (migrate Schedule system to it - time trigger; sensor data alerts and light on skill also)
+            // * SecuritySystem - define zones - group of rooms
+            // * login UI - android pin screen
+            // * migrate external sensors data (garage) through nginx; disable direct port forwarding to myhome; MQTT?
+            // * mobile UI
+            // * restart button in setting modal
+            // * investigate the deatlock (only on release?) - run here for a long period
+            // * add MQTT support (maybe install broker on rpi3, accessible through nginx)
+            // * git squash commits to Remove python into Initial commit; move to master
 
             this.lastBackupTime = DateTime.Now;
             this.SystemChanged = false;
@@ -176,7 +177,7 @@ namespace MyHome
 
         private void Update()
         {
-            this.Upgrade(true);
+            this.CheckForUpgrade();
             Stopwatch stopwatch = new Stopwatch();
             while (this.updateInterval > 0)
             {
@@ -186,7 +187,7 @@ namespace MyHome
 
                 var now = DateTime.Now;
                 if (now.Minute % this.upgradeCheckInterval == 0 && now.Second < this.updateInterval)
-                    this.Upgrade(true);
+                    this.CheckForUpgrade();
 
                 if (this.SystemChanged)
                     this.Save();
@@ -267,34 +268,37 @@ namespace MyHome
             }
         }
 
-        public bool Upgrade(bool checkOnly)
+        public bool CheckForUpgrade()
         {
-            if (checkOnly)
-                logger.Debug("Checking for system update");
+            logger.Debug("Checking for system update");
 
             try
             {
                 using var repo = new Repository(".");
                 Commands.Fetch(repo, repo.Head.RemoteName, Array.Empty<string>(), null, "");
-                if (checkOnly)
-                {
-                    this.UpgradeAvailable = repo.Head.TrackingDetails.BehindBy.GetValueOrDefault() > 0;
-                    return this.UpgradeAvailable.Value;
-                }
-                else
-                {
-                    logger.Info("Upgrading...");
-                    var signature = repo.Config.BuildSignature(DateTimeOffset.Now);
-                    Commands.Pull(repo, signature, null);
-                }
-                return true;
+                this.UpgradeAvailable = repo.Head.TrackingDetails.BehindBy.GetValueOrDefault() > 0;
             }
             catch (Exception e)
             {
-                if (checkOnly)
-                    logger.Error(e, "Cannot check for system update");
-                else
-                    logger.Error(e, "Cannot update the system");
+                logger.Error(e, "Cannot check for system update");
+                this.UpgradeAvailable = false;
+            }
+            return this.UpgradeAvailable.Value;
+        }
+
+        public bool Upgrade()
+        {
+            logger.Info("Upgrading...");
+            try
+            {
+                using var repo = new Repository(".");
+                Commands.Fetch(repo, repo.Head.RemoteName, Array.Empty<string>(), null, "");
+                var signature = repo.Config.BuildSignature(DateTimeOffset.Now);
+                return Commands.Pull(repo, signature, null).Status != MergeStatus.Conflicts;
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Cannot update the system");
                 this.UpgradeAvailable = null;
                 return false;
             }
