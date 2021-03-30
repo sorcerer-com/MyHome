@@ -9,7 +9,8 @@ $.get(templateUrl, template => {
             }
         },
         methods: {
-            moveCamera: moveCamera
+            moveCamera: moveCamera,
+            restartCamera: restartCamera
         }
     });
 });

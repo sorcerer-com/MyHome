@@ -9,28 +9,32 @@
         <!-- Movement controls -->
         <div class="w3-center margin-bottom-8" v-if="camera.IsOnvifSupported">
             <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
-               v-on:click="moveCamera(camera.Name, 'left')">
+               v-on:click="moveCamera(camera.Name, 'left')" title="Move Left">
                 keyboard_arrow_left
             </a>
             <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
-               v-on:click="moveCamera(camera.Name, 'Up')">
+               v-on:click="moveCamera(camera.Name, 'Up')" title="Move Up">
                 keyboard_arrow_up
             </a>
             <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
-               v-on:click="moveCamera(camera.Name, 'Down')">
+               v-on:click="moveCamera(camera.Name, 'Down')" title="Move Down">
                 keyboard_arrow_down
             </a>
             <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
-               v-on:click="moveCamera(camera.Name, 'Right')">
+               v-on:click="moveCamera(camera.Name, 'Right')" title="Move Right">
                 keyboard_arrow_right
             </a>
             <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
-               v-on:click="moveCamera(camera.Name, 'ZoomIn')">
+               v-on:click="moveCamera(camera.Name, 'ZoomIn')" title="Zoom In">
                 zoom_in
             </a>
             <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
-               v-on:click="moveCamera(camera.Name, 'ZoomOut')">
+               v-on:click="moveCamera(camera.Name, 'ZoomOut')" title="Zoom Out">
                 zoom_out
+            </a>
+            <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
+               v-on:click="restartCamera(camera.Name)" title="Restart">
+                autorenew
             </a>
         </div>
     </div>

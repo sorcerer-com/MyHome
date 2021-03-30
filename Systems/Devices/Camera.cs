@@ -58,7 +58,7 @@ namespace MyHome.Systems.Devices
                 // if capture isn't opened try again but only if the previous try was at least 1 minute ago
                 if (!this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(1))
                 {
-                    logger.Debug($"Opening camera: {this.Name}");
+                    logger.Info($"Opening camera: {this.Name}");
                     if (int.TryParse(this.Address, out int device))
                         this.capture.Open(device);
                     else
@@ -113,6 +113,7 @@ namespace MyHome.Systems.Devices
                     this.nextDataRead = DateTime.Now.AddMinutes(1);
             }
         }
+
 
         public Mat GetImage(Size? size = null, bool timestamp = true)
         {
@@ -195,11 +196,33 @@ namespace MyHome.Systems.Devices
             }
         }
 
+        public bool Restart()
+        {
+            if (!this.IsOnvifSupported)
+                return false;
+
+            try
+            {
+                var device = this.GetOnvif<DeviceClient>();
+                device.SystemRebootAsync().Wait();
+                return true;
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Cannot restart camera");
+            }
+            return false;
+        }
+
+
         private string GetStreamAddress()
         {
             // rtsp://192.168.0.120:554/user=admin_password=12345_channel=1_stream=0.sdp?real_stream
             if (this.Address.StartsWith("rtsp://") || !this.IsOnvifSupported)
                 return this.Address;
+
+            if (!this.IsOnvifSupported)
+                return null;
 
             try
             {

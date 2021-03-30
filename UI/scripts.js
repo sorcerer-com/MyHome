@@ -27,6 +27,10 @@ function moveCamera(cameraName, movementType) {
     return $.post(`./api/cameras/${cameraName}/move?movementType=${movementType}`)
 }
 
+function restartCamera(cameraName) {
+    return $.post(`./api/cameras/${cameraName}/restart`)
+}
+
 function getLogs() {
     return $.get("./api/logs");
 }

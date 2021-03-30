@@ -207,6 +207,27 @@ namespace MyHome
             }
         }
 
+        [HttpPost("cameras/{cameraName}/restart")]
+        public ActionResult RestartCamera(string cameraName)
+        {
+
+            try
+            {
+                var camera = this.myHome.DevicesSystem.Cameras.FirstOrDefault(c => c.Name == cameraName);
+                if (camera == null)
+                    return this.NotFound("Camera not found");
+
+                if (camera.Restart())
+                    return this.Ok();
+                return this.BadRequest($"Cannot restart '{cameraName}' camera");
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, $"Failed to restart '{cameraName}' camera");
+                return this.BadRequest(e.Message);
+            }
+        }
+
 
         [HttpGet("logs")]
         public ActionResult GetLogs()
