@@ -43,6 +43,10 @@ function upgrade() {
     return $.post("./api/upgrade");
 }
 
+function getType(typeName) {
+    return $.get(`./api/types/${typeName}`);
+}
+
 
 function setRoomSecuritySystemEnabled(roomName, isEnabled) {
     setRoom(roomName, { IsSecuritySystemEnabled: isEnabled })
@@ -107,4 +111,12 @@ function showLineChart(canvas, data, label) {
 function updateChartData(chart, data) {
     chart.data.datasets[0].data = data;
     chart.update();
+}
+
+function fixDateTimes(object) {
+    for (let key in object) {
+        if (object['$meta'][key] == "DateTime")
+            object[key] = object[key].substr(0, 16);
+    }
+    return object;
 }

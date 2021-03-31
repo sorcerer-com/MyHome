@@ -22,7 +22,7 @@ namespace MyHome.Utils
             Task.WaitAll(source.Select(i => Task.Run(() => action.Invoke(i))).ToArray());
         }
 
-        public static object ToUiObject(this object obj)
+        public static object ToUiObject(this object obj, bool settingsOnly = false)
         {
             if (obj == null)
                 return null;
@@ -31,6 +31,10 @@ namespace MyHome.Utils
             if (type.IsPrimitive || type == typeof(string) || type == typeof(DateTime))
             {
                 return obj;
+            }
+            else if (type.IsEnum)
+            {
+                return type.Name + "." + obj.ToString();
             }
             else if (type.GetInterface(nameof(IDictionary)) != null)
             {
@@ -51,14 +55,45 @@ namespace MyHome.Utils
             }
             else
             {
-                // TODO: if it's read-only?
                 var result = new Dictionary<string, object>();
-                var pis = obj.GetType().GetProperties().Where(pi => pi.GetCustomAttribute<UiProperty>() != null);
+                var metadata = new Dictionary<string, string>();
+                var pis = obj.GetType().GetProperties();
                 foreach (var pi in pis)
+                {
+                    var uiPropertyAttr = pi.GetCustomAttribute<UiProperty>();
+                    if (uiPropertyAttr == null)
+                        continue;
+
+                    if (settingsOnly && uiPropertyAttr.Setting == false)
+                        continue;
+
                     result.Add(pi.Name, pi.GetValue(obj).ToUiObject());
+                    metadata[pi.Name] = GetMetadata(pi.PropertyType);
+                }
                 result.Add("$type", obj.GetType().ToString());
+                if (settingsOnly)
+                    result.Add("$meta", metadata);
                 return result;
             }
+        }
+        private static string GetMetadata(Type type)
+        {
+            var name = type.Name
+                .Replace("`1", "")
+                .Replace("`2", "")
+                .Replace("IEnumerable", "List");
+
+            if (type.IsGenericType)
+            {
+                var genericTypes = type.GenericTypeArguments.Select(t => GetMetadata(t));
+                return $"{name} <{string.Join(", ", genericTypes)}>";
+            }
+            else if (type.IsEnum)
+            {
+                var values = type.GetFields().Where(f => f.IsLiteral).Select(f => type.Name + "." + f.Name);
+                return $"Enum ({string.Join(", ", values)})";
+            }
+            return name;
         }
     }
 }

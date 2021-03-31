@@ -33,6 +33,10 @@
     z-index: -1;
 }
 
+.w3-bar .dropdown-right {
+    right: 70px;
+}
+
 .dropdown-top-right {
     bottom: 30px;
     right: -10px;
@@ -62,6 +66,12 @@
     font-size: initial !important;
 }
 
+
+.w3-bar .w3-dropdown-hover {
+    display: inline-block;
+    cursor: pointer;
+    float: initial;
+}
 
 .w3-modal {
     padding-bottom: 50px;

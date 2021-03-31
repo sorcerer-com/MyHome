@@ -14,13 +14,16 @@
     <!--<script src="./external/vue.min.js"></script>-->
     <!-- TODO: for debug: -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
-    <script src="../external/Chart.bundle.min.js"></script>
+    <script src="./external/Chart.bundle.min.js"></script>
 
     <script src="./components/roomCardComponent.js"></script>
     <script src="./components/sensorsDataComponent.js"></script>
     <script src="./components/camerasComponent.js"></script>
+
     <script src="./components/mediaPlayerComponent.js"></script>
     <script src="./components/securityListComponent.js"></script>
+
+    <script src="./components/createObjectComponent.js"></script>
 
     <link rel="stylesheet" href="./style.css" />
     <script src="./scripts.js"></script>
@@ -36,21 +39,15 @@
                     upgradeAvailable: false,
                     ui: {
                         mediaPlayerHover: false,
-                        modal: ""
+                        modal: "",
+                        addObject: null
                     }
                 },
                 methods: {
-                    allRoomsSecuritySystemEnabled: function () {
-                        return this.rooms.length > 0 && this.rooms.filter(r => 'Motion' in r.SensorsValues).every(r => r.IsSecuritySystemEnabled)
-                    },
-                    someRoomSecuritySystemEnabled: function () {
-                        let roomsWithSecurity = this.rooms.filter(r => 'Motion' in r.SensorsValues);
-                        return roomsWithSecurity.some(r => r.IsSecuritySystemEnabled) && !roomsWithSecurity.every(r => r.IsSecuritySystemEnabled)
-                    },
-
-                    showLogsModal: function () {
-                        this.ui.modal = "logs";
-                        getLogs().done(logs => this.logs = logs.reverse());
+                    addRoom: function (room) {
+                        if (this.rooms.some(r => r.Name == room.Name)) // room exists
+                            return $.Deferred().reject({ responseText: "A room with the same name already exists" });
+                        return setRoom(room.Name, room).done(() => this.ui.modal = "");
                     },
                     upgrade: function () {
                         upgrade().done(() => {
@@ -59,6 +56,22 @@
                         });
                     },
 
+                    allRoomsSecuritySystemEnabled: function () {
+                        return this.rooms.length > 0 && this.rooms.filter(r => 'Motion' in r.SensorsValues).every(r => r.IsSecuritySystemEnabled)
+                    },
+                    someRoomSecuritySystemEnabled: function () {
+                        let roomsWithSecurity = this.rooms.filter(r => 'Motion' in r.SensorsValues);
+                        return roomsWithSecurity.some(r => r.IsSecuritySystemEnabled) && !roomsWithSecurity.every(r => r.IsSecuritySystemEnabled)
+                    },
+
+                    showAddRoomModal: function () {
+                        this.ui.modal = "Add Room";
+                        getType("Room").done(room => this.ui.addObject = fixDateTimes(room));
+                    },
+                    showLogsModal: function () {
+                        this.ui.modal = "Logs";
+                        getLogs().done(logs => this.logs = logs.reverse());
+                    },
                     mediaPlayerHover: function () {
                         if (!this.ui.mediaPlayerHover) {
                             this.ui.mediaPlayerHover = true;
@@ -72,7 +85,7 @@
                 getRooms().done(rooms => {
                     updateVue({ rooms: rooms });
                     setTimeout(update, 3000);
-                }).fail((response) => {
+                }).fail(response => {
                     if (response.status == 401) // unauthorized
                         window.location.replace("./login.html");
                     else
@@ -82,7 +95,7 @@
                 getUpgradeAvailable().done(value => updateVue({ upgradeAvailable: value }));
 
                 // update logs if the modal is opened
-                if (window.vue.ui.modal == "logs") {
+                if (window.vue.ui.modal == "Logs") {
                     getLogs().done(logs => updateVue({ logs: logs.reverse() }));
                 }
 
@@ -98,6 +111,7 @@
     </script>
 </head>
 <body>
+    <!-- TODO: tooltips -->
     <div id="vue-content">
         <!-- Title bar -->
         <div class="w3-bar">
@@ -107,24 +121,30 @@
             </div>
             <div class="w3-right w3-padding w3-padding-top-24">
                 <a href="./" class="material-icons">home</a>
-                <a class="material-icons w3-text-gray w3-hover-text-white">add_circle_outline</a>
+                <div class="w3-dropdown-hover">
+                    <a class="w3-text-gray w3-hover-text-white material-icons">add_circle_outline</a>
+                    <div class="w3-dropdown-content w3-padding-small w3-round-large w3-animate-opacity dropdown-right bg-gray">
+                        <a v-on:click="showAddRoomModal()" class="w3-show-block w3-hover-text-white padding-4">Add Room</a>
+                        <a class="w3-show-block w3-hover-text-white padding-4">Add Device</a>
+                    </div>
+                </div>
                 <a class="material-icons w3-text-gray w3-hover-text-white">settings</a>
                 <a v-on:click="showLogsModal()" class="material-icons w3-text-gray w3-hover-text-white">assignment</a>
+                <!-- Upgrade -->
+                <a class="w3-show-block w3-tiny w3-cell-middle margin-right-8"
+                   v-if="upgradeAvailable != false"
+                   v-on:click="upgrade">
+                    <span v-if="upgradeAvailable">
+                        <span class="w3-cell-middle material-icons font-size-normal">assignment_late</span>
+                        Upgrade Available
+                    </span>
+                    <span v-if="upgradeAvailable == null">
+                        <span class="w3-cell-middle material-icons font-size-normal">error</span>
+                        Upgrade failed
+                    </span>
+                </a>
             </div>
         </div>
-        <!-- Upgrade -->
-        <a class="w3-right w3-tiny w3-cell-middle margin-right-8"
-           v-if="upgradeAvailable != false"
-           v-on:click="upgrade">
-            <span v-if="upgradeAvailable">
-                <span class="w3-cell-middle material-icons font-size-normal">assignment_late</span>
-                Upgrade Available
-            </span>
-            <span v-if="upgradeAvailable == null">
-                <span class="w3-cell-middle material-icons font-size-normal">error</span>
-                Upgrade failed
-            </span>
-        </a>
 
         <!-- Content -->
         <div id="scrollable-content">
@@ -141,10 +161,10 @@
             <!-- Media Player -->
             <div class="w3-dropdown-hover w3-transparent margin-left-8"
                  @mouseover="mediaPlayerHover()" @mouseleave="ui.mediaPlayerHover = false">
-                <span class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
-                      v-bind:class="{'w3-text-light-green': mediaPlayer.Playing}">
+                <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
+                   v-bind:class="{'w3-text-light-green': mediaPlayer.Playing}">
                     video_library
-                </span>
+                </a>
                 <div class="w3-dropdown-content w3-transparent dropdown-top-right">
                     <media-player v-bind:media-player="mediaPlayer"></media-player>
                 </div>
@@ -152,10 +172,10 @@
 
             <!-- Security -->
             <div class="w3-dropdown-hover w3-transparent margin-left-8">
-                <span class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
-                      v-bind:class="{'w3-text-lime': someRoomSecuritySystemEnabled(), 'w3-text-green': allRoomsSecuritySystemEnabled()}">
+                <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
+                   v-bind:class="{'w3-text-lime': someRoomSecuritySystemEnabled(), 'w3-text-green': allRoomsSecuritySystemEnabled()}">
                     security
-                </span>
+                </a>
                 <div class="w3-dropdown-content w3-transparent dropdown-top-right">
                     <security-list v-bind:rooms="rooms"></security-list>
                 </div>
@@ -169,15 +189,16 @@
             <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">
                 <header class="w3-container w3-blue-gray">
                     <span class="w3-button w3-display-topright" v-on:click="ui.modal = ''">&times;</span>
-                    <h2 v-if="ui.modal == 'logs'">Logs</h2>
+                    <h2>{{ui.modal}}</h2>
                 </header>
                 <div class="w3-container w3-padding-16 height-100 overflow-y-auto bg-gray">
-                    <ul class="w3-ul w3-monospace" v-if="ui.modal == 'logs'">
+                    <ul class="w3-ul w3-monospace" v-if="ui.modal == 'Logs'">
                         <li v-for="log of logs" class="w3-hover-opacity overflow-wrap-break-word"
                             v-bind:class="{'w3-red': log.includes('ERROR'), 'w3-purple': log.includes('WARN')}">
                             {{log}}
                         </li>
                     </ul>
+                    <create-object v-if="ui.modal == 'Add Room'" v-bind:object="ui.addObject" v-bind:onsave="addRoom"></create-object>
                 </div>
             </div>
         </div>

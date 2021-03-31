@@ -323,12 +323,7 @@ namespace MyHome.Systems.Devices
                     };
 
                     var value = child.Attributes["Value"].Value.ToLower();
-                    if (value == "true" || value == "false")
-                        item["value"] = (value == "true");
-                    else if (double.TryParse(value, out double d))
-                        item["value"] = d;
-                    else
-                        logger.Warn($"Unknown camera value: {value}");
+                    item["value"] = Utils.Utils.ParseValue(value);
                     result.Add(item);
                 }
                 return result;

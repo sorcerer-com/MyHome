@@ -1,0 +1,23 @@
+﻿<form class="w3-center" v-if="object">
+    <div v-for="name of Object.keys(object)" v-if="name[0] != '$'"
+         class="w3-row w3-row-padding margin-bottom-8">
+        <span class="w3-col m4 w3-right-align">{{name}}:</span>
+
+        <select class="w3-col m4" v-model="object[name]" v-if="object['$meta'][name] == 'Boolean'">
+            <option value="true">True</option>
+            <option value="false">False</option>
+        </select>
+        <select class="w3-col m4" v-model="object[name]" v-if="object['$meta'][name].startsWith('Enum')">
+            <option v-for="v of getEnumValues(object['$meta'][name])" v-bind:value="v">{{v.split(".")[1]}}</option>
+        </select>
+        <input class="w3-col m4" type="number" v-model="object[name]" v-if="object['$meta'][name].startsWith('Int')" />
+        <input class="w3-col m4" type="number" v-model="object[name]" v-if="object['$meta'][name].startsWith('Double')" step="0.1" />
+        <input class="w3-col m4" type="datetime-local" v-model="object[name]" v-if="object['$meta'][name] == 'DateTime'" />
+        <input class="w3-col m4" type="text" v-model="object[name]" v-if="object['$meta'][name] == 'String'" />
+    </div>
+    <a class="w3-button w3-round w3-padding-small w3-white w3-hover-blue-grey margin-8"
+       v-on:click="save()">
+        Save
+    </a>
+    <div class="w3-text-red margin-bottom-8" v-if="error">{{error}}</div>
+</form>

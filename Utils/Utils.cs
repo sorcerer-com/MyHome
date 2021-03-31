@@ -1,35 +1,35 @@
 ﻿using System;
+using System.Linq;
+using System.Reflection;
 
 namespace MyHome.Utils
 {
     public static class Utils
     {
-        /// <summary>
-        /// Sets a non-automatic property backing field and invokes property changed event.
-        /// </summary>
-        /// <typeparam name="T">Type of the property.</typeparam>
-        /// <param name="backingField">Reference to the backing field.</param>
-        /// <param name="value">Value to be set to the backing field.</param>
-        /// <returns>Returns true if the backing field value is successfully updated.</returns>
-        public static bool SetPropertyBackingField<T>(ref T backingField, T value)
+        public static Type GetType(string typeName)
         {
-            if (!typeof(T).IsValueType)
-            {
-                if (ReferenceEquals(backingField, value))
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                if (backingField.Equals(value))
-                {
-                    return false;
-                }
-            }
+            return Assembly
+                .GetExecutingAssembly()
+                .GetTypes()
+                .FirstOrDefault(t => t.Name == typeName);
+        }
 
-            backingField = value;
-            return true;
+        public static dynamic ParseValue(string value)
+        {
+            if (value == "true" || value == "false")
+                return value == "true";
+            else if (int.TryParse(value, out int i))
+                return i;
+            else if (double.TryParse(value, out double d))
+                return d;
+            else if (GetType(value.Split('.')[0])?.IsEnum == true &&
+                Enum.TryParse(GetType(value.Split('.')[0]), value.Split('.')[1], out object e)) // Enum
+            {
+                return e;
+            }
+            else if (DateTime.TryParse(value, out DateTime dt))
+                return dt;
+            return value;
         }
 
         public static string GenerateRandomToken(int bytesCount)

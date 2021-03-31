@@ -12,7 +12,7 @@ namespace MyHome.Models
     {
         public MyHome Owner { get; set; }
 
-        [UiProperty]
+        [UiProperty(true)]
         public string Name { get; set; }
 
 

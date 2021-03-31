@@ -44,7 +44,11 @@ namespace MyHome
             {
                 var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
                 if (room == null)
-                    return this.NotFound("Room not found");
+                {
+                    logger.Info($"Add room '{roomName}'");
+                    room = new Models.Room(this.myHome, roomName);
+                    this.myHome.Rooms.Add(room);
+                }
 
                 var roomType = room.GetType();
                 foreach (var item in this.Request.Form)
@@ -54,12 +58,9 @@ namespace MyHome
                         continue;
 
                     var value = item.Value.ToString();
-                    // TODO: extract to function (in Camera.cs used too, maybe more places)
-                    if (value == "true" || value == "false")
-                        prop.SetValue(room, value == "true");
-                    else
-                        prop.SetValue(room, value);
+                    prop.SetValue(room, Utils.Utils.ParseValue(value));
                 }
+                this.myHome.SystemChanged = true;
                 return this.Ok();
             }
             catch (Exception e)
@@ -91,7 +92,7 @@ namespace MyHome
                 var method = system.GetType().GetMethod(funcName);
                 if (method != null)
                 {
-                    var args = this.Request.HasFormContentType ? this.Request.Form.Select(kvp => kvp.Value.ToString()) : Array.Empty<string>(); // TODO: convert to real types (above TODO)
+                    var args = this.Request.HasFormContentType ? this.Request.Form.Select(kvp => Utils.Utils.ParseValue(kvp.Value.ToString())) : Array.Empty<string>();
                     var result = method.Invoke(system, args.ToArray());
                     return this.Ok(result);
                 }
@@ -257,6 +258,18 @@ namespace MyHome
         public void Restart()
         {
             Environment.Exit(0);
+        }
+
+
+        [HttpGet("types/{typeName}")]
+        public ActionResult GetType(string typeName)
+        {
+            var type = Utils.Utils.GetType(typeName);
+            if (type == null)
+                return this.NotFound($"No such type '{typeName}'");
+
+            var instance = Activator.CreateInstance(type, true);
+            return this.Ok(instance.ToUiObject(true));
         }
     }
 }
