@@ -14,21 +14,33 @@ namespace MyHome.Utils
                 .FirstOrDefault(t => t.Name == typeName);
         }
 
-        public static dynamic ParseValue(string value)
+        public static dynamic ParseValue(string value, Type type)
         {
-            if (value == "true" || value == "false")
+            if ((type == null || type == typeof(bool)) && 
+                (value == "true" || value == "false"))
+            {
                 return value == "true";
-            else if (int.TryParse(value, out int i))
+            }
+            else if ((type == null || type.Name.StartsWith("Int")) &&
+                int.TryParse(value, out int i))
+            {
                 return i;
-            else if (double.TryParse(value, out double d))
+            }
+            else if ((type == null || type == typeof(double)) &&
+                double.TryParse(value, out double d))
+            {
                 return d;
+            }
             else if (GetType(value.Split('.')[0])?.IsEnum == true &&
                 Enum.TryParse(GetType(value.Split('.')[0]), value.Split('.')[1], out object e)) // Enum
             {
                 return e;
             }
-            else if (DateTime.TryParse(value, out DateTime dt))
+            else if ((type == null || type == typeof(DateTime)) &&
+                DateTime.TryParse(value, out DateTime dt))
+            {
                 return dt;
+            }
             return value;
         }
 

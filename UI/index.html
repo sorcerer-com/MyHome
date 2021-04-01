@@ -23,7 +23,7 @@
     <script src="./components/mediaPlayerComponent.js"></script>
     <script src="./components/securityListComponent.js"></script>
 
-    <script src="./components/createObjectComponent.js"></script>
+    <script src="./components/objectEditorComponent.js"></script>
 
     <link rel="stylesheet" href="./style.css" />
     <script src="./scripts.js"></script>
@@ -35,6 +35,7 @@
                 data: {
                     rooms: [],
                     mediaPlayer: {},
+                    settings: {},
                     logs: [],
                     upgradeAvailable: false,
                     ui: {
@@ -49,9 +50,18 @@
                             return $.Deferred().reject({ responseText: "A room with the same name already exists" });
                         return setRoom(room.Name, room).done(() => this.ui.modal = "");
                     },
+                    saveSettings: function (settings) {
+                        return setConfig(settings).done(() => this.ui.modal = "");
+                    },
                     upgrade: function () {
                         upgrade().done(() => {
                             $("#vue-content").html("Upgrade was successfull! Rebooting...");
+                            setTimeout(() => window.location.reload(true), 30000);
+                        });
+                    },
+                    restart: function () {
+                        restart().done(() => {
+                            $("#vue-content").html("Rebooting...");
                             setTimeout(() => window.location.reload(true), 30000);
                         });
                     },
@@ -67,6 +77,10 @@
                     showAddRoomModal: function () {
                         this.ui.modal = "Add Room";
                         getType("Room").done(room => this.ui.addObject = fixDateTimes(room));
+                    },
+                    showSettingsModal: function () {
+                        this.ui.modal = "Settings";
+                        getConfig().done(config => updateVue({ settings: config }));
                     },
                     showLogsModal: function () {
                         this.ui.modal = "Logs";
@@ -128,8 +142,9 @@
                         <a class="w3-show-block w3-hover-text-white padding-4">Add Device</a>
                     </div>
                 </div>
-                <a class="material-icons w3-text-gray w3-hover-text-white">settings</a>
+                <a v-on:click="showSettingsModal()" class="material-icons w3-text-gray w3-hover-text-white">settings</a>
                 <a v-on:click="showLogsModal()" class="material-icons w3-text-gray w3-hover-text-white">assignment</a>
+
                 <!-- Upgrade -->
                 <a class="w3-show-block w3-tiny w3-cell-middle margin-right-8"
                    v-if="upgradeAvailable != false"
@@ -198,7 +213,13 @@
                             {{log}}
                         </li>
                     </ul>
-                    <create-object v-if="ui.modal == 'Add Room'" v-bind:object="ui.addObject" v-bind:onsave="addRoom"></create-object>
+                    <object-editor v-if="ui.modal == 'Add Room'" v-bind:object="ui.addObject" v-bind:onsave="addRoom"></object-editor>
+
+                    <object-editor v-if="ui.modal == 'Settings'" v-bind:object="settings" v-bind:onsave="saveSettings"></object-editor>
+                    <a class="w3-button w3-right w3-round w3-padding-small w3-white w3-hover-blue-grey margin-8"
+                        v-if="ui.modal == 'Settings'" v-on:click="restart()">
+                        Restart
+                    </a>
                 </div>
             </div>
         </div>

@@ -50,16 +50,7 @@ namespace MyHome
                     this.myHome.Rooms.Add(room);
                 }
 
-                var roomType = room.GetType();
-                foreach (var item in this.Request.Form)
-                {
-                    var prop = roomType.GetProperty(item.Key);
-                    if (prop == null || !prop.CanWrite)
-                        continue;
-
-                    var value = item.Value.ToString();
-                    prop.SetValue(room, Utils.Utils.ParseValue(value));
-                }
+                this.SetObject(room);
                 this.myHome.SystemChanged = true;
                 return this.Ok();
             }
@@ -92,7 +83,13 @@ namespace MyHome
                 var method = system.GetType().GetMethod(funcName);
                 if (method != null)
                 {
-                    var args = this.Request.HasFormContentType ? this.Request.Form.Select(kvp => Utils.Utils.ParseValue(kvp.Value.ToString())) : Array.Empty<string>();
+                    var methodParams = method.GetParameters();
+                    var args = Array.Empty<object>();
+                    if (this.Request.HasFormContentType)
+                    {
+                        args = this.Request.Form.Select((kvp, i) =>
+                            Utils.Utils.ParseValue(kvp.Value.ToString(), methodParams[i].ParameterType)).ToArray();
+                    }
                     var result = method.Invoke(system, args.ToArray());
                     return this.Ok(result);
                 }
@@ -230,6 +227,28 @@ namespace MyHome
         }
 
 
+        [HttpGet("config")]
+        public ActionResult GetConfig()
+        {
+            return this.Ok(this.myHome.Config.ToUiObject(true));
+        }
+
+        [HttpPost("config")]
+        public ActionResult SetConfig()
+        {
+            try
+            {
+                this.SetObject(this.myHome.Config);
+                this.myHome.SystemChanged = true;
+                return this.Ok();
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Failed to set config");
+                return this.BadRequest(e.Message);
+            }
+        }
+
         [HttpGet("logs")]
         public ActionResult GetLogs()
         {
@@ -247,17 +266,16 @@ namespace MyHome
         public ActionResult Upgrade()
         {
             if (this.myHome.Upgrade())
-            {
-                System.Threading.Tasks.Task.Delay(100).ContinueWith(_ => Environment.Exit(0));
-                return this.Ok();
-            }
+                return this.Restart();
+
             return this.Conflict();
         }
 
         [HttpPost("restart")]
-        public void Restart()
+        public ActionResult Restart()
         {
-            Environment.Exit(0);
+            System.Threading.Tasks.Task.Delay(100).ContinueWith(_ => Environment.Exit(0));
+            return this.Ok();
         }
 
 
@@ -270,6 +288,21 @@ namespace MyHome
 
             var instance = Activator.CreateInstance(type, true);
             return this.Ok(instance.ToUiObject(true));
+        }
+
+
+        private void SetObject(object obj)
+        {
+            var type = obj.GetType();
+            foreach (var item in this.Request.Form)
+            {
+                var prop = type.GetProperty(item.Key);
+                if (prop == null || !prop.CanWrite)
+                    continue;
+
+                var value = item.Value.ToString();
+                prop.SetValue(obj, Utils.Utils.ParseValue(value, prop.PropertyType));
+            }
         }
     }
 }

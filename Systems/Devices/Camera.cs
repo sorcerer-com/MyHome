@@ -323,7 +323,7 @@ namespace MyHome.Systems.Devices
                     };
 
                     var value = child.Attributes["Value"].Value.ToLower();
-                    item["value"] = Utils.Utils.ParseValue(value);
+                    item["value"] = Utils.Utils.ParseValue(value, null);
                     result.Add(item);
                 }
                 return result;

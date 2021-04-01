@@ -31,6 +31,14 @@ function restartCamera(cameraName) {
     return $.post(`./api/cameras/${cameraName}/restart`)
 }
 
+function getConfig() {
+    return $.get("./api/config");
+}
+
+function setConfig(data) {
+    return $.post("./api/config", data);
+}
+
 function getLogs() {
     return $.get("./api/logs");
 }
@@ -41,6 +49,10 @@ function getUpgradeAvailable() {
 
 function upgrade() {
     return $.post("./api/upgrade");
+}
+
+function restart() {
+    return $.post("./api/restart");
 }
 
 function getType(typeName) {
