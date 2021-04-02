@@ -16,7 +16,7 @@ namespace MyHome.Utils
 
         public static dynamic ParseValue(string value, Type type)
         {
-            if ((type == null || type == typeof(bool)) && 
+            if ((type == null || type == typeof(bool)) &&
                 (value == "true" || value == "false"))
             {
                 return value == "true";

@@ -76,7 +76,6 @@ namespace MyHome
             // * login UI - android pin screen
             // * migrate external sensors data (garage) through nginx; disable direct port forwarding to myhome; MQTT?
             // * mobile UI
-            // * restart button in setting modal
             // * investigate the deatlock (only on release?) - run here for a long period
             // * add MQTT support (maybe install broker on rpi3, accessible through nginx)
             // * git squash commits to Remove python into Initial commit; move to master

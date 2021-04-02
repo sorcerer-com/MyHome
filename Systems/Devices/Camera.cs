@@ -143,12 +143,12 @@ namespace MyHome.Systems.Devices
             }
         }
 
-        public bool SaveImage(string fileName, Size? size = null, bool timestamp = true)
+        public bool SaveImage(string filepath, Size? size = null, bool timestamp = true)
         {
-            logger.Debug($"Camera '{this.Name}' save image: {fileName}");
+            logger.Debug($"Camera '{this.Name}' save image: {filepath}");
 
             var image = this.GetImage(size, timestamp);
-            return Cv2.ImWrite(fileName, image);
+            return Cv2.ImWrite(filepath, image);
         }
 
         public void Move(Movement movement)

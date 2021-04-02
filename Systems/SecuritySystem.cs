@@ -10,6 +10,8 @@ using Newtonsoft.Json;
 
 using NLog;
 
+using OpenCvSharp;
+
 namespace MyHome.Systems
 {
     public class SecuritySystem : BaseSystem
@@ -20,6 +22,8 @@ namespace MyHome.Systems
         public int ActivationDelay { get; set; } // minutes
 
         public int SendInterval { get; set; } // minutes
+
+        public double MovementThreshold { get; set; } // percents
 
         [JsonIgnore]
         public Dictionary<Room, bool> ActivatedRooms => this.RoomsInfo.ToDictionary(r => r.Room, r => r.Activated);
@@ -38,6 +42,8 @@ namespace MyHome.Systems
         [JsonRequired]
         private List<RoomInfo> RoomsInfo { get; }
 
+        private Dictionary<string, Mat> PrevImages { get; }
+
 
         private SecuritySystem() : this(null) { }  // for json deserialization
 
@@ -45,9 +51,10 @@ namespace MyHome.Systems
         {
             this.ActivationDelay = 15;
             this.SendInterval = 5;
+            this.MovementThreshold = 0.02;
 
             this.RoomsInfo = new List<RoomInfo>();
-            // TODO: camera motion check?
+            this.PrevImages = new Dictionary<string, Mat>();
         }
 
         public void SetEnable(Room room, bool enable)
@@ -107,6 +114,8 @@ namespace MyHome.Systems
 
             roomInfo.Activated = true;
             roomInfo.StartTime = DateTime.Now;
+            foreach (var camera in roomInfo.Room.Cameras)
+                this.PrevImages.Remove(camera.Name);
             logger.Info($"Alarm security activated in '{room.Name}' room");
             this.Owner.Events.Fire(this, "SecurityAlarmActivated", roomInfo.Room);
             this.Owner.SystemChanged = true;
@@ -148,38 +157,53 @@ namespace MyHome.Systems
                     continue;
 
                 var elapsed = DateTime.Now - roomInfo.StartTime;
+                bool changed = false;
 
                 // send alert
                 if (elapsed > TimeSpan.FromMinutes(this.SendInterval))
                 {
                     roomInfo.Activated = false;
-                    if (roomInfo.ImageFiles.Count > 0 || CheckForOfflineCamera(roomInfo.Room))
+                    if (roomInfo.ImageFiles.Count > 1 || CheckForOfflineCamera(roomInfo.Room))
                     {
-                        // TODO: reduce "similar" images before send
                         if (this.Owner.SendAlert($"'{roomInfo.Room.Name}' room security alarm activated!", roomInfo.ImageFiles, true))
                             ClearImages(roomInfo);
                     }
                     else
                     {
                         logger.Info($"Skip alert sending for '{roomInfo.Room.Name}' room");
+                        ClearImages(roomInfo);
                     }
+                    changed = true;
                 }
 
                 foreach (var camera in roomInfo.Room.Cameras)
                 {
                     if (camera.IsOpened) // try to open the camera and if succeed
-                        SaveImage(camera, roomInfo);
+                        changed |= this.SaveImage(camera, roomInfo);
                 }
-                this.Owner.SystemChanged = true;
+                this.Owner.SystemChanged = changed;
             }
         }
 
-        private static void SaveImage(Camera camera, RoomInfo roomInfo)
+        private bool SaveImage(Camera camera, RoomInfo roomInfo)
         {
+            var image = camera.GetImage();
+            if (this.PrevImages.ContainsKey(camera.Name))
+            {
+                // if no movement between current and previous image - skip saving
+                if (!FindMovement(this.PrevImages[camera.Name], image, this.MovementThreshold))
+                    return false;
+            }
+            this.PrevImages[camera.Name] = image.Resize(new Size(640, 480));
+
             var filename = $"{camera.Room.Name}_{camera.Name}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.jpg";
             var filepath = Path.Combine(Config.BinPath, filename);
-            if (camera.SaveImage(filepath))
+            if (Cv2.ImWrite(filepath, image))
+            {
                 roomInfo.ImageFiles.Add(filepath);
+                return true;
+            }
+            return false;
         }
 
         private static void ClearImages(RoomInfo roomInfo)
@@ -198,6 +222,25 @@ namespace MyHome.Systems
                     return true;
             }
             return false;
+        }
+
+        private static bool FindMovement(Mat image1, Mat image2, double threshold)
+        {
+            var gray1 = image1
+                .Resize(new Size(640, 480))
+                .CvtColor(ColorConversionCodes.BGR2GRAY)
+                .GaussianBlur(new Size(21, 21), 0);
+            var gray2 = image2
+                .Resize(new Size(640, 480))
+                .CvtColor(ColorConversionCodes.BGR2GRAY)
+                .GaussianBlur(new Size(21, 21), 0);
+
+            Mat diff = new Mat();
+            Cv2.Absdiff(gray1, gray2, diff);
+            diff = diff.Threshold(25, 255, ThresholdTypes.Binary);
+            var diffPecent = (double)diff.CountNonZero() / (640 * 480);
+            logger.Warn(diffPecent);
+            return diffPecent > threshold;
         }
     }
 }

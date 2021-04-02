@@ -1,7 +1,6 @@
 ﻿<div class="w3-padding-small w3-round-large w3-animate-opacity margin-8 bg-gray">
     <!-- rooms statuses -->
-    <div class="w3-left-align" v-for="room of rooms"
-       v-if="'Motion' in room.SensorsValues">
+    <div class="w3-left-align" v-for="room of rooms">
         <a v-on:click="setRoomSecuritySystemEnabled(room.Name, !room.IsSecuritySystemEnabled);">
             <span class="w3-cell-middle w3-small material-icons">
                 <span v-show="room.IsSecuritySystemEnabled" class="w3-text-light-green">check_circle</span>

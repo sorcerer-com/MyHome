@@ -23,7 +23,6 @@
 
     <!-- Security system -->
     <a class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-light-gray"
-       v-if="'Motion' in room.SensorsValues"
        v-on:click="setRoomSecuritySystemEnabled(room.Name, !room.IsSecuritySystemEnabled);">
         <span class="material-icons w3-xxlarge"
               v-bind:class="{'w3-text-light-green': room.IsSecuritySystemEnabled,

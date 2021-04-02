@@ -67,11 +67,10 @@
                     },
 
                     allRoomsSecuritySystemEnabled: function () {
-                        return this.rooms.length > 0 && this.rooms.filter(r => 'Motion' in r.SensorsValues).every(r => r.IsSecuritySystemEnabled)
+                        return this.rooms.length > 0 && this.rooms.every(r => r.IsSecuritySystemEnabled)
                     },
                     someRoomSecuritySystemEnabled: function () {
-                        let roomsWithSecurity = this.rooms.filter(r => 'Motion' in r.SensorsValues);
-                        return roomsWithSecurity.some(r => r.IsSecuritySystemEnabled) && !roomsWithSecurity.every(r => r.IsSecuritySystemEnabled)
+                        return this.rooms.some(r => r.IsSecuritySystemEnabled) && !this.rooms.every(r => r.IsSecuritySystemEnabled)
                     },
 
                     showAddRoomModal: function () {
