@@ -75,7 +75,7 @@ namespace MyHome
             // * SecuritySystem - define zones - group of rooms
             // * login UI - android pin screen
             // * migrate external sensors data (garage) through nginx; disable direct port forwarding to myhome; MQTT?
-            // * mobile UI
+            // * mobile UI / landscape
             // * investigate the deatlock (only on release?) - run here for a long period
             // * add MQTT support (maybe install broker on rpi3, accessible through nginx)
             // * git squash commits to Remove python into Initial commit; move to master

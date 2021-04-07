@@ -46,7 +46,7 @@ namespace MyHome.Utils
                     host = server.Split(':')[0];
                     port = int.Parse(server.Split(':')[1]);
                 }
-                using var smtp = new SmtpClient { Timeout = 20 * 1000 };
+                using var smtp = new SmtpClient { Timeout = 30 * 1000 };
                 smtp.Connect(host, port, (port == 465 || port == 587));
                 smtp.Authenticate(sender, password);
                 smtp.Send(mail);

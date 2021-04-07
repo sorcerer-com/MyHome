@@ -24,10 +24,10 @@ namespace MyHome.Systems
         [UiProperty]
         public int Volume { get; set; }
 
-        [UiProperty]
+        [UiProperty(true)]
         public List<string> MediaPaths { get; }
 
-        [UiProperty]
+        [UiProperty(true)]
         public List<string> Radios { get; }
 
         [UiProperty]
@@ -103,6 +103,7 @@ namespace MyHome.Systems
                 path = path[(path.IndexOf(":") + 1)..];
 
             this.player.Media = new Media(this.libVLC, new Uri(path));
+            this.player.Media.AddOption(":subsdec-encoding=Windows-1251"); // set default encoding to Cyrillic
             this.player.Volume = this.Volume;
             this.player.Fullscreen = true;
             this.player.Play();

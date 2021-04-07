@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -227,24 +228,38 @@ namespace MyHome
         }
 
 
-        [HttpGet("config")]
-        public ActionResult GetConfig()
+        [HttpGet("settings")]
+        public ActionResult GetSettings()
         {
-            return this.Ok(this.myHome.Config.ToUiObject(true));
+            var result = new Dictionary<string, object>
+            {
+                { "Config", this.myHome.Config.ToUiObject(true) }
+            };
+            foreach (var kvp in this.myHome.Systems)
+                result.Add(kvp.Key, kvp.Value.ToUiObject(true));
+            return this.Ok(result);
         }
 
-        [HttpPost("config")]
-        public ActionResult SetConfig()
+        [HttpPost("settings/{name}")]
+        public ActionResult SetSettings(string name)
         {
             try
             {
-                this.SetObject(this.myHome.Config);
+                if (name == "Config")
+                    this.SetObject(this.myHome.Config);
+                else
+                {
+                    var system = this.myHome.Systems.FirstOrDefault(kvp => kvp.Key == name).Value;
+                    if (system == null)
+                        return this.NotFound("System not found");
+                    this.SetObject(system);
+                }
                 this.myHome.SystemChanged = true;
                 return this.Ok();
             }
             catch (Exception e)
             {
-                logger.Error(e, "Failed to set config");
+                logger.Error(e, "Failed to set settings to: " + name);
                 return this.BadRequest(e.Message);
             }
         }
@@ -296,12 +311,22 @@ namespace MyHome
             var type = obj.GetType();
             foreach (var item in this.Request.Form)
             {
-                var prop = type.GetProperty(item.Key);
-                if (prop == null || !prop.CanWrite)
+                var prop = type.GetProperty(item.Key.Replace("[]", ""));
+                if (prop == null)
                     continue;
 
-                var value = item.Value.ToString();
-                prop.SetValue(obj, Utils.Utils.ParseValue(value, prop.PropertyType));
+                if (!prop.CanWrite && !item.Key.EndsWith("[]"))
+                {
+                    prop.SetValue(obj, Utils.Utils.ParseValue(item.Value, prop.PropertyType));
+                }
+                else if (item.Key.EndsWith("[]")) // list
+                {
+                    var values = item.Value.Select(v => Utils.Utils.ParseValue(v, prop.PropertyType.GenericTypeArguments[0]));
+                    var list = prop.GetValue(obj) as System.Collections.IList;
+                    list.Clear();
+                    foreach (var value in values)
+                        list.Add(value);
+                }
             }
         }
     }

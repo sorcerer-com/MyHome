@@ -5,6 +5,7 @@ using System.Linq;
 
 using MyHome.Models;
 using MyHome.Systems.Devices;
+using MyHome.Utils;
 
 using Newtonsoft.Json;
 
@@ -19,10 +20,13 @@ namespace MyHome.Systems
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
 
+        [UiProperty(true)]
         public int ActivationDelay { get; set; } // minutes
 
+        [UiProperty(true)]
         public int SendInterval { get; set; } // minutes
 
+        [UiProperty(true)]
         public double MovementThreshold { get; set; } // percents
 
         [JsonIgnore]
@@ -124,6 +128,8 @@ namespace MyHome.Systems
         private void Events_Handler(object sender, GlobalEvent.GlobalEventArgs e)
         {
             // TODO: maybe move all of this to action-trigger system
+            // * power consumption
+            // * garage door
             if (sender is BaseSensor sensor && e.EventType == "SensorDataAdded")
             {
                 var data = e.Data as Dictionary<string, double>;
@@ -135,7 +141,6 @@ namespace MyHome.Systems
                 if (data.ContainsKey("Motion") && data["Motion"] == 1)
                     this.Activate(sensor.Room);
 
-                // TODO: power consumption
             }
         }
 
@@ -239,7 +244,6 @@ namespace MyHome.Systems
             Cv2.Absdiff(gray1, gray2, diff);
             diff = diff.Threshold(25, 255, ThresholdTypes.Binary);
             var diffPecent = (double)diff.CountNonZero() / (640 * 480);
-            logger.Warn(diffPecent);
             return diffPecent > threshold;
         }
     }

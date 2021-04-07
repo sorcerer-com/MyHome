@@ -101,6 +101,11 @@ a {
     cursor: pointer;
 }
 
+input {
+    border: solid 1px dimgray;
+    border-radius: 4px;
+}
+
 summary {
     cursor: pointer;
     overflow-wrap: break-word;

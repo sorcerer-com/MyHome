@@ -16,6 +16,7 @@ namespace MyHome.Systems
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
+        [UiProperty(true)]
         public int ReadSensorDataInterval { get; set; } // minutes
 
         public List<Device> Devices { get; }

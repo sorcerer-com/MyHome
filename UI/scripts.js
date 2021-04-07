@@ -31,12 +31,12 @@ function restartCamera(cameraName) {
     return $.post(`./api/cameras/${cameraName}/restart`)
 }
 
-function getConfig() {
-    return $.get("./api/config");
+function getSettings() {
+    return $.get("./api/settings");
 }
 
-function setConfig(data) {
-    return $.post("./api/config", data);
+function setSettings(name, data) {
+    return $.post(`./api/settings/${name}`, data);
 }
 
 function getLogs() {

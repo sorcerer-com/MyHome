@@ -1,0 +1,17 @@
+﻿<form class="w3-center" v-if="object">
+    <div v-for="name of Object.keys(object)" v-if="name[0] != '$'"
+         class="w3-row w3-row-padding margin-bottom-8">
+        <span class="w3-col m5 w3-right-align">{{name}}:</span>
+
+        <object-editor-item class="w3-col m5"
+                            v-bind:key="name"
+                            v-bind:value="object[name]"
+                            v-bind:value-type="object['$meta'][name]">
+        </object-editor-item>
+    </div>
+    <a class="w3-button w3-round w3-padding-small w3-white w3-hover-blue-grey margin-8"
+       v-on:click="save()">
+        Save
+    </a>
+    <div class="w3-text-red margin-bottom-8" v-if="error">{{error}}</div>
+</form>

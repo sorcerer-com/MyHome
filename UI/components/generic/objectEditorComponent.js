@@ -10,12 +10,6 @@ $.get(templateUrl, template => {
             }
         },
         methods: {
-            getEnumValues: function (type) {
-                if (!type.startsWith("Enum"))
-                    return [];
-                return type.replace("Enum (", "").replace(")", "").split(", ");
-            },
-
             save: function () {
                 this.onsave(this.object).fail(response => {
                     this.error = "Error: " + response.responseText;
