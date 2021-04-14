@@ -1,5 +1,5 @@
 ﻿<div>
-    <div v-for="sensor of sensors">
+    <div v-for="sensor of sensors" class="w3-margin-bottom">
         <h4 class="reset-margin">{{sensor.Name}}</h4>
         <hr class="reset-margin margin-bottom-8" />
         <canvas v-bind:id="'chart' + sensor.Name + 'LastDay'"></canvas>

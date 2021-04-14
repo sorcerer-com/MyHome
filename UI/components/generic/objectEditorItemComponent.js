@@ -6,6 +6,7 @@ $.get(templateUrl, template => {
         props: ["value", "value-type"],
         data: function () {
             return {
+                localValue: this.value
             }
         },
         methods: {
@@ -16,6 +17,15 @@ $.get(templateUrl, template => {
             },
             getListType: function (type) {
                 return type.replace("List <", "").replace(">", "");
+            },
+            onListChange: function (index, value) {
+                this.localValue[index] = value;
+                this.$emit("change", this.localValue);
+            }
+        },
+        watch: {
+            localValue: function () {
+                this.$emit("change", this.localValue);
             }
         }
     });

@@ -37,7 +37,7 @@ namespace MyHome.Systems.Devices
             ZOOMOUT
         }
 
-        [UiProperty]
+        [UiProperty(true)]
         public bool IsOnvifSupported { get; set; }
 
         [JsonIgnore]
@@ -78,7 +78,7 @@ namespace MyHome.Systems.Devices
         private readonly Dictionary<Type, object> onvif;
 
 
-        private Camera() : this(null, null, null, null) { } // for json deserialization
+        private Camera() : this(null, null, null, "") { } // for json deserialization
 
         public Camera(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room, address)
         {

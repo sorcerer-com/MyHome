@@ -1,0 +1,59 @@
+﻿<div id="scrollable-content">
+    <div class="w3-content w3-padding-16">
+        <!-- Rooms info -->
+        <div class="w3-col m3 s11 w3-margin" v-for="room of rooms">
+            <h3 class="reset-margin margin-left-8">
+                {{room.Name}}
+                <a class="font-size-normal material-icons" v-on:click="showEdit(room.Name, room, saveRoom, deleteRoom)">edit</a>
+            </h3>
+
+            <a class="w3-col m12 s11 w3-center w3-padding w3-round-large w3-hover-light-gray margin-8 bg-gray-opacity-88"
+               v-for="device of room.Devices"
+               v-on:click="showEdit(room.Name, device, saveDevice, deleteDevice)">
+                <span class="w3-show-block overflow-wrap-break-word">{{device.Name}}</span>
+                <span class="w3-small">({{device.$type.substr(device.$type.lastIndexOf(".")+1)}})</span>
+            </a>
+
+            <a class="w3-col m12 s11 w3-padding w3-round-large w3-center w3-hover-light-gray margin-8 bg-gray-opacity-88 material-icons"
+               v-on:click="showAddDevice(room)">
+                add
+            </a>
+        </div>
+
+        <a class="w3-col m3 s11 w3-margin" v-on:click="showAddRoom">
+            <h3 class="reset-margin margin-left-8">
+                <span class="font-size-normal material-icons">add</span>
+                Add Room
+            </h3>
+        </a>
+    </div>
+
+    <!-- Modal -->
+    <div class="w3-modal" v-if="edit.name"
+         v-bind:class="{'w3-show-block': edit.name}"
+         v-on:click="edit.name = null">
+        <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">
+            <header class="w3-container w3-blue-gray">
+                <span class="w3-button w3-display-topright" v-on:click="edit.name = null">&times;</span>
+                <h2>{{edit.name}}</h2>
+            </header>
+            <div class="w3-container w3-padding-16 height-100 overflow-y-auto bg-gray">
+                <div class="w3-margin-bottom" v-if="edit.types">
+                    <span class="w3-right-align">Types:</span>
+                    <select class="w3-mobile" v-on:change="onTypeChange">
+                        <option value="" disabled selected>Select</option>
+                        <option v-for="v of edit.types" v-bind:value="v">{{v}}</option>
+                    </select>
+                </div>
+
+                <object-editor v-bind:object="edit.object" v-bind:onsave="edit.onSave"></object-editor>
+
+                <a class="w3-button w3-right w3-round w3-padding-small w3-white w3-hover-red margin-8"
+                   v-if="!edit.name.startsWith('Add ')"
+                   v-on:click="edit.onDelete">
+                    delete
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

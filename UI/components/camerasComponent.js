@@ -10,7 +10,12 @@ $.get(templateUrl, template => {
         },
         methods: {
             moveCamera: moveCamera,
-            restartCamera: restartCamera
+            restartCamera: function (cameraName) {
+                if (!confirm("Are you sure you want to restart camera?"))
+                    return;
+
+                restartCamera(cameraName);
+            }
         }
     });
 });

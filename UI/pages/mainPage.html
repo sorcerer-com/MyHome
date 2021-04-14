@@ -1,0 +1,34 @@
+﻿<div id="scrollable-content">
+    <div class="w3-content w3-padding-16">
+        <!-- Rooms info -->
+        <div class="w3-col m3 w3-margin" v-for="room of rooms">
+            <room-card v-bind:room="room"></room-card>
+        </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="w3-padding-large w3-bottom w3-margin-bottom w3-right-align">
+        <!-- Media Player -->
+        <div class="w3-dropdown-hover w3-transparent margin-left-8"
+             @mouseover="hoverMediaPlayer()" @mouseleave="mediaPlayerHover = false">
+            <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
+               v-bind:class="{'w3-text-light-green': mediaPlayer.Playing}">
+                video_library
+            </a>
+            <div class="w3-dropdown-content w3-transparent dropdown-top-right">
+                <media-player v-bind:media-player="mediaPlayer"></media-player>
+            </div>
+        </div>
+
+        <!-- Security -->
+        <div class="w3-dropdown-hover w3-transparent margin-left-8">
+            <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
+               v-bind:class="{'w3-text-lime': someRoomSecuritySystemEnabled(), 'w3-text-green': allRoomsSecuritySystemEnabled()}">
+                security
+            </a>
+            <div class="w3-dropdown-content w3-transparent dropdown-top-right">
+                <security-list v-bind:rooms="rooms"></security-list>
+            </div>
+        </div>
+    </div>
+</div>

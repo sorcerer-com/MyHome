@@ -7,8 +7,9 @@ namespace MyHome.Systems.Devices
     {
         public DevicesSystem Owner { get; set; }
 
-        [UiProperty]
-        public string Name { get; set; }
+        [UiProperty(true)]
+        public string Name { get; set; } // TODO: uniq per room?
+        // TODO: auto generated device name?
 
         public Room Room { get; set; }
 

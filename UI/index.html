@@ -26,6 +26,9 @@
     <script src="./components/mediaPlayerComponent.js"></script>
     <script src="./components/securityListComponent.js"></script>
 
+    <script src="../pages/mainPage.js"></script>
+    <script src="../pages/configPage.js"></script>
+
     <link rel="stylesheet" href="./style.css" />
     <script src="./scripts.js"></script>
 
@@ -34,26 +37,44 @@
             window.vue = new Vue({
                 el: "#vue-content",
                 data: {
-                    rooms: [],
-                    mediaPlayer: {},
                     settings: {},
                     logs: [],
                     upgradeAvailable: false,
-                    ui: {
-                        mediaPlayerHover: false,
-                        modal: "",
-                        selectedSettings: "",
-                        addObject: null
-                    }
+
+                    page: "main",
+                    modal: "",
+                    selectedSettings: ""
                 },
                 methods: {
-                    addRoom: function (room) {
-                        if (this.rooms.some(r => r.Name == room.Name)) // room exists
-                            return $.Deferred().reject({ responseText: "A room with the same name already exists" });
-                        return setRoom(room.Name, room).done(() => this.ui.modal = "");
+                    refreshData: function () {
+                        getUpgradeAvailable().done(value => {
+                            Vue.set(this, "upgradeAvailable", value);
+                            setTimeout(this.refreshData, 3000);
+                        }).fail(() => {
+                            if (response.status == 401) // unauthorized
+                                window.location.replace("./login.html");
+                            else
+                                setTimeout(this.refreshData, 1000);
+                        });
+
+                        // update logs if the modal is opened
+                        if (this.modal == "Logs") {
+                            getLogs().done(logs => Vue.set(this, "logs", logs.reverse()));
+                        }
                     },
+
+                    showSettingsModal: function () {
+                        this.modal = "Settings";
+                        this.selectedSettings = "Config";
+                        getSettings().done(settings => Vue.set(this, "settings", settings));
+                    },
+                    showLogsModal: function () {
+                        this.modal = "Logs";
+                        getLogs().done(logs => this.logs = logs.reverse());
+                    },
+
                     saveSettings: function (settings) {
-                        return setSettings(this.ui.selectedSettings, settings).done(() => this.ui.modal = "");
+                        return setSettings(this.selectedSettings, settings).done(() => this.modal = "");
                     },
                     upgrade: function () {
                         upgrade().done(() => {
@@ -62,67 +83,19 @@
                         });
                     },
                     restart: function () {
+                        if (!confirm("Are you sure you want to restart the system?"))
+                            return;
+
                         restart().done(() => {
                             $("#vue-content").html("Rebooting...");
                             setTimeout(() => window.location.reload(true), 30000);
                         });
-                    },
-
-                    allRoomsSecuritySystemEnabled: function () {
-                        return this.rooms.length > 0 && this.rooms.every(r => r.IsSecuritySystemEnabled)
-                    },
-                    someRoomSecuritySystemEnabled: function () {
-                        return this.rooms.some(r => r.IsSecuritySystemEnabled) && !this.rooms.every(r => r.IsSecuritySystemEnabled)
-                    },
-
-                    showAddRoomModal: function () {
-                        this.ui.modal = "Add Room";
-                        getType("Room").done(room => this.ui.addObject = fixDateTimes(room));
-                    },
-                    showSettingsModal: function () {
-                        this.ui.modal = "Settings";
-                        this.ui.selectedSettings = "Config";
-                        getSettings().done(settings => updateVue({ settings: settings }));
-                    },
-                    showLogsModal: function () {
-                        this.ui.modal = "Logs";
-                        getLogs().done(logs => this.logs = logs.reverse());
-                    },
-                    mediaPlayerHover: function () {
-                        if (!this.ui.mediaPlayerHover) {
-                            this.ui.mediaPlayerHover = true;
-                            getSystem("MediaPlayer").done(mediaPlayer => updateVue({ mediaPlayer: mediaPlayer }));
-                        }
                     }
-                }
+                },
+                mounted: function () {
+                    this.refreshData();
+                },
             });
-
-            function update() {
-                getRooms().done(rooms => {
-                    updateVue({ rooms: rooms });
-                    setTimeout(update, 3000);
-                }).fail(response => {
-                    if (response.status == 401) // unauthorized
-                        window.location.replace("./login.html");
-                    else
-                        setTimeout(update, 1000)
-                });
-
-                getUpgradeAvailable().done(value => updateVue({ upgradeAvailable: value }));
-
-                // update logs if the modal is opened
-                if (window.vue.ui.modal == "Logs") {
-                    getLogs().done(logs => updateVue({ logs: logs.reverse() }));
-                }
-
-                // update media player if it is opened
-                if (window.vue.ui.mediaPlayerHover) {
-                    getSystem("MediaPlayer").done(mediaPlayer => updateVue({ mediaPlayer: mediaPlayer }));
-                }
-            }
-
-            update(true);
-            getSystem("MediaPlayer").done(mediaPlayer => updateVue({ mediaPlayer: mediaPlayer }));
         });
     </script>
 </head>
@@ -136,14 +109,12 @@
                 <h3 class="w3-cell-middle w3-padding-small w3-show-inline-block">My Home</h3>
             </div>
             <div class="w3-right w3-padding w3-padding-top-24">
-                <a href="./" class="material-icons">home</a>
-                <div class="w3-dropdown-hover">
-                    <a class="w3-text-gray w3-hover-text-white material-icons">add_circle_outline</a>
-                    <div class="w3-dropdown-content w3-padding-small w3-round-large w3-animate-opacity dropdown-right bg-gray">
-                        <a v-on:click="showAddRoomModal()" class="w3-show-block w3-hover-text-white padding-4">Add Room</a>
-                        <a class="w3-show-block w3-hover-text-white padding-4">Add Device</a>
-                    </div>
-                </div>
+                <a v-on:click="page = 'main'" class="material-icons" v-bind:class="{'w3-text-gray w3-hover-text-white': page != 'main'}">
+                    home
+                </a>
+                <a v-on:click="page = 'config'" class="material-icons" v-bind:class="{'w3-text-gray w3-hover-text-white': page != 'config'}">
+                    build
+                </a>
                 <a v-on:click="showSettingsModal()" class="material-icons w3-text-gray w3-hover-text-white">settings</a>
                 <a v-on:click="showLogsModal()" class="material-icons w3-text-gray w3-hover-text-white">assignment</a>
 
@@ -164,53 +135,21 @@
         </div>
 
         <!-- Content -->
-        <div id="scrollable-content">
-            <div class="w3-content w3-padding-16">
-                <!-- Rooms info -->
-                <div class="w3-col m3 w3-margin" v-for="room of rooms">
-                    <room-card v-bind:room="room"></room-card>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bottom bar -->
-        <div class="w3-padding-large w3-bottom w3-margin-bottom w3-right-align">
-            <!-- Media Player -->
-            <div class="w3-dropdown-hover w3-transparent margin-left-8"
-                 @mouseover="mediaPlayerHover()" @mouseleave="ui.mediaPlayerHover = false">
-                <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
-                   v-bind:class="{'w3-text-light-green': mediaPlayer.Playing}">
-                    video_library
-                </a>
-                <div class="w3-dropdown-content w3-transparent dropdown-top-right">
-                    <media-player v-bind:media-player="mediaPlayer"></media-player>
-                </div>
-            </div>
-
-            <!-- Security -->
-            <div class="w3-dropdown-hover w3-transparent margin-left-8">
-                <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
-                   v-bind:class="{'w3-text-lime': someRoomSecuritySystemEnabled(), 'w3-text-green': allRoomsSecuritySystemEnabled()}">
-                    security
-                </a>
-                <div class="w3-dropdown-content w3-transparent dropdown-top-right">
-                    <security-list v-bind:rooms="rooms"></security-list>
-                </div>
-            </div>
-        </div>
+        <main-page v-if="page == 'main'"></main-page>
+        <config-page v-if="page == 'config'"></config-page>
 
         <!-- Modal -->
-        <div class="w3-modal" v-if="ui.modal"
-             v-bind:class="{'w3-show-block': ui.modal}"
-             v-on:click="ui.modal = ''">
+        <div class="w3-modal" v-if="modal"
+             v-bind:class="{'w3-show-block': modal}"
+             v-on:click="modal = ''">
             <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">
                 <header class="w3-container w3-blue-gray">
-                    <span class="w3-button w3-display-topright" v-on:click="ui.modal = ''">&times;</span>
-                    <h2>{{ui.modal}}</h2>
+                    <span class="w3-button w3-display-topright" v-on:click="modal = ''">&times;</span>
+                    <h2>{{modal}}</h2>
                 </header>
                 <div class="w3-container w3-padding-16 height-100 overflow-y-auto bg-gray">
                     <!-- Logs -->
-                    <ul class="w3-ul w3-monospace" v-if="ui.modal == 'Logs'">
+                    <ul class="w3-ul w3-monospace" v-if="modal == 'Logs'">
                         <li v-for="log of logs" class="w3-hover-opacity overflow-wrap-break-word"
                             v-bind:class="{'w3-red': log.includes('ERROR'), 'w3-purple': log.includes('WARN')}">
                             {{log}}
@@ -218,18 +157,18 @@
                     </ul>
 
                     <!-- Settings -->
-                    <div class="w3-bar w3-gray margin-bottom-8" v-if="ui.modal == 'Settings'">
+                    <div class="w3-bar w3-gray margin-bottom-8" v-if="modal == 'Settings'">
                         <a class="w3-bar-item w3-button" v-for="(name, index) of Object.keys(settings)"
-                           v-bind:class="{'w3-light-gray': ui.selectedSettings == name}"
-                           v-on:click="ui.selectedSettings = name">
+                           v-bind:class="{'w3-light-gray': selectedSettings == name}"
+                           v-on:click="selectedSettings = name">
                             {{name}}
                         </a>
                     </div>
-                    <object-editor v-if="ui.modal == 'Settings'" 
-                                   v-bind:object="settings[ui.selectedSettings]" 
+                    <object-editor v-if="modal == 'Settings'"
+                                   v-bind:object="settings[selectedSettings]"
                                    v-bind:onsave="saveSettings"></object-editor>
                     <a class="w3-button w3-right w3-round w3-padding-small w3-white w3-hover-blue-grey margin-8"
-                       v-if="ui.modal == 'Settings' && ui.selectedSettings == 'Config'" v-on:click="restart()">
+                       v-if="modal == 'Settings' && selectedSettings == 'Config'" v-on:click="restart()">
                         Restart
                     </a>
                 </div>

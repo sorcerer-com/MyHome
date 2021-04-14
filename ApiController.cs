@@ -16,7 +16,7 @@ using NLog.Targets;
 
 namespace MyHome
 {
-
+    // TODO: split in multiple controllers
     [Route("[controller]")]
     [ApiController]
     public class ApiController : ControllerBase
@@ -36,6 +36,12 @@ namespace MyHome
         public ActionResult GetRooms()
         {
             return this.Ok(this.myHome.Rooms.Select(r => r.ToUiObject()));
+        }
+
+        [HttpPost("rooms/create")]
+        public ActionResult CreateRoom()
+        {
+            return this.Ok(new Models.Room(this.myHome, "").ToUiObject(true));
         }
 
         [HttpPost("rooms/{roomName}")]
@@ -58,6 +64,28 @@ namespace MyHome
             catch (Exception e)
             {
                 logger.Error(e, $"Failed to set room '${roomName}'");
+                return this.BadRequest(e.Message);
+            }
+        }
+
+        [HttpPost("rooms/{roomName}/delete")]
+        public ActionResult DeleteRoom(string roomName)
+        {
+            try
+            {
+                var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+                if (room == null)
+                    return this.NotFound("Room not found: " + roomName);
+
+                foreach (var device in room.Devices.ToList()) // copy the list of devices
+                    this.myHome.DevicesSystem.Devices.Remove(device);
+                this.myHome.Rooms.Remove(room);
+                this.myHome.SystemChanged = true;
+                return this.Ok();
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, $"Failed to delete room '${roomName}'");
                 return this.BadRequest(e.Message);
             }
         }
@@ -264,6 +292,96 @@ namespace MyHome
             }
         }
 
+        [HttpGet("settings/rooms")]
+        public ActionResult GetRoomsSettings()
+        {
+            return this.Ok(this.myHome.Rooms.Select(r => r.ToUiObject(true)));
+        }
+
+        [HttpGet("settings/devices/types")]
+        public ActionResult GetDeviceTypes()
+        {
+            return this.Ok(typeof(Device).GetSubClasses().Select(t => t.Name));
+        }
+
+
+        [HttpPost("settings/room/{roomName}/devices/create/{deviceType}")]
+        public ActionResult CreateDevice(string roomName, string deviceType)
+        {
+            var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+            if (room == null)
+                return this.NotFound("Room not found: " + roomName);
+
+            var type = typeof(Device).GetSubClasses().FirstOrDefault(t => t.Name == deviceType);
+            if (type == null)
+                return this.NotFound($"No such device type '{deviceType}'");
+
+            var device = (Device)Activator.CreateInstance(type, true);
+            device.Owner = this.myHome.DevicesSystem;
+            device.Room = room;
+            return this.Ok(device.ToUiObject(true));
+        }
+
+        [HttpPost("settings/room/{roomName}/devices/{deviceName}")]
+        public ActionResult SetDeviceSettings(string roomName, string deviceName)
+        {
+            try
+            {
+                var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+                if (room == null)
+                    return this.NotFound("Room not found: " + roomName);
+
+                var device = room.Devices.FirstOrDefault(d => d.Name == deviceName);
+                if (device == null)
+                {
+                    // TODO: maybe move this to a new API (for room too)
+                    logger.Info($"Add device '{deviceName}' to room '{roomName}'");
+                    var type = System.Reflection.Assembly.GetExecutingAssembly().GetType(this.Request.Form["$type"]);
+                    if (type == null)
+                        return this.NotFound($"No such device type '{type}'");
+
+                    device = (Device)Activator.CreateInstance(type, true);
+                    device.Owner = this.myHome.DevicesSystem;
+                    device.Room = room;
+                    this.myHome.DevicesSystem.Devices.Add(device);
+                }
+
+                this.SetObject(device);
+                this.myHome.SystemChanged = true;
+                return this.Ok();
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, $"Failed to set device '${deviceName}' (${roomName})");
+                return this.BadRequest(e.Message);
+            }
+        }
+
+        [HttpPost("settings/room/{roomName}/devices/{deviceName}/delete")]
+        public ActionResult DeleteDevice(string roomName, string deviceName)
+        {
+            try
+            {
+                var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+                if (room == null)
+                    return this.NotFound("Room not found: " + roomName);
+
+                var device = room.Devices.FirstOrDefault(d => d.Name == deviceName);
+                if (device == null)
+                    return this.NotFound("Device not found: " + deviceName);
+
+                this.myHome.DevicesSystem.Devices.Remove(device);
+                this.myHome.SystemChanged = true;
+                return this.Ok();
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, $"Failed to set device '${deviceName}' (${roomName})");
+                return this.BadRequest(e.Message);
+            }
+        }
+
+
         [HttpGet("logs")]
         public ActionResult GetLogs()
         {
@@ -294,18 +412,6 @@ namespace MyHome
         }
 
 
-        [HttpGet("types/{typeName}")]
-        public ActionResult GetType(string typeName)
-        {
-            var type = Utils.Utils.GetType(typeName);
-            if (type == null)
-                return this.NotFound($"No such type '{typeName}'");
-
-            var instance = Activator.CreateInstance(type, true);
-            return this.Ok(instance.ToUiObject(true));
-        }
-
-
         private void SetObject(object obj)
         {
             var type = obj.GetType();
@@ -315,7 +421,7 @@ namespace MyHome
                 if (prop == null)
                     continue;
 
-                if (!prop.CanWrite && !item.Key.EndsWith("[]"))
+                if (prop.CanWrite && !item.Key.EndsWith("[]"))
                 {
                     prop.SetValue(obj, Utils.Utils.ParseValue(item.Value, prop.PropertyType));
                 }

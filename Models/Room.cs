@@ -17,7 +17,7 @@ namespace MyHome.Models
 
 
         [JsonIgnore]
-        [UiProperty]
+        [UiProperty(true)]
         public IEnumerable<Device> Devices => this.Owner.DevicesSystem.Devices.Where(d => d.Room == this);
 
         [JsonIgnore]

@@ -19,10 +19,10 @@ namespace MyHome.Systems.Devices
         public class SensorValue : Dictionary<string, double> { }; // subName / value
 
 
-        [UiProperty]
+        [UiProperty(true)]
         public string Address { get; set; }
 
-        [UiProperty]
+        [UiProperty(true)]
         public string Token { get; set; }
 
         public Dictionary<DateTime, SensorValue> Data { get; }
@@ -30,13 +30,13 @@ namespace MyHome.Systems.Devices
         [UiProperty]
         public Dictionary<string, Dictionary<string, object>> Metadata { get; }
 
-        [UiProperty]
+        [UiProperty(true)]
         public Dictionary<string, string> SubNamesMap { get; } // map sensor subname to custom subname
 
-        [UiProperty]
+        [UiProperty(true)]
         public Dictionary<string, (double addition, double multiplier)> Calibration { get; } // calibration values per subname - newValue = (realValue + addition) * multiplier
 
-        [UiProperty]
+        [UiProperty(true)]
         public Dictionary<string, string> Units { get; } // subname unit name (if not provide by metadata)
 
 

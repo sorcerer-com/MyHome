@@ -12,6 +12,9 @@ $.get(templateUrl, template => {
         },
         methods: {
             refreshData: function () {
+                if (this._isDestroyed)
+                    return;
+
                 let allRequests = [];
                 for (let sensor of this.sensors) {
                     let request = getSensorData(sensor.Name, this.valueType).done(data => {
@@ -34,9 +37,6 @@ $.get(templateUrl, template => {
         },
         mounted: function () {
             this.refreshData();
-        },
-        destroyed: function () {
-            this.sensors = [];
         }
     });
 });

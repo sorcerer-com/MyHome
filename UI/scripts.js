@@ -2,8 +2,16 @@
     return $.get("./api/rooms");
 }
 
+function createRoom() {
+    return $.post("./api/rooms/create");
+}
+
 function setRoom(roomName, data) {
     return $.post(`./api/rooms/${roomName}`, data);
+}
+
+function deleteRoom(roomName) {
+    return $.post(`./api/rooms/${roomName}/delete`);
 }
 
 function getSystem(systemName) {
@@ -39,6 +47,30 @@ function setSettings(name, data) {
     return $.post(`./api/settings/${name}`, data);
 }
 
+function getRoomsSettings() {
+    return $.get("./api/settings/rooms");
+}
+
+function getDevicesSettings() {
+    return $.get("./api/settings/devices");
+}
+
+function getDeviceTypes() {
+    return $.get("./api/settings/devices/types");
+}
+
+function createDevice(roomName, deviceType) {
+    return $.post(`./api/settings/room/${roomName}/devices/create/${deviceType}`);
+}
+
+function setDeviceSettings(roomName, deviceName, data) {
+    return $.post(`./api/settings/room/${roomName}/devices/${deviceName}`, data);
+}
+
+function deleteDevice(roomName, deviceName) {
+    return $.post(`./api/settings/room/${roomName}/devices/${deviceName}/delete`);
+}
+
 function getLogs() {
     return $.get("./api/logs");
 }
@@ -55,22 +87,12 @@ function restart() {
     return $.post("./api/restart");
 }
 
-function getType(typeName) {
-    return $.get(`./api/types/${typeName}`);
-}
-
 
 function setRoomSecuritySystemEnabled(roomName, isEnabled) {
     setRoom(roomName, { IsSecuritySystemEnabled: isEnabled })
-        .done(() => getRooms().done(rooms => updateVue({ rooms: rooms })));
+        .done(() => getRooms().done(rooms => Vue.set(this, "rooms", rooms )));
 }
 
-
-function updateVue(data) {
-    for (let key in data) {
-        Vue.set(window.vue, key, data[key]);
-    }
-}
 
 function showLineChart(canvas, data, label) {
     let cfg = {

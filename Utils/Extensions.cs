@@ -41,7 +41,7 @@ namespace MyHome.Utils
                 var dict = new Dictionary<object, object>();
                 var value = (IDictionary)obj;
                 foreach (var key in value.Keys)
-                    dict.Add(key, value[key].ToUiObject());
+                    dict.Add(key, value[key].ToUiObject(settingsOnly));
                 return dict;
             }
             else if (type.GetInterface(nameof(IEnumerable)) != null)
@@ -50,7 +50,7 @@ namespace MyHome.Utils
                 var list = new List<object>();
                 var value = (IEnumerable)obj;
                 foreach (var item in value)
-                    list.Add(item.ToUiObject());
+                    list.Add(item.ToUiObject(settingsOnly));
                 return list;
             }
             else
@@ -67,7 +67,7 @@ namespace MyHome.Utils
                     if (settingsOnly && uiPropertyAttr.Setting == false)
                         continue;
 
-                    result.Add(pi.Name, pi.GetValue(obj).ToUiObject());
+                    result.Add(pi.Name, pi.GetValue(obj).ToUiObject(settingsOnly));
                     metadata[pi.Name] = GetMetadata(pi.PropertyType);
                 }
                 result.Add("$type", obj.GetType().ToString());
