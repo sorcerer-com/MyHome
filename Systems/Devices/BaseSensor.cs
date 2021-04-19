@@ -30,13 +30,14 @@ namespace MyHome.Systems.Devices
         [UiProperty]
         public Dictionary<string, Dictionary<string, object>> Metadata { get; }
 
-        [UiProperty(true)]
+        // TODO: cannot be set (not visible in UI) - dictionary isn't supported
+        [UiProperty(true, "real name / custom name")]
         public Dictionary<string, string> SubNamesMap { get; } // map sensor subname to custom subname
 
-        [UiProperty(true)]
+        [UiProperty(true, "name / addition, multiplier")]
         public Dictionary<string, (double addition, double multiplier)> Calibration { get; } // calibration values per subname - newValue = (realValue + addition) * multiplier
 
-        [UiProperty(true)]
+        [UiProperty(true, "name / unit")]
         public Dictionary<string, string> Units { get; } // subname unit name (if not provide by metadata)
 
 

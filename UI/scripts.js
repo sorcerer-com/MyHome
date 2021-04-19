@@ -88,7 +88,7 @@ function getDeviceTypes() {
 
 function setRoomSecuritySystemEnabled(roomName, isEnabled) {
     setRoom(roomName, { IsSecuritySystemEnabled: isEnabled })
-        .done(() => getRooms().done(rooms => Vue.set(this, "rooms", rooms )));
+        .done(() => getRooms().done(rooms => Vue.set(this.$parent, "rooms", rooms )));
 }
 
 
@@ -143,12 +143,4 @@ function showLineChart(canvas, data, label) {
 function updateChartData(chart, data) {
     chart.data.datasets[0].data = data;
     chart.update();
-}
-
-function fixDateTimes(object) {
-    for (let key in object) {
-        if (object['$meta'][key] == "DateTime")
-            object[key] = object[key].substr(0, 16);
-    }
-    return object;
 }

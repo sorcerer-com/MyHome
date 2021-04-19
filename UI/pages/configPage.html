@@ -4,10 +4,14 @@
         <div class="w3-col m3 s11 w3-margin" v-for="room of rooms">
             <h3 class="reset-margin margin-left-8">
                 {{room.Name}}
-                <a class="font-size-normal material-icons" v-on:click="showEdit(room.Name, room, saveRoom, deleteRoom)">edit</a>
+                <a class="font-size-normal material-icons" title="Edit room"
+                   v-on:click="showEdit(room.Name, room, saveRoom, deleteRoom)">
+                    edit
+                </a>
             </h3>
 
             <a class="w3-col m12 s11 w3-center w3-padding w3-round-large w3-hover-light-gray margin-8 bg-gray-opacity-88"
+               title="Edit device"
                v-for="device of room.Devices"
                v-on:click="showEdit(room.Name, device, saveDevice, deleteDevice)">
                 <span class="w3-show-block overflow-wrap-break-word">{{device.Name}}</span>
@@ -15,12 +19,13 @@
             </a>
 
             <a class="w3-col m12 s11 w3-padding w3-round-large w3-center w3-hover-light-gray margin-8 bg-gray-opacity-88 material-icons"
+               title="Add device"
                v-on:click="showAddDevice(room)">
                 add
             </a>
         </div>
 
-        <a class="w3-col m3 s11 w3-margin" v-on:click="showAddRoom">
+        <a class="w3-col m3 s11 w3-margin" title="Add room" v-on:click="showAddRoom">
             <h3 class="reset-margin margin-left-8">
                 <span class="font-size-normal material-icons">add</span>
                 Add Room
@@ -49,6 +54,7 @@
                 <object-editor v-bind:object="edit.object" v-bind:onsave="edit.onSave"></object-editor>
 
                 <a class="w3-button w3-right w3-round w3-padding-small w3-white w3-hover-red margin-8"
+                   title="Delete"
                    v-if="!edit.name.startsWith('Add ')"
                    v-on:click="edit.onDelete">
                     delete

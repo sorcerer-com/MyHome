@@ -20,13 +20,13 @@ namespace MyHome.Systems
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
 
-        [UiProperty(true)]
+        [UiProperty(true, "minutes")]
         public int ActivationDelay { get; set; } // minutes
 
-        [UiProperty(true)]
+        [UiProperty(true, "minutes")]
         public int SendInterval { get; set; } // minutes
 
-        [UiProperty(true)]
+        [UiProperty(true, "percents")]
         public double MovementThreshold { get; set; } // percents
 
         [JsonIgnore]

@@ -21,12 +21,12 @@
     <!-- buttons -->
     <div class="w3-text-black margin-right-8" v-if="mediaPlayer.Playing">
         <span class="w3-small w3-left">{{mediaPlayer.TimeDetails}}</span>
-        <a class="w3-small w3-hover-text-white w3-cell-middle material-icons"
+        <a class="w3-small w3-hover-text-white w3-cell-middle material-icons" title="Volume down"
            v-on:click="callMediaPlayer('VolumeDown')">
             volume_down
         </a>
         <span class="w3-tiny">{{mediaPlayer.Volume}}</span>
-        <a class="w3-small w3-hover-text-white w3-cell-middle material-icons"
+        <a class="w3-small w3-hover-text-white w3-cell-middle material-icons" title="Volume up"
            v-on:click="callMediaPlayer('VolumeUp')">
             volume_up
         </a>
@@ -34,37 +34,44 @@
 
     <div class="w3-center margin-bottom-8">
         <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey font-size-normal material-icons"
+           title="Seek back fast"
            v-bind:class="{'disabled': !mediaPlayer.Playing}"
            v-on:click="callMediaPlayer('SeekBackFast')">
             fast_rewind
         </a>
         <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey font-size-normal material-icons"
+           title="Seek back"
            v-bind:class="{'disabled': !mediaPlayer.Playing}"
            v-on:click="callMediaPlayer('SeekBack')">
             keyboard_arrow_left
         </a>
         <a class="w3-button w3-xlarge w3-padding-small w3-white w3-hover-gray w3-round-xxlarge padding-4 material-icons"
+           title="Play"
            v-bind:class="{'disabled': !selectedMediaItem}"
            v-show="!mediaPlayer.Playing || mediaPlayer.Paused"
            v-on:click="mediaPlayer.Paused ? callMediaPlayer('Pause') : callMediaPlayer('Play', selectedMediaItem)">
             play_arrow
         </a>
         <a class="w3-button w3-xlarge w3-padding-small w3-white w3-hover-gray w3-round-xxlarge padding-4 material-icons"
+           title="Pause"
            v-show="mediaPlayer.Playing && !mediaPlayer.Paused"
            v-on:click="callMediaPlayer('Pause')">
             pause
         </a>
         <a class="w3-button w3-xlarge w3-padding-small w3-white w3-hover-gray w3-round-xxlarge padding-4 material-icons"
+           title="Stop"
            v-show="mediaPlayer.Playing"
-           v-on:click="callMediaPlayer('Stop')">
+           v-on:click="callMediaPlayer('Stop'); selectedMediaItem = ''">
             stop
         </a>
         <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey font-size-normal material-icons"
+           title="Seek forward"
            v-bind:class="{'disabled': !mediaPlayer.Playing}"
            v-on:click="callMediaPlayer('SeekForward')">
             keyboard_arrow_right
         </a>
         <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey font-size-normal material-icons"
+           title="Seek forward fast"
            v-bind:class="{'disabled': !mediaPlayer.Playing}"
            v-on:click="callMediaPlayer('SeekForwardFast')">
             fast_forward

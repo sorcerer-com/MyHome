@@ -56,7 +56,9 @@ namespace MyHome.Utils
             else
             {
                 var result = new Dictionary<string, object>();
-                var metadata = new Dictionary<string, string>();
+                var subtypes = new Dictionary<string, string>();
+                var hints = new Dictionary<string, string>();
+
                 var pis = obj.GetType().GetProperties();
                 foreach (var pi in pis)
                 {
@@ -67,16 +69,21 @@ namespace MyHome.Utils
                     if (settingsOnly && uiPropertyAttr.Setting == false)
                         continue;
 
-                    result.Add(pi.Name, pi.GetValue(obj).ToUiObject(settingsOnly));
-                    metadata[pi.Name] = GetMetadata(pi.PropertyType);
+                    result[pi.Name] = pi.GetValue(obj).ToUiObject(settingsOnly);
+                    subtypes[pi.Name] = pi.PropertyType.ToUiType();
+                    hints[pi.Name] = uiPropertyAttr.Hint;
                 }
                 result.Add("$type", obj.GetType().ToString());
                 if (settingsOnly)
-                    result.Add("$meta", metadata);
+                {
+                    result.Add("$subtypes", subtypes);
+                    result.Add("$hints", hints);
+                }
                 return result;
             }
         }
-        private static string GetMetadata(Type type)
+
+        public static string ToUiType(this Type type)
         {
             var name = type.Name
                 .Replace("`1", "")
@@ -85,7 +92,7 @@ namespace MyHome.Utils
 
             if (type.IsGenericType)
             {
-                var genericTypes = type.GenericTypeArguments.Select(t => GetMetadata(t));
+                var genericTypes = type.GenericTypeArguments.Select(t => t.ToUiType());
                 return $"{name} <{string.Join(", ", genericTypes)}>";
             }
             else if (type.IsEnum)

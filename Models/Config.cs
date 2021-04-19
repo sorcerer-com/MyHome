@@ -9,20 +9,20 @@ namespace MyHome.Models
         public static readonly string BinPath = "bin";
         public static readonly string DataFilePath = Path.Join(BinPath, "data.json");
 
-        [UiProperty(true)]
+        [UiProperty(true, "sha256 hash")]
         public string Password { get; set; } = "";
 
-        [UiProperty(true)]
+        [UiProperty(true, "start - end")]
         public string QuietHours { get; set; } = "";
 
 
-        [UiProperty(true)]
+        [UiProperty(true, "08xxxxxxxx")]
         public string GsmNumber { get; set; } = "";
 
         [UiProperty(true)]
         public string MyTelenorPassword { get; set; } = "";
 
-        [UiProperty(true)]
+        [UiProperty(true, "host[:port]")]
         public string SmtpServerAddress { get; set; } = "";
 
         [UiProperty(true)]

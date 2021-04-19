@@ -2,7 +2,7 @@
     <div v-for="camera of cameras">
         <h4 class="reset-margin">{{camera.Name}}</h4>
         <hr class="reset-margin margin-bottom-8" />
-        <a v-bind:href="`./api/rooms/${room.Name}/cameras/${camera.Name}/image`" target="_blank">
+        <a v-bind:href="`./api/rooms/${room.Name}/cameras/${camera.Name}/image`" target="_blank" title="Open full screen">
             <img v-bind:id="'camera' + camera.Name + 'Image'" 
                  v-bind:src="`./api/rooms/${room.Name}/cameras/${camera.Name}/image`"
                  width="100%" class="w3-margin-bottom" />

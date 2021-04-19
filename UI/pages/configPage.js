@@ -69,7 +69,7 @@ $.get(templateUrl, template => {
             saveRoom: function (room) {
                 if (room.Name == "")
                     return $.Deferred().reject({ responseText: "Cannot add room without name" });
-                if (this.rooms.some(r => r.Name = room.Name))
+                if (this.rooms.some(r => r != room && r.Name == room.Name))
                     return $.Deferred().reject({ responseText: "A room with the same name already exists" });
 
                 return setRoom(this.edit.roomName, room).done(() => this.edit.name = null);
@@ -78,7 +78,7 @@ $.get(templateUrl, template => {
                 if (device.Name == "")
                     return $.Deferred().reject({ responseText: "Cannot add device without name" });
                 let room = this.rooms.find(r => r.Name == this.edit.roomName);
-                if (room.Devices.some(d => d.Name = device.Name))
+                if (room.Devices.some(d => d != device && d.Name == device.Name))
                     return $.Deferred().reject({ responseText: "A device with the same name already exists" });
 
                 return setDevice(this.edit.roomName, this.edit.name, device).done(() => this.edit.name = null);

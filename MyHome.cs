@@ -18,7 +18,6 @@ using NLog;
 
 namespace MyHome
 {
-    // TODO: docstrings?
     public class MyHome : IDisposable
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
@@ -78,7 +77,6 @@ namespace MyHome
             // * mobile UI / landscape
             // * investigate the deatlock (only on release?) - run here for a long period
             // * add MQTT support (maybe install broker on rpi3, accessible through nginx)
-            // * git squash commits to Remove python into Initial commit; move to master
 
             this.lastBackupTime = DateTime.Now;
             this.SystemChanged = false;
@@ -193,7 +191,7 @@ namespace MyHome
 
                 if (stopwatch.Elapsed > TimeSpan.FromSeconds(this.updateInterval))
                 {
-                    logger.Warn($"Update time: {stopwatch.Elapsed}"); // TODO: too often, check networking?
+                    logger.Warn($"Update time: {stopwatch.Elapsed}");
                 }
                 else
                 {

@@ -7,9 +7,16 @@ namespace MyHome.Utils
     {
         public bool Setting { get; }
 
-        public UiProperty(bool setting = false)
+        public string Hint { get; }
+
+        public UiProperty(bool setting = false) : this(setting, "")
+        {
+        }
+
+        public UiProperty(bool setting, string hint)
         {
             this.Setting = setting;
+            this.Hint = hint;
         }
     }
 }

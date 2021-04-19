@@ -104,12 +104,11 @@
                         this.refreshData();
                     },
                 });
-            }, 50);
+            }, 100);
         });
     </script>
 </head>
 <body>
-    <!-- TODO: tooltips -->
     <div id="vue-content">
         <!-- Title bar -->
         <div class="w3-bar">
@@ -118,17 +117,25 @@
                 <h3 class="w3-cell-middle w3-padding-small w3-show-inline-block">My Home</h3>
             </div>
             <div class="w3-right w3-padding w3-padding-top-24">
-                <a v-on:click="page = 'main'" class="material-icons" v-bind:class="{'w3-text-gray w3-hover-text-white': page != 'main'}">
+                <a class="material-icons" title="Home"
+                   v-on:click="page = 'main'" v-bind:class="{'w3-text-gray w3-hover-text-white': page != 'main'}">
                     home
                 </a>
-                <a v-on:click="page = 'config'" class="material-icons" v-bind:class="{'w3-text-gray w3-hover-text-white': page != 'config'}">
+                <a class="material-icons" title="Configure"
+                   v-on:click="page = 'config'" v-bind:class="{'w3-text-gray w3-hover-text-white': page != 'config'}">
                     build
                 </a>
-                <a v-on:click="showSettingsModal()" class="material-icons w3-text-gray w3-hover-text-white">settings</a>
-                <a v-on:click="showLogsModal()" class="material-icons w3-text-gray w3-hover-text-white">assignment</a>
+                <a class="material-icons w3-text-gray w3-hover-text-white" title="Settings"
+                   v-on:click="showSettingsModal()">
+                    settings
+                </a>
+                <a class="material-icons w3-text-gray w3-hover-text-white" title="Logs"
+                   v-on:click="showLogsModal()">
+                    assignment
+                </a>
 
                 <!-- Upgrade -->
-                <a class="w3-show-block w3-tiny w3-cell-middle margin-right-8"
+                <a class="w3-show-block w3-tiny w3-cell-middle margin-right-8" title="Upgrade"
                    v-if="upgradeAvailable != false"
                    v-on:click="upgrade">
                     <span v-if="upgradeAvailable">
@@ -167,8 +174,10 @@
 
                     <!-- Settings -->
                     <div class="w3-bar w3-gray margin-bottom-8" v-if="modal == 'Settings'">
-                        <a class="w3-bar-item w3-button" v-for="(name, index) of Object.keys(settings)"
+                        <a class="w3-bar-item w3-button"
+                           v-for="(name, index) of Object.keys(settings)"
                            v-bind:class="{'w3-light-gray': selectedSettings == name}"
+                           v-bind:title="name"
                            v-on:click="selectedSettings = name">
                             {{name}}
                         </a>
@@ -177,7 +186,9 @@
                                    v-bind:object="settings[selectedSettings]"
                                    v-bind:onsave="saveSettings"></object-editor>
                     <a class="w3-button w3-right w3-round w3-padding-small w3-white w3-hover-blue-grey margin-8"
-                       v-if="modal == 'Settings' && selectedSettings == 'Config'" v-on:click="restart()">
+                       title="Restart system"
+                       v-if="modal == 'Settings' && selectedSettings == 'Config'"
+                       v-on:click="restart()">
                         Restart
                     </a>
                 </div>

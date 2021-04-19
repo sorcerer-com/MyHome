@@ -68,7 +68,7 @@ $.get(templateUrl, template => {
             },
             callMediaPlayer: function (funcName, ...args) {
                 callSystem("MediaPlayer", funcName, ...args)
-                    .done(getSystem("MediaPlayer").done(mediaPlayer => Vue.set(window.vue, "mediaPlayer", mediaPlayer)));
+                    .done(getSystem("MediaPlayer").done(mediaPlayer => Vue.set(this.$parent, "mediaPlayer", mediaPlayer)));
             }
         }
     });

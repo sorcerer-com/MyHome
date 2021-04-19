@@ -40,6 +40,9 @@ namespace MyHome.Systems.Devices
         [UiProperty(true)]
         public bool IsOnvifSupported { get; set; }
 
+        [UiProperty(true, "seconds")]
+        public int ReadDataInterval { get; set; } // seconds
+
         [JsonIgnore]
         public bool IsOpened => this.Capture.IsOpened();
 
@@ -83,6 +86,7 @@ namespace MyHome.Systems.Devices
         public Camera(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room, address)
         {
             this.IsOnvifSupported = true;
+            this.ReadDataInterval = 15;
 
             this.capture = null;
             this.lastUse = DateTime.Now.AddMinutes(-1);
@@ -108,9 +112,9 @@ namespace MyHome.Systems.Devices
             if (this.IsOnvifSupported && DateTime.Now > this.nextDataRead)
             {
                 if (this.ReadData(DateTime.Now))
-                    this.nextDataRead = DateTime.Now.AddSeconds(15); // TODO: maybe extract as param, maybe often
+                    this.nextDataRead = DateTime.Now.AddSeconds(this.ReadDataInterval);
                 else // if doesn't succeed wait more before next try
-                    this.nextDataRead = DateTime.Now.AddMinutes(1);
+                    this.nextDataRead = DateTime.Now.AddMinutes(this.ReadDataInterval * 4);
             }
         }
 
