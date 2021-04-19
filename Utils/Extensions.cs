@@ -95,5 +95,29 @@ namespace MyHome.Utils
             }
             return name;
         }
+
+        public static void SetObject(this Microsoft.AspNetCore.Http.IFormCollection form, object obj)
+        {
+            var type = obj.GetType();
+            foreach (var item in form)
+            {
+                var prop = type.GetProperty(item.Key.Replace("[]", ""));
+                if (prop == null)
+                    continue;
+
+                if (prop.CanWrite && !item.Key.EndsWith("[]"))
+                {
+                    prop.SetValue(obj, Utils.ParseValue(item.Value, prop.PropertyType));
+                }
+                else if (item.Key.EndsWith("[]")) // list
+                {
+                    var values = item.Value.Select(v => Utils.ParseValue(v, prop.PropertyType.GenericTypeArguments[0]));
+                    var list = prop.GetValue(obj) as IList;
+                    list.Clear();
+                    foreach (var value in values)
+                        list.Add(value);
+                }
+            }
+        }
     }
 }

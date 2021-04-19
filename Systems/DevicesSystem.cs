@@ -64,7 +64,7 @@ namespace MyHome.Systems
             var alertMsg = "";
             this.Sensors.Where(s => !string.IsNullOrEmpty(s.Address)).RunForEach(sensor =>
             {
-                logger.Debug($"Requesting data from {sensor.Name}({sensor.Room.Name}, {sensor.Address}) sensor");
+                logger.Debug($"Requesting data from {sensor.Name} ({sensor.Room.Name}, {sensor.Address}) sensor");
 
                 if (sensor.ReadData(this.nextGetDataTime))
                 {
@@ -83,7 +83,7 @@ namespace MyHome.Systems
                     if (lastSensorTime <= this.nextGetDataTime.AddMinutes(-this.ReadSensorDataInterval * 4) &&
                         lastSensorTime > this.nextGetDataTime.AddMinutes(-this.ReadSensorDataInterval * 5))
                     {
-                        alertMsg += $"{sensor.Name}({sensor.Room.Name}) inactive ";
+                        alertMsg += $"{sensor.Name} ({sensor.Room.Name}) inactive ";
                     }
                 }
             });
@@ -99,9 +99,11 @@ namespace MyHome.Systems
             var sensor = this.Sensors.FirstOrDefault(s => s.Token == token);
             if (sensor == null)
             {
-                logger.Warn($"Try to process data({data}) with invalid token: {token}");
+                logger.Warn($"Try to process sensor data ({data}) with invalid token: {token}");
                 return false;
             }
+
+            logger.Debug($"Process sensor '{sensor.Name}' ({sensor.Room.Name}, {token}) data: {data}");
 
             sensor.AddData(DateTime.Now, data);
             this.Owner.SystemChanged = true;

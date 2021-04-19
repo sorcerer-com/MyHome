@@ -44,10 +44,12 @@
             <div class="w3-container w3-padding-16 height-100 overflow-y-auto bg-gray">
                 <!-- Sensors Data -->
                 <sensors-data v-if="selectedValueType != 'Cameras'"
+                              v-bind:room="room"
                               v-bind:sensors="getSensorsBySelectedValueType()"
                               v-bind:value-type="selectedValueType"></sensors-data>
                 <!-- Cameras -->
                 <cameras v-if="selectedValueType == 'Cameras'"
+                         v-bind:room="room"
                          v-bind:cameras="getCameras()"></cameras>
             </div>
         </div>

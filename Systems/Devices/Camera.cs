@@ -58,7 +58,7 @@ namespace MyHome.Systems.Devices
                 // if capture isn't opened try again but only if the previous try was at least 1 minute ago
                 if (!this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(1))
                 {
-                    logger.Info($"Opening camera: {this.Name}");
+                    logger.Info($"Opening camera: {this.Name} ({this.Room.Name})");
                     if (int.TryParse(this.Address, out int device))
                         this.capture.Open(device);
                     else
@@ -100,7 +100,7 @@ namespace MyHome.Systems.Devices
             // release the capture if it isn't used for more then 5 minutes
             if (this.capture != null && this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(5))
             {
-                logger.Info($"Release camera: {this.Name}");
+                logger.Info($"Release camera: {this.Name} ({this.Room.Name})");
                 this.capture.Release();
             }
 
@@ -145,7 +145,7 @@ namespace MyHome.Systems.Devices
 
         public bool SaveImage(string filepath, Size? size = null, bool timestamp = true)
         {
-            logger.Debug($"Camera '{this.Name}' save image: {filepath}");
+            logger.Debug($"Camera '{this.Name}' ({this.Room.Name}) save image: {filepath}");
 
             var image = this.GetImage(size, timestamp);
             return Cv2.ImWrite(filepath, image);
@@ -158,7 +158,7 @@ namespace MyHome.Systems.Devices
                 if (!this.IsOnvifSupported)
                     return;
 
-                logger.Debug($"Camera '{this.Name}' move: {movement}");
+                logger.Debug($"Camera '{this.Name}' ({this.Room.Name}) move: {movement}");
 
                 var speed = new Mictlanix.DotNet.Onvif.Common.PTZSpeed
                 {
@@ -198,11 +198,13 @@ namespace MyHome.Systems.Devices
 
         public bool Restart()
         {
-            if (!this.IsOnvifSupported)
-                return false;
-
             try
             {
+                if (!this.IsOnvifSupported)
+                    return false;
+
+                logger.Debug($"Restart camera '{this.Name}' ({this.Room.Name})");
+
                 var device = this.GetOnvif<DeviceClient>();
                 device.SystemRebootAsync().Wait();
                 return true;

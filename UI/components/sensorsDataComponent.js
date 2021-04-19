@@ -3,7 +3,7 @@ var templateUrl = scriptSrc.substr(0, scriptSrc.lastIndexOf(".")) + ".html";
 $.get(templateUrl, template => {
     Vue.component("sensors-data", {
         template: template,
-        props: ["sensors", "valueType"],
+        props: ["room", "sensors", "valueType"],
         data: function () {
             return {
                 sensorsData: {},
@@ -17,7 +17,7 @@ $.get(templateUrl, template => {
 
                 let allRequests = [];
                 for (let sensor of this.sensors) {
-                    let request = getSensorData(sensor.Name, this.valueType).done(data => {
+                    let request = getSensorData(this.room.Name, sensor.Name, this.valueType).done(data => {
                         let lastDayData = Object.keys(data.lastDay).map(k => { return { t: new Date(k), y: data.lastDay[k] } }).sort((a, b) => (a.t > b.t) ? 1 : -1);
                         let lastYearData = Object.keys(data.lastYear).map(k => { return { t: new Date(k), y: data.lastYear[k] } }).sort((a, b) => (a.t > b.t) ? 1 : -1);
                         if (!(sensor.Name in this.sensorsData)) { // init

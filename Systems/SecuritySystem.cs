@@ -119,7 +119,7 @@ namespace MyHome.Systems
             roomInfo.Activated = true;
             roomInfo.StartTime = DateTime.Now;
             foreach (var camera in roomInfo.Room.Cameras)
-                this.PrevImages.Remove(camera.Name);
+                this.PrevImages.Remove(camera.Room.Name + "." + camera.Name);
             logger.Info($"Alarm security activated in '{room.Name}' room");
             this.Owner.Events.Fire(this, "SecurityAlarmActivated", roomInfo.Room);
             this.Owner.SystemChanged = true;
@@ -193,13 +193,13 @@ namespace MyHome.Systems
         private bool SaveImage(Camera camera, RoomInfo roomInfo)
         {
             var image = camera.GetImage();
-            if (this.PrevImages.ContainsKey(camera.Name))
+            if (this.PrevImages.ContainsKey(camera.Room.Name + "." + camera.Name))
             {
                 // if no movement between current and previous image - skip saving
-                if (!FindMovement(this.PrevImages[camera.Name], image, this.MovementThreshold))
+                if (!FindMovement(this.PrevImages[camera.Room.Name + "." + camera.Name], image, this.MovementThreshold))
                     return false;
             }
-            this.PrevImages[camera.Name] = image.Resize(new Size(640, 480));
+            this.PrevImages[camera.Room.Name + "." + camera.Name] = image.Resize(new Size(640, 480));
 
             var filename = $"{camera.Room.Name}_{camera.Name}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.jpg";
             var filepath = Path.Combine(Config.BinPath, filename);

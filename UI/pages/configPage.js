@@ -23,7 +23,7 @@ $.get(templateUrl, template => {
                 if (this._isDestroyed)
                     return;
 
-                getRoomsSettings().done(rooms => {
+                getRooms(true).done(rooms => {
                     Vue.set(this, "rooms", rooms);
                     setTimeout(this.refreshData, 3000);
                 }).fail(() => {
@@ -67,23 +67,34 @@ $.get(templateUrl, template => {
             },
 
             saveRoom: function (room) {
+                if (room.Name == "")
+                    return $.Deferred().reject({ responseText: "Cannot add room without name" });
+                if (this.rooms.some(r => r.Name = room.Name))
+                    return $.Deferred().reject({ responseText: "A room with the same name already exists" });
+
                 return setRoom(this.edit.roomName, room).done(() => this.edit.name = null);
             },
             saveDevice: function (device) {
-                return setDeviceSettings(this.edit.roomName, this.edit.name, device).done(() => this.edit.name = null);
+                if (device.Name == "")
+                    return $.Deferred().reject({ responseText: "Cannot add device without name" });
+                let room = this.rooms.find(r => r.Name == this.edit.roomName);
+                if (room.Devices.some(d => d.Name = device.Name))
+                    return $.Deferred().reject({ responseText: "A device with the same name already exists" });
+
+                return setDevice(this.edit.roomName, this.edit.name, device).done(() => this.edit.name = null);
             },
 
             deleteRoom: function () {
                 if (!confirm("Are you sure you want to delete the room and all its devices?"))
                     return;
 
-                return deleteRoom(this.edit.roomName).done(() => this.edit.name = null);
+                deleteRoom(this.edit.roomName).done(() => this.edit.name = null);
             },
             deleteDevice: function () {
                 if (!confirm("Are you sure you want to delete the device?"))
                     return;
 
-                return deleteDevice(this.edit.roomName, this.edit.name).done(() => this.edit.name = null);
+                deleteDevice(this.edit.roomName, this.edit.name).done(() => this.edit.name = null);
             }
         },
         mounted: function () {

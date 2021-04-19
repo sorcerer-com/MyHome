@@ -1,5 +1,5 @@
-﻿function getRooms() {
-    return $.get("./api/rooms");
+﻿function getRooms(settings = false) {
+    return $.get(`./api/rooms?settings=${settings}`);
 }
 
 function createRoom() {
@@ -14,8 +14,41 @@ function deleteRoom(roomName) {
     return $.post(`./api/rooms/${roomName}/delete`);
 }
 
+function createDevice(roomName, deviceType) {
+    return $.post(`./api/rooms/${roomName}/devices/create/${deviceType}`);
+}
+
+function setDevice(roomName, deviceName, data) {
+    return $.post(`./api/rooms/${roomName}/devices/${deviceName}`, data);
+}
+
+function deleteDevice(roomName, deviceName) {
+    return $.post(`./api/rooms/${roomName}/devices/${deviceName}/delete`);
+}
+
+function getSensorData(roomName, sensorName, valueType) {
+    return $.get(`./api/rooms/${roomName}/sensors/${sensorName}/data/${valueType}`);
+}
+
+function moveCamera(roomName, cameraName, movementType) {
+    return $.post(`./api/rooms/${roomName}/cameras/${cameraName}/move?movementType=${movementType}`)
+}
+
+function restartCamera(roomName, cameraName) {
+    return $.post(`./api/rooms/${roomName}/cameras/${cameraName}/restart`)
+}
+
+
+function getSystems(settings = false) {
+    return $.get(`./api/systems?settings=${settings}`);
+}
+
 function getSystem(systemName) {
     return $.get(`./api/systems/${systemName}`);
+}
+
+function setSystem(systemName, data) {
+    return $.post(`./api/systems/${systemName}`, data);
 }
 
 function callSystem(systemName, funcName, ...args) {
@@ -23,52 +56,13 @@ function callSystem(systemName, funcName, ...args) {
     return $.post(`./api/systems/${systemName}/${funcName}`, data);
 }
 
-function getSensorData(sensorName, valueType) {
-    return $.get(`./api/sensors/${sensorName}/data/${valueType}`);
+
+function getConfig() {
+    return $.get("./api/config");
 }
 
-function getCameraImage(cameraName) {
-    return $.get(`./api/cameras/${cameraName}/image`);
-}
-
-function moveCamera(cameraName, movementType) {
-    return $.post(`./api/cameras/${cameraName}/move?movementType=${movementType}`)
-}
-
-function restartCamera(cameraName) {
-    return $.post(`./api/cameras/${cameraName}/restart`)
-}
-
-function getSettings() {
-    return $.get("./api/settings");
-}
-
-function setSettings(name, data) {
-    return $.post(`./api/settings/${name}`, data);
-}
-
-function getRoomsSettings() {
-    return $.get("./api/settings/rooms");
-}
-
-function getDevicesSettings() {
-    return $.get("./api/settings/devices");
-}
-
-function getDeviceTypes() {
-    return $.get("./api/settings/devices/types");
-}
-
-function createDevice(roomName, deviceType) {
-    return $.post(`./api/settings/room/${roomName}/devices/create/${deviceType}`);
-}
-
-function setDeviceSettings(roomName, deviceName, data) {
-    return $.post(`./api/settings/room/${roomName}/devices/${deviceName}`, data);
-}
-
-function deleteDevice(roomName, deviceName) {
-    return $.post(`./api/settings/room/${roomName}/devices/${deviceName}/delete`);
+function setConfig(data) {
+    return $.post("./api/config", data);
 }
 
 function getLogs() {
@@ -85,6 +79,10 @@ function upgrade() {
 
 function restart() {
     return $.post("./api/restart");
+}
+
+function getDeviceTypes() {
+    return $.get("./api/device-types");
 }
 
 

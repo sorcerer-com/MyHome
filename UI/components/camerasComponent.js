@@ -3,18 +3,18 @@ var templateUrl = scriptSrc.substr(0, scriptSrc.lastIndexOf(".")) + ".html";
 $.get(templateUrl, template => {
     Vue.component("cameras", {
         template: template,
-        props: ["cameras"],
+        props: ["room", "cameras"],
         data: function () {
             return {
             }
         },
         methods: {
             moveCamera: moveCamera,
-            restartCamera: function (cameraName) {
+            restartCamera: function (roomName, cameraName) {
                 if (!confirm("Are you sure you want to restart camera?"))
                     return;
 
-                restartCamera(cameraName);
+                restartCamera(roomName, cameraName);
             }
         }
     });

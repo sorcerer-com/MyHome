@@ -2,38 +2,39 @@
     <div v-for="camera of cameras">
         <h4 class="reset-margin">{{camera.Name}}</h4>
         <hr class="reset-margin margin-bottom-8" />
-        <a v-bind:href="'./api/cameras/' + camera.Name + '/image'" target="_blank">
-            <img v-bind:id="'camera' + camera.Name + 'Image'" v-bind:src="'./api/cameras/' + camera.Name + '/image'"
+        <a v-bind:href="`./api/rooms/${room.Name}/cameras/${camera.Name}/image`" target="_blank">
+            <img v-bind:id="'camera' + camera.Name + 'Image'" 
+                 v-bind:src="`./api/rooms/${room.Name}/cameras/${camera.Name}/image`"
                  width="100%" class="w3-margin-bottom" />
         </a>
         <!-- Movement controls -->
         <div class="w3-center margin-bottom-8" v-if="camera.IsOnvifSupported">
             <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
-               v-on:click="moveCamera(camera.Name, 'left')" title="Move Left">
+               v-on:click="moveCamera(room.Name, camera.Name, 'left')" title="Move Left">
                 keyboard_arrow_left
             </a>
             <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
-               v-on:click="moveCamera(camera.Name, 'Up')" title="Move Up">
+               v-on:click="moveCamera(room.Name, camera.Name, 'Up')" title="Move Up">
                 keyboard_arrow_up
             </a>
             <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
-               v-on:click="moveCamera(camera.Name, 'Down')" title="Move Down">
+               v-on:click="moveCamera(room.Name, camera.Name, 'Down')" title="Move Down">
                 keyboard_arrow_down
             </a>
             <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
-               v-on:click="moveCamera(camera.Name, 'Right')" title="Move Right">
+               v-on:click="moveCamera(room.Name, camera.Name, 'Right')" title="Move Right">
                 keyboard_arrow_right
             </a>
             <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
-               v-on:click="moveCamera(camera.Name, 'ZoomIn')" title="Zoom In">
+               v-on:click="moveCamera(room.Name, camera.Name, 'ZoomIn')" title="Zoom In">
                 zoom_in
             </a>
             <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
-               v-on:click="moveCamera(camera.Name, 'ZoomOut')" title="Zoom Out">
+               v-on:click="moveCamera(room.Name, camera.Name, 'ZoomOut')" title="Zoom Out">
                 zoom_out
             </a>
             <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
-               v-on:click="restartCamera(camera.Name)" title="Restart">
+               v-on:click="restartCamera(room.Name, camera.Name)" title="Restart">
                 autorenew
             </a>
         </div>

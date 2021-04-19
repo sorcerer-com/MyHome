@@ -209,7 +209,7 @@ namespace MyHome
                 logger.Info($"Send alert: {msg}");
 
                 bool result = true;
-                var latestData = this.DevicesSystem.Sensors.ToDictionary(s => s.Name, s => s.LastValues);
+                var latestData = this.DevicesSystem.Sensors.ToDictionary(s => s.Room.Name + "." + s.Name, s => s.LastValues);
                 msg = $"{DateTime.Now:dd/MM/yyyy HH:mm:ss}\n{msg}\n{JsonConvert.SerializeObject(latestData)}";
 
                 var images = new List<string>();

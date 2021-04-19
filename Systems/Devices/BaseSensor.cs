@@ -68,7 +68,7 @@ namespace MyHome.Systems.Devices
         public bool ReadData(DateTime time)
         {
             var data = this.ReadDataInternal(); // read data from sensor
-            logger.Debug($"Sensor '{this.Name}' read data: '{data}'");
+            logger.Debug($"Sensor '{this.Name}' ({this.Room.Name}) read data: '{data}'");
             if (data != null)
             {
                 this.AddData(time, data);
@@ -81,7 +81,7 @@ namespace MyHome.Systems.Devices
 
         public void AddData(DateTime time, JToken data)
         {
-            logger.Debug($"Sensor '{this.Name}' add data at {time:dd/MM/yyyy HH:mm:ss}: {data}");
+            logger.Debug($"Sensor '{this.Name}' ({this.Room.Name}) add data at {time:dd/MM/yyyy HH:mm:ss}: {data}");
 
             if (!this.Data.ContainsKey(time))
                 this.Data.Add(time, new SensorValue());
@@ -91,7 +91,7 @@ namespace MyHome.Systems.Devices
             {
                 if (!item.ContainsKey("name") && !item.ContainsKey("value"))
                 {
-                    logger.Warn($"Try to add invalid data item({item}) in sensor({this.Name})");
+                    logger.Warn($"Try to add invalid data item({item}) in sensor '{this.Name}' ({this.Room.Name})");
                     continue;
                 }
 
