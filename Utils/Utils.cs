@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace MyHome.Utils
 {
@@ -40,6 +41,12 @@ namespace MyHome.Utils
                 DateTime.TryParse(value, out DateTime dt))
             {
                 return dt;
+            }
+            else if (type.GetInterface(nameof(ITuple)) != null)
+            {
+                var values = value[1..^1].Split(',');
+                if (values.Length == 2)
+                    return ValueTuple.Create(ParseValue(values[0], type.GenericTypeArguments[0]), ParseValue(values[1], type.GenericTypeArguments[1]));
             }
             return value;
         }

@@ -30,7 +30,6 @@ namespace MyHome.Systems.Devices
         [UiProperty]
         public Dictionary<string, Dictionary<string, object>> Metadata { get; }
 
-        // TODO: cannot be set (not visible in UI) - dictionary isn't supported
         [UiProperty(true, "real name / custom name")]
         public Dictionary<string, string> SubNamesMap { get; } // map sensor subname to custom subname
 

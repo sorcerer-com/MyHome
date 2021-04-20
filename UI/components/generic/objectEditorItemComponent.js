@@ -24,6 +24,26 @@ $.get(templateUrl, template => {
             onListChange: function (index, value) {
                 this.localValue[index] = value;
                 this.$emit("change", this.localValue);
+            },
+            getDictTypes: function () {
+                return splitTypes(this.valueType.replace("Dictionary <", "").replace(">", ""));
+            },
+            delDictItem: function (name) {
+                Vue.delete(this.localValue, name);
+            },
+            addDictItem: function () {
+                Vue.set(this.localValue, "", "");
+            },
+            onDictKeyChange: function (oldKey, newKey) {
+                if (oldKey != newKey) {
+                    Vue.set(this.localValue, newKey, this.localValue[oldKey]);
+                    Vue.delete(this.localValue, oldKey);
+                    this.$emit("change", this.localValue);
+                }
+            },
+            onDictValueChange: function (key, value) {
+                Vue.set(this.localValue, key, value);
+                this.$emit("change", this.localValue);
             }
         },
         created: function () {

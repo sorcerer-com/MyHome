@@ -22,11 +22,14 @@
     <!-- string -->
     <input v-if="valueType == 'String'" v-model="localValue" v-bind:title="getTitle()" type="text" class="w3-col m10 w3-mobile" />
 
+    <!-- tuple -->
+    <input v-if="valueType.startsWith('ValueTuple')" v-model="localValue" v-bind:title="getTitle()" type="text" class="w3-col m10 w3-mobile" />
+
     <!-- list -->
     <div v-if="valueType.startsWith('List')">
         <div v-for="(item, index) of localValue" v-bind:key="index"
              class="margin-bottom-8">
-            <object-editor-item v-bind:value="item" 
+            <object-editor-item v-bind:value="item"
                                 v-bind:value-type="getListType()"
                                 v-bind:hint="hint"
                                 v-on:change="value => onListChange(index, value)">
@@ -38,6 +41,31 @@
         </div>
         <a class="material-icons w3-hover-text-light-green" title="Add new"
            v-on:click="localValue.push('')">
+            add_circle
+        </a>
+    </div>
+
+    <!-- dictionary -->
+    <div v-if="valueType.startsWith('Dictionary')">
+        <div v-for="(value, name) of localValue" v-bind:key="name"
+             class="w3-show-inline-block margin-bottom-8">
+            <object-editor-item v-bind:value="name"
+                                v-bind:value-type="getDictTypes()[0]"
+                                v-bind:hint="hint"
+                                v-on:change="newName => onDictKeyChange(name, newName)">
+            </object-editor-item>
+            <object-editor-item v-bind:value="value"
+                                v-bind:value-type="getDictTypes()[1]"
+                                v-bind:hint="hint"
+                                v-on:change="value => onDictValueChange(name, value)">
+            </object-editor-item>
+            <a class="font-size-normal w3-cell-middle w3-hover-text-red material-icons" title="Remove"
+               v-on:click="delDictItem(name)">
+                remove
+            </a>
+        </div>
+        <a class="material-icons w3-hover-text-light-green" title="Add new"
+           v-on:click="addDictItem()">
             add_circle
         </a>
     </div>

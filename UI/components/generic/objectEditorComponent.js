@@ -11,12 +11,18 @@ $.get(templateUrl, template => {
         },
         methods: {
             isSupportedType: function (type) {
-                if (type.startsWith('List')) {
+                if (type.startsWith("List")) {
                     let listType = type.replace("List <", "").replace(">", "");
                     return this.isSupportedType(listType);
+                } else if (type.startsWith("Dictionary")) {
+                    let dictTypes = splitTypes(type.replace("Dictionary <", "").replace(">", ""));
+                    return this.isSupportedType(dictTypes[0]) && this.isSupportedType(dictTypes[1]);
+                } else if (type.startsWith("ValueTuple")) {
+                    let tupleTypes = splitTypes(type.replace("ValueTuple <", "").replace(">", ""));
+                    return tupleTypes.every(t => this.isSupportedType(t));
                 }
-                return type == 'Boolean' || type.startsWith('Enum') || type.startsWith('Int') ||
-                    type == 'Double' || type == 'DateTime' || type == 'String';
+                return type == "Boolean" || type.startsWith("Enum") || type.startsWith("Int") ||
+                    type == "Double" || type == "DateTime" || type == "String";
             },
             onItemChange: function (name, value) {
                 this.object[name] = value;

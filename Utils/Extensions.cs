@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace MyHome.Utils
@@ -35,6 +36,11 @@ namespace MyHome.Utils
             else if (type.IsEnum)
             {
                 return type.Name + "." + obj.ToString();
+            }
+            else if (type.GetInterface(nameof(ITuple)) != null)
+            {
+                var value = (ITuple)obj;
+                return value.ToString();
             }
             else if (type.GetInterface(nameof(IDictionary)) != null)
             {
@@ -105,24 +111,40 @@ namespace MyHome.Utils
 
         public static void SetObject(this Microsoft.AspNetCore.Http.IFormCollection form, object obj)
         {
+            var processingDicts = new List<string>();
+
             var type = obj.GetType();
             foreach (var item in form)
             {
-                var prop = type.GetProperty(item.Key.Replace("[]", ""));
+                var propName = item.Key.Replace("[]", "");
+                if (propName.Contains('[')) // dictionary
+                    propName = propName[..item.Key.IndexOf('[')];
+                var prop = type.GetProperty(propName);
                 if (prop == null)
                     continue;
 
-                if (prop.CanWrite && !item.Key.EndsWith("[]"))
+                if (item.Key.EndsWith("[]")) // list
                 {
-                    prop.SetValue(obj, Utils.ParseValue(item.Value, prop.PropertyType));
-                }
-                else if (item.Key.EndsWith("[]")) // list
-                {
-                    var values = item.Value.Select(v => Utils.ParseValue(v, prop.PropertyType.GenericTypeArguments[0]));
                     var list = prop.GetValue(obj) as IList;
                     list.Clear();
+                    var values = item.Value.Select(v => Utils.ParseValue(v, prop.PropertyType.GenericTypeArguments[0]));
                     foreach (var value in values)
                         list.Add(value);
+                }
+                else if (item.Key.IndexOf('[') < item.Key.IndexOf(']')) // dictionary
+                {
+                    var dict = prop.GetValue(obj) as IDictionary;
+                    if (!processingDicts.Contains(propName))
+                    {
+                        dict.Clear();
+                        processingDicts.Add(propName);
+                    }
+                    var key = Utils.ParseValue(item.Key[(item.Key.IndexOf('[') + 1)..item.Key.IndexOf(']')], prop.PropertyType.GenericTypeArguments[0]);
+                    dict[key] = Utils.ParseValue(item.Value, prop.PropertyType.GenericTypeArguments[1]);
+                }
+                else if(prop.CanWrite)
+                {
+                    prop.SetValue(obj, Utils.ParseValue(item.Value, prop.PropertyType));
                 }
             }
         }
