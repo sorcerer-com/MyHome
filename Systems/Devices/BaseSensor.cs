@@ -156,7 +156,7 @@ namespace MyHome.Systems.Devices
                     if (aggrType == "avg")
                         newValue = Math.Round(values.Average(), 2); // round to 2 decimals after the point
                     else if (aggrType == "sum")
-                        newValue = values.Sum();
+                        newValue = Math.Round(values.Sum(), 2);
                     this.Data[group.Key][subName] = newValue;
                 }
             }

@@ -3,6 +3,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using MyHome.Systems.Actions;
+
 namespace MyHome.Utils
 {
     public static class Utils
@@ -57,6 +59,21 @@ namespace MyHome.Utils
             var buffer = new byte[bytesCount];
             rand.NextBytes(buffer);
             return BitConverter.ToString(buffer).ToLower().Replace("-", string.Empty);
+        }
+
+        public static bool CheckCondition<T>(T value1, T value2, Condition condition) where T : IComparable
+        {
+            var compare = value1.CompareTo(value2);
+            return condition switch
+            {
+                Condition.Equal => compare == 0,
+                Condition.NotEqual => compare != 0,
+                Condition.Less => compare < 0,
+                Condition.LessOrEqual => compare <= 0,
+                Condition.Greater => compare > 0,
+                Condition.GreaterOrEqual => compare >= 0,
+                _ => throw new Exception("Check invalid condition: " + condition),
+            };
         }
     }
 }

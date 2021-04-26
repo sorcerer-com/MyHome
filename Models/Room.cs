@@ -6,10 +6,14 @@ using MyHome.Utils;
 
 using Newtonsoft.Json;
 
+using NLog;
+
 namespace MyHome.Models
 {
     public class Room
     {
+        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+
         public MyHome Owner { get; set; }
 
         [UiProperty(true)]
@@ -44,6 +48,8 @@ namespace MyHome.Models
             {
                 if (value)
                     this.Owner.SecuritySystem.Activate(this);
+                else
+                    logger.Warn("Try to deactivate security system on room: " + this.Name);
             }
         }
 

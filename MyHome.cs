@@ -9,6 +9,7 @@ using LibGit2Sharp;
 
 using MyHome.Models;
 using MyHome.Systems;
+using MyHome.Systems.Actions;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -49,6 +50,9 @@ namespace MyHome
 
         [JsonIgnore]
         public SecuritySystem SecuritySystem => this.Systems.Values.OfType<SecuritySystem>().FirstOrDefault();
+
+        [JsonIgnore]
+        public ActionsSystem ActionsSystem => this.Systems.Values.OfType<ActionsSystem>().FirstOrDefault();
 
 
         public MyHome()

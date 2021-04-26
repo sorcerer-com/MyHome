@@ -142,7 +142,7 @@ namespace MyHome.Utils
                     var key = Utils.ParseValue(item.Key[(item.Key.IndexOf('[') + 1)..item.Key.IndexOf(']')], prop.PropertyType.GenericTypeArguments[0]);
                     dict[key] = Utils.ParseValue(item.Value, prop.PropertyType.GenericTypeArguments[1]);
                 }
-                else if(prop.CanWrite)
+                else if (prop.CanWrite)
                 {
                     prop.SetValue(obj, Utils.ParseValue(item.Value, prop.PropertyType));
                 }
