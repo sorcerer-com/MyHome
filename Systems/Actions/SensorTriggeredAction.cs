@@ -1,16 +1,23 @@
 ﻿using System.Collections.Generic;
 
 using MyHome.Models;
+using MyHome.Utils;
 
 namespace MyHome.Systems.Actions
 {
     public class SensorTriggeredAction : EventTriggeredAction
     {
+        [UiProperty(true)]
         public string TriggerSensorSubname { get; set; }
 
-        public Condition TriggerCondition { get; set; } // TODO: convert in UI (check Utils)
+        [UiProperty(true)]
+        public Condition TriggerCondition { get; set; }
 
+        [UiProperty(true)]
         public double TriggerConditionValue { get; set; }
+
+
+        private SensorTriggeredAction() : this(null, null, null, Condition.Equal, 0, null, null) { }  // for json deserialization
 
         public SensorTriggeredAction(ActionsSystem owner, Room triggerRoom,
             string triggerSensorSubname, Condition triggerCondition, double triggerConditionValue,
@@ -21,6 +28,7 @@ namespace MyHome.Systems.Actions
             this.TriggerCondition = triggerCondition;
             this.TriggerConditionValue = triggerConditionValue;
         }
+
 
         protected override bool IsTriggered(object sender, GlobalEvent.GlobalEventArgs e)
         {

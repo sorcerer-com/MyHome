@@ -28,6 +28,7 @@
 
     <script src="../pages/mainPage.js"></script>
     <script src="../pages/configPage.js"></script>
+    <script src="../pages/actionsPage.js"></script>
 
     <link rel="stylesheet" href="./style.css" />
     <script src="./scripts.js"></script>
@@ -125,6 +126,10 @@
                    v-on:click="page = 'config'" v-bind:class="{'w3-text-gray w3-hover-text-white': page != 'config'}">
                     build
                 </a>
+                <a class="material-icons" title="Actions"
+                   v-on:click="page = 'actions'" v-bind:class="{'w3-text-gray w3-hover-text-white': page != 'actions'}">
+                    settings_ethernet
+                </a>
                 <a class="material-icons w3-text-gray w3-hover-text-white" title="Settings"
                    v-on:click="showSettingsModal()">
                     settings
@@ -153,6 +158,7 @@
         <!-- Content -->
         <main-page v-if="page == 'main'"></main-page>
         <config-page v-if="page == 'config'"></config-page>
+        <actions-page v-if="page =='actions'"></actions-page>
 
         <!-- Modal -->
         <div class="w3-modal" v-if="modal"

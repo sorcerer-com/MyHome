@@ -105,10 +105,14 @@ namespace MyHome.Controllers
         }
 
 
-        [HttpGet("device-types")]
-        public ActionResult GetDeviceTypes()
+        [HttpGet("types/{typeName}")]
+        public ActionResult GetDeviceTypes(string typeName)
         {
-            return this.Ok(typeof(Device).GetSubClasses().Select(t => t.Name));
+            var type = Utils.Utils.GetType(typeName);
+            if (type == null)
+                return this.NotFound("Invalid type name: " + typeName);
+
+            return this.Ok(type.GetSubClasses().Select(t => t.Name));
         }
     }
 }

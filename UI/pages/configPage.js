@@ -50,7 +50,7 @@ $.get(templateUrl, template => {
                 });
             },
             showAddDevice: function (room) {
-                getDeviceTypes().done(types => {
+                getSubTypes("Device").done(types => {
                     this.edit.name = "Add Device";
                     this.edit.types = types;
                     this.edit.object = null;

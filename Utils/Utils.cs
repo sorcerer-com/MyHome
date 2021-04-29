@@ -34,15 +34,20 @@ namespace MyHome.Utils
             {
                 return d;
             }
-            else if (GetType(value.Split('.')[0])?.IsEnum == true &&
-                Enum.TryParse(GetType(value.Split('.')[0]), value.Split('.')[1], out object e)) // Enum
-            {
-                return e;
-            }
             else if ((type == null || type == typeof(DateTime)) &&
                 DateTime.TryParse(value, out DateTime dt))
             {
                 return dt;
+            }
+            else if ((type == null || type == typeof(TimeSpan)) &&
+                TimeSpan.TryParse(value, out TimeSpan ts))
+            {
+                return ts;
+            }
+            else if (GetType(value.Split('.')[0])?.IsEnum == true &&
+                Enum.TryParse(GetType(value.Split('.')[0]), value.Split('.')[1], out object e)) // Enum
+            {
+                return e;
             }
             else if (type.GetInterface(nameof(ITuple)) != null)
             {

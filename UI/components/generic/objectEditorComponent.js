@@ -22,7 +22,7 @@ $.get(templateUrl, template => {
                     return tupleTypes.every(t => this.isSupportedType(t));
                 }
                 return type == "Boolean" || type.startsWith("Enum") || type.startsWith("Int") ||
-                    type == "Double" || type == "DateTime" || type == "String";
+                    type == "Double" || type == "DateTime" || type == "TimeSpan" || type == "String";
             },
             onItemChange: function (name, value) {
                 this.object[name] = value;

@@ -7,6 +7,7 @@ namespace MyHome.Systems
 {
     public class ActionsSystem : BaseSystem
     {
+        [UiProperty(true)]
         public Dictionary<string, BaseAction> Actions { get; private set; } // name / action
 
 
@@ -30,7 +31,7 @@ namespace MyHome.Systems
             base.Update();
 
             this.Actions.Values.RunForEach(action => action.Update());
-            // TODO: AND action
+            // TODO: AND action - split trigger part from the action
         }
     }
 }

@@ -43,8 +43,8 @@ function getSystems(settings = false) {
     return $.get(`./api/systems?settings=${settings}`);
 }
 
-function getSystem(systemName) {
-    return $.get(`./api/systems/${systemName}`);
+function getSystem(systemName, settings = false) {
+    return $.get(`./api/systems/${systemName}?settings=${settings}`);
 }
 
 function setSystem(systemName, data) {
@@ -54,6 +54,18 @@ function setSystem(systemName, data) {
 function callSystem(systemName, funcName, ...args) {
     let data = Object.assign({}, args);
     return $.post(`./api/systems/${systemName}/${funcName}`, data);
+}
+
+function createAction(actionType) {
+    return $.post(`./api/systems/Actions/create/${actionType}`);
+}
+
+function setAction(actionName, data) {
+    return $.post(`./api/systems/Actions/${actionName}`, data);
+}
+
+function deleteAction(actionName) {
+    return $.post(`./api/systems/Actions/${actionName}/delete`);
 }
 
 
@@ -81,8 +93,8 @@ function restart() {
     return $.post("./api/restart");
 }
 
-function getDeviceTypes() {
-    return $.get("./api/device-types");
+function getSubTypes(typeName) {
+    return $.get(`./api/types/${typeName}`);
 }
 
 

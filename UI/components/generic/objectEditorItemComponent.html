@@ -19,6 +19,9 @@
     <!-- datetime -->
     <input v-if="valueType == 'DateTime'" v-model="localValue" v-bind:title="getTitle()" type="datetime-local" class="w3-col m10 w3-mobile" />
 
+    <!-- timespan -->
+    <input v-if="valueType == 'TimeSpan'" v-model="localValue" v-bind:title="getTitle()" type="time" class="w3-col m10 w3-mobile" />
+
     <!-- string -->
     <input v-if="valueType == 'String'" v-model="localValue" v-bind:title="getTitle()" type="text" class="w3-col m10 w3-mobile" />
 

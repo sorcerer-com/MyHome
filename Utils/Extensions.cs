@@ -33,6 +33,11 @@ namespace MyHome.Utils
             {
                 return obj;
             }
+            else if (type == typeof(TimeSpan))
+            {
+                var value = (TimeSpan)obj;
+                return value.ToString();
+            }
             else if (type.IsEnum)
             {
                 return type.Name + "." + obj.ToString();

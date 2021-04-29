@@ -1,8 +1,10 @@
-﻿
-using System;
+﻿using System;
 using System.Linq;
 
 using MyHome.Models;
+using MyHome.Utils;
+
+using Newtonsoft.Json;
 
 using NLog;
 
@@ -26,7 +28,16 @@ namespace MyHome.Systems.Actions
 
         public Room Room { get; set; }
 
-        public string Action { get; set; } // device.prop = value; device.func(); for room: prop = value; func();
+        [JsonIgnore]
+        [UiProperty(true)]
+        public string RoomName
+        {
+            get => this.Room?.Name ?? "";
+            set => this.Room = this.Owner.Owner.Rooms.FirstOrDefault(r => r.Name == value);
+        }
+
+        [UiProperty(true, "[device.]prop = value / [device.]func()")]
+        public string Action { get; set; }
 
 
         private BaseAction() : this(null, null, null) { }  // for json deserialization
@@ -38,6 +49,7 @@ namespace MyHome.Systems.Actions
             this.Action = action;
         }
 
+
         public virtual void Setup()
         {
         }
@@ -45,6 +57,7 @@ namespace MyHome.Systems.Actions
         public virtual void Update()
         {
         }
+
 
         public void Execute()
         {

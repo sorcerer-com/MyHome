@@ -1,5 +1,9 @@
-﻿
+﻿using System.Linq;
+
 using MyHome.Models;
+using MyHome.Utils;
+
+using Newtonsoft.Json;
 
 namespace MyHome.Systems.Actions
 {
@@ -7,7 +11,19 @@ namespace MyHome.Systems.Actions
     {
         public Room TriggerRoom { get; set; }
 
-        public string TriggerEvent { get; set; } // TODO: change event type to enum
+        [JsonIgnore]
+        [UiProperty(true)]
+        public string TriggerRoomName
+        {
+            get => this.Room?.Name ?? "";
+            set => this.Room = this.Owner.Owner.Rooms.FirstOrDefault(r => r.Name == value);
+        }
+
+        [UiProperty(true)]
+        public string TriggerEvent { get; set; }
+
+
+        private EventTriggeredAction() : this(null, null, null, null, null) { }  // for json deserialization
 
         public EventTriggeredAction(ActionsSystem owner, Room triggerRoom, string triggerEvent, Room room, string action) :
             base(owner, room, action)
@@ -15,6 +31,7 @@ namespace MyHome.Systems.Actions
             this.TriggerRoom = triggerRoom;
             this.TriggerEvent = triggerEvent;
         }
+
 
         public override void Setup()
         {
