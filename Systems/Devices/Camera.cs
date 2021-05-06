@@ -119,7 +119,7 @@ namespace MyHome.Systems.Devices
         }
 
 
-        public Mat GetImage(Size? size = null, bool timestamp = true)
+        public Mat GetImage(bool initIfEmpty = true, Size? size = null, bool timestamp = true)
         {
             lock (this.Capture)
             {
@@ -129,7 +129,9 @@ namespace MyHome.Systems.Devices
                 {
                     this.Capture.Release(); // try to release the camera and open it again next time
                     this.lastUse = DateTime.Now.AddMinutes(-1);
-                    image = new Mat(480, 640, MatType.CV_8UC3);
+                    if (!initIfEmpty)
+                        return null;
+                    image = new Mat(480, 640, MatType.CV_8UC3, 0);
                     image.Line(0, 0, 640, 480, Scalar.Red, 2, LineTypes.AntiAlias);
                     image.Line(640, 0, 0, 480, Scalar.Red, 2, LineTypes.AntiAlias);
                 }
@@ -147,11 +149,11 @@ namespace MyHome.Systems.Devices
             }
         }
 
-        public bool SaveImage(string filepath, Size? size = null, bool timestamp = true)
+        public bool SaveImage(string filepath, bool initIfEmpty = true, Size? size = null, bool timestamp = true)
         {
             logger.Debug($"Camera '{this.Name}' ({this.Room.Name}) save image: {filepath}");
 
-            var image = this.GetImage(size, timestamp);
+            var image = this.GetImage(initIfEmpty, size, timestamp);
             return Cv2.ImWrite(filepath, image);
         }
 

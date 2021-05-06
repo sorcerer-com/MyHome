@@ -47,7 +47,7 @@
         </a>
         <a class="w3-button w3-xlarge w3-padding-small w3-white w3-hover-gray w3-round-xxlarge padding-4 material-icons"
            title="Play"
-           v-bind:class="{'disabled': !selectedMediaItem}"
+           v-bind:class="{'disabled': !selectedMediaItem && !mediaPlayer.Paused}"
            v-show="!mediaPlayer.Playing || mediaPlayer.Paused"
            v-on:click="mediaPlayer.Paused ? callMediaPlayer('Pause') : callMediaPlayer('Play', selectedMediaItem)">
             play_arrow

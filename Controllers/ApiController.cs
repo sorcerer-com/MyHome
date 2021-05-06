@@ -4,7 +4,6 @@ using System.Linq;
 
 using Microsoft.AspNetCore.Mvc;
 
-using MyHome.Systems.Devices;
 using MyHome.Utils;
 
 using Newtonsoft.Json.Linq;

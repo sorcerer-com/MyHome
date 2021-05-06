@@ -68,11 +68,11 @@ namespace MyHome.Utils
                 logger.Info($"Send SMS '{message.Replace("\n", " ")}' to {number}");
                 if (provider.ToLower() == "telenor")
                 {
-                    var browser = new ScrapingBrowser { Encoding = Encoding.UTF8 };
+                    var browser = new ScrapingBrowser { Encoding = Encoding.UTF8, IgnoreCookies = true };
                     var page = browser.NavigateToPage(new Uri("https://my.telenor.bg"));
                     // login
                     var form = new PageWebForm(page.Find("form", ScrapySharp.Html.By.Class("form")).First(), browser);
-                    form["account"] = number[1..];
+                    form["phone"] = number[1..];
                     page = form.Submit(new Uri("https://id.telenor.bg/id/signin-switchable/"));
                     form = new PageWebForm(page.Find("form", ScrapySharp.Html.By.Class("form")).First(), browser);
                     form["pin"] = password;

@@ -171,7 +171,7 @@ namespace MyHome.Systems.Devices
                 this.Data.Remove(time);
 
             // for older then 24 hour, save only 1 per day
-            times = this.Data.Keys.Where(t => t < now.Date.AddHours(now.Hour).AddDays(-1));
+            times = this.Data.Keys.Where(t => t < now.Date.AddDays(-1));
             var groupedDates = times.GroupBy(t => t.Date);
             this.AggregateData(groupedDates);
         }

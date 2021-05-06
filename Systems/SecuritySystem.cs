@@ -103,7 +103,7 @@ namespace MyHome.Systems
             var roomInfo = this.RoomsInfo.FirstOrDefault(r => r.Room == room);
             if (roomInfo == null)
             {
-                logger.Warn($"Try to activate security alarm for '{room.Name}' room, but it's not enabled");
+                logger.Debug($"Try to activate security alarm for '{room.Name}' room, but it's not enabled");
                 return;
             }
 
@@ -192,7 +192,9 @@ namespace MyHome.Systems
 
         private bool SaveImage(Camera camera, RoomInfo roomInfo)
         {
-            var image = camera.GetImage();
+            var image = camera.GetImage(false);
+            if (image == null)
+                return false;
             if (this.PrevImages.ContainsKey(camera.Room.Name + "." + camera.Name))
             {
                 // if no movement between current and previous image - skip saving
