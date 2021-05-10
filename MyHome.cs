@@ -73,12 +73,10 @@ namespace MyHome
             foreach (Type type in typeof(BaseSystem).GetSubClasses())
                 this.Systems.Add(type.Name, (BaseSystem)Activator.CreateInstance(type, this));
             // TODO list 
-            // * Trigger-Action system (migrate Schedule system to it - time trigger; sensor data alerts and light on skill also)
-            // * SecuritySystem - define zones - group of rooms
+            // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
             // * login UI - android pin screen
             // * migrate external sensors data (garage) through nginx; disable direct port forwarding to myhome; MQTT?
             // * mobile UI / landscape
-            // * investigate the deatlock (only on release?) - run here for a long period
             // * add MQTT support (maybe install broker on rpi3, accessible through nginx)
 
             this.lastBackupTime = DateTime.Now;

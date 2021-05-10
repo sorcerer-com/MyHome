@@ -72,6 +72,12 @@ namespace MyHome.Models
         }
 
 
+        public bool SendAlert()
+        {
+            return this.Owner.SendAlert($"'{this.Name}' room alert!");
+        }
+
+
         private Dictionary<string, double> GetSensorsValues()
         {
             return this.Sensors.Select(s => s.LastValues)

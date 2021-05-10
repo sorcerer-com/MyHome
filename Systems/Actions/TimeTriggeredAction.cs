@@ -7,33 +7,39 @@ namespace MyHome.Systems.Actions
 {
     public class TimeTriggeredAction : BaseAction
     {
-        private TimeSpan time;
+        private DateTime time;
         [UiProperty(true)]
-        public TimeSpan Time
+        public DateTime Time
         {
             get => this.time;
             set
             {
                 this.time = value;
 
-                var now = DateTime.Now;
-                this.nextTime = now - now.TimeOfDay + this.time;
-                while (this.nextTime < DateTime.Now)
-                    this.nextTime += this.Interval;
+                while (this.time < DateTime.Now)
+                    this.time += this.interval;
             }
         }
 
-        [UiProperty(true, "0 hours - 12AM")]
-        public TimeSpan Interval { get; set; }
-
-        private DateTime nextTime;
-
-
-        private TimeTriggeredAction() : this(null, null, null, TimeSpan.Zero, TimeSpan.FromMinutes(1)) { }  // for json deserialization
-
-        public TimeTriggeredAction(ActionsSystem owner, Room room, string action, TimeSpan time, TimeSpan interval) : base(owner, room, action)
+        private TimeSpan interval;
+        [UiProperty(true)]
+        public string Interval
         {
-            this.Interval = interval;
+            get => this.interval.ToString();
+            set
+            {
+                _ = TimeSpan.TryParse(value, out this.interval);
+                if (this.interval.TotalMilliseconds == 0)
+                    this.interval = TimeSpan.FromHours(1);
+            }
+        }
+
+
+        private TimeTriggeredAction() : this(null, null, null, DateTime.Now, TimeSpan.FromHours(1)) { }  // for json deserialization
+
+        public TimeTriggeredAction(ActionsSystem owner, Room room, string action, DateTime time, TimeSpan interval) : base(owner, room, action)
+        {
+            this.interval = interval;
             this.Time = time; // first set interval to calculate nextTime correctly
         }
 
@@ -42,13 +48,13 @@ namespace MyHome.Systems.Actions
         {
             base.Update();
 
-            if (DateTime.Now < this.nextTime)
+            if (DateTime.Now < this.time)
                 return;
 
             this.Execute();
 
-            while (this.nextTime < DateTime.Now)
-                this.nextTime += this.Interval;
+            while (this.time < DateTime.Now)
+                this.time += this.interval;
         }
     }
 }

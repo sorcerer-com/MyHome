@@ -125,32 +125,6 @@ namespace MyHome.Systems
             this.Owner.SystemChanged = true;
         }
 
-        private void Events_Handler(object sender, GlobalEvent.GlobalEventArgs e)
-        {
-            // TODO: maybe move all of this to action-trigger system
-            // * power consumption
-            // * garage door
-            if (sender is BaseSensor sensor && e.EventType == "SensorDataAdded")
-            {
-                var data = e.Data as Dictionary<string, double>;
-                var roomInfo = this.RoomsInfo.FirstOrDefault(r => r.Room == sensor.Room);
-                if (roomInfo == null)
-                    return;
-
-                // if sensor received Motion data after delay start - activate alarm
-                if (data.ContainsKey("Motion") && data["Motion"] == 1)
-                    this.Activate(sensor.Room);
-
-            }
-        }
-
-
-        public override void Setup()
-        {
-            base.Setup();
-
-            this.Owner.Events.Handler += this.Events_Handler;
-        }
 
         public override void Update()
         {
