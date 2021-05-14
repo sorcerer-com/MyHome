@@ -15,8 +15,8 @@ namespace MyHome.Systems.Actions
         [UiProperty(true)]
         public string TriggerRoomName
         {
-            get => this.Room?.Name ?? "";
-            set => this.Room = this.Owner.Owner.Rooms.FirstOrDefault(r => r.Name == value);
+            get => this.TriggerRoom?.Name ?? "";
+            set => this.TriggerRoom = this.Owner.Owner.Rooms.FirstOrDefault(r => r.Name == value);
         }
 
         [UiProperty(true)]

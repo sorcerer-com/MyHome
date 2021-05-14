@@ -309,7 +309,7 @@ namespace MyHome.Systems.Devices
             if (!this.IsOnvifSupported)
             {
                 logger.Debug("Not Onfiv camera, so no data to read");
-                return null;
+                return new JArray();
             }
 
             try
@@ -325,13 +325,12 @@ namespace MyHome.Systems.Devices
                     if (child == null || child.Attributes == null)
                         continue;
 
+                    var value = child.Attributes["Value"].Value.ToLower();
                     var item = new JObject
                     {
-                        ["name"] = child.Attributes["Name"].Value
+                        ["name"] = child.Attributes["Name"].Value,
+                        ["value"] = Utils.Utils.ParseValue(value, null)
                     };
-
-                    var value = child.Attributes["Value"].Value.ToLower();
-                    item["value"] = Utils.Utils.ParseValue(value, null);
                     result.Add(item);
                 }
                 return result;

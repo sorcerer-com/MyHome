@@ -5,10 +5,12 @@
     <!-- TODO: maybe show devices instead of value / grouped by type - https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg -->
     <a class="w3-col m5 s3 w3-padding w3-round-large w3-hover-light-gray margin-8 bg-gray-opacity-88" style="min-height: 72px"
        v-for="(value, name) of room.SensorsValues"
-       v-bind:title="metadata(room.SensorsMetadata[name])"
+       v-bind:title="value + '\n' + metadata(room.SensorsMetadata[name])"
        v-on:click="selectedValueType = name">
         <span class="w3-xlarge room-sensor-value">{{Math.round(value, 2)}}</span>
-        <span v-if="room.SensorsMetadata[name]" class="w3-small room-sensor-value-unit">{{room.SensorsMetadata[name]['unit']}}</span>
+        <span v-if="room.SensorsMetadata[name] && room.SensorsMetadata[name]['unit']" class="w3-small room-sensor-value-unit">
+            {{room.SensorsMetadata[name]['unit']}}
+        </span>
         <div class="w3-tiny">{{name}}</div>
     </a>
 

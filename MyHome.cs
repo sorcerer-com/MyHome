@@ -28,10 +28,14 @@ namespace MyHome
         [JsonRequired]
         private DateTime lastBackupTime;
 
+
         public Config Config { get; private set; }
 
         [JsonIgnore]
         public GlobalEvent Events { get; }
+
+        [JsonIgnore]
+        public MqttClientWrapper MqttClient { get; private set; }
 
         public List<Room> Rooms { get; private set; }
 
@@ -57,8 +61,6 @@ namespace MyHome
         public MyHome()
         {
             logger.Info("Start My Home");
-
-
             using (var repo = new Repository("."))
             {
                 logger.Info($"Version: {repo.Head.Tip.Author.When.ToLocalTime():dd/MM/yyyy HH:mm:ss} {repo.Head.Tip.MessageShort}");
@@ -66,6 +68,7 @@ namespace MyHome
 
             this.Config = new Config();
             this.Events = new GlobalEvent();
+            this.MqttClient = new MqttClientWrapper();
 
             this.Rooms = new List<Room>();
 
@@ -105,6 +108,10 @@ namespace MyHome
         public void Setup()
         {
             logger.Info("Setup My Home");
+
+            var (host, port) = Utils.Utils.SplitAddress(this.Config.MqttServerAddress);
+            this.MqttClient.Connect("MyHomeClient", host, port, this.Config.MqttUsername, this.Config.MqttPassword);
+
             foreach (var system in this.Systems.Values)
                 system.Setup();
         }
@@ -113,6 +120,7 @@ namespace MyHome
         {
             this.Events.Fire(this, "Stop");
             this.updateInterval = 0;
+            this.MqttClient.Disconnect();
 
             this.Save();
             foreach (var system in this.Systems.Values)
@@ -200,6 +208,7 @@ namespace MyHome
                 }
             }
         }
+
 
         public bool SendAlert(string msg, List<string> fileNames = null, bool force = false)
         {

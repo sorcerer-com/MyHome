@@ -85,7 +85,7 @@ namespace MyHome.Systems
             {
                 if (roomInfo == null)
                 {
-                    logger.Warn($"Try to disable security alarm for '{room.Name}' room, but it's not enabled");
+                    logger.Debug($"Try to disable security alarm for '{room.Name}' room, but it's not enabled");
                     return;
                 }
 

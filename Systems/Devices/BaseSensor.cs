@@ -82,6 +82,8 @@ namespace MyHome.Systems.Devices
         public void AddData(DateTime time, JToken data)
         {
             logger.Debug($"Sensor '{this.Name}' ({this.Room.Name}) add data at {time:dd/MM/yyyy HH:mm:ss}: {data}");
+            if (!data.HasValues)
+                return;
 
             if (!this.Data.ContainsKey(time))
                 this.Data.Add(time, new SensorValue());

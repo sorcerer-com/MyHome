@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MyHome.Models
+namespace MyHome.Utils
 {
     public class GlobalEvent
     {
@@ -27,7 +27,7 @@ namespace MyHome.Models
 
         public void Fire(object sender, string eventType, object data)
         {
-            Handler?.Invoke(sender, new GlobalEventArgs(eventType, data));
+            this.Handler?.Invoke(sender, new GlobalEventArgs(eventType, data));
         }
     }
 }

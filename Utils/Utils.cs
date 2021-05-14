@@ -66,6 +66,15 @@ namespace MyHome.Utils
             return BitConverter.ToString(buffer).ToLower().Replace("-", string.Empty);
         }
 
+        public static (string host, int? port) SplitAddress(string address)
+        {
+            if (!address.Contains(":"))
+                return (address, null);
+
+            var split = address.Split(":");
+            return (split[0], int.Parse(split[1]));
+        }
+
         public static bool CheckCondition<T>(T value1, T value2, Condition condition) where T : IComparable
         {
             var compare = value1.CompareTo(value2);

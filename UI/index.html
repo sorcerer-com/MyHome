@@ -52,7 +52,7 @@
                             getUpgradeAvailable().done(value => {
                                 Vue.set(this, "upgradeAvailable", value);
                                 setTimeout(this.refreshData, 3000);
-                            }).fail(() => {
+                            }).fail(response => {
                                 if (response.status == 401) // unauthorized
                                     window.location.replace("./login.html");
                                 else

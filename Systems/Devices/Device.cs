@@ -22,6 +22,15 @@ namespace MyHome.Systems.Devices
             this.Room = room;
         }
 
+
+        public virtual void Setup()
+        {
+        }
+
+        public virtual void Stop()
+        {
+        }
+
         public virtual void Update()
         {
         }

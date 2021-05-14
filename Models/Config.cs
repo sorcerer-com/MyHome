@@ -30,5 +30,15 @@ namespace MyHome.Models
 
         [UiProperty(true)]
         public string EmailPassword { get; set; } = "";
+
+
+        [UiProperty(true, "host[:port]")]
+        public string MqttServerAddress { get; set; } = "";
+
+        [UiProperty(true)]
+        public string MqttUsername { get; set; } = "";
+
+        [UiProperty(true)]
+        public string MqttPassword { get; set; } = "";
     }
 }

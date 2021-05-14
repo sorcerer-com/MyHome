@@ -46,6 +46,17 @@ namespace MyHome.Systems
 
             // set after loading the GetSensorDataInterval
             this.nextGetDataTime = this.GetNextReadDataTime();
+
+            foreach (var device in this.Devices)
+                device.Setup();
+        }
+
+        public override void Stop()
+        {
+            base.Stop();
+
+            foreach (var device in this.Devices)
+                device.Stop();
         }
 
         public override void Update()
@@ -62,20 +73,21 @@ namespace MyHome.Systems
                 this.nextGetDataTime = this.GetNextReadDataTime();
 
             var alertMsg = "";
-            this.Sensors.Where(s => !string.IsNullOrEmpty(s.Address)).RunForEach(sensor =>
+            this.Sensors.RunForEach(sensor =>
             {
+                // aggregate one value per ReadSensorDataInterval
+                var now = DateTime.Now;
+                var times = sensor.Data.Keys.Where(t => t < now.AddHours(-1) && t >= now.Date.AddHours(now.Hour).AddDays(-1)); // last 24 hours
+                var groupedDates = times.GroupBy(t => new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute / this.ReadSensorDataInterval * this.ReadSensorDataInterval, 0));
+                sensor.AggregateData(groupedDates);
+
+                if (string.IsNullOrEmpty(sensor.Address))
+                    return;
+
                 logger.Debug($"Requesting data from {sensor.Name} ({sensor.Room.Name}, {sensor.Address}) sensor");
 
                 if (sensor.ReadData(this.nextGetDataTime))
-                {
-                    // aggregate one value per ReadSensorDataInterval
-                    var now = DateTime.Now;
-                    var times = sensor.Data.Keys.Where(t => t < now.AddHours(-1) && t >= now.Date.AddHours(now.Hour).AddDays(-1)); // last 24 hours
-                    var groupedDates = times.GroupBy(t => new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute / this.ReadSensorDataInterval * this.ReadSensorDataInterval, 0));
-                    sensor.AggregateData(groupedDates);
-
                     this.Owner.SystemChanged = true;
-                }
                 else
                 {
                     logger.Warn($"No data from {sensor.Name} ({sensor.Room.Name}) sensor");

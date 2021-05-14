@@ -39,15 +39,9 @@ namespace MyHome.Utils
                 fileNames?.ForEach(f => builder.Attachments.Add(f));
                 mail.Body = builder.ToMessageBody();
 
-                string host = server;
-                int port = 465;
-                if (server.Contains(":"))
-                {
-                    host = server.Split(':')[0];
-                    port = int.Parse(server.Split(':')[1]);
-                }
+                var (host, port) = Utils.SplitAddress(server);
                 using var smtp = new SmtpClient { Timeout = 30 * 1000 };
-                smtp.Connect(host, port, (port == 465 || port == 587));
+                smtp.Connect(host, port ?? 465, port == null || port == 465 || port == 587);
                 smtp.Authenticate(sender, password);
                 smtp.Send(mail);
                 smtp.Disconnect(true);

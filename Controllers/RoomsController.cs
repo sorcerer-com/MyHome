@@ -124,6 +124,7 @@ namespace MyHome.Controllers
                     device = (Device)Activator.CreateInstance(type, true);
                     device.Owner = this.myHome.DevicesSystem;
                     device.Room = room;
+                    device.Setup();
                     this.myHome.DevicesSystem.Devices.Add(device);
                 }
 
@@ -151,6 +152,7 @@ namespace MyHome.Controllers
                 if (device == null)
                     return this.NotFound($"Device '{deviceName}' not found");
 
+                device.Stop();
                 this.myHome.DevicesSystem.Devices.Remove(device);
                 this.myHome.SystemChanged = true;
                 return this.Ok();
