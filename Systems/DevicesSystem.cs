@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using MyHome.Systems.Devices;
+using MyHome.Systems.Devices.Sensors;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -87,7 +88,9 @@ namespace MyHome.Systems
                 logger.Debug($"Requesting data from {sensor.Name} ({sensor.Room.Name}, {sensor.Address}) sensor");
 
                 if (sensor.ReadData(this.nextGetDataTime))
+                {
                     this.Owner.SystemChanged = true;
+                }
                 else
                 {
                     logger.Warn($"No data from {sensor.Name} ({sensor.Room.Name}) sensor");

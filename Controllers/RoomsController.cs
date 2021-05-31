@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using MyHome.Systems.Devices;
+using MyHome.Systems.Devices.Sensors;
 using MyHome.Utils;
 
 using NLog;

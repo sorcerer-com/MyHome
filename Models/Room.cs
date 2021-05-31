@@ -2,6 +2,7 @@
 using System.Linq;
 
 using MyHome.Systems.Devices;
+using MyHome.Systems.Devices.Sensors;
 using MyHome.Utils;
 
 using Newtonsoft.Json;

@@ -12,7 +12,7 @@ using Newtonsoft.Json.Linq;
 
 using NLog;
 
-namespace MyHome.Systems.Devices
+namespace MyHome.Systems.Devices.Sensors
 {
     public class MqttSensor : BaseSensor
     {

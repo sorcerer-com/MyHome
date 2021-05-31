@@ -21,7 +21,7 @@ using OnvifEvents;
 
 using OpenCvSharp;
 
-namespace MyHome.Systems.Devices
+namespace MyHome.Systems.Devices.Sensors
 {
     public class Camera : BaseSensor
     {

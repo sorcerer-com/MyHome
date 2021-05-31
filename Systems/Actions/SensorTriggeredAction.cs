@@ -7,6 +7,9 @@ namespace MyHome.Systems.Actions
 {
     public class SensorTriggeredAction : EventTriggeredAction
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0051:Remove unused private member")]
+        private new string TriggerEvent { get; set; }
+
         [UiProperty(true)]
         public string TriggerSensorSubname { get; set; }
 

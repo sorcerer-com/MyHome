@@ -78,9 +78,9 @@ namespace MyHome
             // TODO list 
             // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
             // * login UI - android pin screen
+            // * improve Actions UI - pre-defined events, actions, etc.
             // * migrate external sensors data (garage) through nginx; disable direct port forwarding to myhome; MQTT?
             // * mobile UI / landscape
-            // * add MQTT support (maybe install broker on rpi3, accessible through nginx)
 
             this.lastBackupTime = DateTime.Now;
             this.SystemChanged = false;

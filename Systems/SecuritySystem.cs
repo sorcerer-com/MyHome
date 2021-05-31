@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 
 using MyHome.Models;
-using MyHome.Systems.Devices;
+using MyHome.Systems.Devices.Sensors;
 using MyHome.Utils;
 
 using Newtonsoft.Json;

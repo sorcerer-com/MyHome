@@ -3,7 +3,7 @@ using MyHome.Utils;
 
 using Newtonsoft.Json.Linq;
 
-namespace MyHome.Systems.Devices
+namespace MyHome.Systems.Devices.Sensors
 {
     public class MySensor : BaseSensor
     {
