@@ -35,7 +35,10 @@ $.get(templateUrl, template => {
                 return this.room.Devices.filter(d => d.$type.endsWith("Camera"));
             },
             getSensorsBySelectedValueType: function () {
-                return this.room.Devices.filter(d => this.selectedValueType in d.LastValues);
+                return this.room.Devices.filter(d => d.$type.endsWith("Sensor") && this.selectedValueType in d.LastValues);
+            },
+            getDrivers: function () {
+                return this.room.Devices.filter(d => d.$type.endsWith("Driver"));
             },
 
             setRoomSecuritySystemEnabled: setRoomSecuritySystemEnabled

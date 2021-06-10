@@ -94,7 +94,7 @@ namespace MyHome.Systems.Devices.Sensors
 
             this.onvif = new Dictionary<Type, object>();
 
-            Task.Run(() => this.Capture.Release()); // prepare capture for opening
+            Task.Run(() => { lock (this.Capture) this.Capture.Release(); }); // prepare capture for opening
         }
 
         public override void Update()

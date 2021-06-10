@@ -25,6 +25,13 @@
         <div class="w3-tiny">Cameras</div>
     </a>
 
+    <!-- Drivers -->
+    <driver v-for="driver of getDrivers()" 
+            v-bind:key="driver.Name" 
+            v-bind:room="room" 
+            v-bind:driver="driver">
+    </driver>
+
     <!-- Security system -->
     <a class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-light-gray"
        v-bind:title="room.IsSecuritySystemEnabled ? 'Disable' : 'Enable'"

@@ -51,7 +51,7 @@ namespace MyHome.Utils
             }
             else if (type.GetInterface(nameof(ITuple)) != null)
             {
-                var values = value[1..^1].Split(',');
+                var values = value[1..^1].Split(", ");
                 if (values.Length == 2)
                     return ValueTuple.Create(ParseValue(values[0], type.GenericTypeArguments[0]), ParseValue(values[1], type.GenericTypeArguments[1]));
             }

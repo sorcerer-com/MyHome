@@ -1,13 +1,13 @@
 ﻿<div id="scrollable-content">
     <div class="w3-content w3-padding-16">
         <!-- Rooms info -->
-        <div class="w3-col m3 w3-margin" v-for="room of rooms">
-            <room-card v-bind:room="room"></room-card>
+            <div class="w3-col m3 w3-margin" v-for="room of rooms">
+                <room-card v-bind:room="room"></room-card>
+            </div>
         </div>
-    </div>
 
     <!-- Bottom bar -->
-    <div class="w3-padding-large w3-bottom w3-margin-bottom w3-right-align">
+    <div class="w3-padding-large w3-margin-bottom w3-display-bottomright">
         <!-- Media Player -->
         <div class="w3-dropdown-hover w3-transparent margin-left-8"
              @mouseover="hoverMediaPlayer()" @mouseleave="mediaPlayerHover = false">

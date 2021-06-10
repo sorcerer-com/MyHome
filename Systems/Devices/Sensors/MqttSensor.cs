@@ -16,6 +16,7 @@ namespace MyHome.Systems.Devices.Sensors
 {
     public class MqttSensor : BaseSensor
     {
+        // TODO: check for offline - alert - LWT
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0051:Remove unused private member")]
@@ -44,9 +45,9 @@ namespace MyHome.Systems.Devices.Sensors
         private MqttClientWrapper MqttClient => this.Owner?.Owner.MqttClient;
 
 
-        private MqttSensor() : this(null, null, null, null, null) { } // for json deserialization
+        private MqttSensor() : this(null, null, null, null) { } // for json deserialization
 
-        public MqttSensor(DevicesSystem owner, string name, Room room, string address, string mqttTopic) : base(owner, name, room, address)
+        public MqttSensor(DevicesSystem owner, string name, Room room, string mqttTopic) : base(owner, name, room, null)
         {
             this.MqttTopic = mqttTopic;
             this.JsonPaths = new List<string>();
@@ -69,6 +70,7 @@ namespace MyHome.Systems.Devices.Sensors
             base.Stop();
 
             // remove handlers
+            this.MqttClient.Unsubscribe(this.mqttTopic);
             this.MqttClient.Connected -= this.MqttClient_Connected;
             this.MqttClient.ApplicationMessageReceived -= this.MqttClient_ApplicationMessageReceived;
         }

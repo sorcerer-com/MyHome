@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 
 using MQTTnet;
@@ -16,6 +18,7 @@ namespace MyHome.Utils
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         private readonly IMqttClient MqttClient;
+        private readonly Dictionary<string, int> Subscriptions;
 
         public bool IsConnected => this.MqttClient.IsConnected;
 
@@ -28,6 +31,7 @@ namespace MyHome.Utils
         {
             var factory = new MqttFactory();
             this.MqttClient = factory.CreateMqttClient();
+            this.Subscriptions = new Dictionary<string, int>();
         }
 
 
@@ -35,7 +39,11 @@ namespace MyHome.Utils
         {
             logger.Debug($"Connect MQTT client '{clientId}' to {server}:{port}");
 
-            this.MqttClient.UseConnectedHandler(e => this.Connected?.Invoke(this, e));
+            this.MqttClient.UseConnectedHandler(e =>
+            {
+                logger.Debug("MQTT client connected");
+                this.Connected?.Invoke(this, e);
+            });
 
             this.MqttClient.UseDisconnectedHandler(e =>
             {
@@ -43,12 +51,16 @@ namespace MyHome.Utils
                 if (autoreconnect)
                 {
                     logger.Debug("MQTT client disconnected. Try to reconnect...");
-                    Thread.Sleep(5);
+                    Thread.Sleep(5000);
                     this.MqttClient.ReconnectAsync();
                 }
             });
 
-            this.MqttClient.UseApplicationMessageReceivedHandler(e => this.ApplicationMessageReceived?.Invoke(this, e));
+            this.MqttClient.UseApplicationMessageReceivedHandler(e =>
+            {
+                logger.Debug($"Process MQTT message with topic '{e.ApplicationMessage.Topic}': {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
+                this.ApplicationMessageReceived?.Invoke(this, e);
+            });
 
             var options = new MqttClientOptionsBuilder()
                 .WithClientId(clientId)
@@ -63,17 +75,59 @@ namespace MyHome.Utils
 
         public void Disconnect()
         {
+            logger.Debug($"Disconnect MQTT client '{this.MqttClient.Options.ClientId}'");
             this.MqttClient.DisconnectAsync();
         }
 
         public void Subscribe(string topic)
         {
+            if (string.IsNullOrEmpty(topic))
+                return;
+
+            if (!this.Subscriptions.ContainsKey(topic))
+                this.Subscriptions.Add(topic, 0);
+            this.Subscriptions[topic] = this.Subscriptions[topic] + 1;
+
+            logger.Debug($"Subscribe MQTT client '{this.MqttClient.Options.ClientId}' for topic: {topic} ({this.Subscriptions[topic]})");
             this.MqttClient.SubscribeAsync(topic);
         }
 
         public void Unsubscribe(string topic)
         {
+            if (string.IsNullOrEmpty(topic))
+                return;
+
+            logger.Debug($"Unsubscribe MQTT client '{this.MqttClient.Options.ClientId}' for topic: {topic} ({this.Subscriptions[topic]})");
+            if (this.Subscriptions.ContainsKey(topic))
+            {
+                this.Subscriptions[topic] = this.Subscriptions[topic] - 1;
+                if (this.Subscriptions[topic] != 0)
+                    return; // don't unsubscribe if there are more "clients" subscribed
+                else
+                    this.Subscriptions.Remove(topic);
+            }
+
             this.MqttClient.UnsubscribeAsync(topic);
+        }
+
+        public void Publish(string topic, string payload, int qualityOfService = 0, bool retain = false)
+        {
+            logger.Debug($"Publish message on topic '{topic}' (QoS: {qualityOfService}, retain: {retain}): {payload}");
+            try
+            {
+                var message = new MqttApplicationMessageBuilder()
+                    .WithTopic(topic)
+                    .WithPayload(payload)
+                    .WithQualityOfServiceLevel(qualityOfService)
+                    .WithRetainFlag(retain)
+                    .Build();
+
+                this.MqttClient.PublishAsync(message, CancellationToken.None);
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Failed to publish message on topic: " + topic);
+            }
         }
     }
 }
