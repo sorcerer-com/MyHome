@@ -79,7 +79,7 @@ namespace MyHome
             // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
             // * login UI - android pin screen
             // * improve Actions UI - pre-defined events, actions, etc.
-            // * migrate external sensors data (garage) through nginx; disable direct port forwarding to myhome; MQTT?
+            // * migrate the old multisensor to MQTT; remove token and process external data;
             // * mobile UI / landscape
 
             this.lastBackupTime = DateTime.Now;
