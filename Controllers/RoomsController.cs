@@ -135,7 +135,7 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Failed to set device '${deviceName}' (${roomName})");
+                logger.Error(e, $"Failed to set device '{deviceName}' ({roomName})");
                 return this.BadRequest(e.Message);
             }
         }
@@ -160,7 +160,7 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Failed to delete device '${deviceName}' (${roomName})");
+                logger.Error(e, $"Failed to delete device '{deviceName}' ({roomName})");
                 return this.BadRequest(e.Message);
             }
         }
@@ -256,7 +256,7 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Failed to move '{cameraName}' camera to '${movementType}'");
+                logger.Error(e, $"Failed to move '{cameraName}' camera to '{movementType}'");
                 return this.BadRequest(e.Message);
             }
         }

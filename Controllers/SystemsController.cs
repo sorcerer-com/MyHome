@@ -87,7 +87,7 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Failed to call '{systemName}' system's function '${funcName}'");
+                logger.Error(e, $"Failed to call '{systemName}' system's function '{funcName}'");
                 return this.BadRequest(e.Message);
             }
         }

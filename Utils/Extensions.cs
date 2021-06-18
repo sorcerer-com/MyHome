@@ -99,7 +99,8 @@ namespace MyHome.Utils
             var name = type.Name
                 .Replace("`1", "")
                 .Replace("`2", "")
-                .Replace("IEnumerable", "List");
+                .Replace("IEnumerable", "List")
+                .Replace("ObservableCollection", "List");
 
             if (type.IsGenericType)
             {
@@ -131,7 +132,9 @@ namespace MyHome.Utils
                 if (item.Key.EndsWith("[]")) // list
                 {
                     var list = prop.GetValue(obj) as IList;
-                    list.Clear();
+                    // workaround since Clear() doesn't work well with observable collections
+                    while (list.Count > 0)
+                        list.RemoveAt(0);
                     var values = item.Value.Select(v => Utils.ParseValue(v, prop.PropertyType.GenericTypeArguments[0]));
                     foreach (var value in values)
                         list.Add(value);

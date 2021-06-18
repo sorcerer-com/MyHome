@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Linq;
 using System.Text;
 
 using MQTTnet;
@@ -22,37 +25,20 @@ namespace MyHome.Systems.Devices.Sensors
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0051:Remove unused private member")]
         private new string Address { get; set; }
 
-        private string mqttTopic;
-        [UiProperty(true)]
-        public string MqttTopic
-        {
-            get => this.mqttTopic;
-            set
-            {
-                if (this.MqttClient?.IsConnected == true)
-                {
-                    this.MqttClient.Unsubscribe(this.mqttTopic);
-                    this.MqttClient.Subscribe(value);
-                }
-                this.mqttTopic = value;
-            }
-        }
-
-        [UiProperty(true)]
-        public List<string> JsonPaths { get; private set; }
+        [UiProperty(true, "(topic, json path)")]
+        public ObservableCollection<(string topic, string jsonPath)> MqttTopics { get; set; }
 
 
         private MqttClientWrapper MqttClient => this.Owner?.Owner.MqttClient;
 
 
-        private MqttSensor() : this(null, null, null, null) { } // for json deserialization
+        private MqttSensor() : this(null, null, null) { } // for json deserialization
 
-        public MqttSensor(DevicesSystem owner, string name, Room room, string mqttTopic) : base(owner, name, room, null)
+        public MqttSensor(DevicesSystem owner, string name, Room room) : base(owner, name, room, null)
         {
-            this.MqttTopic = mqttTopic;
-            this.JsonPaths = new List<string>();
+            this.MqttTopics = new ObservableCollection<(string topic, string jsonPath)>();
+            this.MqttTopics.CollectionChanged += this.MqttTopics_CollectionChanged;
         }
-
 
         public override void Setup()
         {
@@ -69,23 +55,51 @@ namespace MyHome.Systems.Devices.Sensors
         {
             base.Stop();
 
+            foreach (var (topic, _) in this.MqttTopics)
+                this.MqttClient.Unsubscribe(topic);
+
             // remove handlers
-            this.MqttClient.Unsubscribe(this.mqttTopic);
             this.MqttClient.Connected -= this.MqttClient_Connected;
             this.MqttClient.ApplicationMessageReceived -= this.MqttClient_ApplicationMessageReceived;
         }
 
+        private void MqttTopics_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (this.MqttClient?.IsConnected != true)
+                return;
+
+            if (e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                foreach (var (topic, _) in this.MqttTopics)
+                    this.MqttClient.Unsubscribe(topic);
+            }
+            else
+            {
+                if (e.OldItems != null)
+                {
+                    foreach (var (topic, _) in e.OldItems.OfType<(string topic, string jsonPath)>())
+                        this.MqttClient.Unsubscribe(topic);
+                }
+                if (e.NewItems != null)
+                {
+                    foreach (var (topic, _) in e.NewItems.OfType<(string topic, string jsonPath)>())
+                        this.MqttClient.Subscribe(topic);
+                }
+            }
+        }
+
         private void MqttClient_Connected(object sender, MqttClientConnectedEventArgs e)
         {
-            this.MqttClient.Subscribe(this.mqttTopic);
+            foreach (var (topic, _) in this.MqttTopics)
+                this.MqttClient.Subscribe(topic);
         }
 
         private void MqttClient_ApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs e)
         {
-            if (e.ApplicationMessage.Topic != this.mqttTopic)
+            if (!this.MqttTopics.Any(value => value.topic == e.ApplicationMessage.Topic))
                 return;
 
-            logger.Debug($"Process sensor '{this.Name}' ({this.Room.Name}) MQTT message with topic: {this.mqttTopic}");
+            logger.Debug($"Process sensor '{this.Name}' ({this.Room.Name}) MQTT message with topic: {e.ApplicationMessage.Topic}");
 
             try
             {
@@ -93,9 +107,9 @@ namespace MyHome.Systems.Devices.Sensors
                 var json = JToken.Parse(payload);
 
                 var data = new JArray();
-                foreach (var path in this.JsonPaths)
+                foreach (var (_, jsonPath) in this.MqttTopics.Where(kvp => kvp.topic == e.ApplicationMessage.Topic))
                 {
-                    var token = json.SelectToken(path);
+                    var token = json.SelectToken(jsonPath);
                     if (token == null)
                         continue;
 
