@@ -142,7 +142,7 @@ namespace MyHome.Systems
                 if (elapsed > TimeSpan.FromMinutes(this.SendInterval))
                 {
                     roomInfo.Activated = false;
-                    if (roomInfo.ImageFiles.Count > 1 || CheckForOfflineCamera(roomInfo.Room))
+                    if (roomInfo.ImageFiles.Count > 1 || CheckCameras(roomInfo.Room))
                     {
                         if (this.Owner.SendAlert($"'{roomInfo.Room.Name}' room security alarm activated!", roomInfo.ImageFiles, true))
                             ClearImages(roomInfo);
@@ -195,14 +195,10 @@ namespace MyHome.Systems
             roomInfo.ImageFiles.Clear();
         }
 
-        private static bool CheckForOfflineCamera(Room room)
+        private static bool CheckCameras(Room room)
         {
-            foreach (var camera in room.Cameras)
-            {
-                if (!camera.IsOpened)
-                    return true;
-            }
-            return false;
+            // it there is no cameras or there is offline camera
+            return !room.Cameras.Any() || room.Cameras.Any(camera => !camera.IsOpened);
         }
 
         private static bool FindMovement(Mat image1, Mat image2, double threshold)
