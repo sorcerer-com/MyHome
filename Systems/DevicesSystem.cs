@@ -82,24 +82,22 @@ namespace MyHome.Systems
                 var groupedDates = times.GroupBy(t => new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute / this.ReadSensorDataInterval * this.ReadSensorDataInterval, 0));
                 sensor.AggregateData(groupedDates);
 
-                if (string.IsNullOrEmpty(sensor.Address))
-                    return;
-
-                logger.Debug($"Requesting data from {sensor.Name} ({sensor.Room.Name}, {sensor.Address}) sensor");
-
-                if (sensor.ReadData(this.nextGetDataTime))
+                var lastSensorTime = sensor.Data.Keys.OrderBy(t => t).LastOrDefault();
+                if (lastSensorTime <= this.nextGetDataTime.AddMinutes(-this.ReadSensorDataInterval * 4) &&
+                    lastSensorTime > this.nextGetDataTime.AddMinutes(-this.ReadSensorDataInterval * 5))
                 {
-                    this.Owner.SystemChanged = true;
+                    logger.Warn($"Sensor {sensor.Name} ({sensor.Room.Name}) is not active from {lastSensorTime}");
+                    alertMsg += $"{sensor.Name} ({sensor.Room.Name}) inactive ";
                 }
-                else
+
+                if (!string.IsNullOrEmpty(sensor.Address))
                 {
-                    logger.Warn($"No data from {sensor.Name} ({sensor.Room.Name}) sensor");
-                    var lastSensorTime = sensor.Data.Keys.OrderBy(t => t).LastOrDefault();
-                    if (lastSensorTime <= this.nextGetDataTime.AddMinutes(-this.ReadSensorDataInterval * 4) &&
-                        lastSensorTime > this.nextGetDataTime.AddMinutes(-this.ReadSensorDataInterval * 5))
-                    {
-                        alertMsg += $"{sensor.Name} ({sensor.Room.Name}) inactive ";
-                    }
+                    logger.Debug($"Requesting data from {sensor.Name} ({sensor.Room.Name}, {sensor.Address}) sensor");
+
+                    if (sensor.ReadData(this.nextGetDataTime))
+                        this.Owner.SystemChanged = true;
+                    else
+                        logger.Warn($"No data from {sensor.Name} ({sensor.Room.Name}) sensor");
                 }
             });
 

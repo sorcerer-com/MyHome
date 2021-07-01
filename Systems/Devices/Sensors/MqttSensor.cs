@@ -19,7 +19,6 @@ namespace MyHome.Systems.Devices.Sensors
 {
     public class MqttSensor : BaseSensor
     {
-        // TODO: check for offline - alert - LWT
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0051:Remove unused private member")]
