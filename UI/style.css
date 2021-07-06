@@ -136,9 +136,16 @@ summary {
     margin-top: -50px;
 }
 
+    #login input {
+        background: transparent;
+        outline: none;
+        border: 0;
+    }
+
     #login .w3-button {
-        width: 45px;
-        height: 45px;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
     }
 
     #login .material-icons {

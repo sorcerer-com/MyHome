@@ -77,7 +77,6 @@ namespace MyHome
                 this.Systems.Add(type.Name, (BaseSystem)Activator.CreateInstance(type, this));
             // TODO list 
             // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
-            // * login UI - android pin screen
             // * improve Actions UI - pre-defined events, actions, etc. Manually activated security alarm shouldn't be stopped.
             // * migrate the old multisensor to MQTT; remove token and process external data;
             // * mobile UI / landscape
