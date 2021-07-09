@@ -43,6 +43,9 @@ namespace MyHome.Systems.Devices.Drivers
             set => this.MqttSetTopics[SWITCH_STATE_NAME] = value;
         }
 
+        [UiProperty(true)]
+        public bool ConfirmationRequired { get; set; }
+
 
         private SwitchMqttDriver() : this(null, null, null) { } // for json deserialization
 

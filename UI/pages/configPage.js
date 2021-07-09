@@ -85,13 +85,13 @@ $.get(templateUrl, template => {
             },
 
             deleteRoom: function () {
-                if (!confirm("Are you sure you want to delete the room and all its devices?"))
+                if (!confirm(`Are you sure you want to delete the ${this.edit.roomName} and all its devices ?`))
                     return;
 
                 deleteRoom(this.edit.roomName).done(() => this.edit.name = null);
             },
             deleteDevice: function () {
-                if (!confirm("Are you sure you want to delete the device?"))
+                if (!confirm(`Are you sure you want to delete the ${this.edit.roomName} ${this.edit.name}?`))
                     return;
 
                 deleteDevice(this.edit.roomName, this.edit.name).done(() => this.edit.name = null);

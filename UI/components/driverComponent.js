@@ -12,6 +12,10 @@ $.get(templateUrl, template => {
         methods: {
             click: function () {
                 if ("IsOn" in this.driver) {
+                    if (this.driver.ConfirmationRequired &&
+                        !confirm(`Are you sure you want to turn ${!this.driver.IsOn ? 'on' : 'off'} the ${this.room.Name} ${this.driver.Name}?`))
+                        return;
+
                     this.driver.IsOn = !this.driver.IsOn;
                     setDevice(this.room.Name, this.driver.Name, { "IsOn": this.driver.IsOn });
                 }

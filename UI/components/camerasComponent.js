@@ -11,7 +11,7 @@ $.get(templateUrl, template => {
         methods: {
             moveCamera: moveCamera,
             restartCamera: function (roomName, cameraName) {
-                if (!confirm("Are you sure you want to restart camera?"))
+                if (!confirm(`Are you sure you want to restart the ${roomName} ${cameraName}?`))
                     return;
 
                 restartCamera(roomName, cameraName);
