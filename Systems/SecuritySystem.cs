@@ -32,6 +32,8 @@ namespace MyHome.Systems
         [JsonIgnore]
         public Dictionary<Room, bool> ActivatedRooms => this.RoomsInfo.ToDictionary(r => r.Room, r => r.Activated);
 
+        public Dictionary<string, Dictionary<DateTime, string>> History { get; set; } // roomName / time / action
+
         private class RoomInfo
         {
             public Room Room { get; set; }
@@ -56,6 +58,7 @@ namespace MyHome.Systems
             this.ActivationDelay = 15;
             this.SendInterval = 5;
             this.MovementThreshold = 0.02;
+            this.History = new Dictionary<string, Dictionary<DateTime, string>>();
 
             this.RoomsInfo = new List<RoomInfo>();
             this.PrevImages = new Dictionary<string, Mat>();
@@ -95,6 +98,7 @@ namespace MyHome.Systems
                 ClearImages(roomInfo);
                 this.RoomsInfo.Remove(roomInfo);
             }
+            this.SetHistory(room, enable ? "Enabled" : "Disabled");
             this.Owner.SystemChanged = true;
         }
 
@@ -121,6 +125,7 @@ namespace MyHome.Systems
             foreach (var camera in roomInfo.Room.Cameras)
                 this.PrevImages.Remove(camera.Room.Name + "." + camera.Name);
             logger.Info($"Alarm security activated in '{room.Name}' room");
+            this.SetHistory(room, "Activated");
             this.Owner.Events.Fire(this, "SecurityAlarmActivated", roomInfo.Room);
             this.Owner.SystemChanged = true;
         }
@@ -142,6 +147,7 @@ namespace MyHome.Systems
                 if (elapsed > TimeSpan.FromMinutes(this.SendInterval))
                 {
                     roomInfo.Activated = false;
+                    this.SetHistory(roomInfo.Room, "Enabled");
                     if (roomInfo.ImageFiles.Count > 1 || CheckCameras(roomInfo.Room))
                     {
                         if (this.Owner.SendAlert($"'{roomInfo.Room.Name}' room security alarm activated!", roomInfo.ImageFiles, true))
@@ -217,6 +223,25 @@ namespace MyHome.Systems
             diff = diff.Threshold(25, 255, ThresholdTypes.Binary);
             var diffPecent = (double)diff.CountNonZero() / (640 * 480);
             return diffPecent > threshold;
+        }
+
+        private void SetHistory(Room room, string action)
+        {
+            if (!this.History.ContainsKey(room.Name))
+                this.History.Add(room.Name, new Dictionary<DateTime, string>());
+
+            this.History[room.Name][DateTime.Now] = action;
+
+            // remove entries older than one week
+            var weekAgo = DateTime.Now.AddDays(-7);
+            foreach (var key in this.History.Keys)
+            {
+                foreach (var time in this.History[key].Keys)
+                {
+                    if (time < weekAgo)
+                        this.History[key].Remove(time);
+                }
+            }
         }
     }
 }

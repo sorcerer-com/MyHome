@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using MyHome.Systems.Devices;
@@ -54,6 +55,12 @@ namespace MyHome.Models
             }
         }
 
+        [JsonIgnore]
+        [UiProperty]
+        public Dictionary<DateTime, string> SecurityHistory =>
+            this.Owner.SecuritySystem.History.ContainsKey(this.Name)
+                    ? this.Owner.SecuritySystem.History[this.Name]
+                    : new Dictionary<DateTime, string>();
 
         [JsonIgnore]
         [UiProperty]

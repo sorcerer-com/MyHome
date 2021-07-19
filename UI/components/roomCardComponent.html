@@ -26,9 +26,9 @@
     </a>
 
     <!-- Drivers -->
-    <driver v-for="driver of getDrivers()" 
-            v-bind:key="driver.Name" 
-            v-bind:room="room" 
+    <driver v-for="driver of getDrivers()"
+            v-bind:key="driver.Name"
+            v-bind:room="room"
             v-bind:driver="driver">
     </driver>
 
@@ -41,6 +41,11 @@
                              'w3-text-red': room.IsSecuritySystemActivated}">
             security
         </span>
+        <span class="material-icons w3-round w3-text-orange w3-hover-text-blue font-size-normal" title="History"
+              v-on:click="selectedValueType = 'Security'" v-on:click.stop="">
+            show_chart
+        </span>
+
         <div class="w3-tiny">Security</div>
     </a>
 
@@ -55,7 +60,7 @@
             </header>
             <div class="w3-container w3-padding-16 height-100 overflow-y-auto bg-gray">
                 <!-- Sensors Data -->
-                <sensors-data v-if="selectedValueType != 'Cameras'"
+                <sensors-data v-if="selectedValueType != 'Cameras' && selectedValueType != 'Security'"
                               v-bind:room="room"
                               v-bind:sensors="getSensorsBySelectedValueType()"
                               v-bind:value-type="selectedValueType"></sensors-data>
@@ -63,6 +68,8 @@
                 <cameras v-if="selectedValueType == 'Cameras'"
                          v-bind:room="room"
                          v-bind:cameras="getCameras()"></cameras>
+                <!-- Security -->
+                <canvas v-if="selectedValueType == 'Security'" id="securityChart"></canvas>
             </div>
         </div>
     </div>
