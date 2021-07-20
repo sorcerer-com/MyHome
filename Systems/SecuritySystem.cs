@@ -32,7 +32,7 @@ namespace MyHome.Systems
         [JsonIgnore]
         public Dictionary<Room, bool> ActivatedRooms => this.RoomsInfo.ToDictionary(r => r.Room, r => r.Activated);
 
-        public Dictionary<string, Dictionary<DateTime, string>> History { get; set; } // roomName / time / action
+        public Dictionary<string, Dictionary<DateTime, string>> History { get; } // roomName / time / action
 
         private class RoomInfo
         {

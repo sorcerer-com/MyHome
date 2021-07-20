@@ -24,7 +24,7 @@ namespace MyHome.Systems.Devices.Sensors
         private new string Address { get; set; }
 
         [UiProperty(true, "(topic, json path)")]
-        public ObservableCollection<(string topic, string jsonPath)> MqttTopics { get; set; }
+        public ObservableCollection<(string topic, string jsonPath)> MqttTopics { get; }
 
 
         private MqttClientWrapper MqttClient => this.Owner?.Owner.MqttClient;

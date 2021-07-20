@@ -7,8 +7,9 @@ namespace MyHome.Systems
 {
     public class ActionsSystem : BaseSystem
     {
+        // TODO: consider do as list, not a dictionary, to allow renaming
         [UiProperty(true)]
-        public Dictionary<string, BaseAction> Actions { get; private set; } // name / action
+        public Dictionary<string, BaseAction> Actions { get; } // name / action
 
 
         private ActionsSystem() : this(null) { }  // for json deserialization
@@ -17,6 +18,7 @@ namespace MyHome.Systems
         {
             this.Actions = new Dictionary<string, BaseAction>();
         }
+
 
         public override void Setup()
         {

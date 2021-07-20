@@ -20,11 +20,11 @@ namespace MyHome.Systems.Devices.Drivers
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
 
-        protected Dictionary<string, object> State { get; private set; }
+        protected Dictionary<string, object> State { get; }
 
-        protected Dictionary<string, (string topic, string jsonPath)> MqttGetTopics { get; set; }
+        protected Dictionary<string, (string topic, string jsonPath)> MqttGetTopics { get; }
 
-        protected Dictionary<string, (string topic, string jsonPath)> MqttSetTopics { get; set; }
+        protected Dictionary<string, (string topic, string jsonPath)> MqttSetTopics { get; }
 
 
         protected MqttClientWrapper MqttClient => this.Owner?.Owner.MqttClient;

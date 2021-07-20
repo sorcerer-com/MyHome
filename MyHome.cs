@@ -29,15 +29,15 @@ namespace MyHome
         private DateTime lastBackupTime;
 
 
-        public Config Config { get; private set; }
+        public Config Config { get; }
 
         [JsonIgnore]
         public GlobalEvent Events { get; }
 
         [JsonIgnore]
-        public MqttClientWrapper MqttClient { get; private set; }
+        public MqttClientWrapper MqttClient { get; }
 
-        public List<Room> Rooms { get; private set; }
+        public List<Room> Rooms { get; }
 
         public Dictionary<string, BaseSystem> Systems { get; }
 
