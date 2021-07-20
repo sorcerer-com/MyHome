@@ -75,7 +75,7 @@ while True:
 
     try:
         killProc()
-        proc = subprocess.Popen(sys.argv[1].split())
+        proc = subprocess.Popen(sys.argv[1].split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         while (proc is not None) and (proc.poll() is None):
             for i in range(0, 12):  # wait a minute
@@ -84,7 +84,8 @@ while True:
                     break
 
             if (proc is None) or (proc.poll() is not None):
-                logger.error("Process didn't start, so try to restart it")
+                logger.error(f"Process didn't start, so try to restart it (ExitCode: {proc.returncode})")
+                logger.error(proc.communicate()[1])
                 break
 
             # try open page 3 times
