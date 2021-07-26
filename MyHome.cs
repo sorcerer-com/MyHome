@@ -18,11 +18,10 @@ using NLog;
 
 namespace MyHome
 {
-    public class MyHome : IDisposable
+    public sealed class MyHome : IDisposable
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
-        private readonly Thread thread;
         private int updateInterval = 3; // seconds
         private readonly int upgradeCheckInterval = 5; // minutes
         [JsonRequired]
@@ -88,12 +87,12 @@ namespace MyHome
 
             this.Setup();
 
-            this.thread = new Thread(this.Update)
+            var thread = new Thread(this.Update)
             {
                 Name = "MyHome update",
                 IsBackground = true
             };
-            this.thread.Start();
+            thread.Start();
 
             this.Events.Fire(this, "Start");
         }

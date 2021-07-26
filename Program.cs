@@ -8,7 +8,7 @@ using NLog.Web;
 
 namespace MyHome
 {
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {
@@ -34,16 +34,16 @@ namespace MyHome
         public static IHostBuilder CreateHostBuilder(string[] args)
         {
             return Host.CreateDefaultBuilder(args)
-.ConfigureWebHostDefaults(webBuilder =>
-{
-    webBuilder.UseStartup<Startup>();
-})
-.ConfigureLogging(logging =>
-{
-    logging.ClearProviders();
-    logging.SetMinimumLevel(LogLevel.Trace);
-})
-.UseNLog();  // NLog: Setup NLog for Dependency injection
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                })
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.SetMinimumLevel(LogLevel.Trace);
+                })
+                .UseNLog();  // NLog: Setup NLog for Dependency injection
         }
     }
 }

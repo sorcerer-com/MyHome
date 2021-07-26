@@ -125,7 +125,7 @@ namespace MyHome.Systems.Devices.Sensors
             {
                 var image = new Mat();
                 this.Capture.Read(image);
-                if (image == null || image.Empty())
+                if (image.Empty())
                 {
                     this.Capture.Release(); // try to release the camera and open it again next time
                     this.lastUse = DateTime.Now.AddMinutes(-1);

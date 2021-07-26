@@ -49,7 +49,7 @@ namespace MyHome.Utils
             {
                 return e;
             }
-            else if (type.GetInterface(nameof(ITuple)) != null)
+            else if (type != null && type.GetInterface(nameof(ITuple)) != null)
             {
                 var values = value[1..^1].Split(", ");
                 if (values.Length == 2)

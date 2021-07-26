@@ -73,11 +73,11 @@ namespace MyHome.Utils
                 var pis = obj.GetType().GetProperties();
                 foreach (var pi in pis)
                 {
-                    var uiPropertyAttr = pi.GetCustomAttribute<UiProperty>();
+                    var uiPropertyAttr = pi.GetCustomAttribute<UiPropertyAttribute>();
                     if (uiPropertyAttr == null)
                         continue;
 
-                    if (settingsOnly && uiPropertyAttr.Setting == false)
+                    if (settingsOnly && !uiPropertyAttr.Setting)
                         continue;
 
                     result[pi.Name] = pi.GetValue(obj).ToUiObject(settingsOnly);

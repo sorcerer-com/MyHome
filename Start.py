@@ -75,7 +75,7 @@ while True:
 
     try:
         killProc()
-        proc = subprocess.Popen(sys.argv[1].split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(sys.argv[1].split(), stderr=subprocess.PIPE)
 
         while (proc is not None) and (proc.poll() is None):
             for i in range(0, 12):  # wait a minute
