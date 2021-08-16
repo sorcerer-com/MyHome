@@ -30,7 +30,14 @@ namespace MyHome.Systems
         public double MovementThreshold { get; set; } // percents
 
         [JsonIgnore]
-        public Dictionary<Room, bool> ActivatedRooms => this.RoomsInfo.ToDictionary(r => r.Room, r => r.Activated);
+        public Dictionary<Room, bool> ActivatedRooms
+        {
+            get
+            {
+                lock (this.RoomsInfo)
+                    return this.RoomsInfo.ToDictionary(r => r.Room, r => r.Activated);
+            }
+        }
 
         public Dictionary<string, Dictionary<DateTime, string>> History { get; } // roomName / time / action
 
@@ -66,68 +73,74 @@ namespace MyHome.Systems
 
         public void SetEnable(Room room, bool enable)
         {
-            var roomInfo = this.RoomsInfo.FirstOrDefault(r => r.Room == room);
-            if (enable)
+            lock (this.RoomsInfo)
             {
-                if (roomInfo != null)
+                var roomInfo = this.RoomsInfo.FirstOrDefault(r => r.Room == room);
+                if (enable)
                 {
-                    logger.Warn($"Try to enable security alarm for '{room.Name}' room, but it's already enabled");
-                    return;
-                }
+                    if (roomInfo != null)
+                    {
+                        logger.Warn($"Try to enable security alarm for '{room.Name}' room, but it's already enabled");
+                        return;
+                    }
 
-                logger.Info($"Enable security alarm for '{room.Name}' room");
-                this.RoomsInfo.Add(new RoomInfo()
-                {
-                    Room = room,
-                    Activated = false,
-                    StartTime = DateTime.Now + TimeSpan.FromMinutes(this.ActivationDelay),
-                    ImageFiles = new List<string>()
-                });
-            }
-            else
-            {
-                if (roomInfo == null)
-                {
-                    logger.Debug($"Try to disable security alarm for '{room.Name}' room, but it's not enabled");
-                    return;
+                    logger.Info($"Enable security alarm for '{room.Name}' room");
+                    this.RoomsInfo.Add(new RoomInfo()
+                    {
+                        Room = room,
+                        Activated = false,
+                        StartTime = DateTime.Now + TimeSpan.FromMinutes(this.ActivationDelay),
+                        ImageFiles = new List<string>()
+                    });
                 }
+                else
+                {
+                    if (roomInfo == null)
+                    {
+                        logger.Debug($"Try to disable security alarm for '{room.Name}' room, but it's not enabled");
+                        return;
+                    }
 
-                logger.Info($"Disable security alarm for '{room.Name}' room");
-                if (roomInfo.Activated)
-                    logger.Warn("The alarm is currently activated");
-                ClearImages(roomInfo);
-                this.RoomsInfo.Remove(roomInfo);
+                    logger.Info($"Disable security alarm for '{room.Name}' room");
+                    if (roomInfo.Activated)
+                        logger.Warn("The alarm is currently activated");
+                    ClearImages(roomInfo);
+                    this.RoomsInfo.Remove(roomInfo);
+                }
+                this.SetHistory(room, enable ? "Enabled" : "Disabled");
+                this.Owner.SystemChanged = true;
             }
-            this.SetHistory(room, enable ? "Enabled" : "Disabled");
-            this.Owner.SystemChanged = true;
         }
 
         public void Activate(Room room)
         {
-            var roomInfo = this.RoomsInfo.FirstOrDefault(r => r.Room == room);
-            if (roomInfo == null)
+            lock (this.RoomsInfo)
             {
-                logger.Debug($"Try to activate security alarm for '{room.Name}' room, but it's not enabled");
-                return;
+                var roomInfo = this.RoomsInfo.FirstOrDefault(r => r.Room == room);
+                if (roomInfo == null)
+                {
+                    logger.Debug($"Try to activate security alarm for '{room.Name}' room, but it's not enabled");
+                    return;
+                }
+
+                if (DateTime.Now - roomInfo.StartTime < TimeSpan.Zero)
+                {
+                    logger.Info($"Try to activate security alarm for '{room.Name}' room, but the delay isn't passed");
+                    return;
+                }
+
+                if (roomInfo.Activated)
+                    return;
+
+                roomInfo.Activated = true;
+                roomInfo.StartTime = DateTime.Now;
+                foreach (var camera in roomInfo.Room.Cameras)
+                    this.PrevImages.Remove(camera.Room.Name + "." + camera.Name);
+                logger.Info($"Alarm security activated in '{room.Name}' room");
+                this.SetHistory(room, "Activated");
+                this.Owner.Events.Fire(this, "SecurityAlarmActivated", roomInfo.Room);
+                this.Owner.SystemChanged = true;
             }
-
-            if (DateTime.Now - roomInfo.StartTime < TimeSpan.Zero)
-            {
-                logger.Info($"Try to activate security alarm for '{room.Name}' room, but the delay isn't passed");
-                return;
-            }
-
-            if (roomInfo.Activated)
-                return;
-
-            roomInfo.Activated = true;
-            roomInfo.StartTime = DateTime.Now;
-            foreach (var camera in roomInfo.Room.Cameras)
-                this.PrevImages.Remove(camera.Room.Name + "." + camera.Name);
-            logger.Info($"Alarm security activated in '{room.Name}' room");
-            this.SetHistory(room, "Activated");
-            this.Owner.Events.Fire(this, "SecurityAlarmActivated", roomInfo.Room);
-            this.Owner.SystemChanged = true;
         }
 
 
@@ -135,38 +148,41 @@ namespace MyHome.Systems
         {
             base.Update();
 
-            foreach (var roomInfo in this.RoomsInfo)
+            lock (this.RoomsInfo)
             {
-                if (!roomInfo.Activated)
-                    continue;
-
-                var elapsed = DateTime.Now - roomInfo.StartTime;
-                bool changed = false;
-
-                // send alert
-                if (elapsed > TimeSpan.FromMinutes(this.SendInterval))
+                foreach (var roomInfo in this.RoomsInfo)
                 {
-                    roomInfo.Activated = false;
-                    this.SetHistory(roomInfo.Room, "Enabled");
-                    if (roomInfo.ImageFiles.Count > 1 || CheckCameras(roomInfo.Room))
+                    if (!roomInfo.Activated)
+                        continue;
+
+                    var elapsed = DateTime.Now - roomInfo.StartTime;
+                    bool changed = false;
+
+                    // send alert
+                    if (elapsed > TimeSpan.FromMinutes(this.SendInterval))
                     {
-                        if (this.Owner.SendAlert($"'{roomInfo.Room.Name}' room security alarm activated!", roomInfo.ImageFiles, true))
+                        roomInfo.Activated = false;
+                        this.SetHistory(roomInfo.Room, "Enabled");
+                        if (roomInfo.ImageFiles.Count > 1 || CheckCameras(roomInfo.Room))
+                        {
+                            if (this.Owner.SendAlert($"'{roomInfo.Room.Name}' room security alarm activated!", roomInfo.ImageFiles, true))
+                                ClearImages(roomInfo);
+                        }
+                        else
+                        {
+                            logger.Info($"Skip alert sending for '{roomInfo.Room.Name}' room");
                             ClearImages(roomInfo);
+                        }
+                        changed = true;
                     }
-                    else
-                    {
-                        logger.Info($"Skip alert sending for '{roomInfo.Room.Name}' room");
-                        ClearImages(roomInfo);
-                    }
-                    changed = true;
-                }
 
-                foreach (var camera in roomInfo.Room.Cameras)
-                {
-                    if (camera.IsOpened) // try to open the camera and if succeed
-                        changed |= this.SaveImage(camera, roomInfo);
+                    foreach (var camera in roomInfo.Room.Cameras)
+                    {
+                        if (camera.IsOpened) // try to open the camera and if succeed
+                            changed |= this.SaveImage(camera, roomInfo);
+                    }
+                    this.Owner.SystemChanged = changed;
                 }
-                this.Owner.SystemChanged = changed;
             }
         }
 

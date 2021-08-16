@@ -22,6 +22,7 @@ namespace MyHome.Systems.Actions
 
     public abstract class BaseAction
     {
+        // TODO: add on/off ability
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         public ActionsSystem Owner { get; set; }

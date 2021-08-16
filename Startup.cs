@@ -88,11 +88,11 @@ namespace MyHome
                 {
                     logger.Info("LogIn: Correct password");
                     context.Session.SetString("password", hashStr);
-                    context.Response.Redirect("/");
+                    context.Response.Redirect("./");
                 }
                 else
                 {
-                    context.Response.Redirect("/login.html?invalid");
+                    context.Response.Redirect("./login.html?invalid");
                 }
 
                 return false;
@@ -101,7 +101,7 @@ namespace MyHome
                 context.Request.Path != "/api/sensor/data")
             {
                 if (!context.Request.Path.StartsWithSegments("/api")) // pages only
-                    context.Response.Redirect("/login.html");
+                    context.Response.Redirect("./login.html");
                 else
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return false;

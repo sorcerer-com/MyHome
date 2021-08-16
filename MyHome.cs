@@ -208,6 +208,7 @@ namespace MyHome
         }
 
 
+        // TODO: allow sending only email alerts - for some not urgent cases
         public bool SendAlert(string msg, List<string> fileNames = null, bool force = false)
         {
             try
@@ -219,16 +220,16 @@ namespace MyHome
                 msg = $"{DateTime.Now:dd/MM/yyyy HH:mm:ss}\n{msg}\n{JsonConvert.SerializeObject(latestData)}";
 
                 var images = new List<string>();
-                if (fileNames == null)
+                foreach (var camera in this.DevicesSystem.Cameras)
                 {
-                    foreach (var camera in this.DevicesSystem.Cameras)
-                    {
-                        var filename = Path.Combine(Config.BinPath, $"{camera.Room.Name}_{camera.Name}.jpg");
-                        camera.SaveImage(filename);
-                        images.Add(filename);
-                    }
-                    fileNames = images;
+                    var filename = Path.Combine(Config.BinPath, $"{camera.Room.Name}_{camera.Name}.jpg");
+                    camera.SaveImage(filename);
+                    images.Add(filename);
                 }
+                if (fileNames == null)
+                    fileNames = images;
+                else
+                    fileNames.AddRange(images);
 
                 if (!Services.SendEMail(this.Config.SmtpServerAddress, this.Config.Email, this.Config.EmailPassword,
                     this.Config.Email, "My Home", msg, fileNames))
