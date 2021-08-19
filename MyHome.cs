@@ -171,9 +171,14 @@ namespace MyHome
                 ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
             });
 
-            var data = JObject.FromObject(this, serializer);
-            var json = data.ToString();
-            File.WriteAllText(Config.DataFilePath, json);
+
+            // retry since sometimes failed because of "Collection was modified"
+            Utils.Utils.Retry(_ =>
+            {
+                var data = JObject.FromObject(this, serializer);
+                var json = data.ToString();
+                File.WriteAllText(Config.DataFilePath, json);
+            }, 3, logger);
 
             this.SystemChanged = false;
             this.Events.Fire(this, "Saved");

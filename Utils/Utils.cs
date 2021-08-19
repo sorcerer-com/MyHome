@@ -5,10 +5,28 @@ using System.Runtime.CompilerServices;
 
 using MyHome.Systems.Actions;
 
+using NLog;
+
 namespace MyHome.Utils
 {
     public static class Utils
     {
+        public static void Retry(Action<int> action, int times, ILogger logger = null)
+        {
+            for (int i = 0; i < times; i++)
+            {
+                try
+                {
+                    action.Invoke(i);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    logger?.Error(e, $"Action failed, retry {i + 1} of {times}");
+                }
+            }
+        }
+
         public static Type GetType(string typeName)
         {
             return Assembly

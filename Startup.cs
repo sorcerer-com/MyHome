@@ -97,8 +97,8 @@ namespace MyHome
 
                 return false;
             }
-            else if ((context.Session.GetString("password") ?? "") != myHome.Config.Password && !IsResouce(context.Request.Path) &&
-                context.Request.Path != "/api/sensor/data")
+            else if (!IsResouce(context.Request.Path) && context.Request.Path != "/api/sensor/data" &&
+                (context.Session.GetString("password") ?? "") != myHome.Config.Password)
             {
                 if (!context.Request.Path.StartsWithSegments("/api")) // pages only
                     context.Response.Redirect("./login.html");
