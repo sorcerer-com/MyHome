@@ -75,7 +75,7 @@ namespace MyHome.Systems.Devices.Drivers
             if (!this.MqttGetTopics.Values.Any(value => e.ApplicationMessage.Topic == value.topic))
                 return;
 
-            logger.Debug($"Process driver '{this.Name}' ({this.Room.Name}) MQTT message with topic: {e.ApplicationMessage.Topic}");
+            logger.Trace($"Process driver '{this.Name}' ({this.Room.Name}) MQTT message with topic: {e.ApplicationMessage.Topic}");
 
             try
             {
@@ -102,7 +102,8 @@ namespace MyHome.Systems.Devices.Drivers
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "Failed to process MQTT message");
+                logger.Error("Failed to process MQTT message");
+                logger.Debug(ex);
             }
         }
     }

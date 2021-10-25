@@ -58,7 +58,8 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Failed to set room '{roomName}'");
+                logger.Error($"Failed to set room '{roomName}'");
+                logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
         }
@@ -80,7 +81,8 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Failed to delete room '{roomName}'");
+                logger.Error($"Failed to delete room '{roomName}'");
+                logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
         }
@@ -135,7 +137,8 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Failed to set device '{deviceName}' ({roomName})");
+                logger.Error($"Failed to set device '{deviceName}' ({roomName})");
+                logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
         }
@@ -160,7 +163,8 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Failed to delete device '{deviceName}' ({roomName})");
+                logger.Error($"Failed to delete device '{deviceName}' ({roomName})");
+                logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
         }
@@ -256,7 +260,8 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Failed to move '{cameraName}' camera to '{movementType}'");
+                logger.Error($"Failed to move '{cameraName}' camera to '{movementType}'");
+                logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
         }
@@ -281,7 +286,8 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Failed to restart '{cameraName}' camera");
+                logger.Error($"Failed to restart '{cameraName}' camera");
+                logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
         }

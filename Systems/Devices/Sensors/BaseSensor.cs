@@ -68,7 +68,7 @@ namespace MyHome.Systems.Devices.Sensors
         public bool ReadData(DateTime time)
         {
             var data = this.ReadDataInternal(); // read data from sensor
-            logger.Debug($"Sensor '{this.Name}' ({this.Room.Name}) read data: '{data}'");
+            logger.Trace($"Sensor '{this.Name}' ({this.Room.Name}) read data: '{data}'");
             if (data != null)
             {
                 this.AddData(time, data);
@@ -81,7 +81,7 @@ namespace MyHome.Systems.Devices.Sensors
 
         public void AddData(DateTime time, JToken data)
         {
-            logger.Debug($"Sensor '{this.Name}' ({this.Room.Name}) add data at {time:dd/MM/yyyy HH:mm:ss}: {data}");
+            logger.Trace($"Sensor '{this.Name}' ({this.Room.Name}) add data at {time:dd/MM/yyyy HH:mm:ss}: {data}");
             if (!data.HasValues)
                 return;
 

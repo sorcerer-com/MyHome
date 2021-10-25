@@ -62,7 +62,7 @@ namespace MyHome.Systems.Actions
 
         public void Execute()
         {
-            logger.Debug("Action triggered: " + this.Owner.Actions.FirstOrDefault(kvp => kvp.Value == this).Key);
+            logger.Trace($"Action triggered: {this.Owner.Actions.FirstOrDefault(kvp => kvp.Value == this).Key}");
 
             if (this.Action.Contains("="))
             {
@@ -100,7 +100,7 @@ namespace MyHome.Systems.Actions
             }
             else
             {
-                logger.Error("Invalid action: " + this.Action);
+                logger.Error($"Invalid action: {this.Action}");
             }
         }
 
@@ -119,7 +119,8 @@ namespace MyHome.Systems.Actions
             }
             catch (Exception e)
             {
-                logger.Error(e, "Action failed to set property value");
+                logger.Error("Action failed to set property value");
+                logger.Debug(e);
             }
         }
 
@@ -138,7 +139,8 @@ namespace MyHome.Systems.Actions
             }
             catch (Exception e)
             {
-                logger.Error(e, "Action failed to call method");
+                logger.Error("Action failed to call method");
+                logger.Debug(e);
             }
         }
     }

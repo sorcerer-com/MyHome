@@ -45,7 +45,8 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, "Failed to process external sensor data");
+                logger.Error("Failed to process external sensor data");
+                logger.Debug(e);
             }
             return this.NotFound();
         }
@@ -68,7 +69,8 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, "Failed to set config");
+                logger.Error("Failed to set config");
+                logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
         }

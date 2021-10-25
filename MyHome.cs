@@ -154,7 +154,7 @@ namespace MyHome
 
         public void Save()
         {
-            logger.Info("Save settings and data");
+            logger.Debug("Save settings and data");
 
             // backup data file every day
             if (DateTime.Now - this.lastBackupTime > TimeSpan.FromDays(1))
@@ -203,7 +203,7 @@ namespace MyHome
 
                 if (stopwatch.Elapsed > TimeSpan.FromSeconds(this.updateInterval))
                 {
-                    logger.Warn($"Update time: {stopwatch.Elapsed}");
+                    logger.Debug($"Update time: {stopwatch.Elapsed}");
                 }
                 else
                 {
@@ -274,7 +274,8 @@ namespace MyHome
             }
             catch (Exception e)
             {
-                logger.Error(e, "Cannot send alert message");
+                logger.Error("Cannot send alert message");
+                logger.Debug(e);
                 return false;
             }
         }
@@ -291,7 +292,8 @@ namespace MyHome
             }
             catch (Exception e)
             {
-                logger.Error(e, "Cannot check for system update");
+                logger.Error("Cannot check for system update");
+                logger.Debug(e);
                 this.UpgradeAvailable = false;
             }
             return this.UpgradeAvailable.Value;
@@ -309,7 +311,8 @@ namespace MyHome
             }
             catch (Exception e)
             {
-                logger.Error(e, "Cannot update the system");
+                logger.Error("Cannot update the system");
+                logger.Debug(e);
                 this.UpgradeAvailable = null;
                 return false;
             }

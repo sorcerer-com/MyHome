@@ -34,6 +34,8 @@ namespace MyHome.Systems
 
             this.Actions.Values.RunForEach(action => action.Update());
             // TODO: AND action - split trigger part from the action
+            // TODO: allow action execution per timer - turn on lights for 5 seconds
+            // TODO: add sunset/sunrise as time of execution
         }
     }
 }

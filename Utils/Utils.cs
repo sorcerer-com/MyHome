@@ -18,13 +18,15 @@ namespace MyHome.Utils
                 try
                 {
                     action.Invoke(i);
-                    break;
+                    return;
                 }
                 catch (Exception e)
                 {
-                    logger?.Error(e, $"Action failed, retry {i + 1} of {times}");
+                    logger?.Warn($"Action failed, retry {i + 1} of {times}");
+                    logger?.Debug(e);
                 }
             }
+            logger?.Error($"Action failed, retries exceeded");
         }
 
         public static Type GetType(string typeName)

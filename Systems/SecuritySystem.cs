@@ -80,7 +80,7 @@ namespace MyHome.Systems
                 {
                     if (roomInfo != null)
                     {
-                        logger.Warn($"Try to enable security alarm for '{room.Name}' room, but it's already enabled");
+                        logger.Debug($"Try to enable security alarm for '{room.Name}' room, but it's already enabled");
                         return;
                     }
 
@@ -119,13 +119,13 @@ namespace MyHome.Systems
                 var roomInfo = this.RoomsInfo.FirstOrDefault(r => r.Room == room);
                 if (roomInfo == null)
                 {
-                    logger.Debug($"Try to activate security alarm for '{room.Name}' room, but it's not enabled");
+                    logger.Trace($"Try to activate security alarm for '{room.Name}' room, but it's not enabled");
                     return;
                 }
 
                 if (DateTime.Now - roomInfo.StartTime < TimeSpan.Zero)
                 {
-                    logger.Info($"Try to activate security alarm for '{room.Name}' room, but the delay isn't passed");
+                    logger.Debug($"Try to activate security alarm for '{room.Name}' room, but the delay isn't passed");
                     return;
                 }
 
@@ -136,7 +136,7 @@ namespace MyHome.Systems
                 roomInfo.StartTime = DateTime.Now;
                 foreach (var camera in roomInfo.Room.Cameras)
                     this.PrevImages.Remove(camera.Room.Name + "." + camera.Name);
-                logger.Info($"Alarm security activated in '{room.Name}' room");
+                logger.Info($"Security alarm activated in '{room.Name}' room");
                 this.SetHistory(room, "Activated");
                 this.Owner.Events.Fire(this, "SecurityAlarmActivated", roomInfo.Room);
                 this.Owner.SystemChanged = true;

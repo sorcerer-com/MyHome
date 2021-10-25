@@ -198,7 +198,8 @@ namespace MyHome.Systems.Devices.Sensors
             }
             catch (Exception e)
             {
-                logger.Error(e, "Cannot move camera");
+                logger.Error("Cannot move camera");
+                logger.Debug(e);
             }
         }
 
@@ -217,7 +218,8 @@ namespace MyHome.Systems.Devices.Sensors
             }
             catch (Exception e)
             {
-                logger.Error(e, "Cannot restart camera");
+                logger.Error("Cannot restart camera");
+                logger.Debug(e);
             }
             return false;
         }
@@ -252,7 +254,8 @@ namespace MyHome.Systems.Devices.Sensors
             }
             catch (Exception e)
             {
-                logger.Error(e, "Cannot get stream address");
+                logger.Error("Cannot get stream address");
+                logger.Debug(e);
             }
             return null;
         }
@@ -266,7 +269,7 @@ namespace MyHome.Systems.Devices.Sensors
             {
                 if (!this.onvif.ContainsKey(typeof(T)))
                 {
-                    logger.Debug($"Creating Onvif {typeof(T).Name}");
+                    logger.Trace($"Creating Onvif {typeof(T).Name}");
                     var address = this.Address.Split('@')[1]; // username:password@ip:port #8899
                     var username = this.Address.Split('@')[0].Split(':')[0];
                     var password = this.Address.Split('@')[0].Split(':')[1];
@@ -337,7 +340,8 @@ namespace MyHome.Systems.Devices.Sensors
             }
             catch (Exception e)
             {
-                logger.Error(e, "Cannot read data from camera");
+                logger.Error("Cannot read data from camera");
+                logger.Debug(e);
                 return null;
             }
         }

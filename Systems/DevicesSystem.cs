@@ -116,7 +116,7 @@ namespace MyHome.Systems
                 return false;
             }
 
-            logger.Debug($"Process sensor '{sensor.Name}' ({sensor.Room.Name}, {token}) data: {data}");
+            logger.Trace($"Process sensor '{sensor.Name}' ({sensor.Room.Name}, {token}) data: {data}");
 
             sensor.AddData(DateTime.Now, data);
             this.Owner.SystemChanged = true;

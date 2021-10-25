@@ -27,7 +27,7 @@ namespace MyHome.Utils
         {
             try
             {
-                logger.Info($"Send email to '{recipient}' subject: '{subject}' ({fileNames.Count} files)");
+                logger.Debug($"Send email to '{recipient}' subject: '{subject}' ({fileNames.Count} files)");
 
 
                 var mail = new MimeMessage();
@@ -50,7 +50,8 @@ namespace MyHome.Utils
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Cannot send email to '{recipient}' subject: '{subject}'");
+                logger.Error($"Cannot send email to '{recipient}' subject: '{subject}'");
+                logger.Debug(e);
                 return false;
             }
         }
@@ -59,7 +60,7 @@ namespace MyHome.Utils
         {
             try
             {
-                logger.Info($"Send SMS '{message.Replace("\n", " ")}' to {number}");
+                logger.Debug($"Send SMS '{message.Replace("\n", " ")}' to {number}");
                 if (provider.ToLower() == "telenor")
                 {
                     var browser = new ScrapingBrowser { Encoding = Encoding.UTF8, IgnoreCookies = true };
@@ -97,7 +98,8 @@ namespace MyHome.Utils
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Cannot send SMS '{message.Replace("\n", " ")}' to {number}");
+                logger.Error($"Cannot send SMS '{message.Replace("\n", " ")}' to {number}");
+                logger.Debug(e);
                 return false;
             }
         }
@@ -106,7 +108,7 @@ namespace MyHome.Utils
         {
             try
             {
-                logger.Debug($"Get json content from '{url}'");
+                logger.Trace($"Get json content from '{url}'");
                 using var client = new HttpClient
                 {
                     Timeout = TimeSpan.FromSeconds(5)
@@ -117,7 +119,7 @@ namespace MyHome.Utils
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Cannot get json content from '{url}'");
+                logger.Trace(e, $"Cannot get json content from '{url}'");
                 return null;
             }
         }

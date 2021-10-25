@@ -51,7 +51,7 @@ namespace MyHome.Models
                 if (value)
                     this.Owner.SecuritySystem.Activate(this);
                 else
-                    logger.Warn("Try to deactivate security system on room: " + this.Name);
+                    logger.Warn($"Try to deactivate security system on room: {this.Name}");
             }
         }
 

@@ -56,7 +56,8 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Failed to set system '{systemName}'");
+                logger.Error($"Failed to set system '{systemName}'");
+                logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
         }
@@ -87,7 +88,8 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Failed to call '{systemName}' system's function '{funcName}'");
+                logger.Error($"Failed to call '{systemName}' system's function '{funcName}'");
+                logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
         }
@@ -113,7 +115,7 @@ namespace MyHome.Controllers
                 var action = this.myHome.ActionsSystem.Actions.FirstOrDefault(kvp => kvp.Key == actionName).Value;
                 if (action == null)
                 {
-                    logger.Info("Add action: " + actionName);
+                    logger.Info($"Add action: {actionName}");
                     var type = System.Reflection.Assembly.GetExecutingAssembly().GetType(this.Request.Form["$type"]);
                     if (type == null)
                         return this.NotFound("No such action type: " + type);
@@ -130,7 +132,8 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, "Failed to set action: " + actionName);
+                logger.Error($"Failed to set action: {actionName}");
+                logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
         }
@@ -149,7 +152,8 @@ namespace MyHome.Controllers
             }
             catch (Exception e)
             {
-                logger.Error(e, "Failed to delete action: " + actionName);
+                logger.Error($"Failed to delete action: {actionName}");
+                logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
         }

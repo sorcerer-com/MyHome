@@ -21,7 +21,8 @@ namespace MyHome
             catch (Exception exception)
             {
                 //NLog: catch setup errors
-                logger.Error(exception, "Stopped program because of exception");
+                logger.Error("Stopped program because of exception");
+                logger.Debug(exception);
                 throw;
             }
             finally

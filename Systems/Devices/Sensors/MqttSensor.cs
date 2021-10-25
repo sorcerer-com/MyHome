@@ -97,7 +97,7 @@ namespace MyHome.Systems.Devices.Sensors
             if (!this.MqttTopics.Any(value => value.topic == e.ApplicationMessage.Topic))
                 return;
 
-            logger.Debug($"Process sensor '{this.Name}' ({this.Room.Name}) MQTT message with topic: {e.ApplicationMessage.Topic}");
+            logger.Trace($"Process sensor '{this.Name}' ({this.Room.Name}) MQTT message with topic: {e.ApplicationMessage.Topic}");
 
             try
             {
@@ -126,7 +126,8 @@ namespace MyHome.Systems.Devices.Sensors
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "Failed to process MQTT message");
+                logger.Error("Failed to process MQTT message");
+                logger.Debug(ex);
             }
         }
 

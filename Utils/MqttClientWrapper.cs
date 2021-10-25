@@ -58,7 +58,7 @@ namespace MyHome.Utils
 
             this.MqttClient.UseApplicationMessageReceivedHandler(e =>
             {
-                logger.Debug($"Process MQTT message with topic '{e.ApplicationMessage.Topic}': {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
+                logger.Trace($"Process MQTT message with topic '{e.ApplicationMessage.Topic}': {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
                 this.ApplicationMessageReceived?.Invoke(this, e);
             });
 
@@ -88,7 +88,7 @@ namespace MyHome.Utils
                 this.Subscriptions.Add(topic, 0);
             this.Subscriptions[topic] = this.Subscriptions[topic] + 1;
 
-            logger.Debug($"Subscribe MQTT client '{this.MqttClient.Options.ClientId}' for topic: {topic} ({this.Subscriptions[topic]})");
+            logger.Trace($"Subscribe MQTT client '{this.MqttClient.Options.ClientId}' for topic: {topic} ({this.Subscriptions[topic]})");
             this.MqttClient.SubscribeAsync(topic);
         }
 
@@ -97,7 +97,7 @@ namespace MyHome.Utils
             if (string.IsNullOrEmpty(topic))
                 return;
 
-            logger.Debug($"Unsubscribe MQTT client '{this.MqttClient.Options.ClientId}' for topic: {topic} ({this.Subscriptions[topic]})");
+            logger.Trace($"Unsubscribe MQTT client '{this.MqttClient.Options.ClientId}' for topic: {topic} ({this.Subscriptions[topic]})");
             if (this.Subscriptions.ContainsKey(topic))
             {
                 this.Subscriptions[topic] = this.Subscriptions[topic] - 1;
@@ -112,7 +112,7 @@ namespace MyHome.Utils
 
         public void Publish(string topic, string payload, int qualityOfService = 0, bool retain = false)
         {
-            logger.Debug($"Publish message on topic '{topic}' (QoS: {qualityOfService}, retain: {retain}): {payload}");
+            logger.Trace($"Publish message on topic '{topic}' (QoS: {qualityOfService}, retain: {retain}): {payload}");
             try
             {
                 var message = new MqttApplicationMessageBuilder()
@@ -126,7 +126,8 @@ namespace MyHome.Utils
             }
             catch (Exception e)
             {
-                logger.Error(e, "Failed to publish message on topic: " + topic);
+                logger.Error("Failed to publish message on topic: {topic}");
+                logger.Debug(e);
             }
         }
     }
