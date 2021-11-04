@@ -80,9 +80,9 @@ namespace MyHome.Models
         }
 
 
-        public bool SendAlert()
+        public bool SendAlert(string message)
         {
-            return this.Owner.SendAlert($"'{this.Name}' room alert!");
+            return this.Owner.SendAlert($"'{this.Name}' room alert: {message}");
         }
 
 

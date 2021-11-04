@@ -7,16 +7,15 @@ namespace MyHome.Systems
 {
     public class ActionsSystem : BaseSystem
     {
-        // TODO: consider do as list, not a dictionary, to allow renaming
         [UiProperty(true)]
-        public Dictionary<string, BaseAction> Actions { get; } // name / action
+        public List<BaseAction> Actions { get; }
 
 
         private ActionsSystem() : this(null) { }  // for json deserialization
 
         public ActionsSystem(MyHome owner) : base(owner)
         {
-            this.Actions = new Dictionary<string, BaseAction>();
+            this.Actions = new List<BaseAction>();
         }
 
 
@@ -24,7 +23,7 @@ namespace MyHome.Systems
         {
             base.Setup();
 
-            foreach (var action in this.Actions.Values)
+            foreach (var action in this.Actions)
                 action.Setup();
         }
 
@@ -32,10 +31,10 @@ namespace MyHome.Systems
         {
             base.Update();
 
-            this.Actions.Values.RunForEach(action => action.Update());
-            // TODO: AND action - split trigger part from the action
+            this.Actions.RunForEach(action => action.Update());
             // TODO: allow action execution per timer - turn on lights for 5 seconds
-            // TODO: add sunset/sunrise as time of execution
+            // TODO: manually activated security alarm shouldn't be stopped
+            // TODO: add sunset/sunrise (weather state) as time of execution
         }
     }
 }

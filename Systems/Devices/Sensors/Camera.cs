@@ -249,7 +249,7 @@ namespace MyHome.Systems.Devices.Sensors
                 var response = media.GetStreamUriAsync(streamSetup, token).Result.Uri;
                 // replace internal IP address with the real one
                 var responseIp = response[7..response.IndexOf(":", 7)];
-                var ip = this.Address.Split(':', '@')[2];
+                var ip = this.Address.Split(new char[] { ':', '@' })[2];
                 return response.Replace(responseIp, ip);
             }
             catch (Exception e)

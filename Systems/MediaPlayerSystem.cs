@@ -108,21 +108,21 @@ namespace MyHome.Systems
             this.player.Fullscreen = true;
             this.player.Play();
             this.MarkWatched(this.playing);
-            this.Owner.Events.Fire(this, "MediaPlayed", this.playing);
+            this.Owner.Events.Fire(this, GlobalEventTypes.MediaPlayed, this.playing);
         }
 
         public override void Stop()
         {
             logger.Debug($"Stop media: {this.playing}");
             this.player.Stop();
-            this.Owner.Events.Fire(this, "MediaStopped");
+            this.Owner.Events.Fire(this, GlobalEventTypes.MediaStopped);
         }
 
         public void Pause()
         {
             logger.Debug($"Pause media: {this.playing}");
             this.player.Pause();
-            this.Owner.Events.Fire(this, "MediaPaused");
+            this.Owner.Events.Fire(this, GlobalEventTypes.MediaPaused);
         }
 
         public void VolumeDown()
@@ -131,7 +131,7 @@ namespace MyHome.Systems
             this.Volume -= 5;
             this.player.Volume = this.Volume;
             this.Owner.SystemChanged = true;
-            this.Owner.Events.Fire(this, "MediaVolumeDown");
+            this.Owner.Events.Fire(this, GlobalEventTypes.MediaVolumeDown);
         }
 
         public void VolumeUp()
@@ -140,35 +140,35 @@ namespace MyHome.Systems
             this.Volume += 5;
             this.player.Volume = this.Volume;
             this.Owner.SystemChanged = true;
-            this.Owner.Events.Fire(this, "MediaVolumeUp");
+            this.Owner.Events.Fire(this, GlobalEventTypes.MediaVolumeUp);
         }
 
         public void SeekBack()
         {
             logger.Debug($"Seek back media: {this.playing}");
             this.player.Time -= 30 * 1000; // -30 seconds
-            this.Owner.Events.Fire(this, "MediaSeekBack");
+            this.Owner.Events.Fire(this, GlobalEventTypes.MediaSeekBack);
         }
 
         public void SeekForward()
         {
             logger.Debug($"Seek forward media: {this.playing}");
             this.player.Time += 30 * 1000; // +30 seconds
-            this.Owner.Events.Fire(this, "MediaSeekForward");
+            this.Owner.Events.Fire(this, GlobalEventTypes.MediaSeekForward);
         }
 
         public void SeekBackFast()
         {
             logger.Debug($"Seek back fast media: {this.playing}");
             this.player.Time -= 600 * 1000; // -600 seconds
-            this.Owner.Events.Fire(this, "MediaSeekBackFast");
+            this.Owner.Events.Fire(this, GlobalEventTypes.MediaSeekBackFast);
         }
 
         public void SeekForwardFast()
         {
             logger.Debug($"Seek forward fast media: {this.playing}");
             this.player.Time += 600 * 1000; // +600 seconds
-            this.Owner.Events.Fire(this, "MediaSeekForwardFast");
+            this.Owner.Events.Fire(this, GlobalEventTypes.MediaSeekForwardFast);
         }
 
 

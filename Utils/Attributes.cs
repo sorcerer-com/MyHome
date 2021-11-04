@@ -9,14 +9,14 @@ namespace MyHome.Utils
 
         public string Hint { get; }
 
-        public UiPropertyAttribute(bool setting = false) : this(setting, "")
-        {
-        }
+        public string Selector { get; }
 
-        public UiPropertyAttribute(bool setting, string hint)
+
+        public UiPropertyAttribute(bool setting = false, string hint = "", string selector = null)
         {
             this.Setting = setting;
             this.Hint = hint;
+            this.Selector = selector;
         }
     }
 }

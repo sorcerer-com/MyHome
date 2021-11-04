@@ -83,6 +83,16 @@ namespace MyHome.Utils
                     result[pi.Name] = pi.GetValue(obj).ToUiObject(settingsOnly);
                     subtypes[pi.Name] = pi.PropertyType.ToUiType();
                     hints[pi.Name] = uiPropertyAttr.Hint;
+
+                    if (!string.IsNullOrEmpty(uiPropertyAttr.Selector))
+                    {
+                        var mi = obj.GetType().GetMethod(uiPropertyAttr.Selector);
+                        if (mi != null)
+                        {
+                            var values = (IEnumerable<string>)mi.Invoke(obj, null);
+                            subtypes[pi.Name] = $"Select: {string.Join(", ", values)}";
+                        }
+                    }
                 }
                 result.Add("$type", obj.GetType().ToString());
                 if (settingsOnly)
@@ -139,16 +149,29 @@ namespace MyHome.Utils
                     foreach (var value in values)
                         list.Add(value);
                 }
-                else if (item.Key.IndexOf('[') < item.Key.IndexOf(']')) // dictionary
+                else if (item.Key.IndexOf('[') < item.Key.IndexOf(']'))
                 {
-                    var dict = prop.GetValue(obj) as IDictionary;
-                    if (!processingDicts.Contains(propName))
+                    if (prop.PropertyType.IsGenericType) // dictionary
                     {
-                        dict.Clear();
-                        processingDicts.Add(propName);
+                        var dict = prop.GetValue(obj) as IDictionary;
+                        if (!processingDicts.Contains(propName))
+                        {
+                            dict.Clear();
+                            processingDicts.Add(propName);
+                        }
+                        var key = Utils.ParseValue(item.Key[(item.Key.IndexOf('[') + 1)..item.Key.IndexOf(']')], prop.PropertyType.GenericTypeArguments[0]);
+                        dict[key] = Utils.ParseValue(item.Value, prop.PropertyType.GenericTypeArguments[1]);
                     }
-                    var key = Utils.ParseValue(item.Key[(item.Key.IndexOf('[') + 1)..item.Key.IndexOf(']')], prop.PropertyType.GenericTypeArguments[0]);
-                    dict[key] = Utils.ParseValue(item.Value, prop.PropertyType.GenericTypeArguments[1]);
+                    else // object
+                    {
+                        var obj2 = prop.GetValue(obj);
+                        var property = item.Key[(item.Key.IndexOf('[') + 1)..item.Key.IndexOf(']')];
+                        var prop2 = obj2.GetType().GetProperty(property);
+                        if (prop2 == null)
+                            continue;
+                        if (prop2.CanWrite)
+                            prop2.SetValue(obj2, Utils.ParseValue(item.Value, prop2.PropertyType));
+                    }
                 }
                 else if (prop.CanWrite)
                 {

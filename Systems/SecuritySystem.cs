@@ -52,7 +52,7 @@ namespace MyHome.Systems
             public List<string> ImageFiles { get; set; }
         }
 
-        [JsonRequired]
+        [JsonProperty]
         private List<RoomInfo> RoomsInfo { get; }
 
         private Dictionary<string, Mat> PrevImages { get; }
@@ -138,7 +138,7 @@ namespace MyHome.Systems
                     this.PrevImages.Remove(camera.Room.Name + "." + camera.Name);
                 logger.Info($"Security alarm activated in '{room.Name}' room");
                 this.SetHistory(room, "Activated");
-                this.Owner.Events.Fire(this, "SecurityAlarmActivated", roomInfo.Room);
+                this.Owner.Events.Fire(this, GlobalEventTypes.SecurityAlarmActivated, roomInfo.Room);
                 this.Owner.SystemChanged = true;
             }
         }

@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 
 using MyHome.Systems.Actions;
+using MyHome.Systems.Actions.Executors;
 using MyHome.Utils;
 
 using NLog;
@@ -81,7 +82,7 @@ namespace MyHome.Controllers
                         args = this.Request.Form.Select((kvp, i) =>
                             Utils.Utils.ParseValue(kvp.Value.ToString(), methodParams[i].ParameterType)).ToArray();
                     }
-                    var result = method.Invoke(system, args.ToArray());
+                    var result = method.Invoke(system, args);
                     return this.Ok(result);
                 }
                 return this.NotFound("No such function: " + funcName);
@@ -107,23 +108,47 @@ namespace MyHome.Controllers
             return this.Ok(action.ToUiObject(true));
         }
 
+        [HttpPost("Actions/Executor/create/{executorType}")]
+        public ActionResult CreateActionExecutor(string executorType)
+        {
+            var type = typeof(BaseExecutor).GetSubClasses().FirstOrDefault(t => t.Name == executorType);
+            if (type == null)
+                return this.NotFound("No such executor type: " + executorType);
+
+            var executor = (BaseExecutor)Activator.CreateInstance(type, true);
+            executor.Owner = new TimeTriggeredAction(this.myHome.ActionsSystem, "", true, null, DateTime.Now, TimeSpan.FromHours(1)); // TODO: remove after owner removed
+            return this.Ok(executor.ToUiObject(true));
+        }
+
         [HttpPost("Actions/{actionName}")]
         public ActionResult SetAction(string actionName)
         {
             try
             {
-                var action = this.myHome.ActionsSystem.Actions.FirstOrDefault(kvp => kvp.Key == actionName).Value;
+                var action = this.myHome.ActionsSystem.Actions.FirstOrDefault(action => action.Name == actionName);
                 if (action == null)
                 {
                     logger.Info($"Add action: {actionName}");
-                    var type = System.Reflection.Assembly.GetExecutingAssembly().GetType(this.Request.Form["$type"]);
-                    if (type == null)
-                        return this.NotFound("No such action type: " + type);
+                    var actionType = System.Reflection.Assembly.GetExecutingAssembly().GetType(this.Request.Form["$type"]);
+                    if (actionType == null)
+                        return this.NotFound("No such action type: " + actionType);
 
-                    action = (BaseAction)Activator.CreateInstance(type, true);
+                    action = (BaseAction)Activator.CreateInstance(actionType, true);
                     action.Owner = this.myHome.ActionsSystem;
                     action.Setup();
-                    this.myHome.ActionsSystem.Actions.Add(actionName, action);
+                    this.myHome.ActionsSystem.Actions.Add(action);
+                }
+
+                var executorType = System.Reflection.Assembly.GetExecutingAssembly().GetType(this.Request.Form["Executor[$type]"]);
+                if (executorType != null)
+                {
+                    var executor = (BaseExecutor)Activator.CreateInstance(executorType, true);
+                    executor.Owner = action;
+                    action.Executor = executor;
+                }
+                else
+                {
+                    logger.Error($"No such executor type: {executorType}");
                 }
 
                 this.Request.Form.SetObject(action);
@@ -143,10 +168,12 @@ namespace MyHome.Controllers
         {
             try
             {
-                if (!this.myHome.ActionsSystem.Actions.ContainsKey(actionName))
+                logger.Info($"Delete action: {actionName}");
+                var action = this.myHome.ActionsSystem.Actions.FirstOrDefault(action => action.Name == actionName);
+                if (action == null)
                     return this.NotFound($"Action '{actionName}' not found");
 
-                this.myHome.ActionsSystem.Actions.Remove(actionName);
+                this.myHome.ActionsSystem.Actions.Remove(action);
                 this.myHome.SystemChanged = true;
                 return this.Ok();
             }

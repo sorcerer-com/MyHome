@@ -60,6 +60,10 @@ function createAction(actionType) {
     return $.post(`./api/systems/Actions/create/${actionType}`);
 }
 
+function createActionExecutor(executorType) {
+    return $.post(`./api/systems/Actions/Executor/create/${executorType}`);
+}
+
 function setAction(actionName, data) {
     return $.post(`./api/systems/Actions/${actionName}`, data);
 }

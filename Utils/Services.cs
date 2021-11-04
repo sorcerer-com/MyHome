@@ -27,7 +27,7 @@ namespace MyHome.Utils
         {
             try
             {
-                logger.Debug($"Send email to '{recipient}' subject: '{subject}' ({fileNames.Count} files)");
+                logger.Debug($"Send email to '{recipient}' subject: '{subject}' ({fileNames?.Count} files)");
 
 
                 var mail = new MimeMessage();

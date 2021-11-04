@@ -32,7 +32,7 @@ namespace MyHome.Systems.Devices.Drivers
 
         private BaseDriver() : this(null, null, null) { } // for json deserialization
 
-        public BaseDriver(DevicesSystem owner, string name, Room room) : base(owner, name, room)
+        protected BaseDriver(DevicesSystem owner, string name, Room room) : base(owner, name, room)
         {
             this.State = new Dictionary<string, object>();
 
@@ -96,7 +96,7 @@ namespace MyHome.Systems.Devices.Drivers
                         this.State[item.Key] = Utils.Utils.ParseValue(value, this.State[item.Key].GetType());
                     this.Owner.Owner.SystemChanged = true;
 
-                    this.Owner.Owner.Events.Fire(this, "DriverStateChanged",
+                    this.Owner.Owner.Events.Fire(this, GlobalEventTypes.DriverStateChanged,
                         this.State.Where(kvp => kvp.Key == item.Key).ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
                 }
             }

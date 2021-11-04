@@ -18,7 +18,7 @@ namespace MyHome.Systems
 
         private BaseSystem() : this(null) { } // for json deserialization
 
-        public BaseSystem(MyHome owner)
+        protected BaseSystem(MyHome owner)
         {
             this.Owner = owner;
         }

@@ -44,6 +44,11 @@ $.get(templateUrl, template => {
             onDictValueChange: function (key, value) {
                 Vue.set(this.localValue, key, value);
                 this.$emit("change", this.localValue);
+            },
+            getSelectValues: function () {
+                if (!this.valueType.startsWith("Select"))
+                    return [];
+                return this.valueType.replace("Select: ", "").split(", ");
             }
         },
         created: function () {

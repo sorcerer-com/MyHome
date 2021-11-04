@@ -9,11 +9,10 @@ $.get(templateUrl, template => {
 
                 edit: {
                     name: null,
-                    types: null,
-                    object: null,
-                    onSave: null,
-                    onDelete: null
-                }
+                    action: null,
+                    types: null
+                },
+                error: ""
             }
         },
         methods: {
@@ -34,53 +33,64 @@ $.get(templateUrl, template => {
                     return {};
 
                 // room name / action name / action
-                return Object.keys(this.actions.Actions).reduce((rv, x) => {
-                    let action = this.actions.Actions[x];
-                    rv[action.RoomName] = rv[action.RoomName] || {}
-                    rv[action.RoomName][x] = action;
+                return this.actions.Actions.reduce((rv, x) => {
+                    let target = x.Executor?.Target?.substr(0, x.Executor?.Target?.lastIndexOf(" "))
+                    let roomName = target?.split(".")[0];
+                    rv[roomName] = rv[roomName] || {}
+                    rv[roomName][x.Name] = x;
                     return rv;
                 }, {});
             },
 
-            showEdit: function (name, action, onSave, onDelete) {
-                this.edit.name = name;
-                this.edit.types = null;
-                this.edit.object = action;
-                this.edit.onSave = onSave;
-                this.edit.onDelete = onDelete;
+            showEdit: function (name, action) {
+                $.when(getSubTypes("BaseAction"), getSubTypes("BaseExecutor"))
+                    .done((actionTypes, executorTypes) => {
+                        this.edit.name = name;
+                        this.edit.action = action;
+                        this.edit.types = { "action": actionTypes[0], "executor": executorTypes[0] };
+                    });
             },
             showAddAction: function () {
-                getSubTypes("BaseAction").done(types => {
-                    this.edit.name = "Add Action";
-                    this.edit.types = types;
-                    this.edit.object = null;
-                    this.edit.onSave = null;
-                    this.edit.onDelete = null;
-                });
+                $.when(getSubTypes("BaseAction"), getSubTypes("BaseExecutor"))
+                    .done((actionTypes, executorTypes) => {
+                        this.edit.name = "Add Action";
+                        this.edit.action = null;
+                        this.edit.types = { "action": actionTypes[0], "executor": executorTypes[0] };
+                    });
             },
             onTypeChange: function (event) {
                 createAction(event.target.value).done(action => {
                     action.Name = "New Action";
                     action["$subtypes"]["Name"] = "String";
-                    this.edit.object = action;
-                    this.edit.onSave = this.saveAction;
+                    this.edit.action = action;
+                });
+            },
+            onExecutorTypeChange: function (event) {
+                createActionExecutor(event.target.value).done(executor => {
+                    this.edit.action.Executor = executor;
                 });
             },
 
-            saveAction: function (action) {
+            saveAction: function () {
                 let name = this.edit.name;
                 if (this.edit.name == "Add Action") {
-                    if (action.Name == "")
-                        return $.Deferred().reject({ responseText: "Cannot set action without name" });
-                    if (Object.keys(this.actions.Actions).some(name => name == action.Name))
-                        return $.Deferred().reject({ responseText: "An action with the same name already exists" });
-                    name = action.Name;
+                    if (this.edit.action.Name == "") {
+                        this.error = "Cannot set action without name";
+                        return;
+                    }
+                    if (this.actions.Actions.some(a => a.Name == this.edit.action.Name)) {
+                        this.error = "An action with the same name already exists";
+                        return;
+                    }
+                    name = this.edit.action.Name;
                 }
 
-                if (action.RoomName == "")
-                    return $.Deferred().reject({ responseText: "Cannot set action without room" });
+                if (this.edit.action.Executor == null) {
+                    this.error = "Cannot set action without Executor";
+                    return;
+                }
 
-                return setAction(name, action).done(() => this.edit.name = null);
+                return setAction(name, this.edit.action).done(() => this.edit.name = null);
             },
             deleteAction: function () {
                 if (!confirm("Are you sure you want to delete the action?"))

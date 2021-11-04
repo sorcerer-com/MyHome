@@ -40,7 +40,7 @@ namespace MyHome.Systems.Devices.Sensors
         public Dictionary<string, string> Units { get; } // subname unit name (if not provide by metadata)
 
 
-        [JsonRequired]
+        [JsonProperty]
         private Dictionary<string, double> LastReadings { get; } // subname / value
 
 
@@ -51,7 +51,7 @@ namespace MyHome.Systems.Devices.Sensors
 
         private BaseSensor() : this(null, null, null, null) { } // for json deserialization
 
-        public BaseSensor(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room)
+        protected BaseSensor(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room)
         {
             this.Address = address;
             this.Token = Utils.Utils.GenerateRandomToken(16);
@@ -126,7 +126,7 @@ namespace MyHome.Systems.Devices.Sensors
                     item.Add("unit", this.Units[name]);
                 this.Metadata[name] = item.ToObject<Dictionary<string, object>>();
             }
-            this.Owner.Owner.Events.Fire(this, "SensorDataAdded", addedData);
+            this.Owner.Owner.Events.Fire(this, GlobalEventTypes.SensorDataAdded, addedData);
             this.ArchiveData();
         }
 

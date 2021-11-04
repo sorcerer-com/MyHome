@@ -13,6 +13,7 @@ using MyHome.Utils;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 using NLog;
 
@@ -24,7 +25,7 @@ namespace MyHome
 
         private int updateInterval = 3; // seconds
         private readonly int upgradeCheckInterval = 5; // minutes
-        [JsonRequired]
+        [JsonProperty]
         private DateTime lastBackupTime;
 
 
@@ -79,6 +80,7 @@ namespace MyHome
             // * improve Actions UI - pre-defined events, actions, etc. Manually activated security alarm shouldn't be stopped.
             // * migrate the old multisensor to MQTT; remove token and process external data;
             // * mobile UI / landscape
+            // * remove Owner references (maybe make MyHome singleton)
 
             this.lastBackupTime = DateTime.Now;
             this.SystemChanged = false;
@@ -94,7 +96,7 @@ namespace MyHome
             };
             thread.Start();
 
-            this.Events.Fire(this, "Start");
+            this.Events.Fire(this, GlobalEventTypes.Start);
         }
 
         void IDisposable.Dispose()
@@ -116,7 +118,7 @@ namespace MyHome
 
         public void Stop()
         {
-            this.Events.Fire(this, "Stop");
+            this.Events.Fire(this, GlobalEventTypes.Stop);
             this.updateInterval = 0;
             this.MqttClient.Disconnect();
 
@@ -136,20 +138,29 @@ namespace MyHome
                 return;
             }
 
+            ITraceWriter traceWriter = new MemoryTraceWriter();
             var serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
             {
                 TypeNameHandling = TypeNameHandling.All,
                 PreserveReferencesHandling = PreserveReferencesHandling.All,
                 Formatting = Formatting.Indented,
-                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
+                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+                TraceWriter = traceWriter
             });
 
             var json = File.ReadAllText(Config.DataFilePath);
             var data = JObject.Parse(json);
-            serializer.Populate(data.CreateReader(), this);
+            try
+            {
+                serializer.Populate(data.CreateReader(), this);
+            }
+            finally
+            {
+                // logger.Trace(traceWriter);
+            }
 
             this.SystemChanged = false;
-            this.Events.Fire(this, "Loaded");
+            this.Events.Fire(this, GlobalEventTypes.Loaded);
         }
 
         public void Save()
@@ -181,7 +192,7 @@ namespace MyHome
             }, 3, logger);
 
             this.SystemChanged = false;
-            this.Events.Fire(this, "Saved");
+            this.Events.Fire(this, GlobalEventTypes.Saved);
         }
 
         private void Update()

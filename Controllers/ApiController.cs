@@ -107,7 +107,7 @@ namespace MyHome.Controllers
 
 
         [HttpGet("types/{typeName}")]
-        public ActionResult GetDeviceTypes(string typeName)
+        public ActionResult GetSubTypes(string typeName)
         {
             var type = Utils.Utils.GetType(typeName);
             if (type == null)

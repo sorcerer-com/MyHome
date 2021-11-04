@@ -12,7 +12,7 @@
         </object-editor-item>
     </div>
     <a class="w3-button w3-round w3-padding-small w3-white w3-hover-blue-grey margin-8" title="Save"
-       v-on:click="save()">
+       v-if="onsave" v-on:click="save()">
         Save
     </a>
     <div class="w3-text-red margin-bottom-8" v-if="error">{{error}}</div>

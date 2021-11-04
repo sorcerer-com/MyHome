@@ -1,10 +1,14 @@
 ﻿using MyHome.Models;
 using MyHome.Utils;
 
+using NLog;
+
 namespace MyHome.Systems.Devices
 {
     public abstract class Device
     {
+        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+
         public DevicesSystem Owner { get; set; }
 
         [UiProperty(true)]
@@ -15,7 +19,7 @@ namespace MyHome.Systems.Devices
 
         private Device() : this(null, null, null) { } // for json deserialization
 
-        public Device(DevicesSystem owner, string name, Room room)
+        protected Device(DevicesSystem owner, string name, Room room)
         {
             this.Owner = owner;
             this.Name = name;
@@ -25,10 +29,12 @@ namespace MyHome.Systems.Devices
 
         public virtual void Setup()
         {
+            logger.Debug($"Setup device: {this.Name}");
         }
 
         public virtual void Stop()
         {
+            logger.Debug($"Stop device: {this.Name}");
         }
 
         public virtual void Update()

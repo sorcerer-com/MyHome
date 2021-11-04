@@ -2,30 +2,52 @@
 
 namespace MyHome.Utils
 {
+    public enum GlobalEventTypes
+    {
+        Start,
+        Stop,
+        Loaded,
+        Saved,
+
+        MediaPlayed,
+        MediaStopped,
+        MediaPaused,
+        MediaVolumeDown,
+        MediaVolumeUp,
+        MediaSeekBack,
+        MediaSeekForward,
+        MediaSeekBackFast,
+        MediaSeekForwardFast,
+
+        SecurityAlarmActivated,
+
+        SensorDataAdded,
+        DriverStateChanged
+    }
+
+    public class GlobalEventArgs : EventArgs
+    {
+        public GlobalEventTypes EventType { get; }
+
+        public object Data { get; }
+
+        public GlobalEventArgs(GlobalEventTypes eventType, object data)
+        {
+            this.EventType = eventType;
+            this.Data = data;
+        }
+    }
+
     public class GlobalEvent
     {
-        public class GlobalEventArgs : EventArgs
-        {
-            public string EventType { get; }
-
-            public object Data { get; }
-
-            public GlobalEventArgs(string eventType, object data)
-            {
-                this.EventType = eventType;
-                this.Data = data;
-            }
-        }
-
         public event EventHandler<GlobalEventArgs> Handler;
 
-
-        public void Fire(object sender, string eventType)
+        public void Fire(object sender, GlobalEventTypes eventType)
         {
             this.Fire(sender, eventType, null);
         }
 
-        public void Fire(object sender, string eventType, object data)
+        public void Fire(object sender, GlobalEventTypes eventType, object data)
         {
             this.Handler?.Invoke(sender, new GlobalEventArgs(eventType, data));
         }

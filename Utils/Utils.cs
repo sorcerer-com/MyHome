@@ -3,12 +3,20 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-using MyHome.Systems.Actions;
-
 using NLog;
 
 namespace MyHome.Utils
 {
+    public enum Condition
+    {
+        Equal,
+        NotEqual,
+        Less,
+        LessOrEqual,
+        Greater,
+        GreaterOrEqual
+    }
+
     public static class Utils
     {
         public static void Retry(Action<int> action, int times, ILogger logger = null)

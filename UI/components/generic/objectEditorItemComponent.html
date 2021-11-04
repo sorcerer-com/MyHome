@@ -72,4 +72,9 @@
             add_circle
         </a>
     </div>
+
+    <!-- select -->
+    <select v-if="valueType.startsWith('Select')" v-model="localValue" v-bind:title="getTitle()" class="w3-col m10 w3-mobile">
+        <option v-for="v of getSelectValues()" v-bind:value="v">{{v}}</option>
+    </select>
 </div>

@@ -1,13 +1,13 @@
 ﻿using System;
 
-using MyHome.Models;
+using MyHome.Systems.Actions.Executors;
 using MyHome.Utils;
 
 namespace MyHome.Systems.Actions
 {
     public class TimeTriggeredAction : BaseAction
     {
-        // should be defined before time, to calculate it corrently
+        // should be defined before time, to calculate it correctly
         private TimeSpan interval;
         [UiProperty(true)]
         public string Interval
@@ -36,11 +36,13 @@ namespace MyHome.Systems.Actions
         }
 
 
-        private TimeTriggeredAction() : this(null, null, null, DateTime.Now, TimeSpan.FromHours(1)) { }  // for json deserialization
+        private TimeTriggeredAction() : this(null, null, true, null, DateTime.Now, TimeSpan.FromHours(1)) { }  // for json deserialization
 
-        public TimeTriggeredAction(ActionsSystem owner, Room room, string action, DateTime time, TimeSpan interval) : base(owner, room, action)
+        public TimeTriggeredAction(ActionsSystem owner, string name, bool isEnabled, BaseExecutor executor,
+            DateTime time, TimeSpan interval) :
+            base(owner, name, isEnabled, executor)
         {
-            this.Interval = interval.ToString();
+            this.interval = interval;
             this.Time = time; // first set interval to calculate nextTime correctly
         }
 
@@ -52,7 +54,7 @@ namespace MyHome.Systems.Actions
             if (DateTime.Now < this.time)
                 return;
 
-            this.Execute();
+            this.Trigger();
 
             while (this.time < DateTime.Now)
                 this.time += this.interval;
