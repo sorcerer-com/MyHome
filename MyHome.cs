@@ -77,10 +77,12 @@ namespace MyHome
                 this.Systems.Add(type.Name, (BaseSystem)Activator.CreateInstance(type, this));
             // TODO list 
             // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
-            // * improve Actions UI - pre-defined events, actions, etc. Manually activated security alarm shouldn't be stopped.
             // * migrate the old multisensor to MQTT; remove token and process external data;
             // * mobile UI / landscape
             // * remove Owner references (maybe make MyHome singleton)
+            // * driver offline alert
+            // * multiple sensor graphics at once (for one sensor subname - motion, by multiple devices too)
+            // * notifications in web?
 
             this.lastBackupTime = DateTime.Now;
             this.SystemChanged = false;
@@ -224,7 +226,6 @@ namespace MyHome
         }
 
 
-        // TODO: allow sending only email alerts - for some not urgent cases
         public bool SendAlert(string msg, List<string> fileNames = null, bool force = false)
         {
             try
@@ -232,8 +233,7 @@ namespace MyHome
                 logger.Info($"Send alert: {msg}");
 
                 bool result = true;
-                var latestData = this.DevicesSystem.Sensors.ToDictionary(s => s.Room.Name + "." + s.Name, s => s.LastValues);
-                msg = $"{DateTime.Now:dd/MM/yyyy HH:mm:ss}\n{msg}\n{JsonConvert.SerializeObject(latestData)}";
+                msg = $"{DateTime.Now:dd/MM/yyyy HH:mm:ss}\n{msg}";
 
                 var images = new List<string>();
                 foreach (var camera in this.DevicesSystem.Cameras)
@@ -242,13 +242,13 @@ namespace MyHome
                     camera.SaveImage(filename);
                     images.Add(filename);
                 }
-                if (fileNames == null)
-                    fileNames = images;
-                else
-                    fileNames.AddRange(images);
+                fileNames ??= new List<string>();
+                fileNames.AddRange(images);
 
+                var latestData = this.DevicesSystem.Sensors.ToDictionary(s => s.Room.Name + "." + s.Name, s => s.LastValues);
+                var emailMsg = $"{msg}\n{JsonConvert.SerializeObject(latestData, Formatting.Indented)}";
                 if (!Services.SendEMail(this.Config.SmtpServerAddress, this.Config.Email, this.Config.EmailPassword,
-                    this.Config.Email, "My Home", msg, fileNames))
+                    this.Config.Email, "My Home", emailMsg, fileNames))
                 {
                     result = false;
                 }
