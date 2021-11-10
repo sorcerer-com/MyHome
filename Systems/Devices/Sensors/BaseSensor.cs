@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using MyHome.Models;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -49,11 +48,8 @@ namespace MyHome.Systems.Devices.Sensors
         public Dictionary<string, double> LastValues => this.GetLastValues();
 
 
-        private BaseSensor() : this(null, null, null, null) { } // for json deserialization
-
-        protected BaseSensor(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room)
+        protected BaseSensor()
         {
-            this.Address = address;
             this.Token = Utils.Utils.GenerateRandomToken(16);
             this.Data = new Dictionary<DateTime, SensorValue>();
             this.Metadata = new Dictionary<string, Dictionary<string, object>>();
@@ -126,7 +122,7 @@ namespace MyHome.Systems.Devices.Sensors
                     item.Add("unit", this.Units[name]);
                 this.Metadata[name] = item.ToObject<Dictionary<string, object>>();
             }
-            this.Owner.Owner.Events.Fire(this, GlobalEventTypes.SensorDataAdded, addedData);
+            MyHome.Instance.Events.Fire(this, GlobalEventTypes.SensorDataAdded, addedData);
             this.ArchiveData();
         }
 

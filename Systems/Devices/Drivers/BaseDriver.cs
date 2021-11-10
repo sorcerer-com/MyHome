@@ -6,7 +6,6 @@ using System.Text;
 using MQTTnet;
 using MQTTnet.Client.Connecting;
 
-using MyHome.Models;
 using MyHome.Utils;
 
 using Newtonsoft.Json.Linq;
@@ -27,12 +26,7 @@ namespace MyHome.Systems.Devices.Drivers
         protected Dictionary<string, (string topic, string jsonPath)> MqttSetTopics { get; }
 
 
-        protected MqttClientWrapper MqttClient => this.Owner?.Owner.MqttClient;
-
-
-        private BaseDriver() : this(null, null, null) { } // for json deserialization
-
-        protected BaseDriver(DevicesSystem owner, string name, Room room) : base(owner, name, room)
+        protected BaseDriver()
         {
             this.State = new Dictionary<string, object>();
 
@@ -46,10 +40,10 @@ namespace MyHome.Systems.Devices.Drivers
             base.Setup();
 
             // subscribe to topic
-            this.MqttClient.Connected += this.MqttClient_Connected;
+            MyHome.Instance.MqttClient.Connected += this.MqttClient_Connected;
 
             // process messages
-            this.MqttClient.ApplicationMessageReceived += this.MqttClient_ApplicationMessageReceived;
+            MyHome.Instance.MqttClient.ApplicationMessageReceived += this.MqttClient_ApplicationMessageReceived;
         }
 
         public override void Stop()
@@ -57,17 +51,17 @@ namespace MyHome.Systems.Devices.Drivers
             base.Stop();
 
             foreach (var (topic, _) in this.MqttGetTopics.Values)
-                this.MqttClient.Unsubscribe(topic);
+                MyHome.Instance.MqttClient.Unsubscribe(topic);
 
             // remove handlers
-            this.MqttClient.Connected -= this.MqttClient_Connected;
-            this.MqttClient.ApplicationMessageReceived -= this.MqttClient_ApplicationMessageReceived;
+            MyHome.Instance.MqttClient.Connected -= this.MqttClient_Connected;
+            MyHome.Instance.MqttClient.ApplicationMessageReceived -= this.MqttClient_ApplicationMessageReceived;
         }
 
         private void MqttClient_Connected(object sender, MqttClientConnectedEventArgs e)
         {
             foreach (var (topic, _) in this.MqttGetTopics.Values)
-                this.MqttClient.Subscribe(topic);
+                MyHome.Instance.MqttClient.Subscribe(topic);
         }
 
         private void MqttClient_ApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs e)
@@ -94,9 +88,9 @@ namespace MyHome.Systems.Devices.Drivers
                         this.State[item.Key] = value == "ON";
                     else
                         this.State[item.Key] = Utils.Utils.ParseValue(value, this.State[item.Key].GetType());
-                    this.Owner.Owner.SystemChanged = true;
+                    MyHome.Instance.SystemChanged = true;
 
-                    this.Owner.Owner.Events.Fire(this, GlobalEventTypes.DriverStateChanged,
+                    MyHome.Instance.Events.Fire(this, GlobalEventTypes.DriverStateChanged,
                         this.State.Where(kvp => kvp.Key == item.Key).ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
                 }
             }

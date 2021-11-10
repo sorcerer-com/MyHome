@@ -20,13 +20,8 @@ namespace MyHome.Systems.Actions.Executors
         public string Arguments { get; set; }
 
 
-        private CallExecutor() : this(null, null, null, null) { }  // for json deserialization
-
-        public CallExecutor(BaseAction owner, string target, string function, string arguments) :
-            base(owner, target)
+        public CallExecutor()
         {
-            this.Function = function;
-            this.Arguments = arguments;
         }
 
 
@@ -44,9 +39,9 @@ namespace MyHome.Systems.Actions.Executors
 
         public IEnumerable<string> GetFunctions() // Function selector
         {
-            var functions = this.Owner.Owner.Owner.Rooms.SelectMany(r => GetFunctions(r));
+            var functions = MyHome.Instance.Rooms.SelectMany(r => GetFunctions(r));
             functions = functions.Union(
-                this.Owner.Owner.Owner.Rooms.SelectMany(r =>
+                MyHome.Instance.Rooms.SelectMany(r =>
                     r.Devices.SelectMany(d => GetFunctions(d))));
             return functions.Distinct();
         }

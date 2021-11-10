@@ -32,9 +32,7 @@ namespace MyHome.Systems
         private DateTime nextReadDataTime;
 
 
-        private DevicesSystem() : this(null) { }  // for json deserialization
-
-        public DevicesSystem(MyHome owner) : base(owner)
+        public DevicesSystem()
         {
             this.ReadSensorDataInterval = 15;
             this.Devices = new List<Device>();
@@ -97,14 +95,14 @@ namespace MyHome.Systems
                     logger.Debug($"Requesting data from {sensor.Name} ({sensor.Room.Name}, {sensor.Address}) sensor");
 
                     if (sensor.ReadData(this.nextReadDataTime))
-                        this.Owner.SystemChanged = true;
+                        MyHome.Instance.SystemChanged = true;
                     else
                         logger.Warn($"No data from {sensor.Name} ({sensor.Room.Name}) sensor");
                 }
             });
 
             if (!string.IsNullOrEmpty(alertMsg))
-                this.Owner.SendAlert($"{alertMsg.Trim()} Alarm Activated!");
+                MyHome.Instance.SendAlert($"{alertMsg.Trim()} Alarm Activated!");
 
             this.nextReadDataTime += TimeSpan.FromMinutes(this.ReadSensorDataInterval);
         }
@@ -121,7 +119,7 @@ namespace MyHome.Systems
             logger.Trace($"Process sensor '{sensor.Name}' ({sensor.Room.Name}, {token}) data: {data}");
 
             sensor.AddData(DateTime.Now, data);
-            this.Owner.SystemChanged = true;
+            MyHome.Instance.SystemChanged = true;
             return true;
         }
 

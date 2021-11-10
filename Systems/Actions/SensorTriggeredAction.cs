@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using MyHome.Models;
-using MyHome.Systems.Actions.Executors;
 using MyHome.Utils;
 
 namespace MyHome.Systems.Actions
@@ -22,21 +20,14 @@ namespace MyHome.Systems.Actions
         public double ConditionValue { get; set; }
 
 
-        private SensorTriggeredAction() : this(null, null, true, null, null, null, Condition.Equal, 0) { }  // for json deserialization
-
-        public SensorTriggeredAction(ActionsSystem owner, string name, bool isEnabled, BaseExecutor executor,
-            Room eventRoom, string sensorSubname, Condition condition, double conditionValue) :
-            base(owner, name, isEnabled, executor, eventRoom, GlobalEventTypes.SensorDataAdded)
+        public SensorTriggeredAction()
         {
-            this.SensorSubname = sensorSubname;
-            this.Condition = condition;
-            this.ConditionValue = conditionValue;
         }
 
 
         public IEnumerable<string> GetSensorSubname() // EventRoomName selector
         {
-            return this.Owner.Owner.Rooms.SelectMany(r => r.SensorsValues.Keys).Distinct().OrderBy(s => s);
+            return MyHome.Instance.Rooms.SelectMany(r => r.SensorsValues.Keys).Distinct().OrderBy(s => s);
         }
 
         protected override bool IsTriggered(object sender, GlobalEventArgs e)

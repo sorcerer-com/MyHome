@@ -9,7 +9,6 @@ using Mictlanix.DotNet.Onvif.Imaging;
 using Mictlanix.DotNet.Onvif.Media;
 using Mictlanix.DotNet.Onvif.Ptz;
 
-using MyHome.Models;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -81,9 +80,7 @@ namespace MyHome.Systems.Devices.Sensors
         private readonly Dictionary<Type, object> onvif;
 
 
-        private Camera() : this(null, null, null, "") { } // for json deserialization
-
-        public Camera(DevicesSystem owner, string name, Room room, string address) : base(owner, name, room, address)
+        public Camera()
         {
             this.IsOnvifSupported = true;
             this.ReadDataInterval = 15;

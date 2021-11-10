@@ -64,9 +64,7 @@ namespace MyHome.Systems
         private readonly MediaPlayer player;
 
 
-        private MediaPlayerSystem() : this(null) { }  // for json deserialization
-
-        public MediaPlayerSystem(MyHome owner) : base(owner)
+        public MediaPlayerSystem()
         {
             this.Volume = 50;
             this.MediaPaths = new List<string>();
@@ -108,21 +106,21 @@ namespace MyHome.Systems
             this.player.Fullscreen = true;
             this.player.Play();
             this.MarkWatched(this.playing);
-            this.Owner.Events.Fire(this, GlobalEventTypes.MediaPlayed, this.playing);
+            MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaPlayed, this.playing);
         }
 
         public override void Stop()
         {
             logger.Debug($"Stop media: {this.playing}");
             this.player.Stop();
-            this.Owner.Events.Fire(this, GlobalEventTypes.MediaStopped);
+            MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaStopped);
         }
 
         public void Pause()
         {
             logger.Debug($"Pause media: {this.playing}");
             this.player.Pause();
-            this.Owner.Events.Fire(this, GlobalEventTypes.MediaPaused);
+            MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaPaused);
         }
 
         public void VolumeDown()
@@ -130,8 +128,8 @@ namespace MyHome.Systems
             logger.Debug($"Volume down media: {this.playing} to {this.Volume - 5}");
             this.Volume -= 5;
             this.player.Volume = this.Volume;
-            this.Owner.SystemChanged = true;
-            this.Owner.Events.Fire(this, GlobalEventTypes.MediaVolumeDown);
+            MyHome.Instance.SystemChanged = true;
+            MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaVolumeDown);
         }
 
         public void VolumeUp()
@@ -139,36 +137,36 @@ namespace MyHome.Systems
             logger.Debug($"Volume up media: {this.playing} to {this.Volume + 5}");
             this.Volume += 5;
             this.player.Volume = this.Volume;
-            this.Owner.SystemChanged = true;
-            this.Owner.Events.Fire(this, GlobalEventTypes.MediaVolumeUp);
+            MyHome.Instance.SystemChanged = true;
+            MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaVolumeUp);
         }
 
         public void SeekBack()
         {
             logger.Debug($"Seek back media: {this.playing}");
             this.player.Time -= 30 * 1000; // -30 seconds
-            this.Owner.Events.Fire(this, GlobalEventTypes.MediaSeekBack);
+            MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaSeekBack);
         }
 
         public void SeekForward()
         {
             logger.Debug($"Seek forward media: {this.playing}");
             this.player.Time += 30 * 1000; // +30 seconds
-            this.Owner.Events.Fire(this, GlobalEventTypes.MediaSeekForward);
+            MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaSeekForward);
         }
 
         public void SeekBackFast()
         {
             logger.Debug($"Seek back fast media: {this.playing}");
             this.player.Time -= 600 * 1000; // -600 seconds
-            this.Owner.Events.Fire(this, GlobalEventTypes.MediaSeekBackFast);
+            MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaSeekBackFast);
         }
 
         public void SeekForwardFast()
         {
             logger.Debug($"Seek forward fast media: {this.playing}");
             this.player.Time += 600 * 1000; // +600 seconds
-            this.Owner.Events.Fire(this, GlobalEventTypes.MediaSeekForwardFast);
+            MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaSeekForwardFast);
         }
 
 
@@ -215,7 +213,7 @@ namespace MyHome.Systems
             // cleanup watched list from nonexistent files
             var mediaList = this.GetMediaList();
             this.Watched.RemoveAll(w => !mediaList.Contains(w));
-            this.Owner.SystemChanged = true;
+            MyHome.Instance.SystemChanged = true;
         }
     }
 }

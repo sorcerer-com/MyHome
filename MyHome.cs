@@ -29,6 +29,8 @@ namespace MyHome
         private DateTime lastBackupTime;
 
 
+        public static MyHome Instance { get; private set; }
+
         public Config Config { get; }
 
         [JsonIgnore]
@@ -61,6 +63,7 @@ namespace MyHome
         public MyHome()
         {
             logger.Info("Start My Home");
+            Instance = this;
             using (var repo = new Repository("."))
             {
                 logger.Info($"Version: {repo.Head.Tip.Author.When.ToLocalTime():dd/MM/yyyy HH:mm:ss} {repo.Head.Tip.MessageShort}");
@@ -74,12 +77,11 @@ namespace MyHome
 
             this.Systems = new Dictionary<string, BaseSystem>();
             foreach (Type type in typeof(BaseSystem).GetSubClasses())
-                this.Systems.Add(type.Name, (BaseSystem)Activator.CreateInstance(type, this));
+                this.Systems.Add(type.Name, (BaseSystem)Activator.CreateInstance(type));
             // TODO list 
             // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
             // * migrate the old multisensor to MQTT; remove token and process external data;
             // * mobile UI / landscape
-            // * remove Owner references (maybe make MyHome singleton)
             // * driver offline alert
             // * multiple sensor graphics at once (for one sensor subname - motion, by multiple devices too)
             // * notifications in web?

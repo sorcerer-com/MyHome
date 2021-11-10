@@ -58,9 +58,7 @@ namespace MyHome.Systems
         private Dictionary<string, Mat> PrevImages { get; }
 
 
-        private SecuritySystem() : this(null) { }  // for json deserialization
-
-        public SecuritySystem(MyHome owner) : base(owner)
+        public SecuritySystem()
         {
             this.ActivationDelay = 15;
             this.SendInterval = 5;
@@ -108,7 +106,7 @@ namespace MyHome.Systems
                     this.RoomsInfo.Remove(roomInfo);
                 }
                 this.SetHistory(room, enable ? "Enabled" : "Disabled");
-                this.Owner.SystemChanged = true;
+                MyHome.Instance.SystemChanged = true;
             }
         }
 
@@ -138,8 +136,8 @@ namespace MyHome.Systems
                     this.PrevImages.Remove(camera.Room.Name + "." + camera.Name);
                 logger.Info($"Security alarm activated in '{room.Name}' room");
                 this.SetHistory(room, "Activated");
-                this.Owner.Events.Fire(this, GlobalEventTypes.SecurityAlarmActivated, roomInfo.Room);
-                this.Owner.SystemChanged = true;
+                MyHome.Instance.SystemChanged = true;
+                MyHome.Instance.Events.Fire(this, GlobalEventTypes.SecurityAlarmActivated, roomInfo.Room);
             }
         }
 
@@ -165,7 +163,7 @@ namespace MyHome.Systems
                         this.SetHistory(roomInfo.Room, "Enabled");
                         if (roomInfo.ImageFiles.Count > 1 || CheckCameras(roomInfo.Room))
                         {
-                            if (this.Owner.SendAlert($"'{roomInfo.Room.Name}' room security alarm activated!", roomInfo.ImageFiles, true))
+                            if (MyHome.Instance.SendAlert($"'{roomInfo.Room.Name}' room security alarm activated!", roomInfo.ImageFiles, true))
                                 ClearImages(roomInfo);
                         }
                         else
@@ -181,7 +179,7 @@ namespace MyHome.Systems
                         if (camera.IsOpened) // try to open the camera and if succeed
                             changed |= this.SaveImage(camera, roomInfo);
                     }
-                    this.Owner.SystemChanged = changed;
+                    MyHome.Instance.SystemChanged = changed;
                 }
             }
         }

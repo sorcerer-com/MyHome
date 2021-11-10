@@ -9,7 +9,6 @@ namespace MyHome.Systems.Devices
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
-        public DevicesSystem Owner { get; set; }
 
         [UiProperty(true)]
         public string Name { get; set; } // unique per room
@@ -17,13 +16,8 @@ namespace MyHome.Systems.Devices
         public Room Room { get; set; }
 
 
-        private Device() : this(null, null, null) { } // for json deserialization
-
-        protected Device(DevicesSystem owner, string name, Room room)
+        protected Device()
         {
-            this.Owner = owner;
-            this.Name = name;
-            this.Room = room;
         }
 
 

@@ -11,9 +11,7 @@ namespace MyHome.Systems
         public List<BaseAction> Actions { get; }
 
 
-        private ActionsSystem() : this(null) { }  // for json deserialization
-
-        public ActionsSystem(MyHome owner) : base(owner)
+        public ActionsSystem()
         {
             this.Actions = new List<BaseAction>();
         }

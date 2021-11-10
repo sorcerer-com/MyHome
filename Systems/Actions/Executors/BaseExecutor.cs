@@ -9,15 +9,13 @@ namespace MyHome.Systems.Actions.Executors
 {
     public abstract class BaseExecutor
     {
-        public BaseAction Owner { get; set; }
-
         protected Room Room
         {
             get
             {
                 var target = this.Target[0..this.Target.LastIndexOf(' ')]; // remove target type
                 var split = target.Split(".");
-                return this.Owner.Owner.Owner.Rooms.FirstOrDefault(r => r.Name == split[0]);
+                return MyHome.Instance.Rooms.FirstOrDefault(r => r.Name == split[0]);
             }
         }
 
@@ -37,21 +35,17 @@ namespace MyHome.Systems.Actions.Executors
         public string Target { get; set; }
 
 
-        private BaseExecutor() : this(null, null) { }  // for json deserialization
-
-        protected BaseExecutor(BaseAction owner, string target)
+        protected BaseExecutor()
         {
-            this.Owner = owner;
-            this.Target = target;
         }
 
         public abstract void Execute();
 
         public IEnumerable<string> GetTarget() // Target selector
         {
-            var targets = this.Owner.Owner.Owner.Rooms.Select(r => $"{r.Name} ({r.GetType().Name})");
+            var targets = MyHome.Instance.Rooms.Select(r => $"{r.Name} ({r.GetType().Name})");
             targets = targets.Union(
-                this.Owner.Owner.Owner.Rooms.SelectMany(r =>
+                MyHome.Instance.Rooms.SelectMany(r =>
                     r.Devices.Select(d => $"{r.Name}.{d.Name} ({d.GetType().Name})")));
             return targets;
         }

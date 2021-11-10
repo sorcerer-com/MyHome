@@ -102,7 +102,6 @@ namespace MyHome.Controllers
 
             var device = (Device)Activator.CreateInstance(type, true);
             device.Name = "New " + deviceType;
-            device.Owner = this.myHome.DevicesSystem;
             device.Room = room;
             return this.Ok(device.ToUiObject(true));
         }
@@ -125,7 +124,6 @@ namespace MyHome.Controllers
                         return this.NotFound("No such device type: " + type);
 
                     device = (Device)Activator.CreateInstance(type, true);
-                    device.Owner = this.myHome.DevicesSystem;
                     device.Room = room;
                     device.Setup();
                     this.myHome.DevicesSystem.Devices.Add(device);

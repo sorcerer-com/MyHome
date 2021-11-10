@@ -1,5 +1,4 @@
-﻿using MyHome.Models;
-using MyHome.Utils;
+﻿using MyHome.Utils;
 
 using Newtonsoft.Json.Linq;
 
@@ -26,10 +25,10 @@ namespace MyHome.Systems.Devices.Drivers
             get => this.MqttGetTopics[COLOR_STATE_NAME];
             set
             {
-                if (this.MqttClient?.IsConnected == true)
+                if (MyHome.Instance.MqttClient.IsConnected)
                 {
-                    this.MqttClient.Unsubscribe(this.MqttGetTopics[COLOR_STATE_NAME].topic);
-                    this.MqttClient.Subscribe(value.topic);
+                    MyHome.Instance.MqttClient.Unsubscribe(this.MqttGetTopics[COLOR_STATE_NAME].topic);
+                    MyHome.Instance.MqttClient.Subscribe(value.topic);
                 }
                 this.MqttGetTopics[COLOR_STATE_NAME] = value;
             }
@@ -43,9 +42,7 @@ namespace MyHome.Systems.Devices.Drivers
         }
 
 
-        private LightMqttDriver() : this(null, null, null) { } // for json deserialization
-
-        public LightMqttDriver(DevicesSystem owner, string name, Room room) : base(owner, name, room)
+        public LightMqttDriver()
         {
             this.State.Add(COLOR_STATE_NAME, "#ffffff");
             this.MqttGetTopics.Add(COLOR_STATE_NAME, ("", ""));
@@ -65,7 +62,8 @@ namespace MyHome.Systems.Devices.Drivers
                 value = json.ToString();
             }
 
-            this.MqttClient?.Publish(this.ColorSetMqttTopic.topic, value);
+            if (MyHome.Instance.MqttClient.IsConnected)
+                MyHome.Instance.MqttClient.Publish(this.ColorSetMqttTopic.topic, value);
         }
     }
 }

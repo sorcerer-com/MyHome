@@ -20,13 +20,8 @@ namespace MyHome.Systems.Actions.Executors
         public string Value { get; set; }
 
 
-        private SetExecutor() : this(null, null, null, null) { }  // for json deserialization
-
-        public SetExecutor(BaseAction owner, string target, string property, string value) :
-            base(owner, target)
+        public SetExecutor()
         {
-            this.Property = property;
-            this.Value = value;
         }
 
 
@@ -44,9 +39,9 @@ namespace MyHome.Systems.Actions.Executors
 
         public IEnumerable<string> GetProperties() // Property selector
         {
-            var functions = this.Owner.Owner.Owner.Rooms.SelectMany(r => GetProperties(r));
+            var functions = MyHome.Instance.Rooms.SelectMany(r => GetProperties(r));
             functions = functions.Union(
-                this.Owner.Owner.Owner.Rooms.SelectMany(r =>
+                MyHome.Instance.Rooms.SelectMany(r =>
                     r.Devices.SelectMany(d => GetProperties(d))));
             return functions.Distinct();
         }

@@ -10,8 +10,6 @@ namespace MyHome.Systems.Actions
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
-        public ActionsSystem Owner { get; set; }
-
         [UiProperty(true)]
         public string Name { get; set; }
 
@@ -24,14 +22,8 @@ namespace MyHome.Systems.Actions
         public BaseExecutor Executor { get; set; }
 
 
-        private BaseAction() : this(null, null, true, null) { }  // for json deserialization
-
-        protected BaseAction(ActionsSystem owner, string name, bool isEnabled, BaseExecutor executor)
+        protected BaseAction()
         {
-            this.Owner = owner;
-            this.Name = name;
-            this.IsEnabled = isEnabled;
-            this.Executor = executor;
         }
 
 

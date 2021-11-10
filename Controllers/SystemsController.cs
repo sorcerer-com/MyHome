@@ -104,7 +104,6 @@ namespace MyHome.Controllers
                 return this.NotFound("No such action type: " + actionType);
 
             var action = (BaseAction)Activator.CreateInstance(type, true);
-            action.Owner = this.myHome.ActionsSystem;
             return this.Ok(action.ToUiObject(true));
         }
 
@@ -116,7 +115,6 @@ namespace MyHome.Controllers
                 return this.NotFound("No such executor type: " + executorType);
 
             var executor = (BaseExecutor)Activator.CreateInstance(type, true);
-            executor.Owner = new TimeTriggeredAction(this.myHome.ActionsSystem, "", true, null, DateTime.Now, TimeSpan.FromHours(1)); // TODO: remove after owner removed
             return this.Ok(executor.ToUiObject(true));
         }
 
@@ -134,7 +132,6 @@ namespace MyHome.Controllers
                         return this.NotFound("No such action type: " + actionType);
 
                     action = (BaseAction)Activator.CreateInstance(actionType, true);
-                    action.Owner = this.myHome.ActionsSystem;
                     action.Setup();
                     this.myHome.ActionsSystem.Actions.Add(action);
                 }
@@ -143,7 +140,6 @@ namespace MyHome.Controllers
                 if (executorType != null)
                 {
                     var executor = (BaseExecutor)Activator.CreateInstance(executorType, true);
-                    executor.Owner = action;
                     action.Executor = executor;
                 }
                 else

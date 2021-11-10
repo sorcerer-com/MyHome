@@ -1,6 +1,5 @@
 ﻿using System;
 
-using MyHome.Systems.Actions.Executors;
 using MyHome.Utils;
 
 namespace MyHome.Systems.Actions
@@ -36,14 +35,8 @@ namespace MyHome.Systems.Actions
         }
 
 
-        private TimeTriggeredAction() : this(null, null, true, null, DateTime.Now, TimeSpan.FromHours(1)) { }  // for json deserialization
-
-        public TimeTriggeredAction(ActionsSystem owner, string name, bool isEnabled, BaseExecutor executor,
-            DateTime time, TimeSpan interval) :
-            base(owner, name, isEnabled, executor)
+        public TimeTriggeredAction()
         {
-            this.interval = interval;
-            this.Time = time; // first set interval to calculate nextTime correctly
         }
 
 

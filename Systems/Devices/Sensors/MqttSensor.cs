@@ -7,7 +7,6 @@ using System.Text;
 using MQTTnet;
 using MQTTnet.Client.Connecting;
 
-using MyHome.Models;
 using MyHome.Utils;
 
 using Newtonsoft.Json.Linq;
@@ -27,12 +26,7 @@ namespace MyHome.Systems.Devices.Sensors
         public ObservableCollection<(string topic, string jsonPath)> MqttTopics { get; }
 
 
-        private MqttClientWrapper MqttClient => this.Owner?.Owner.MqttClient;
-
-
-        private MqttSensor() : this(null, null, null) { } // for json deserialization
-
-        public MqttSensor(DevicesSystem owner, string name, Room room) : base(owner, name, room, null)
+        public MqttSensor()
         {
             this.MqttTopics = new ObservableCollection<(string topic, string jsonPath)>();
             this.MqttTopics.CollectionChanged += this.MqttTopics_CollectionChanged;
@@ -43,10 +37,10 @@ namespace MyHome.Systems.Devices.Sensors
             base.Setup();
 
             // subscribe to topic
-            this.MqttClient.Connected += this.MqttClient_Connected;
+            MyHome.Instance.MqttClient.Connected += this.MqttClient_Connected;
 
             // process messages
-            this.MqttClient.ApplicationMessageReceived += this.MqttClient_ApplicationMessageReceived;
+            MyHome.Instance.MqttClient.ApplicationMessageReceived += this.MqttClient_ApplicationMessageReceived;
         }
 
         public override void Stop()
@@ -54,34 +48,34 @@ namespace MyHome.Systems.Devices.Sensors
             base.Stop();
 
             foreach (var (topic, _) in this.MqttTopics)
-                this.MqttClient.Unsubscribe(topic);
+                MyHome.Instance.MqttClient.Unsubscribe(topic);
 
             // remove handlers
-            this.MqttClient.Connected -= this.MqttClient_Connected;
-            this.MqttClient.ApplicationMessageReceived -= this.MqttClient_ApplicationMessageReceived;
+            MyHome.Instance.MqttClient.Connected -= this.MqttClient_Connected;
+            MyHome.Instance.MqttClient.ApplicationMessageReceived -= this.MqttClient_ApplicationMessageReceived;
         }
 
         private void MqttTopics_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (this.MqttClient?.IsConnected != true)
+            if (!MyHome.Instance.MqttClient.IsConnected)
                 return;
 
             if (e.Action == NotifyCollectionChangedAction.Reset)
             {
                 foreach (var (topic, _) in this.MqttTopics)
-                    this.MqttClient.Unsubscribe(topic);
+                    MyHome.Instance.MqttClient.Unsubscribe(topic);
             }
             else
             {
                 if (e.OldItems != null)
                 {
                     foreach (var (topic, _) in e.OldItems.OfType<(string topic, string jsonPath)>())
-                        this.MqttClient.Unsubscribe(topic);
+                        MyHome.Instance.MqttClient.Unsubscribe(topic);
                 }
                 if (e.NewItems != null)
                 {
                     foreach (var (topic, _) in e.NewItems.OfType<(string topic, string jsonPath)>())
-                        this.MqttClient.Subscribe(topic);
+                        MyHome.Instance.MqttClient.Subscribe(topic);
                 }
             }
         }
@@ -89,7 +83,7 @@ namespace MyHome.Systems.Devices.Sensors
         private void MqttClient_Connected(object sender, MqttClientConnectedEventArgs e)
         {
             foreach (var (topic, _) in this.MqttTopics)
-                this.MqttClient.Subscribe(topic);
+                MyHome.Instance.MqttClient.Subscribe(topic);
         }
 
         private void MqttClient_ApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs e)
