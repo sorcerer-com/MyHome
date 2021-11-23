@@ -10,6 +10,13 @@ $.get(templateUrl, template => {
             }
         },
         methods: {
+            updateLocalValue: function () {
+                if (this.valueType == "DateTime")
+                    this.localValue = this.value.substr(0, 16);
+                else
+                    this.localValue = this.value;
+            },
+
             getTitle: function () {
                 return (this.localValue + "\n" + this.hint).trim();
             },
@@ -52,12 +59,12 @@ $.get(templateUrl, template => {
             }
         },
         created: function () {
-            if (this.valueType == "DateTime")
-                this.localValue = this.value.substr(0, 16);
-            else
-                this.localValue = this.value;
+            this.updateLocalValue();
         },
         watch: {
+            value: function () {
+                this.updateLocalValue();
+            },
             localValue: function () {
                 this.$emit("change", this.localValue);
             }

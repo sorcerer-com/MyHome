@@ -43,12 +43,11 @@ $.get(templateUrl, template => {
             },
 
             showEdit: function (name, action) {
-                $.when(getSubTypes("BaseAction"), getSubTypes("BaseExecutor"))
-                    .done((actionTypes, executorTypes) => {
-                        this.edit.name = name;
-                        this.edit.action = action;
-                        this.edit.types = { "action": actionTypes[0], "executor": executorTypes[0] };
-                    });
+                getSubTypes("BaseExecutor").done(executorTypes => {
+                    this.edit.name = name;
+                    this.edit.action = action;
+                    this.edit.types = { "executor": executorTypes };
+                });
             },
             showAddAction: function () {
                 $.when(getSubTypes("BaseAction"), getSubTypes("BaseExecutor"))
@@ -92,12 +91,22 @@ $.get(templateUrl, template => {
 
                 return setAction(name, this.edit.action).done(() => this.edit.name = null);
             },
+            cloneAction: function () {
+                this.edit.name = this.edit.name + " - Clone";
+                this.edit.action = { ...this.edit.action }; // clone the object
+                this.edit.action.Name = this.edit.name;
+            },
             deleteAction: function () {
                 if (!confirm("Are you sure you want to delete the action?"))
                     return;
 
                 deleteAction(this.edit.name).done(() => this.edit.name = null);
             },
+
+            toggleActionEnabled: function (action) {
+                action.IsEnabled = !action.IsEnabled;
+                setAction(action.Name, action);
+            }
         },
         mounted: function () {
             this.refreshData();

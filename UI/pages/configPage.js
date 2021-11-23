@@ -84,6 +84,12 @@ $.get(templateUrl, template => {
                 return setDevice(this.edit.roomName, this.edit.name, device).done(() => this.edit.name = null);
             },
 
+            cloneDevice: function () {
+                this.edit.name = this.edit.name + " - Clone";
+                this.edit.object = { ...this.edit.object }; // clone the object
+                this.edit.object.Name = this.edit.name;
+            },
+
             deleteRoom: function () {
                 if (!confirm(`Are you sure you want to delete the ${this.edit.roomName} and all its devices ?`))
                     return;

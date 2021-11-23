@@ -10,7 +10,11 @@
                v-on:click="showEdit(name, action)">
                 <span class="w3-show-block overflow-wrap-break-word">
                     {{name}}
-                    <span class="material-icons w3-small w3-text-green" v-bind:class="{'w3-text-red': !action.IsEnabled}">circle</span>
+                    <span class="material-icons w3-small w3-text-green" v-bind:class="{'w3-text-red': !action.IsEnabled}"
+                          v-bind:title="action.IsEnabled ? 'Disable' : 'Enable'" 
+                          v-on:click="toggleActionEnabled(action)" v-on:click.stop="">
+                        circle
+                    </span>
                 </span>
                 <span class="w3-small">({{action.$type.substr(action.$type.lastIndexOf(".")+1)}})</span>
             </a>
@@ -65,11 +69,18 @@
                 </div>
                 <div class="w3-text-red margin-bottom-8" v-if="error">{{error}}</div>
 
+                <a class="w3-button w3-round w3-padding-small w3-white w3-hover-blue margin-8"
+                   title="Clone"
+                   v-if="!edit.name.startsWith('Add ')"
+                   v-on:click="cloneAction">
+                    Clone
+                </a>
+
                 <a class="w3-button w3-right w3-round w3-padding-small w3-white w3-hover-red margin-8"
                    title="Delete"
                    v-if="!edit.name.startsWith('Add ')"
                    v-on:click="deleteAction">
-                    delete
+                    Delete
                 </a>
             </div>
         </div>

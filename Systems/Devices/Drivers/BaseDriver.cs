@@ -84,14 +84,18 @@ namespace MyHome.Systems.Devices.Drivers
                             continue;
                         value = jsonToken.ToString();
                     }
+                    var oldValue = this.State[item.Key];
                     if (this.State[item.Key] is bool && (value == "ON" || value == "OFF"))
                         this.State[item.Key] = value == "ON";
                     else
                         this.State[item.Key] = Utils.Utils.ParseValue(value, this.State[item.Key].GetType());
-                    MyHome.Instance.SystemChanged = true;
 
-                    MyHome.Instance.Events.Fire(this, GlobalEventTypes.DriverStateChanged,
-                        this.State.Where(kvp => kvp.Key == item.Key).ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+                    if (oldValue != this.State[item.Key])
+                    {
+                        MyHome.Instance.SystemChanged = true;
+                        MyHome.Instance.Events.Fire(this, GlobalEventTypes.DriverStateChanged,
+                            this.State.Where(kvp => kvp.Key == item.Key).ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+                    }
                 }
             }
             catch (Exception ex)

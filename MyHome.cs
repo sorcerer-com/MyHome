@@ -82,9 +82,7 @@ namespace MyHome
             // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
             // * migrate the old multisensor to MQTT; remove token and process external data;
             // * mobile UI / landscape
-            // * driver offline alert
             // * multiple sensor graphics at once (for one sensor subname - motion, by multiple devices too)
-            // * notifications in web?
 
             this.lastBackupTime = DateTime.Now;
             this.SystemChanged = false;
@@ -193,7 +191,7 @@ namespace MyHome
                 var data = JObject.FromObject(this, serializer);
                 var json = data.ToString();
                 File.WriteAllText(Config.DataFilePath, json);
-            }, 3, logger);
+            }, 3, logger, "save");
 
             this.SystemChanged = false;
             this.Events.Fire(this, GlobalEventTypes.Saved);

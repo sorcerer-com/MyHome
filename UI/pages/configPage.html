@@ -53,11 +53,18 @@
 
                 <object-editor v-bind:object="edit.object" v-bind:onsave="edit.onSave"></object-editor>
 
+                <a class="w3-button w3-round w3-padding-small w3-white w3-hover-blue margin-8"
+                   title="Clone"
+                   v-if="!edit.name.startsWith('Add ')"
+                   v-on:click="cloneDevice">
+                    Clone
+                </a>
+
                 <a class="w3-button w3-right w3-round w3-padding-small w3-white w3-hover-red margin-8"
                    title="Delete"
                    v-if="!edit.name.startsWith('Add ')"
                    v-on:click="edit.onDelete">
-                    delete
+                    Delete
                 </a>
             </div>
         </div>

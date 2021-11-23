@@ -19,8 +19,9 @@ namespace MyHome.Utils
 
     public static class Utils
     {
-        public static void Retry(Action<int> action, int times, ILogger logger = null)
+        public static void Retry(Action<int> action, int times, ILogger logger = null, string operation = null)
         {
+            operation = operation != null ? $"'{operation}'" : "";
             for (int i = 0; i < times; i++)
             {
                 try
@@ -30,11 +31,11 @@ namespace MyHome.Utils
                 }
                 catch (Exception e)
                 {
-                    logger?.Warn($"Action failed, retry {i + 1} of {times}");
+                    logger?.Warn($"Action {operation} failed, retry {i + 1} of {times}");
                     logger?.Debug(e);
                 }
             }
-            logger?.Error($"Action failed, retries exceeded");
+            logger?.Error($"Action {operation} failed, retries exceeded");
         }
 
         public static Type GetType(string typeName)
