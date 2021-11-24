@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 
 using MyHome.Systems.Actions;
+using MyHome.Systems.Actions.Conditions;
 using MyHome.Systems.Actions.Executors;
 using MyHome.Utils;
 
@@ -107,6 +108,17 @@ namespace MyHome.Controllers
             return this.Ok(action.ToUiObject(true));
         }
 
+        [HttpPost("Actions/Condition/create/{conditionType}")]
+        public ActionResult CreateActionCondition(string conditionType)
+        {
+            var type = typeof(BaseCondition).GetSubClasses().FirstOrDefault(t => t.Name == conditionType);
+            if (type == null)
+                return this.NotFound("No such condition type: " + conditionType);
+
+            var condition = (BaseCondition)Activator.CreateInstance(type, true);
+            return this.Ok(condition.ToUiObject(true));
+        }
+
         [HttpPost("Actions/Executor/create/{executorType}")]
         public ActionResult CreateActionExecutor(string executorType)
         {
@@ -136,6 +148,21 @@ namespace MyHome.Controllers
                     this.myHome.ActionsSystem.Actions.Add(action);
                 }
 
+                if (this.Request.Form.ContainsKey("ActionCondition[$type]"))
+                {
+                    var conditionType = System.Reflection.Assembly.GetExecutingAssembly().GetType(this.Request.Form["ActionCondition[$type]"]);
+                    if (conditionType != null)
+                    {
+                        var condition = (BaseCondition)Activator.CreateInstance(conditionType, true);
+                        action.ActionCondition = condition;
+                    }
+                    else
+                        logger.Error($"No such condition type: {conditionType}");
+                }
+                else
+                    action.ActionCondition = null;
+
+
                 var executorType = System.Reflection.Assembly.GetExecutingAssembly().GetType(this.Request.Form["Executor[$type]"]);
                 if (executorType != null)
                 {
@@ -143,9 +170,7 @@ namespace MyHome.Controllers
                     action.Executor = executor;
                 }
                 else
-                {
                     logger.Error($"No such executor type: {executorType}");
-                }
 
                 this.Request.Form.SetObject(action);
                 this.myHome.SystemChanged = true;

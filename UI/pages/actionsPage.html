@@ -44,18 +44,34 @@
                 <div class="w3-margin-bottom" v-if="edit.types['action']">
                     <span class="w3-right-align">Types:</span>
                     <select class="w3-mobile" v-on:change="onTypeChange">
-                        <option value="" disabled selected>Select</option>
+                        <option value="" disabled selected hidden>Select</option>
                         <option v-for="v of edit.types['action']" v-bind:value="v">{{v}}</option>
                     </select>
                 </div>
 
                 <object-editor v-bind:object="edit.action"></object-editor>
 
+                <div class="w3-margin-bottom" v-if="edit.action && edit.types['condition']">
+                    <span class="w3-right-align">Condition Types:</span>
+                    <select class="w3-mobile" v-on:change="onConditionTypeChange">
+                        <option value="" selected>None</option>
+                        <option v-for="v of edit.types['condition']" v-bind:value="v"
+                                v-bind:selected="edit.action?.ActionCondition?.$type.substr(edit.action?.ActionCondition?.$type.lastIndexOf('.')+1) == v">
+                            {{v}}
+                        </option>
+                    </select>
+                </div>
+
+                <object-editor v-if="edit.action?.ActionCondition" v-bind:object="edit.action.ActionCondition"></object-editor>
+
                 <div class="w3-margin-bottom" v-if="edit.action && edit.types['executor']">
                     <span class="w3-right-align">Executor Types:</span>
                     <select class="w3-mobile" v-on:change="onExecutorTypeChange">
-                        <option value="" disabled selected>Select</option>
-                        <option v-for="v of edit.types['executor']" v-bind:value="v">{{v}}</option>
+                        <option value="" disabled selected hidden>Select</option>
+                        <option v-for="v of edit.types['executor']" v-bind:value="v"
+                                v-bind:selected="edit.action?.Executor?.$type.substr(edit.action?.Executor?.$type.lastIndexOf('.')+1) == v">
+                            {{v}}
+                        </option>
                     </select>
                 </div>
 

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 
 using MyHome.Models;
 using MyHome.Utils;
@@ -35,11 +34,6 @@ namespace MyHome.Systems.Actions
             base.Setup();
 
             MyHome.Instance.Events.Handler += this.Events_Handler;
-        }
-
-        public IEnumerable<string> GetRooms() // EventRoomName selector
-        {
-            return MyHome.Instance.Rooms.Select(r => r.Name);
         }
 
         private void Events_Handler(object sender, GlobalEventArgs e)

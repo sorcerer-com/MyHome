@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 using MyHome.Utils;
 
@@ -35,26 +33,6 @@ namespace MyHome.Systems.Actions.Executors
                 else
                     CallMethod(this.Room, methodName, this.Arguments);
             }
-        }
-
-        public IEnumerable<string> GetFunctions() // Function selector
-        {
-            var functions = MyHome.Instance.Rooms.SelectMany(r => GetFunctions(r));
-            functions = functions.Union(
-                MyHome.Instance.Rooms.SelectMany(r =>
-                    r.Devices.SelectMany(d => GetFunctions(d))));
-            return functions.Distinct();
-        }
-
-        private static IEnumerable<string> GetFunctions(object obj)
-        {
-            return obj.GetType()
-                .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .Where(mi => !mi.IsSpecialName &&
-                    mi.DeclaringType != typeof(object) &&
-                    !mi.DeclaringType.IsAbstract &&
-                    !mi.IsVirtual)
-                .Select(mi => $"{mi.DeclaringType.Name}.{mi.Name} ({string.Join(",", mi.GetParameters().Select(p => p.Name))})");
         }
 
 

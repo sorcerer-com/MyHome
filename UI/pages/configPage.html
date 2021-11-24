@@ -46,7 +46,7 @@
                 <div class="w3-margin-bottom" v-if="edit.types">
                     <span class="w3-right-align">Types:</span>
                     <select class="w3-mobile" v-on:change="onTypeChange">
-                        <option value="" disabled selected>Select</option>
+                        <option value="" disabled selected hidden>Select</option>
                         <option v-for="v of edit.types" v-bind:value="v">{{v}}</option>
                     </select>
                 </div>

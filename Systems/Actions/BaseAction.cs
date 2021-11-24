@@ -1,4 +1,5 @@
 ﻿
+using MyHome.Systems.Actions.Conditions;
 using MyHome.Systems.Actions.Executors;
 using MyHome.Utils;
 
@@ -16,7 +17,10 @@ namespace MyHome.Systems.Actions
         [UiProperty(true)]
         public bool IsEnabled { get; set; }
 
-        // TODO: add conditions
+        // TODO: multiple conditions and executors
+
+        [UiProperty(true)]
+        public BaseCondition ActionCondition { get; set; }
 
         [UiProperty(true)]
         public BaseExecutor Executor { get; set; }
@@ -42,7 +46,12 @@ namespace MyHome.Systems.Actions
         {
             logger.Debug($"Action triggered: {this.Name}");
             if (this.IsEnabled)
-                this.Executor?.Execute();
+            {
+                if (this.ActionCondition?.Check() != false) // if there is no condition or it's true
+                    this.Executor?.Execute();
+                else
+                    logger.Debug("Action condition doesn't met");
+            }
             else
                 logger.Debug("Action is disabled");
         }

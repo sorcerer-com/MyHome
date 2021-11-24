@@ -43,18 +43,21 @@ $.get(templateUrl, template => {
             },
 
             showEdit: function (name, action) {
-                getSubTypes("BaseExecutor").done(executorTypes => {
-                    this.edit.name = name;
-                    this.edit.action = action;
-                    this.edit.types = { "executor": executorTypes };
-                });
+                this.error = "";
+                $.when(getSubTypes("BaseCondition"), getSubTypes("BaseExecutor"))
+                    .done((conditionTypes, executorTypes) => {
+                        this.edit.name = name;
+                        this.edit.action = action;
+                        this.edit.types = { "condition": conditionTypes[0], "executor": executorTypes[0] };
+                    });
             },
             showAddAction: function () {
-                $.when(getSubTypes("BaseAction"), getSubTypes("BaseExecutor"))
-                    .done((actionTypes, executorTypes) => {
+                this.error = "";
+                $.when(getSubTypes("BaseAction"), getSubTypes("BaseCondition"), getSubTypes("BaseExecutor"))
+                    .done((actionTypes, conditionTypes, executorTypes) => {
                         this.edit.name = "Add Action";
                         this.edit.action = null;
-                        this.edit.types = { "action": actionTypes[0], "executor": executorTypes[0] };
+                        this.edit.types = { "action": actionTypes[0], "condition": conditionTypes[0], "executor": executorTypes[0] };
                     });
             },
             onTypeChange: function (event) {
@@ -63,6 +66,15 @@ $.get(templateUrl, template => {
                     action["$subtypes"]["Name"] = "String";
                     this.edit.action = action;
                 });
+            },
+            onConditionTypeChange: function (event) {
+                if (event.target.value) {
+                    createActionCondition(event.target.value).done(condition => {
+                        this.edit.action.ActionCondition = condition;
+                    });
+                } else {
+                    this.edit.action.ActionCondition = null;
+                }
             },
             onExecutorTypeChange: function (event) {
                 createActionExecutor(event.target.value).done(executor => {
@@ -83,6 +95,9 @@ $.get(templateUrl, template => {
                     }
                     name = this.edit.action.Name;
                 }
+
+                if (this.edit.action.ActionCondition == null) // remove condition if it's empty
+                    delete this.edit.action.ActionCondition;
 
                 if (this.edit.action.Executor == null) {
                     this.error = "Cannot set action without Executor";
@@ -105,6 +120,10 @@ $.get(templateUrl, template => {
 
             toggleActionEnabled: function (action) {
                 action.IsEnabled = !action.IsEnabled;
+
+                if (action.ActionCondition == null) // remove condition if it's empty
+                    delete action.ActionCondition;
+
                 setAction(action.Name, action);
             }
         },

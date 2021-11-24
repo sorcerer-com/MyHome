@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 using MyHome.Utils;
 
@@ -35,25 +32,6 @@ namespace MyHome.Systems.Actions.Executors
                 else
                     SetProperty(this.Room, propertyName, this.Value);
             }
-        }
-
-        public IEnumerable<string> GetProperties() // Property selector
-        {
-            var functions = MyHome.Instance.Rooms.SelectMany(r => GetProperties(r));
-            functions = functions.Union(
-                MyHome.Instance.Rooms.SelectMany(r =>
-                    r.Devices.SelectMany(d => GetProperties(d))));
-            return functions.Distinct();
-        }
-
-        private static IEnumerable<string> GetProperties(object obj)
-        {
-            return obj.GetType()
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(pi => pi.CanWrite &&
-                    (pi.PropertyType.IsPrimitive || pi.PropertyType == typeof(string)) &&
-                    !pi.DeclaringType.IsAbstract)
-                .Select(pi => $"{pi.DeclaringType.Name}.{pi.Name} ({pi.PropertyType.Name})");
         }
 
 

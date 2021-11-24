@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 using MyHome.Utils;
 
@@ -22,13 +21,9 @@ namespace MyHome.Systems.Actions
 
         public SensorTriggeredAction()
         {
+            base.EventType = GlobalEventTypes.SensorDataAdded;
         }
 
-
-        public IEnumerable<string> GetSensorSubname() // EventRoomName selector
-        {
-            return MyHome.Instance.Rooms.SelectMany(r => r.SensorsValues.Keys).Distinct().OrderBy(s => s);
-        }
 
         protected override bool IsTriggered(object sender, GlobalEventArgs e)
         {

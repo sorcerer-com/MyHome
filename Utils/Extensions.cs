@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
+using MyHome.Models;
+
 namespace MyHome.Utils
 {
     public static class Extensions
@@ -86,7 +88,9 @@ namespace MyHome.Utils
 
                     if (!string.IsNullOrEmpty(uiPropertyAttr.Selector))
                     {
-                        var mi = obj.GetType().GetMethod(uiPropertyAttr.Selector);
+                        var mi = typeof(Selectors).GetMethod(uiPropertyAttr.Selector);
+                        if (mi == null)
+                            mi = obj.GetType().GetMethod(uiPropertyAttr.Selector);
                         if (mi != null)
                         {
                             var values = (IEnumerable<string>)mi.Invoke(obj, null);

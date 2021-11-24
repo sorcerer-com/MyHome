@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 
 using MyHome.Models;
 using MyHome.Systems.Devices;
@@ -40,14 +39,5 @@ namespace MyHome.Systems.Actions.Executors
         }
 
         public abstract void Execute();
-
-        public IEnumerable<string> GetTarget() // Target selector
-        {
-            var targets = MyHome.Instance.Rooms.Select(r => $"{r.Name} ({r.GetType().Name})");
-            targets = targets.Union(
-                MyHome.Instance.Rooms.SelectMany(r =>
-                    r.Devices.Select(d => $"{r.Name}.{d.Name} ({d.GetType().Name})")));
-            return targets;
-        }
     }
 }
