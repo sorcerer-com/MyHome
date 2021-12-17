@@ -5,7 +5,6 @@ using System.Linq;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 using NLog;
 
@@ -18,25 +17,19 @@ namespace MyHome.Systems.Devices.Sensors
         public class SensorValue : Dictionary<string, double> { }; // subName / value
 
 
-        [UiProperty(true)]
-        public string Address { get; set; }
-
-        [UiProperty(true)]
-        public string Token { get; set; }
-
         public Dictionary<DateTime, SensorValue> Data { get; }
-
-        [UiProperty]
-        public Dictionary<string, Dictionary<string, object>> Metadata { get; }
 
         [UiProperty(true, "real name / custom name")]
         public Dictionary<string, string> SubNamesMap { get; } // map sensor subname to custom subname
 
+        [UiProperty(true, "names")]
+        public List<string> SumAggregated { get; } // subnames
+
         [UiProperty(true, "name / addition, multiplier")]
-        public Dictionary<string, (double addition, double multiplier)> Calibration { get; } // calibration values per subname - newValue = (realValue + addition) * multiplier
+        public Dictionary<string, (double addition, double multiplier)> Calibration { get; } // calibration values per subname: newValue = (realValue + addition) * multiplier
 
         [UiProperty(true, "name / unit")]
-        public Dictionary<string, string> Units { get; } // subname unit name (if not provide by metadata)
+        public Dictionary<string, string> Units { get; } // subname / unit name (if not provide by metadata)
 
 
         [JsonProperty]
@@ -45,15 +38,18 @@ namespace MyHome.Systems.Devices.Sensors
 
         [JsonIgnore]
         [UiProperty]
+        public Dictionary<string, Dictionary<string, object>> Metadata => this.GetMetadata();
+
+        [JsonIgnore]
+        [UiProperty]
         public Dictionary<string, double> LastValues => this.GetLastValues();
 
 
         protected BaseSensor()
         {
-            this.Token = Utils.Utils.GenerateRandomToken(16);
             this.Data = new Dictionary<DateTime, SensorValue>();
-            this.Metadata = new Dictionary<string, Dictionary<string, object>>();
             this.SubNamesMap = new Dictionary<string, string>();
+            this.SumAggregated = new List<string>();
             this.Calibration = new Dictionary<string, (double addition, double multiplier)>();
             this.Units = new Dictionary<string, string>();
 
@@ -61,51 +57,29 @@ namespace MyHome.Systems.Devices.Sensors
         }
 
 
-        public bool ReadData(DateTime time)
+        public void AddData(DateTime time, Dictionary<string, object> data)
         {
-            var data = this.ReadDataInternal(); // read data from sensor
-            logger.Trace($"Sensor '{this.Name}' ({this.Room.Name}) read data: '{data}'");
-            if (data != null)
-            {
-                this.AddData(time, data);
-                return true;
-            }
-            return false;
-        }
-
-        protected abstract JToken ReadDataInternal();
-
-        public void AddData(DateTime time, JToken data)
-        {
-            logger.Trace($"Sensor '{this.Name}' ({this.Room.Name}) add data at {time:dd/MM/yyyy HH:mm:ss}: {data}");
-            if (!data.HasValues)
+            logger.Trace($"Sensor '{this.Name}' ({this.Room.Name}) add data at {time:dd/MM/yyyy HH:mm:ss}: {string.Join('\n', data)}");
+            if (data.Count == 0)
                 return;
 
             if (!this.Data.ContainsKey(time))
                 this.Data.Add(time, new SensorValue());
 
             var addedData = new Dictionary<string, double>();
-            foreach (var item in data.OfType<JObject>())
+            foreach (var item in data)
             {
-                if (!item.ContainsKey("name") && !item.ContainsKey("value"))
-                {
-                    logger.Warn($"Try to add invalid data item({item}) in sensor '{this.Name}' ({this.Room.Name})");
-                    continue;
-                }
-
-                var name = (string)item["name"];
+                var name = item.Key;
                 if (this.SubNamesMap.ContainsKey(name))
                     name = this.SubNamesMap[name];
 
-                var value = (item["value"].Type == JTokenType.Boolean) ? ((bool)item["value"] ? 1 : 0) : (double)item["value"];
+                var value = (item.Value is bool b) ? (b ? 1 : 0) : (double)item.Value;
                 if (this.Calibration.ContainsKey(name)) // mapped name
                     value = (value + this.Calibration[name].addition) * this.Calibration[name].multiplier;
 
-                var aggrType = item.ContainsKey("aggrType") ? (string)item["aggrType"] : "avg";
-                if (aggrType == "avg")
-                {
+                var sumAggr = this.SumAggregated.Contains(name);
+                if (!sumAggr)
                     this.Data[time][name] = value;
-                }
                 else // sum type - differentiate
                 {
                     this.LastReadings.TryGetValue(name, out var prevValue);
@@ -116,11 +90,6 @@ namespace MyHome.Systems.Devices.Sensors
                 }
 
                 addedData[name] = this.Data[time][name];
-                item.Remove("name");
-                item.Remove("value");
-                if (this.Units.ContainsKey(name))
-                    item.Add("unit", this.Units[name]);
-                this.Metadata[name] = item.ToObject<Dictionary<string, object>>();
             }
             MyHome.Instance.Events.Fire(this, GlobalEventTypes.SensorDataAdded, addedData);
             this.ArchiveData();
@@ -146,14 +115,12 @@ namespace MyHome.Systems.Devices.Sensors
                     if (!values.Any())
                         continue;
 
-                    var aggrType = "avg";
-                    if (this.Metadata.ContainsKey(subName) && this.Metadata[subName].ContainsKey("aggrType"))
-                        aggrType = (string)this.Metadata[subName]["aggrType"];
+                    var sumAggr = this.SumAggregated.Contains(subName);
 
                     double newValue = 0.0;
-                    if (aggrType == "avg")
+                    if (!sumAggr)
                         newValue = Math.Round(values.Average(), 2); // round to 2 decimals after the point
-                    else if (aggrType == "sum")
+                    else
                         newValue = Math.Round(values.Sum(), 2);
                     this.Data[group.Key][subName] = newValue;
                 }
@@ -172,6 +139,22 @@ namespace MyHome.Systems.Devices.Sensors
             times = this.Data.Keys.Where(t => t < now.Date.AddDays(-1));
             var groupedDates = times.GroupBy(t => t.Date);
             this.AggregateData(groupedDates);
+        }
+
+        private Dictionary<string, Dictionary<string, object>> GetMetadata()
+        {
+            var result = new Dictionary<string, Dictionary<string, object>>();
+            foreach (var key in this.LastValues.Keys)
+            {
+                var info = new Dictionary<string, object>
+                {
+                    { "aggrType", this.SumAggregated.Contains(key) ? "sum" : "avg" }
+                };
+                if (this.Units.ContainsKey(key))
+                    info.Add("unit", this.Units[key]);
+                result.Add(key, info);
+            }
+            return result;
         }
 
         private Dictionary<string, double> GetLastValues()

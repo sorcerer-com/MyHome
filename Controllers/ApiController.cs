@@ -1,12 +1,9 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 
 using Microsoft.AspNetCore.Mvc;
 
 using MyHome.Utils;
-
-using Newtonsoft.Json.Linq;
 
 using NLog;
 using NLog.Targets;
@@ -25,30 +22,6 @@ namespace MyHome.Controllers
         public ApiController(MyHome myHome)
         {
             this.myHome = myHome;
-        }
-
-
-        [HttpPost("sensor/data")]
-        public ActionResult ProcessSensorData()
-        {
-            // curl "http://127.0.0.1:5000/api/sensor/data" -i -X POST -H "token: c9dd348f9b48020e5d0a7204d5ce6eb8" -H "Content-Type: application/json" -d '[{"name": "test", "value": '$((1 + RANDOM % 100))'}]'
-            try
-            {
-                if (this.Request.Headers.ContainsKey("token"))
-                {
-                    using var reader = new StreamReader(this.Request.Body);
-                    var body = reader.ReadToEndAsync().Result;
-                    var json = JArray.Parse(body);
-                    if (this.myHome.DevicesSystem.ProcessSensorData(this.Request.Headers["token"], json))
-                        return this.Ok();
-                }
-            }
-            catch (Exception e)
-            {
-                logger.Error("Failed to process external sensor data");
-                logger.Debug(e);
-            }
-            return this.NotFound();
         }
 
 

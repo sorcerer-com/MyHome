@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
@@ -18,9 +19,6 @@ namespace MyHome.Systems.Devices.Sensors
     public class MqttSensor : BaseSensor
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0051:Remove unused private member")]
-        private new string Address { get; set; }
 
         [UiProperty(true, "(topic, json path)")]
         public ObservableCollection<(string topic, string jsonPath)> MqttTopics { get; }
@@ -98,7 +96,7 @@ namespace MyHome.Systems.Devices.Sensors
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                 var json = JToken.Parse(payload);
 
-                var data = new JArray();
+                var data = new Dictionary<string, object>();
                 foreach (var (_, jsonPath) in this.MqttTopics.Where(kvp => kvp.topic == e.ApplicationMessage.Topic))
                 {
                     var token = json.SelectToken(jsonPath);
@@ -109,12 +107,7 @@ namespace MyHome.Systems.Devices.Sensors
                     var value = property.Value;
                     if (value.Type == JTokenType.String && ((string)value == "ON" || (string)value == "OFF"))
                         value = (string)value == "ON";
-                    var item = new JObject
-                    {
-                        ["name"] = property.Name,
-                        ["value"] = value
-                    };
-                    data.Add(item);
+                    data.Add(property.Path, (double)value);
                 }
                 this.AddData(DateTime.Now, data);
             }
@@ -123,11 +116,6 @@ namespace MyHome.Systems.Devices.Sensors
                 logger.Error("Failed to process MQTT message");
                 logger.Debug(ex);
             }
-        }
-
-        protected override JToken ReadDataInternal()
-        {
-            return new JArray();
         }
     }
 }

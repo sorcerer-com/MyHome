@@ -12,7 +12,6 @@ using Mictlanix.DotNet.Onvif.Ptz;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 using NLog;
 
@@ -35,6 +34,10 @@ namespace MyHome.Systems.Devices.Sensors
             ZOOMIN,
             ZOOMOUT
         }
+
+
+        [UiProperty(true)]
+        public string Address { get; set; }
 
         [UiProperty(true)]
         public bool IsOnvifSupported { get; set; }
@@ -94,6 +97,7 @@ namespace MyHome.Systems.Devices.Sensors
             Task.Run(() => { lock (this.Capture) this.Capture.Release(); }); // prepare capture for opening
         }
 
+
         public override void Update()
         {
             base.Update();
@@ -108,10 +112,14 @@ namespace MyHome.Systems.Devices.Sensors
             // read sensor data
             if (this.IsOnvifSupported && DateTime.Now > this.nextDataRead)
             {
-                if (this.ReadData(DateTime.Now))
+                var data = this.ReadData();
+                if (data != null)
+                {
+                    this.AddData(DateTime.Now, data);
                     this.nextDataRead = DateTime.Now.AddSeconds(this.ReadDataInterval);
+                }
                 else // if doesn't succeed wait more before next try
-                    this.nextDataRead = DateTime.Now.AddMinutes(this.ReadDataInterval * 4);
+                    this.nextDataRead = DateTime.Now.AddSeconds(this.ReadDataInterval * 4);
             }
         }
 
@@ -304,12 +312,14 @@ namespace MyHome.Systems.Devices.Sensors
             return (T)this.onvif[typeof(T)];
         }
 
-        protected override JToken ReadDataInternal()
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S1168:Empty arrays and collections should be returned instead of null")]
+        private Dictionary<string, object> ReadData()
         {
+            var result = new Dictionary<string, object>();
             if (!this.IsOnvifSupported)
             {
                 logger.Debug("Not Onfiv camera, so no data to read");
-                return new JArray();
+                return result;
             }
 
             try
@@ -319,19 +329,13 @@ namespace MyHome.Systems.Devices.Sensors
                 var response = pullPointClient.PullMessagesAsync(request).Result;
 
                 var data = response.NotificationMessage[0].Message.ChildNodes[3];
-                var result = new JArray();
                 foreach (XmlNode child in data.ChildNodes)
                 {
                     if (child == null || child.Attributes == null)
                         continue;
 
-                    var value = child.Attributes["Value"].Value.ToLower();
-                    var item = new JObject
-                    {
-                        ["name"] = child.Attributes["Name"].Value,
-                        ["value"] = Utils.Utils.ParseValue(value, null)
-                    };
-                    result.Add(item);
+                    var value = child.Attributes["Value"].Value;
+                    result.Add(child.Attributes["Name"].Value, Utils.Utils.ParseValue(value, null));
                 }
                 return result;
             }

@@ -7,7 +7,6 @@ using MyHome.Systems.Devices.Sensors;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 using NLog;
 
@@ -18,7 +17,7 @@ namespace MyHome.Systems
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         [UiProperty(true, "minutes")]
-        public int ReadSensorDataInterval { get; set; } // minutes
+        public int SensorsDataInterval { get; set; } // minutes
 
         public List<Device> Devices { get; }
 
@@ -29,12 +28,12 @@ namespace MyHome.Systems
         public IEnumerable<Camera> Cameras => this.Devices.OfType<Camera>();
 
 
-        private DateTime nextReadDataTime;
+        private DateTime nextSensorCheckTime;
 
 
         public DevicesSystem()
         {
-            this.ReadSensorDataInterval = 15;
+            this.SensorsDataInterval = 15;
             this.Devices = new List<Device>();
         }
 
@@ -44,7 +43,7 @@ namespace MyHome.Systems
             base.Setup();
 
             // set after loading the GetSensorDataInterval
-            this.nextReadDataTime = this.GetNextReadDataTime();
+            this.nextSensorCheckTime = this.GetNextSensorCheckTime();
 
             foreach (var device in this.Devices)
                 device.Setup();
@@ -64,72 +63,46 @@ namespace MyHome.Systems
 
             this.Devices.RunForEach(device => device.Update());
 
-            if (DateTime.Now < this.nextReadDataTime.AddSeconds(59)) // to be in the end of the minute
+            if (DateTime.Now < this.nextSensorCheckTime)
                 return;
 
-            // if GetSensorDataInterval is changed
-            if (this.nextReadDataTime.Minute % this.ReadSensorDataInterval != 0)
-                this.nextReadDataTime = this.GetNextReadDataTime();
+            // if SensorsDataInterval is changed
+            if (this.nextSensorCheckTime.Minute % this.SensorsDataInterval != 0)
+                this.nextSensorCheckTime = this.GetNextSensorCheckTime();
 
             var alertMsg = "";
             this.Sensors.RunForEach(sensor =>
             {
                 // check for inactive sensor
                 var lastSensorTime = sensor.Data.Keys.OrderBy(t => t).LastOrDefault();
-                if (lastSensorTime <= this.nextReadDataTime.AddMinutes(-this.ReadSensorDataInterval * 4) &&
-                    lastSensorTime > this.nextReadDataTime.AddMinutes(-this.ReadSensorDataInterval * 5))
+                if (lastSensorTime <= this.nextSensorCheckTime.AddMinutes(-this.SensorsDataInterval * 4) &&
+                    lastSensorTime > this.nextSensorCheckTime.AddMinutes(-this.SensorsDataInterval * 5))
                 {
                     logger.Warn($"Sensor {sensor.Name} ({sensor.Room.Name}) is not active from {lastSensorTime}");
                     alertMsg += $"{sensor.Name} ({sensor.Room.Name}) inactive ";
                 }
 
-                // aggregate one value per ReadSensorDataInterval
+                // aggregate one value per SensorsDataInterval
                 var now = DateTime.Now;
                 var times = sensor.Data.Keys.Where(t => t < now.AddHours(-1) && t >= now.Date.AddHours(now.Hour).AddDays(-1)); // last 24 hours
-                var groupedDates = times.GroupBy(t => new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute / this.ReadSensorDataInterval * this.ReadSensorDataInterval, 0));
+                var groupedDates = times.GroupBy(t => new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute / this.SensorsDataInterval * this.SensorsDataInterval, 0));
                 sensor.AggregateData(groupedDates);
-
-                // request data
-                if (!string.IsNullOrEmpty(sensor.Address))
-                {
-                    logger.Debug($"Requesting data from {sensor.Name} ({sensor.Room.Name}, {sensor.Address}) sensor");
-
-                    if (sensor.ReadData(this.nextReadDataTime))
-                        MyHome.Instance.SystemChanged = true;
-                    else
-                        logger.Warn($"No data from {sensor.Name} ({sensor.Room.Name}) sensor");
-                }
             });
 
             if (!string.IsNullOrEmpty(alertMsg))
                 MyHome.Instance.SendAlert($"{alertMsg.Trim()} Alarm Activated!");
 
-            this.nextReadDataTime += TimeSpan.FromMinutes(this.ReadSensorDataInterval);
-        }
-
-        public bool ProcessSensorData(string token, JArray data)
-        {
-            var sensor = this.Sensors.FirstOrDefault(s => s.Token == token);
-            if (sensor == null)
-            {
-                logger.Warn($"Try to process sensor data ({data}) with invalid token: {token}");
-                return false;
-            }
-
-            logger.Trace($"Process sensor '{sensor.Name}' ({sensor.Room.Name}, {token}) data: {data}");
-
-            sensor.AddData(DateTime.Now, data);
+            this.nextSensorCheckTime += TimeSpan.FromMinutes(this.SensorsDataInterval);
             MyHome.Instance.SystemChanged = true;
-            return true;
         }
 
 
-        private DateTime GetNextReadDataTime()
+        private DateTime GetNextSensorCheckTime()
         {
             var now = DateTime.Now;
             var time = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0, 0);
             while (time < now)
-                time += TimeSpan.FromMinutes(this.ReadSensorDataInterval);
+                time += TimeSpan.FromMinutes(this.SensorsDataInterval);
             return time;
         }
     }

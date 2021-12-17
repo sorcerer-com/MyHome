@@ -87,14 +87,6 @@ namespace MyHome.Utils
             return value;
         }
 
-        public static string GenerateRandomToken(int bytesCount)
-        {
-            var rand = new Random();
-            var buffer = new byte[bytesCount];
-            rand.NextBytes(buffer);
-            return BitConverter.ToString(buffer).ToLower().Replace("-", string.Empty);
-        }
-
         public static (string host, int? port) SplitAddress(string address)
         {
             if (!address.Contains(":"))
