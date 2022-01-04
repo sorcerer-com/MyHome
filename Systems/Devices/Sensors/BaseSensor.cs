@@ -83,9 +83,13 @@ namespace MyHome.Systems.Devices.Sensors
                 else // sum type - differentiate
                 {
                     this.LastReadings.TryGetValue(name, out var prevValue);
-                    if (prevValue - 1 > value) // if the new value is smaller (with epsilon - 1) than previous - it's reset
-                        prevValue = 0;
-                    this.Data[time][name] = Math.Round(value - prevValue, 2); // round to 2 decimals after the point
+                    // TODO: uncomment once the Energy Monitor values are fixed
+                    //if (prevValue - 1 > value) // if the new value is smaller (with epsilon - 1) than previous - it's reset
+                    //    prevValue = 0;
+                    if (prevValue + 1 < value)
+                        this.Data[time][name] = Math.Round(value - prevValue, 2); // round to 2 decimals after the point
+                    else
+                        this.Data[time][name] = 0;
                     this.LastReadings[name] = value;
                 }
 
@@ -159,6 +163,7 @@ namespace MyHome.Systems.Devices.Sensors
 
         private Dictionary<string, double> GetLastValues()
         {
+            // TODO: maybe if sumType -> show sum for the day (from 00:00)
             return this.Data.OrderBy(kvp => kvp.Key)
                 .SelectMany(x => x.Value)
                 .GroupBy(x => x.Key)
