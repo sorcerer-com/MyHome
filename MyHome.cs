@@ -78,10 +78,10 @@ namespace MyHome
             this.Systems = new Dictionary<string, BaseSystem>();
             foreach (Type type in typeof(BaseSystem).GetSubClasses())
                 this.Systems.Add(type.Name, (BaseSystem)Activator.CreateInstance(type));
+            this.Systems.TrimExcess();
             // TODO list 
             // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
-            // * migrate the old multisensor to MQTT; remove token and process external data;
-            // * mobile UI / landscape
+            // * mobile UI / landscape, improve UI - too many sensor values, merge Water Switch and Water State somehow
             // * multiple sensor graphics at once (for one sensor subname - motion, by multiple devices too)
 
             this.lastBackupTime = DateTime.Now;
@@ -245,7 +245,7 @@ namespace MyHome
                 fileNames ??= new List<string>();
                 fileNames.AddRange(images);
 
-                var latestData = this.DevicesSystem.Sensors.ToDictionary(s => s.Room.Name + "." + s.Name, s => s.LastValues);
+                var latestData = this.DevicesSystem.Sensors.ToDictionary(s => s.Room.Name + "." + s.Name, s => s.Values);
                 var emailMsg = $"{msg}\n{JsonConvert.SerializeObject(latestData, Formatting.Indented)}";
                 if (!Services.SendEMail(this.Config.SmtpServerAddress, this.Config.Email, this.Config.EmailPassword,
                     this.Config.Email, "My Home", emailMsg, fileNames))

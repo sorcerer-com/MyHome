@@ -14,7 +14,10 @@ $.get(templateUrl, template => {
             autoResizeFontSize: function () {
                 // auto resize text font if it's larger
                 $(".room-sensor-value").each((_, el) => {
-                    if (el.textContent.length > 2 && el.nextElementSibling.tagName == "SPAN") // if there is a unit text
+                    // if there is a unit text
+                    if (el.textContent.length > 3 && el.nextElementSibling.tagName == "SPAN")
+                        $(el).removeClass("w3-xlarge");
+                    else if (el.textContent.length > 2 && el.nextElementSibling.tagName == "SPAN")
                         $(el).removeClass("w3-xlarge").addClass("w3-large");
                     else
                         $(el).removeClass("w3-large").addClass("w3-xlarge");
@@ -56,7 +59,7 @@ $.get(templateUrl, template => {
             },
             getSensorsBySelectedValueType: function () {
                 return this.room.Devices.filter(d => (d.$type.endsWith("Sensor") || d.$type.endsWith("Camera")) &&
-                    this.selectedValueType in d.LastValues);
+                    this.selectedValueType in d.Values);
             },
             getDrivers: function () {
                 return this.room.Devices.filter(d => d.$type.endsWith("Driver"));

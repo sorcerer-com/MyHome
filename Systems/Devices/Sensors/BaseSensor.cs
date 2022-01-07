@@ -42,7 +42,7 @@ namespace MyHome.Systems.Devices.Sensors
 
         [JsonIgnore]
         [UiProperty]
-        public Dictionary<string, double> LastValues => this.GetLastValues();
+        public Dictionary<string, double> Values => this.GetValues();
 
 
         protected BaseSensor()
@@ -66,7 +66,6 @@ namespace MyHome.Systems.Devices.Sensors
             if (!this.Data.ContainsKey(time))
                 this.Data.Add(time, new SensorValue());
 
-            var addedData = new Dictionary<string, double>();
             foreach (var item in data)
             {
                 var name = item.Key;
@@ -92,10 +91,9 @@ namespace MyHome.Systems.Devices.Sensors
                         this.Data[time][name] = 0;
                     this.LastReadings[name] = value;
                 }
-
-                addedData[name] = this.Data[time][name];
+                this.Data[time].TrimExcess();
             }
-            MyHome.Instance.Events.Fire(this, GlobalEventTypes.SensorDataAdded, addedData);
+            MyHome.Instance.Events.Fire(this, GlobalEventTypes.SensorDataAdded, this.Data[time]);
             this.ArchiveData();
         }
 
@@ -128,6 +126,7 @@ namespace MyHome.Systems.Devices.Sensors
                         newValue = Math.Round(values.Sum(), 2);
                     this.Data[group.Key][subName] = newValue;
                 }
+                this.Data[group.Key].TrimExcess();
             }
         }
 
@@ -148,7 +147,7 @@ namespace MyHome.Systems.Devices.Sensors
         private Dictionary<string, Dictionary<string, object>> GetMetadata()
         {
             var result = new Dictionary<string, Dictionary<string, object>>();
-            foreach (var key in this.LastValues.Keys)
+            foreach (var key in this.Values.Keys)
             {
                 var info = new Dictionary<string, object>
                 {
@@ -161,13 +160,21 @@ namespace MyHome.Systems.Devices.Sensors
             return result;
         }
 
-        private Dictionary<string, double> GetLastValues()
+        private Dictionary<string, double> GetValues()
         {
-            // TODO: maybe if sumType -> show sum for the day (from 00:00)
-            return this.Data.OrderBy(kvp => kvp.Key)
-                .SelectMany(x => x.Value)
+            var result = this.Data.OrderBy(kvp => kvp.Key)
+                .SelectMany(kvp => kvp.Value)
                 .GroupBy(x => x.Key)
                 .ToDictionary(g => g.Key, g => g.Last().Value);
+
+            // for sum type sensors - set value to be the sum for the day
+            var sumType = this.Data.Where(kvp => kvp.Key > DateTime.Now.Date)
+                .SelectMany(kvp => kvp.Value)
+                .GroupBy(x => x.Key)
+                .Where(g => this.SumAggregated.Contains(g.Key))
+                .ToList();
+            sumType.ForEach(g => result[g.Key] = g.Select(x => x.Value).Sum());
+            return result;
         }
     }
 }

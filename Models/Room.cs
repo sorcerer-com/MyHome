@@ -88,7 +88,7 @@ namespace MyHome.Models
 
         private Dictionary<string, double> GetSensorsValues()
         {
-            return this.Sensors.Select(s => s.LastValues)
+            return this.Sensors.Select(s => s.Values)
                  .SelectMany(dict => dict)
                  .GroupBy(kvp => kvp.Key)
                  .ToDictionary(g => g.Key, g => g.Average(kvp => kvp.Value));

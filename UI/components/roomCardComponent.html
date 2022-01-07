@@ -15,7 +15,7 @@
     </a>
 
     <!-- Cameras -->
-    <a class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-light-gray"
+    <a class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-light-gray" style="min-height: 72px"
        v-if="getCameras().length > 0"
        v-bind:title="getCameras().length + ' Cameras'"
        v-on:click="selectedValueType = 'Cameras'">
@@ -33,7 +33,7 @@
     </driver>
 
     <!-- Security system -->
-    <a class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-light-gray"
+    <a class="w3-col m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-light-gray" style="min-height: 72px"
        v-bind:title="room.IsSecuritySystemEnabled ? 'Disable' : 'Enable'"
        v-on:click="setRoomSecuritySystemEnabled(room.Name, !room.IsSecuritySystemEnabled);">
         <span class="material-icons w3-xxlarge"
