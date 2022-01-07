@@ -62,6 +62,14 @@ namespace MyHome
 
         public MyHome()
         {
+            // TODO list 
+            // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
+            // * UI - mobile / landscape
+            //   - show all sensors data on a single chart somewhere
+            //   - maybe show devices instead of value / grouped by type -https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg
+            //   - too many sensor values, merge Water Switch and Water State somehow
+            // * multiple sensor graphics at once (for one sensor subname - motion, by multiple devices too)
+
             logger.Info("Start My Home");
             Instance = this;
             using (var repo = new Repository("."))
@@ -79,10 +87,6 @@ namespace MyHome
             foreach (Type type in typeof(BaseSystem).GetSubClasses())
                 this.Systems.Add(type.Name, (BaseSystem)Activator.CreateInstance(type));
             this.Systems.TrimExcess();
-            // TODO list 
-            // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
-            // * mobile UI / landscape, improve UI - too many sensor values, merge Water Switch and Water State somehow
-            // * multiple sensor graphics at once (for one sensor subname - motion, by multiple devices too)
 
             this.lastBackupTime = DateTime.Now;
             this.SystemChanged = false;

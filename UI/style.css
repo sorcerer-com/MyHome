@@ -78,8 +78,12 @@
 }
 
 .w3-modal-content {
-    width: 40%;
     height: 90%;
+}
+@media (min-width:993px) {
+    .w3-modal-content {
+        width: 600px;
+    }
 }
 
 

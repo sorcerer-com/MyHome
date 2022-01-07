@@ -1,7 +1,7 @@
 ﻿<div id="scrollable-content">
     <div class="w3-content w3-padding-16">
         <!-- Rooms devices -->
-        <div class="w3-col m3 s11 w3-margin" v-for="room of rooms">
+        <div class="w3-col l3 m5 s11 w3-margin" v-for="room of rooms">
             <h3 class="reset-margin margin-left-8">
                 {{room.Name}}
                 <a class="font-size-normal material-icons" title="Edit room"
@@ -10,7 +10,7 @@
                 </a>
             </h3>
 
-            <a class="w3-col m12 s11 w3-center w3-padding w3-round-large w3-hover-light-gray margin-8 bg-gray-opacity-88"
+            <a class="w3-col s11 w3-center w3-padding w3-round-large w3-hover-light-gray margin-8 bg-gray-opacity-88"
                title="Edit device"
                v-for="device of room.Devices"
                v-on:click="showEdit(room.Name, device, saveDevice, deleteDevice)">
@@ -18,14 +18,14 @@
                 <span class="w3-small">({{device.$type.substr(device.$type.lastIndexOf(".")+1)}})</span>
             </a>
 
-            <a class="w3-col m12 s11 w3-padding w3-round-large w3-center w3-hover-light-gray margin-8 bg-gray-opacity-88 material-icons"
+            <a class="w3-col s11 w3-padding w3-round-large w3-center w3-hover-light-gray margin-8 bg-gray-opacity-88 material-icons"
                title="Add device"
                v-on:click="showAddDevice(room)">
                 add
             </a>
         </div>
 
-        <a class="w3-col m3 s11 w3-margin" title="Add room" v-on:click="showAddRoom">
+        <a class="w3-col l3 m5 s11 w3-margin" title="Add room" v-on:click="showAddRoom">
             <h3 class="reset-margin margin-left-8">
                 <span class="font-size-normal material-icons">add</span>
                 Add Room
