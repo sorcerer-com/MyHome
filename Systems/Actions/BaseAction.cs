@@ -44,16 +44,16 @@ namespace MyHome.Systems.Actions
 
         protected void Trigger()
         {
-            logger.Debug($"Action triggered: {this.Name}");
+            logger.Trace($"Action triggered: {this.Name}");
             if (this.IsEnabled)
             {
                 if (this.ActionCondition?.Check() != false) // if there is no condition or it's true
                     this.Executor?.Execute();
                 else
-                    logger.Debug("Action condition doesn't met");
+                    logger.Trace("Action condition doesn't met");
             }
             else
-                logger.Debug("Action is disabled");
+                logger.Trace("Action is disabled");
         }
     }
 }

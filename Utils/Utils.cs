@@ -78,6 +78,11 @@ namespace MyHome.Utils
             {
                 return e;
             }
+            else if ((type != null && type.IsEnum) &&
+                Enum.TryParse(type, value, out object e2)) // Enum
+            {
+                return e2;
+            }
             else if (type != null && type.GetInterface(nameof(ITuple)) != null)
             {
                 var values = value[1..^1].Split(", ");

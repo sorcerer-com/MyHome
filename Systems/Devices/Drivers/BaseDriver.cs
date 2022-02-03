@@ -23,15 +23,12 @@ namespace MyHome.Systems.Devices.Drivers
 
         protected Dictionary<string, (string topic, string jsonPath)> MqttGetTopics { get; }
 
-        protected Dictionary<string, (string topic, string jsonPath)> MqttSetTopics { get; }
-
 
         protected BaseDriver()
         {
             this.State = new Dictionary<string, object>();
 
             this.MqttGetTopics = new Dictionary<string, (string topic, string jsonPath)>();
-            this.MqttSetTopics = new Dictionary<string, (string topic, string jsonPath)>();
         }
 
 
@@ -58,6 +55,7 @@ namespace MyHome.Systems.Devices.Drivers
             MyHome.Instance.MqttClient.ApplicationMessageReceived -= this.MqttClient_ApplicationMessageReceived;
         }
 
+
         private void MqttClient_Connected(object sender, MqttClientConnectedEventArgs e)
         {
             foreach (var (topic, _) in this.MqttGetTopics.Values)
@@ -74,6 +72,12 @@ namespace MyHome.Systems.Devices.Drivers
             try
             {
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                if (!this.AcceptPayload(payload))
+                {
+                    logger.Trace("The received payload is not accepted");
+                    return;
+                }
+                bool changed = false;
                 foreach (var item in this.MqttGetTopics.Where(kvp => kvp.Value.topic == e.ApplicationMessage.Topic))
                 {
                     var value = payload;
@@ -85,17 +89,17 @@ namespace MyHome.Systems.Devices.Drivers
                         value = jsonToken.ToString();
                     }
                     var oldValue = this.State[item.Key];
-                    if (this.State[item.Key] is bool && (value == "ON" || value == "OFF"))
-                        this.State[item.Key] = value == "ON";
+                    if (this.State[item.Key] is bool && (value.ToUpper() == "ON" || value.ToUpper() == "OFF"))
+                        this.State[item.Key] = value.ToUpper() == "ON";
                     else
                         this.State[item.Key] = Utils.Utils.ParseValue(value, this.State[item.Key].GetType());
 
-                    if (oldValue != this.State[item.Key])
-                    {
-                        MyHome.Instance.SystemChanged = true;
-                        MyHome.Instance.Events.Fire(this, GlobalEventTypes.DriverStateChanged,
-                            this.State.Where(kvp => kvp.Key == item.Key).ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
-                    }
+                    changed |= oldValue != this.State[item.Key];
+                }
+                if (changed)
+                {
+                    MyHome.Instance.SystemChanged = true;
+                    MyHome.Instance.Events.Fire(this, GlobalEventTypes.DriverStateChanged, this.State);
                 }
             }
             catch (Exception ex)
@@ -103,6 +107,34 @@ namespace MyHome.Systems.Devices.Drivers
                 logger.Error("Failed to process MQTT message");
                 logger.Debug(ex);
             }
+        }
+
+        protected virtual bool AcceptPayload(string payload)
+        {
+            return true;
+        }
+
+        protected void SetState(string name, object value, Action call)
+        {
+            if (this.State[name] == value)
+                return;
+
+            this.State[name] = value;
+            call?.Invoke();
+        }
+
+        protected void SetGetTopic(string name, (string topic, string jsonPath) value)
+        {
+            if (this.MqttGetTopics[name] == value)
+                return;
+
+            if (MyHome.Instance.MqttClient.IsConnected &&
+                this.MqttGetTopics[name].topic != value.topic)
+            {
+                MyHome.Instance.MqttClient.Unsubscribe(this.MqttGetTopics[name].topic);
+                MyHome.Instance.MqttClient.Subscribe(value.topic);
+            }
+            this.MqttGetTopics[name] = value;
         }
     }
 }

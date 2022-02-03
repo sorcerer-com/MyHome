@@ -12,34 +12,18 @@ namespace MyHome.Systems.Devices.Drivers
         public bool IsOn
         {
             get => (bool)this.State[SWITCH_STATE_NAME];
-            set
-            {
-                this.State[SWITCH_STATE_NAME] = value;
-                this.SendSwitchState();
-            }
+            set => this.SetState(SWITCH_STATE_NAME, value, this.SendSwitchState);
         }
 
         [UiProperty(true, "(topic, json path)")]
         public (string topic, string jsonPath) IsOnGetMqttTopic
         {
             get => this.MqttGetTopics[SWITCH_STATE_NAME];
-            set
-            {
-                if (MyHome.Instance.MqttClient.IsConnected)
-                {
-                    MyHome.Instance.MqttClient.Unsubscribe(this.MqttGetTopics[SWITCH_STATE_NAME].topic);
-                    MyHome.Instance.MqttClient.Subscribe(value.topic);
-                }
-                this.MqttGetTopics[SWITCH_STATE_NAME] = value;
-            }
+            set => this.SetGetTopic(SWITCH_STATE_NAME, value);
         }
 
         [UiProperty(true, "(topic, json path)")]
-        public (string topic, string jsonPath) IsOnSetMqttTopic
-        {
-            get => this.MqttSetTopics[SWITCH_STATE_NAME];
-            set => this.MqttSetTopics[SWITCH_STATE_NAME] = value;
-        }
+        public (string topic, string jsonPath) IsOnSetMqttTopic { get; set; }
 
         [UiProperty(true)]
         public bool ConfirmationRequired { get; set; }
@@ -49,7 +33,7 @@ namespace MyHome.Systems.Devices.Drivers
         {
             this.State.Add(SWITCH_STATE_NAME, false);
             this.MqttGetTopics.Add(SWITCH_STATE_NAME, ("", ""));
-            this.MqttSetTopics.Add(SWITCH_STATE_NAME, ("", ""));
+            this.IsOnSetMqttTopic = ("", "");
         }
 
         public bool Toggle()

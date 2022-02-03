@@ -6,7 +6,8 @@ $.get(templateUrl, template => {
         props: ["room", "driver"],
         data: function () {
             return {
-                debounceSetColor: debounce(this.setColor, 1000) // set only after no changes in 1 sec
+                debounceSetColor: debounce(this.setColor, 1000), // set only after no changes in 1 sec
+                modalObject: null
             }
         },
         methods: {
@@ -19,10 +20,35 @@ $.get(templateUrl, template => {
                     this.driver.IsOn = !this.driver.IsOn;
                     setDevice(this.room.Name, this.driver.Name, { "IsOn": this.driver.IsOn });
                 }
+                if (this.modalObject == null && this.driver.$type.endsWith("AcIrMqttDriver")) {
+                    this.modalObject = { ...this.driver };
+                }
             },
 
             setColor: function () {
                 setDevice(this.room.Name, this.driver.Name, { "Color": this.driver.Color });
+            },
+
+            getAcIcon: function () {
+                switch (this.driver.Mode) {
+                    case "AcMode.Off":
+                        return "";
+                    case "AcMode.Auto":
+                        return "hdr_auto";
+                    case "AcMode.Cool":
+                        return "ac_unit";
+                    case "AcMode.Heat":
+                        return "wb_sunny";
+                    case "AcMode.Dry":
+                        return "invert_colors";
+                    case "AcMode.Fan":
+                        return "air";
+                }
+            },
+
+            save: function () {
+                setDevice(this.room.Name, this.driver.Name, this.modalObject);
+                this.modalObject = null;
             }
         },
         watch: {

@@ -11,9 +11,37 @@
           v-if="driver.$type.endsWith('LightMqttDriver')">
         {{driver.IsOn ? 'lightbulb' : 'lightbulb_outline'}}
     </span>
-    <input type="color" style="width: 12px; height: 12px;" 
+    <input type="color" style="width: 12px; height: 12px;"
            v-model="driver.Color" v-bind:title="driver.Color" v-on:click.stop=""
            v-if="driver.$type.endsWith('LightMqttDriver')" />
 
+    <!-- AC -->
+    <span class="w3-xlarge"
+          v-if="driver.$type.endsWith('AcIrMqttDriver')">
+        {{Math.round(driver.Temperature, 2)}}
+    </span>
+    <span class="w3-tiny" v-if="driver.$type.endsWith('AcIrMqttDriver')">°C</span>
+    <span class="material-icons w3-tiny" style="vertical-align:top;margin-top:8px;"
+          v-if="driver.$type.endsWith('AcIrMqttDriver')">
+        {{getAcIcon()}}
+    </span>
+
     <div class="w3-tiny">{{driver.Name}}</div>
+
+    <!-- Modal -->
+    <div class="w3-modal" v-if="modalObject" v-on:click.stop=""
+         v-bind:class="{'w3-show-block': modalObject}"
+         v-on:click="modalObject = null">
+        <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">
+            <header class="w3-container w3-blue-gray">
+                <span class="w3-button w3-display-topright" v-on:click="modalObject = null">&times;</span>
+                <h2>{{modalObject.Name}}</h2>
+            </header>
+            <div class="w3-container w3-text-white w3-padding-16 height-100 overflow-y-auto bg-gray">
+                <object-editor v-if="driver.$type.endsWith('AcIrMqttDriver')"
+                               v-bind:object="modalObject"
+                               v-bind:onsave="save"></object-editor>
+            </div>
+        </div>
+    </div>
 </a>

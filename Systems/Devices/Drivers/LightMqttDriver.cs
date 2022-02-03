@@ -12,41 +12,25 @@ namespace MyHome.Systems.Devices.Drivers
         public string Color
         {
             get => "#" + ((string)this.State[COLOR_STATE_NAME]).TrimStart('#')[..6]; // ensure there is # in front and 6 digits
-            set
-            {
-                this.State[COLOR_STATE_NAME] = value;
-                this.SendColorState();
-            }
+            set => this.SetState(COLOR_STATE_NAME, value, this.SendColorState);
         }
 
         [UiProperty(true, "(topic, json path)")]
         public (string topic, string jsonPath) ColorGetMqttTopic
         {
             get => this.MqttGetTopics[COLOR_STATE_NAME];
-            set
-            {
-                if (MyHome.Instance.MqttClient.IsConnected)
-                {
-                    MyHome.Instance.MqttClient.Unsubscribe(this.MqttGetTopics[COLOR_STATE_NAME].topic);
-                    MyHome.Instance.MqttClient.Subscribe(value.topic);
-                }
-                this.MqttGetTopics[COLOR_STATE_NAME] = value;
-            }
+            set => this.SetGetTopic(COLOR_STATE_NAME, value);
         }
 
         [UiProperty(true, "(topic, json path)")]
-        public (string topic, string jsonPath) ColorSetMqttTopic
-        {
-            get => this.MqttSetTopics[COLOR_STATE_NAME];
-            set => this.MqttSetTopics[COLOR_STATE_NAME] = value;
-        }
+        public (string topic, string jsonPath) ColorSetMqttTopic { get; set; }
 
 
         public LightMqttDriver()
         {
             this.State.Add(COLOR_STATE_NAME, "#ffffff");
             this.MqttGetTopics.Add(COLOR_STATE_NAME, ("", ""));
-            this.MqttSetTopics.Add(COLOR_STATE_NAME, ("", ""));
+            this.ColorSetMqttTopic = ("", "");
         }
 
 

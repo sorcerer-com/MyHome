@@ -99,11 +99,8 @@ namespace MyHome.Utils
                     }
                 }
                 result.Add("$type", obj.GetType().ToString());
-                if (settingsOnly)
-                {
-                    result.Add("$subtypes", subtypes);
-                    result.Add("$hints", hints);
-                }
+                result.Add("$subtypes", subtypes);
+                result.Add("$hints", hints);
                 return result;
             }
         }
@@ -182,6 +179,26 @@ namespace MyHome.Utils
                     prop.SetValue(obj, Utils.ParseValue(item.Value, prop.PropertyType));
                 }
             }
+        }
+
+        public static Action Debounce(this Action func, int milliseconds = 100)
+        {
+            System.Threading.CancellationTokenSource cancelTokenSource = null;
+
+            return () =>
+            {
+                cancelTokenSource?.Cancel();
+                cancelTokenSource = new System.Threading.CancellationTokenSource();
+
+                Task.Delay(milliseconds, cancelTokenSource.Token)
+                    .ContinueWith(t =>
+                    {
+                        if (t.IsCompletedSuccessfully)
+                        {
+                            func();
+                        }
+                    }, TaskScheduler.Default);
+            };
         }
     }
 }
