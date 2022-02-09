@@ -90,7 +90,7 @@ namespace MyHome.Systems
             });
 
             if (!string.IsNullOrEmpty(alertMsg))
-                MyHome.Instance.SendAlert($"{alertMsg.Trim()} Alarm Activated!");
+                MyHome.Instance.SendAlert($"{alertMsg.Trim()} alarm activated!");
 
             this.nextSensorCheckTime += TimeSpan.FromMinutes(this.SensorsDataInterval);
             MyHome.Instance.SystemChanged = true;

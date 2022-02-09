@@ -25,8 +25,10 @@ namespace MyHome
 
         private int updateInterval = 3; // seconds
         private readonly int upgradeCheckInterval = 5; // minutes
+        private readonly int mqttDisconnectedAlert = 1; // minutes
         [JsonProperty]
         private DateTime lastBackupTime;
+        private DateTime mqttDisconnectedTime;
 
 
         public static MyHome Instance { get; private set; }
@@ -89,6 +91,7 @@ namespace MyHome
             this.Systems.TrimExcess();
 
             this.lastBackupTime = DateTime.Now;
+            this.mqttDisconnectedTime = DateTime.Now;
             this.SystemChanged = false;
 
             this.Load();
@@ -211,6 +214,8 @@ namespace MyHome
 
                 this.Systems.Values.RunForEach(system => system.Update());
 
+                this.CheckMqttStatus();
+
                 var now = DateTime.Now;
                 if (now.Minute % this.upgradeCheckInterval == 0 && now.Second < this.updateInterval)
                     this.CheckForUpgrade();
@@ -226,6 +231,19 @@ namespace MyHome
                 {
                     Thread.Sleep(TimeSpan.FromSeconds(this.updateInterval) - stopwatch.Elapsed);
                 }
+            }
+        }
+
+        private void CheckMqttStatus()
+        {
+            var now = DateTime.Now;
+            if (this.MqttClient.IsConnected)
+                this.mqttDisconnectedTime = now;
+            else if (now - this.mqttDisconnectedTime > TimeSpan.FromMinutes(this.mqttDisconnectedAlert) &&
+                now - this.mqttDisconnectedTime < TimeSpan.FromMinutes(this.mqttDisconnectedAlert * 2))
+            {
+                this.SendAlert($"MQTT broker is down from {this.mqttDisconnectedTime:dd/MM/yyyy HH:mm:ss}!");
+                this.mqttDisconnectedTime = now - TimeSpan.FromMinutes(this.mqttDisconnectedAlert * 2);
             }
         }
 
