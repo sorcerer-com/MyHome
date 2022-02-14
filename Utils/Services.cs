@@ -56,6 +56,8 @@ namespace MyHome.Utils
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "S1075")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "S1854")]
         public static bool SendSMS(string number, string provider, string password, string message)
         {
             try
@@ -104,6 +106,7 @@ namespace MyHome.Utils
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "S1168")]
         public static JToken GetJsonContent(string url)
         {
             try

@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
-namespace MyHome.Systems.Devices.Drivers.IR
+namespace MyHome.Systems.Devices.Drivers
 {
     public class AcIrMqttDriver : BaseDriver
     {
