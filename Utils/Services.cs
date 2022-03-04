@@ -66,16 +66,16 @@ namespace MyHome.Utils
                 if (provider.ToLower() == "telenor")
                 {
                     var browser = new ScrapingBrowser { Encoding = Encoding.UTF8, IgnoreCookies = true };
-                    var page = browser.NavigateToPage(new Uri("https://my.telenor.bg"));
+                    var page = browser.NavigateToPage(new Uri("https://my.yettel.bg"));
                     // login
                     var form = new PageWebForm(page.Find("form", ScrapySharp.Html.By.Class("form")).First(), browser);
                     form["phone"] = number[1..];
-                    page = form.Submit(new Uri("https://id.telenor.bg/id/signin-switchable/"));
+                    page = form.Submit(new Uri("https://id.yettel.bg/id/signin-switchable/"));
                     form = new PageWebForm(page.Find("form", ScrapySharp.Html.By.Class("form")).First(), browser);
                     form["pin"] = password;
-                    page = form.Submit(new Uri("https://id.telenor.bg/id/verify-phone/"));
+                    page = form.Submit(new Uri("https://id.yettel.bg/id/verify-phone/"));
                     // go to sms
-                    page = browser.NavigateToPage(new Uri("https://my.telenor.bg/compose"));
+                    page = browser.NavigateToPage(new Uri("https://my.yettel.bg/compose"));
                     // sms
                     form = page.FindFormById("new-sms-form");
                     form["receiverPhoneNum"] = number;
@@ -84,15 +84,15 @@ namespace MyHome.Utils
                     form.FormFields.Add(new FormField { Name = "txtareaMessage", Value = message });
                     try
                     {
-                        page = form.Submit(new Uri("https://my.telenor.bg/st/validatesms"));
+                        page = form.Submit(new Uri("https://my.yettel.bg/st/validatesms"));
                     }
                     catch (Exception e)
                     {
                         // Expected exception - response 302 Found
-                        if (!(e.InnerException is WebException))
+                        if (e.InnerException is not WebException)
                             throw;
                     }
-                    browser.NavigateToPage(new Uri("https://my.telenor.bg/logout"));
+                    browser.NavigateToPage(new Uri("https://my.yettel.bg/logout"));
                     return true;
                 }
                 logger.Error($"Cannot send SMS - invalid operator '{provider}'");
