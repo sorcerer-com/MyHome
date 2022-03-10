@@ -19,6 +19,8 @@ namespace MyHome.Systems
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
+        private static readonly string ImagesPath = Path.Combine(Config.BinPath, "Images");
+
 
         [UiProperty(true, "minutes")]
         public int ActivationDelay { get; set; } // minutes
@@ -29,19 +31,22 @@ namespace MyHome.Systems
         [UiProperty(true, "percents")]
         public double MovementThreshold { get; set; } // percents
 
+        [UiProperty(true, "MB")]
+        public double ImagesDiskUsage { get; set; } // MB
+
         [JsonIgnore]
         public Dictionary<Room, bool> ActivatedRooms
         {
             get
             {
-                lock (this.RoomsInfo)
-                    return this.RoomsInfo.ToDictionary(r => r.Room, r => r.Activated);
+                lock (this.roomsInfo)
+                    return this.roomsInfo.ToDictionary(r => r.Room, r => r.Activated);
             }
         }
 
         public Dictionary<string, Dictionary<DateTime, string>> History { get; } // roomName / time / action
 
-        private class RoomInfo
+        private sealed class RoomInfo
         {
             public Room Room { get; set; }
 
@@ -53,9 +58,11 @@ namespace MyHome.Systems
         }
 
         [JsonProperty]
-        private List<RoomInfo> RoomsInfo { get; }
+        private readonly List<RoomInfo> roomsInfo;
 
-        private Dictionary<string, Mat> PrevImages { get; }
+        private readonly Dictionary<string, Mat> prevImages;
+
+        private DateTime imageClearTimer;
 
 
         public SecuritySystem()
@@ -63,17 +70,21 @@ namespace MyHome.Systems
             this.ActivationDelay = 15;
             this.SendInterval = 5;
             this.MovementThreshold = 0.02;
+            this.ImagesDiskUsage = 200;
             this.History = new Dictionary<string, Dictionary<DateTime, string>>();
 
-            this.RoomsInfo = new List<RoomInfo>();
-            this.PrevImages = new Dictionary<string, Mat>();
+            this.roomsInfo = new List<RoomInfo>();
+            this.prevImages = new Dictionary<string, Mat>();
+            this.imageClearTimer = DateTime.Now;
+
+            Directory.CreateDirectory(ImagesPath);
         }
 
         public void SetEnable(Room room, bool enable)
         {
-            lock (this.RoomsInfo)
+            lock (this.roomsInfo)
             {
-                var roomInfo = this.RoomsInfo.FirstOrDefault(r => r.Room == room);
+                var roomInfo = this.roomsInfo.FirstOrDefault(r => r.Room == room);
                 if (enable)
                 {
                     if (roomInfo != null)
@@ -83,7 +94,7 @@ namespace MyHome.Systems
                     }
 
                     logger.Info($"Enable security alarm for '{room.Name}' room");
-                    this.RoomsInfo.Add(new RoomInfo()
+                    this.roomsInfo.Add(new RoomInfo()
                     {
                         Room = room,
                         Activated = false,
@@ -102,8 +113,7 @@ namespace MyHome.Systems
                     logger.Info($"Disable security alarm for '{room.Name}' room");
                     if (roomInfo.Activated)
                         logger.Warn("The alarm is currently activated");
-                    ClearImages(roomInfo);
-                    this.RoomsInfo.Remove(roomInfo);
+                    this.roomsInfo.Remove(roomInfo);
                 }
                 this.SetHistory(room, enable ? "Enabled" : "Disabled");
                 MyHome.Instance.SystemChanged = true;
@@ -112,9 +122,9 @@ namespace MyHome.Systems
 
         public void Activate(Room room)
         {
-            lock (this.RoomsInfo)
+            lock (this.roomsInfo)
             {
-                var roomInfo = this.RoomsInfo.FirstOrDefault(r => r.Room == room);
+                var roomInfo = this.roomsInfo.FirstOrDefault(r => r.Room == room);
                 if (roomInfo == null)
                 {
                     logger.Trace($"Try to activate security alarm for '{room.Name}' room, but it's not enabled");
@@ -133,7 +143,7 @@ namespace MyHome.Systems
                 roomInfo.Activated = true;
                 roomInfo.StartTime = DateTime.Now;
                 foreach (var camera in roomInfo.Room.Cameras)
-                    this.PrevImages.Remove(camera.Room.Name + "." + camera.Name);
+                    this.prevImages.Remove(camera.Room.Name + "." + camera.Name);
                 logger.Info($"Security alarm activated in '{room.Name}' room");
                 this.SetHistory(room, "Activated");
                 MyHome.Instance.SystemChanged = true;
@@ -146,15 +156,14 @@ namespace MyHome.Systems
         {
             base.Update();
 
-            lock (this.RoomsInfo)
+            lock (this.roomsInfo)
             {
-                foreach (var roomInfo in this.RoomsInfo)
+                foreach (var roomInfo in this.roomsInfo)
                 {
                     if (!roomInfo.Activated)
                         continue;
 
                     var elapsed = DateTime.Now - roomInfo.StartTime;
-                    bool changed = false;
 
                     // send alert
                     if (elapsed > TimeSpan.FromMinutes(this.SendInterval))
@@ -164,55 +173,66 @@ namespace MyHome.Systems
                         if (roomInfo.ImageFiles.Count > 1 || CheckCameras(roomInfo.Room))
                         {
                             if (MyHome.Instance.SendAlert($"'{roomInfo.Room.Name}' room security alarm activated!", roomInfo.ImageFiles, true))
-                                ClearImages(roomInfo);
+                                roomInfo.ImageFiles.Clear();
                         }
                         else
                         {
                             logger.Info($"Skip alert sending for '{roomInfo.Room.Name}' room");
-                            ClearImages(roomInfo);
+                            roomInfo.ImageFiles.Clear();
                         }
-                        changed = true;
+                        MyHome.Instance.SystemChanged = true;
                     }
 
                     foreach (var camera in roomInfo.Room.Cameras)
                     {
                         if (camera.IsOpened) // try to open the camera and if succeed
-                            changed |= this.SaveImage(camera, roomInfo);
+                            this.SaveImage(camera, roomInfo);
                     }
-                    MyHome.Instance.SystemChanged = changed;
+                }
+
+                if (DateTime.Now - imageClearTimer > TimeSpan.FromMinutes(this.SendInterval))
+                {
+                    imageClearTimer = DateTime.Now;
+                    ClearImages();
                 }
             }
         }
 
-        private bool SaveImage(Camera camera, RoomInfo roomInfo)
+        private void SaveImage(Camera camera, RoomInfo roomInfo)
         {
             var image = camera.GetImage(false);
             if (image == null)
-                return false;
-            if (this.PrevImages.ContainsKey(camera.Room.Name + "." + camera.Name))
+                return;
+            if (this.prevImages.ContainsKey(camera.Room.Name + "." + camera.Name))
             {
                 // if no movement between current and previous image - skip saving
-                if (!FindMovement(this.PrevImages[camera.Room.Name + "." + camera.Name], image, this.MovementThreshold))
-                    return false;
+                if (!FindMovement(this.prevImages[camera.Room.Name + "." + camera.Name], image, this.MovementThreshold))
+                    return;
             }
-            this.PrevImages[camera.Room.Name + "." + camera.Name] = image.Resize(new Size(640, 480));
+            this.prevImages[camera.Room.Name + "." + camera.Name] = image.Resize(new Size(640, 480));
 
             var filename = $"{camera.Room.Name}_{camera.Name}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.jpg";
-            var filepath = Path.Combine(Config.BinPath, filename);
+            var filepath = Path.Combine(ImagesPath, filename);
             if (Cv2.ImWrite(filepath, image))
-            {
                 roomInfo.ImageFiles.Add(filepath);
-                return true;
-            }
-            return false;
         }
 
-        private static void ClearImages(RoomInfo roomInfo)
+        private void ClearImages()
         {
-            foreach (var file in roomInfo.ImageFiles)
-                File.Delete(file);
+            var files = Directory.GetFiles(ImagesPath, "*.jpg").Select(f => new FileInfo(f));
+            var total = files.Sum(fi => fi.Length);
+            if (total < this.ImagesDiskUsage * 1024L * 1024L) // ImageDiskUsage is in MB
+                return;
 
-            roomInfo.ImageFiles.Clear();
+            var deleted = 0L;
+            foreach (var fileInfo in files.OrderBy(f => f.CreationTime))
+            {
+                deleted += fileInfo.Length;
+                File.Delete(fileInfo.FullName);
+
+                if (total - deleted < this.ImagesDiskUsage * 1024L * 1024L * 0.9) // reach 90%
+                    break;
+            }
         }
 
         private static bool CheckCameras(Room room)

@@ -60,18 +60,21 @@ namespace MyHome.Systems.Devices.Sensors
                     this.capture.Set(CaptureProperty.BufferSize, 1);
                 }
 
-                // if capture isn't opened try again but only if the previous try was at least 1 minute ago
-                if (!this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(1))
+                lock (this.capture)
                 {
-                    logger.Info($"Opening camera: {this.Name} ({this.Room.Name})");
-                    if (int.TryParse(this.Address, out int device))
-                        this.capture.Open(device);
-                    else
-                        this.capture.Open(this.GetStreamAddress());
-                    this.lastUse = DateTime.Now;
+                    // if capture isn't opened try again but only if the previous try was at least 1 minute ago
+                    if (!this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(1))
+                    {
+                        logger.Info($"Opening camera: {this.Name} ({this.Room.Name})");
+                        if (int.TryParse(this.Address, out int device))
+                            this.capture.Open(device);
+                        else
+                            this.capture.Open(this.GetStreamAddress());
+                        this.lastUse = DateTime.Now;
+                    }
+                    if (this.capture.IsOpened())
+                        this.lastUse = DateTime.Now;
                 }
-                if (this.capture.IsOpened())
-                    this.lastUse = DateTime.Now;
 
                 return this.capture;
             }

@@ -23,7 +23,7 @@ namespace MyHome
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
-        private int updateInterval = 3; // seconds
+        private int updateInterval = 1; // seconds
         private readonly int upgradeCheckInterval = 5; // minutes
         private readonly int mqttDisconnectedAlert = 1; // minutes
         [JsonProperty]
