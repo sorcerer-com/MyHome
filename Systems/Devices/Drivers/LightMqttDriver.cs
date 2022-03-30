@@ -2,10 +2,14 @@
 
 using Newtonsoft.Json.Linq;
 
+using NLog;
+
 namespace MyHome.Systems.Devices.Drivers
 {
     public class LightMqttDriver : SwitchMqttDriver
     {
+        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+
         private const string COLOR_STATE_NAME = "Color";
 
         [UiProperty]
@@ -47,7 +51,10 @@ namespace MyHome.Systems.Devices.Drivers
             }
 
             if (MyHome.Instance.MqttClient.IsConnected)
+            {
+                logger.Info($"Send state to {this.Name} ({this.Room.Name}): {value}");
                 MyHome.Instance.MqttClient.Publish(this.ColorSetMqttTopic.topic, value);
+            }
         }
     }
 }

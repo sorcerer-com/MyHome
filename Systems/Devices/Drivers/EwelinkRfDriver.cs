@@ -49,6 +49,7 @@ namespace MyHome.Systems.Devices.Drivers
             {
                 try
                 {
+                    logger.Info($"Transmit to eWeLink RF driver {this.Name} ({this.Room.Name})");
                     var ewelink = new Ewelink(this.EwelinkEmail, this.EwelinkPassword);
                     ewelink.TransmitRfChannel(this.EwelinkDeviceId, this.EwelinkRfChannel).Wait();
                 }

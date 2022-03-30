@@ -2,10 +2,14 @@
 
 using Newtonsoft.Json.Linq;
 
+using NLog;
+
 namespace MyHome.Systems.Devices.Drivers
 {
     public class SwitchMqttDriver : BaseDriver
     {
+        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+
         private const string SWITCH_STATE_NAME = "On";
 
         [UiProperty]
@@ -56,7 +60,10 @@ namespace MyHome.Systems.Devices.Drivers
             }
 
             if (MyHome.Instance.MqttClient.IsConnected)
+            {
+                logger.Info($"Send state to {this.Name} ({this.Room.Name}): {value}");
                 MyHome.Instance.MqttClient.Publish(this.IsOnSetMqttTopic.topic, value);
+            }
         }
     }
 }

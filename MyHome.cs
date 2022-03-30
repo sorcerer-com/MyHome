@@ -226,7 +226,7 @@ namespace MyHome
 
                 if (stopwatch.Elapsed > TimeSpan.FromSeconds(this.updateInterval))
                 {
-                    logger.Debug($"Update time: {stopwatch.Elapsed}");
+                    logger.Trace($"Update time: {stopwatch.Elapsed}");
                 }
                 else
                 {

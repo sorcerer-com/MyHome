@@ -6,10 +6,14 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
+using NLog;
+
 namespace MyHome.Systems.Devices.Drivers
 {
     public class AcIrMqttDriver : BaseDriver
     {
+        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+
         private enum STATE_NAMES
         {
             Power,
@@ -248,7 +252,10 @@ namespace MyHome.Systems.Devices.Drivers
             }
 
             if (MyHome.Instance.MqttClient.IsConnected)
+            {
+                logger.Info($"Send state to {this.Name} ({this.Room.Name}): {value}");
                 MyHome.Instance.MqttClient.Publish(this.StateSetMqttTopic.topic, value.ToString());
+            }
         }
     }
 }
