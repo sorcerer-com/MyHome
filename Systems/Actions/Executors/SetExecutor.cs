@@ -26,7 +26,7 @@ namespace MyHome.Systems.Actions.Executors
         {
             if (!string.IsNullOrEmpty(this.Property))
             {
-                var propertyName = this.Property.Split(new char[] { ' ', '.' })[1]; // remove object type and param type
+                var propertyName = this.Property.Split('.')[1]; // remove object type
                 if (this.Device != null)
                     SetProperty(this.Device, propertyName, this.Value);
                 else

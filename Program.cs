@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -13,6 +14,7 @@ namespace MyHome
         public static void Main(string[] args)
         {
             var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             try
             {
                 logger.Debug("Init main");

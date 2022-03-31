@@ -9,7 +9,7 @@ namespace MyHome.Systems.Actions
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0051:Remove unused private members")]
         private new GlobalEventTypes EventType { get; set; }
 
-        [UiProperty(true, selector: "GetSensorSubname")]
+        [UiProperty(true, selector: "GetSensorsSubnames")]
         public string SensorSubname { get; set; }
 
         [UiProperty(true)]

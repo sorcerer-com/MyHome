@@ -17,8 +17,7 @@ namespace MyHome.Systems.Actions.Conditions
         {
             get
             {
-                var target = this.Target[0..this.Target.LastIndexOf(' ')]; // remove target type
-                var split = target.Split(".");
+                var split = this.Target.Split(".");
                 return MyHome.Instance.Rooms.FirstOrDefault(r => r.Name == split[0]);
             }
         }
@@ -27,8 +26,7 @@ namespace MyHome.Systems.Actions.Conditions
         {
             get
             {
-                var target = this.Target[0..this.Target.LastIndexOf(' ')]; // remove target type
-                var split = target.Split(".");
+                var split = this.Target.Split(".");
                 if (split.Length > 1)
                     return this.Room?.Devices.FirstOrDefault(d => d.Name == split[1]);
                 return null;
@@ -57,7 +55,7 @@ namespace MyHome.Systems.Actions.Conditions
         {
             if (!string.IsNullOrEmpty(this.Property))
             {
-                var propertyName = this.Property.Split(new char[] { ' ', '.' })[1]; // remove object type and param type
+                var propertyName = this.Property.Split('.')[1]; // remove object type
                 object value;
                 if (this.Device != null)
                     value = GetPropertyValue(this.Device, propertyName);

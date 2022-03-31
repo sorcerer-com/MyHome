@@ -34,8 +34,7 @@ $.get(templateUrl, template => {
 
                 // room name / action name / action
                 return this.actions.Actions.reduce((rv, x) => {
-                    let target = x.Executor?.Target?.substr(0, x.Executor?.Target?.lastIndexOf(" "))
-                    let roomName = target?.split(".")[0];
+                    let roomName = x.Executor?.Target?.split(".")[0];
                     rv[roomName] = rv[roomName] || {}
                     rv[roomName][x.Name] = x;
                     return rv;

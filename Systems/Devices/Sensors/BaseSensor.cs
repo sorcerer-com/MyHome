@@ -37,7 +37,6 @@ namespace MyHome.Systems.Devices.Sensors
 
 
         [JsonIgnore]
-        [UiProperty]
         public Dictionary<string, Dictionary<string, object>> Metadata => this.GetMetadata();
 
         [JsonIgnore]

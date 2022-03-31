@@ -27,7 +27,7 @@ namespace MyHome.Systems.Actions.Executors
         {
             if (!string.IsNullOrEmpty(this.Function))
             {
-                var methodName = this.Function.Split(new char[] { ' ', '.' })[1]; // remove object type and function arguments
+                var methodName = this.Function.Split('.')[1]; // remove object type
                 if (this.Device != null)
                     CallMethod(this.Device, methodName, this.Arguments);
                 else

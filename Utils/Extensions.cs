@@ -90,9 +90,9 @@ namespace MyHome.Utils
                             mi = obj.GetType().GetMethod(uiPropertyAttr.Selector);
                         if (mi != null)
                         {
-                            var values = (IEnumerable<string>)mi.Invoke(obj, null);
+                            var values = (IEnumerable<(string, string)>)mi.Invoke(obj, null);
                             subtypes[pi.Name]["type"] = "select";
-                            subtypes[pi.Name]["select"] = values.ToList();
+                            subtypes[pi.Name]["select"] = values.ToDictionary(v => v.Item1, v => v.Item2);
                         }
                     }
                 }

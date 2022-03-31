@@ -6,27 +6,26 @@ namespace MyHome.Models
 {
     public static class Selectors
     {
-        // TODO: return Dictionary<string, string> // value / display value
-        public static IEnumerable<string> GetRooms()
+        public static IEnumerable<(string, string)> GetRooms()
         {
-            return MyHome.Instance.Rooms.Select(r => r.Name);
+            return MyHome.Instance.Rooms.Select(r => (r.Name, r.Name));
         }
 
-        public static IEnumerable<string> GetTarget()
+        public static IEnumerable<(string, string)> GetTarget()
         {
-            var result = MyHome.Instance.Rooms.Select(r => $"{r.Name} ({r.GetType().Name})");
+            var result = MyHome.Instance.Rooms.Select(r => ($"{r.Name}", $"{r.Name} ({r.GetType().Name})"));
             result = result.Union(
                 MyHome.Instance.Rooms.SelectMany(r =>
-                    r.Devices.Select(d => $"{r.Name}.{d.Name} ({d.GetType().Name})")));
+                    r.Devices.Select(d => ($"{r.Name}.{d.Name}", $"{r.Name}.{d.Name} ({d.GetType().Name})"))));
             return result;
         }
 
-        public static IEnumerable<string> GetSensorsSubnames()
+        public static IEnumerable<(string, string)> GetSensorsSubnames()
         {
-            return MyHome.Instance.Rooms.SelectMany(r => r.SensorsValues.Keys).Distinct().OrderBy(s => s);
+            return MyHome.Instance.Rooms.SelectMany(r => r.SensorsValues.Keys).Distinct().OrderBy(s => s).Select(s => (s, s));
         }
 
-        public static IEnumerable<string> GetFunctions()
+        public static IEnumerable<(string, string)> GetFunctions()
         {
             var functions = MyHome.Instance.Rooms.SelectMany(r => GetFunctions(r));
             functions = functions.Union(
@@ -35,7 +34,7 @@ namespace MyHome.Models
             return functions.Distinct();
         }
 
-        private static IEnumerable<string> GetFunctions(object obj)
+        private static IEnumerable<(string, string)> GetFunctions(object obj)
         {
             return obj.GetType()
                 .GetMethods(BindingFlags.Public | BindingFlags.Instance)
@@ -43,10 +42,10 @@ namespace MyHome.Models
                     mi.DeclaringType != typeof(object) &&
                     !mi.DeclaringType.IsAbstract &&
                     !mi.IsVirtual)
-                .Select(mi => $"{mi.DeclaringType.Name}.{mi.Name} ({string.Join(",", mi.GetParameters().Select(p => p.Name))})");
+                .Select(mi => ($"{mi.DeclaringType.Name}.{mi.Name}", $"{mi.DeclaringType.Name}.{mi.Name} ({string.Join(",", mi.GetParameters().Select(p => p.Name))})"));
         }
 
-        public static IEnumerable<string> GetProperties()
+        public static IEnumerable<(string, string)> GetProperties()
         {
             var functions = MyHome.Instance.Rooms.SelectMany(r => GetProperties(r));
             functions = functions.Union(
@@ -55,14 +54,14 @@ namespace MyHome.Models
             return functions.Distinct();
         }
 
-        private static IEnumerable<string> GetProperties(object obj)
+        private static IEnumerable<(string, string)> GetProperties(object obj)
         {
             return obj.GetType()
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(pi => pi.CanWrite &&
                     (pi.PropertyType.IsPrimitive || pi.PropertyType == typeof(string)) &&
                     !pi.DeclaringType.IsAbstract)
-                .Select(pi => $"{pi.DeclaringType.Name}.{pi.Name} ({pi.PropertyType.Name})");
+                .Select(pi => ($"{pi.DeclaringType.Name}.{pi.Name}", $"{pi.DeclaringType.Name}.{pi.Name} ({pi.PropertyType.Name})"));
         }
     }
 }

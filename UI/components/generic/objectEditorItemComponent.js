@@ -49,11 +49,6 @@ $.get(templateUrl, template => {
             },
             delDictItem: function (name) {
                 Vue.delete(this.value, name);
-            },
-            getSelectValues: function () {
-                if (!this.valueType.startsWith("Select"))
-                    return [];
-                return this.valueType.replace("Select: ", "").split(", ");
             }
         },
         watch: {

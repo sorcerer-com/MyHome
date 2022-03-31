@@ -60,21 +60,18 @@ namespace MyHome.Systems.Devices.Sensors
                     this.capture.Set(CaptureProperty.BufferSize, 1);
                 }
 
-                lock (this.capture)
+                // if capture isn't opened try again but only if the previous try was at least 1 minute ago
+                if (!this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(1))
                 {
-                    // if capture isn't opened try again but only if the previous try was at least 1 minute ago
-                    if (!this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(1))
-                    {
-                        logger.Info($"Opening camera: {this.Name} ({this.Room.Name})");
-                        if (int.TryParse(this.Address, out int device))
-                            this.capture.Open(device);
-                        else
-                            this.capture.Open(this.GetStreamAddress());
-                        this.lastUse = DateTime.Now;
-                    }
-                    if (this.capture.IsOpened())
-                        this.lastUse = DateTime.Now;
+                    logger.Info($"Opening camera: {this.Name} ({this.Room.Name})");
+                    if (int.TryParse(this.Address, out int device))
+                        this.capture.Open(device);
+                    else
+                        this.capture.Open(this.GetStreamAddress());
+                    this.lastUse = DateTime.Now;
                 }
+                if (this.capture.IsOpened())
+                    this.lastUse = DateTime.Now;
 
                 return this.capture;
             }
@@ -135,8 +132,11 @@ namespace MyHome.Systems.Devices.Sensors
                 this.Capture.Read(image);
                 if (image.Empty())
                 {
-                    this.Capture.Release(); // try to release the camera and open it again next time
-                    this.lastUse = DateTime.Now.AddMinutes(-1);
+                    if (this.Capture.IsOpened())
+                    {
+                        this.Capture.Release(); // try to release the camera and open it again next time
+                        this.lastUse = DateTime.Now.AddMinutes(-1);
+                    }
                     if (!initIfEmpty)
                         return null;
                     image = new Mat(480, 640, MatType.CV_8UC3, 0);

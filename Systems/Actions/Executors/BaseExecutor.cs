@@ -12,8 +12,7 @@ namespace MyHome.Systems.Actions.Executors
         {
             get
             {
-                var target = this.Target[0..this.Target.LastIndexOf(' ')]; // remove target type
-                var split = target.Split(".");
+                var split = this.Target.Split(".");
                 return MyHome.Instance.Rooms.FirstOrDefault(r => r.Name == split[0]);
             }
         }
@@ -22,8 +21,7 @@ namespace MyHome.Systems.Actions.Executors
         {
             get
             {
-                var target = this.Target[0..this.Target.LastIndexOf(' ')]; // remove target type
-                var split = target.Split(".");
+                var split = this.Target.Split(".");
                 if (split.Length > 1)
                     return this.Room?.Devices.FirstOrDefault(d => d.Name == split[1]);
                 return null;
