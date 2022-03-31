@@ -51,7 +51,10 @@
                     </select>
                 </div>
 
-                <object-editor v-bind:object="edit.object" v-bind:onsave="edit.onSave"></object-editor>
+                <object-editor v-bind:object="edit.object"
+                               v-bind:onsave="edit.onSave"
+                               v-bind:settings="true">
+                </object-editor>
 
                 <a class="w3-button w3-round w3-padding-small w3-white w3-hover-blue margin-8"
                    title="Clone"

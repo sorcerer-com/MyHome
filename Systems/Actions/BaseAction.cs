@@ -19,10 +19,10 @@ namespace MyHome.Systems.Actions
 
         // TODO: multiple conditions and executors
 
-        [UiProperty(true)]
+        [UiProperty]
         public BaseCondition ActionCondition { get; set; }
 
-        [UiProperty(true)]
+        [UiProperty]
         public BaseExecutor Executor { get; set; }
 
 

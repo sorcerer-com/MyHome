@@ -25,7 +25,7 @@ namespace MyHome.Utils
             Task.WaitAll(source.Select(i => Task.Run(() => action.Invoke(i))).ToArray());
         }
 
-        public static object ToUiObject(this object obj, bool settingsOnly = false)
+        public static object ToUiObject(this object obj)
         {
             if (obj == null)
                 return null;
@@ -54,7 +54,7 @@ namespace MyHome.Utils
                 var dict = new Dictionary<object, object>();
                 var value = (IDictionary)obj;
                 foreach (var key in value.Keys)
-                    dict.Add(key, value[key].ToUiObject(settingsOnly));
+                    dict.Add(key, value[key].ToUiObject());
                 return dict;
             }
             else if (type.GetInterface(nameof(IEnumerable)) != null)
@@ -63,14 +63,13 @@ namespace MyHome.Utils
                 var list = new List<object>();
                 var value = (IEnumerable)obj;
                 foreach (var item in value)
-                    list.Add(item.ToUiObject(settingsOnly));
+                    list.Add(item.ToUiObject());
                 return list;
             }
             else
             {
                 var result = new Dictionary<string, object>();
-                var subtypes = new Dictionary<string, string>();
-                var hints = new Dictionary<string, string>();
+                var subtypes = new Dictionary<string, Dictionary<string, object>>();
 
                 var pis = obj.GetType().GetProperties();
                 foreach (var pi in pis)
@@ -79,12 +78,10 @@ namespace MyHome.Utils
                     if (uiPropertyAttr == null)
                         continue;
 
-                    if (settingsOnly && !uiPropertyAttr.Setting)
-                        continue;
-
-                    result[pi.Name] = pi.GetValue(obj).ToUiObject(settingsOnly);
+                    result[pi.Name] = pi.GetValue(obj).ToUiObject();
                     subtypes[pi.Name] = pi.PropertyType.ToUiType();
-                    hints[pi.Name] = uiPropertyAttr.Hint;
+                    subtypes[pi.Name]["setting"] = uiPropertyAttr.Setting;
+                    subtypes[pi.Name]["hint"] = uiPropertyAttr.Hint;
 
                     if (!string.IsNullOrEmpty(uiPropertyAttr.Selector))
                     {
@@ -94,36 +91,39 @@ namespace MyHome.Utils
                         if (mi != null)
                         {
                             var values = (IEnumerable<string>)mi.Invoke(obj, null);
-                            subtypes[pi.Name] = $"Select: {string.Join(", ", values)}";
+                            subtypes[pi.Name]["type"] = "select";
+                            subtypes[pi.Name]["select"] = values.ToList();
                         }
                     }
                 }
                 result.Add("$type", obj.GetType().ToString());
                 result.Add("$subtypes", subtypes);
-                result.Add("$hints", hints);
                 return result;
             }
         }
 
-        public static string ToUiType(this Type type)
+        private static Dictionary<string, object> ToUiType(this Type type)
         {
+            var result = new Dictionary<string, object>();
+
             var name = type.Name
                 .Replace("`1", "")
                 .Replace("`2", "")
                 .Replace("IEnumerable", "List")
                 .Replace("ObservableCollection", "List");
+            result["type"] = name;
 
             if (type.IsGenericType)
             {
                 var genericTypes = type.GenericTypeArguments.Select(t => t.ToUiType());
-                return $"{name} <{string.Join(", ", genericTypes)}>";
+                result["genericTypes"] = genericTypes.ToList();
             }
             else if (type.IsEnum)
             {
-                var values = type.GetFields().Where(f => f.IsLiteral).Select(f => type.Name + "." + f.Name);
-                return $"Enum ({string.Join(", ", values)})";
+                var values = type.GetFields().Where(f => f.IsLiteral).Select(f => f.Name);
+                result["enums"] = values.ToList();
             }
-            return name;
+            return result;
         }
 
         public static void SetObject(this Microsoft.AspNetCore.Http.IFormCollection form, object obj)
@@ -133,6 +133,9 @@ namespace MyHome.Utils
             var type = obj.GetType();
             foreach (var item in form)
             {
+                if (item.Key.Contains("$subtypes"))
+                    continue;
+
                 var propName = item.Key.Replace("[]", "");
                 if (propName.Contains('[')) // dictionary
                     propName = propName[..item.Key.IndexOf('[')];

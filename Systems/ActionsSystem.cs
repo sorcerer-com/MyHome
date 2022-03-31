@@ -7,7 +7,7 @@ namespace MyHome.Systems
 {
     public class ActionsSystem : BaseSystem
     {
-        [UiProperty(true)]
+        [UiProperty]
         public List<BaseAction> Actions { get; }
 
 

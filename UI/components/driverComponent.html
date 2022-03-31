@@ -40,6 +40,7 @@
             <div class="w3-container w3-text-white w3-padding-16 height-100 overflow-y-auto bg-gray">
                 <object-editor v-if="driver.$type.endsWith('AcIrMqttDriver')"
                                v-bind:object="modalObject"
+                               v-bind:settings="false"
                                v-bind:onsave="save"></object-editor>
             </div>
         </div>

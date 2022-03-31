@@ -49,7 +49,7 @@
                     </select>
                 </div>
 
-                <object-editor v-bind:object="edit.action"></object-editor>
+                <object-editor v-bind:object="edit.action" v-bind:settings="true"></object-editor>
 
                 <div class="w3-margin-bottom" v-if="edit.action && edit.types['condition']">
                     <span class="w3-right-align">Condition Types:</span>
@@ -62,7 +62,10 @@
                     </select>
                 </div>
 
-                <object-editor v-if="edit.action?.ActionCondition" v-bind:object="edit.action.ActionCondition"></object-editor>
+                <object-editor v-if="edit.action?.ActionCondition" 
+                               v-bind:object="edit.action.ActionCondition" 
+                               v-bind:settings="true">
+                </object-editor>
 
                 <div class="w3-margin-bottom" v-if="edit.action && edit.types['executor']">
                     <span class="w3-right-align">Executor Types:</span>
@@ -75,7 +78,10 @@
                     </select>
                 </div>
 
-                <object-editor v-if="edit.action?.Executor" v-bind:object="edit.action.Executor"></object-editor>
+                <object-editor v-if="edit.action?.Executor"
+                               v-bind:object="edit.action.Executor"
+                               v-bind:settings="true">
+                </object-editor>
 
                 <div class="w3-center">
                     <a class="w3-button w3-round w3-padding-small w3-white w3-hover-blue-grey margin-8" title="Save"

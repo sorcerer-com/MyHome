@@ -28,7 +28,7 @@ namespace MyHome.Controllers
         [HttpGet("config")]
         public ActionResult GetConfig()
         {
-            return this.Ok(this.myHome.Config.ToUiObject(true));
+            return this.Ok(this.myHome.Config.ToUiObject());
         }
 
         [HttpPost("config")]

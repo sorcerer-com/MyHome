@@ -6,6 +6,7 @@ namespace MyHome.Models
 {
     public static class Selectors
     {
+        // TODO: return Dictionary<string, string> // value / display value
         public static IEnumerable<string> GetRooms()
         {
             return MyHome.Instance.Rooms.Select(r => r.Name);

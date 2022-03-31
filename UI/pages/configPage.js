@@ -23,7 +23,7 @@ $.get(templateUrl, template => {
                 if (this._isDestroyed)
                     return;
 
-                getRooms(true).done(rooms => {
+                getRooms().done(rooms => {
                     Vue.set(this, "rooms", rooms);
                     setTimeout(this.refreshData, 3000);
                 }).fail(() => {

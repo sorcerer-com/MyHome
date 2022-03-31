@@ -28,19 +28,19 @@ namespace MyHome.Controllers
 
 
         [HttpGet]
-        public ActionResult GetSystems(bool settings)
+        public ActionResult GetSystems()
         {
-            return this.Ok(this.myHome.Systems.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToUiObject(settings)));
+            return this.Ok(this.myHome.Systems.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToUiObject()));
         }
 
         [HttpGet("{systemName}")]
-        public ActionResult GetSystem(string systemName, bool settings)
+        public ActionResult GetSystem(string systemName)
         {
             var system = this.myHome.Systems.Values.FirstOrDefault(s => s.Name.ToLower() == systemName.ToLower());
             if (system == null)
                 return this.NotFound($"System '{systemName}' not found");
 
-            return this.Ok(system.ToUiObject(settings));
+            return this.Ok(system.ToUiObject());
         }
 
         [HttpPost("{systemName}")]
@@ -105,7 +105,7 @@ namespace MyHome.Controllers
                 return this.NotFound("No such action type: " + actionType);
 
             var action = (BaseAction)Activator.CreateInstance(type, true);
-            return this.Ok(action.ToUiObject(true));
+            return this.Ok(action.ToUiObject());
         }
 
         [HttpPost("Actions/Condition/create/{conditionType}")]
@@ -116,7 +116,7 @@ namespace MyHome.Controllers
                 return this.NotFound("No such condition type: " + conditionType);
 
             var condition = (BaseCondition)Activator.CreateInstance(type, true);
-            return this.Ok(condition.ToUiObject(true));
+            return this.Ok(condition.ToUiObject());
         }
 
         [HttpPost("Actions/Executor/create/{executorType}")]
@@ -127,7 +127,7 @@ namespace MyHome.Controllers
                 return this.NotFound("No such executor type: " + executorType);
 
             var executor = (BaseExecutor)Activator.CreateInstance(type, true);
-            return this.Ok(executor.ToUiObject(true));
+            return this.Ok(executor.ToUiObject());
         }
 
         [HttpPost("Actions/{actionName}")]

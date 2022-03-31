@@ -1,65 +1,62 @@
 ﻿<div>
     <!-- bool -->
-    <select v-if="valueType == 'Boolean'" v-model="localValue" v-bind:title="getTitle()" class="w3-col m10 w3-mobile">
+    <select v-if="valueInfo.type == 'Boolean'" v-model="value" v-bind:title="getTitle()" class="w3-col m10 w3-mobile">
         <option value="true">True</option>
         <option value="false">False</option>
     </select>
 
     <!-- enum -->
-    <select v-if="valueType.startsWith('Enum')" v-model="localValue" v-bind:title="getTitle()" class="w3-col m10 w3-mobile">
-        <option v-for="v of getEnumValues()" v-bind:value="v">{{v.split(".")[1]}}</option>
+    <select v-if="valueInfo.enums" v-model="value" v-bind:title="getTitle()" class="w3-col m10 w3-mobile">
+        <option v-for="v of valueInfo.enums" v-bind:value="valueInfo.type + '.' + v">{{v}}</option>
     </select>
 
     <!-- int -->
-    <input v-if="valueType.startsWith('Int')" v-model="localValue" v-bind:title="getTitle()" type="number" class="w3-col m10 w3-mobile" />
+    <input v-if="valueInfo.type.startsWith('Int')" v-model="value" v-bind:title="getTitle()" type="number" class="w3-col m10 w3-mobile" />
 
     <!-- double -->
-    <input v-if="valueType == 'Double'" v-model="localValue" v-bind:title="getTitle()" type="number" step="0.01" class="w3-col m10 w3-mobile" />
+    <input v-if="valueInfo.type == 'Double'" v-model="value" v-bind:title="getTitle()" type="number" step="0.01" class="w3-col m10 w3-mobile" />
 
     <!-- datetime -->
-    <input v-if="valueType == 'DateTime'" v-model="localValue" v-bind:title="getTitle()" type="datetime-local" class="w3-col m10 w3-mobile" />
+    <input v-if="valueInfo.type == 'DateTime'" v-model="localDateTime" v-bind:title="getTitle()" type="datetime-local" class="w3-col m10 w3-mobile" />
 
     <!-- timespan -->
-    <input v-if="valueType == 'TimeSpan'" v-model="localValue" v-bind:title="getTitle()" type="time" class="w3-col m10 w3-mobile" />
+    <input v-if="valueInfo.type == 'TimeSpan'" v-model="value" v-bind:title="getTitle()" type="time" class="w3-col m10 w3-mobile" />
 
     <!-- string -->
-    <input v-if="valueType == 'String'" v-model="localValue" v-bind:title="getTitle()" type="text" class="w3-col m10 w3-mobile" />
+    <input v-if="valueInfo.type == 'String'" v-model="value" v-bind:title="getTitle()" type="text" class="w3-col m10 w3-mobile" />
 
     <!-- tuple -->
-    <input v-if="valueType.startsWith('ValueTuple')" v-model="localValue" v-bind:title="getTitle()" type="text" class="w3-col m10 w3-mobile" />
+    <input v-if="valueInfo.type.startsWith('ValueTuple')" v-model="value" v-bind:title="getTitle()" type="text" class="w3-col m10 w3-mobile" />
 
     <!-- list -->
-    <div v-if="valueType.startsWith('List')">
-        <div v-for="(item, index) of localValue" v-bind:key="index"
+    <div v-if="valueInfo.type == 'List'">
+        <div v-for="(item, index) of value" v-bind:key="index"
              class="margin-bottom-8">
             <object-editor-item v-bind:value="item"
-                                v-bind:value-type="getListType()"
-                                v-bind:hint="hint"
-                                v-on:change="value => onListChange(index, value)">
+                                v-bind:value-info="getListValueInfo()"
+                                v-on:change="v => onListChange(index, v)">
             </object-editor-item>
             <a class="font-size-normal w3-cell-middle w3-hover-text-red material-icons" title="Remove"
-               v-on:click="localValue.splice(index, 1)">
+               v-on:click="value.splice(index, 1)">
                 remove
             </a>
         </div>
         <a class="material-icons w3-hover-text-light-green" title="Add new"
-           v-on:click="localValue.push('')">
+           v-on:click="value.push('')">
             add_circle
         </a>
     </div>
 
     <!-- dictionary -->
-    <div v-if="valueType.startsWith('Dictionary')">
-        <div v-for="(value, name) of localValue" v-bind:key="name"
+    <div v-if="valueInfo.type == 'Dictionary'">
+        <div v-for="(value, name) of value" v-bind:key="name"
              class="w3-show-inline-block margin-bottom-8">
             <object-editor-item v-bind:value="name"
-                                v-bind:value-type="getDictTypes()[0]"
-                                v-bind:hint="hint"
-                                v-on:change="newName => onDictKeyChange(name, newName)">
+                                v-bind:value-info="getDictValueInfo(0)"
+                                v-on:change="newName => debounceOnDictKeyChange(name, newName)">
             </object-editor-item>
             <object-editor-item v-bind:value="value"
-                                v-bind:value-type="getDictTypes()[1]"
-                                v-bind:hint="hint"
+                                v-bind:value-info="getDictValueInfo(1)"
                                 v-on:change="value => onDictValueChange(name, value)">
             </object-editor-item>
             <a class="font-size-normal w3-cell-middle w3-hover-text-red material-icons" title="Remove"
@@ -74,8 +71,8 @@
     </div>
 
     <!-- select -->
-    <select v-if="valueType.startsWith('Select')" v-model="localValue" v-bind:title="getTitle()" class="w3-col m10 w3-mobile">
+    <select v-if="valueInfo.type == 'select'" v-model="value" v-bind:title="getTitle()" class="w3-col m10 w3-mobile">
         <option value="" disabled selected hidden>Select</option>
-        <option v-for="v of getSelectValues()" v-bind:value="v">{{v}}</option>
+        <option v-for="v of valueInfo.select" v-bind:value="v">{{v}}</option>
     </select>
 </div>

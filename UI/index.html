@@ -16,6 +16,7 @@
     <script src="./external/Chart.bundle.min.js"></script>
 
     <link rel="stylesheet" href="./style.css" />
+    <script src="./apis.js"></script>
     <script src="./scripts.js"></script>
 
     <script src="./components/generic/objectEditorItemComponent.js"></script>
@@ -190,6 +191,7 @@
                     </div>
                     <object-editor v-if="modal == 'Settings'"
                                    v-bind:object="settings[selectedSettings]"
+                                   v-bind:settings="true"
                                    v-bind:onsave="saveSettings"></object-editor>
                     <a class="w3-button w3-right w3-round w3-padding-small w3-white w3-hover-blue-grey margin-8"
                        title="Restart system"

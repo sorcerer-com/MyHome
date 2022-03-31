@@ -16,15 +16,13 @@ namespace MyHome.Models
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
-        public MyHome Owner { get; set; }
-
         [UiProperty(true)]
         public string Name { get; set; }
 
 
         [JsonIgnore]
         [UiProperty(true)]
-        public IEnumerable<Device> Devices => this.Owner.DevicesSystem.Devices.Where(d => d.Room == this);
+        public IEnumerable<Device> Devices => MyHome.Instance.DevicesSystem.Devices.Where(d => d.Room == this);
 
         [JsonIgnore]
         public IEnumerable<BaseSensor> Sensors => this.Devices.OfType<BaseSensor>();
@@ -37,19 +35,19 @@ namespace MyHome.Models
         [UiProperty]
         public bool IsSecuritySystemEnabled
         {
-            get => this.Owner.SecuritySystem.ActivatedRooms.ContainsKey(this);
-            set => this.Owner.SecuritySystem.SetEnable(this, value);
+            get => MyHome.Instance.SecuritySystem.ActivatedRooms.ContainsKey(this);
+            set => MyHome.Instance.SecuritySystem.SetEnable(this, value);
         }
 
         [JsonIgnore]
         [UiProperty]
         public bool IsSecuritySystemActivated
         {
-            get => this.Owner.SecuritySystem.ActivatedRooms.GetValueOrDefault(this);
+            get => MyHome.Instance.SecuritySystem.ActivatedRooms.GetValueOrDefault(this);
             set
             {
                 if (value)
-                    this.Owner.SecuritySystem.Activate(this);
+                    MyHome.Instance.SecuritySystem.Activate(this);
                 else
                     logger.Warn($"Try to deactivate security system on room: {this.Name}");
             }
@@ -58,8 +56,8 @@ namespace MyHome.Models
         [JsonIgnore]
         [UiProperty]
         public Dictionary<DateTime, string> SecurityHistory =>
-            this.Owner.SecuritySystem.History.ContainsKey(this.Name)
-                    ? this.Owner.SecuritySystem.History[this.Name]
+            MyHome.Instance.SecuritySystem.History.ContainsKey(this.Name)
+                    ? MyHome.Instance.SecuritySystem.History[this.Name]
                     : new Dictionary<DateTime, string>();
 
         [JsonIgnore]
@@ -71,18 +69,17 @@ namespace MyHome.Models
         public Dictionary<string, Dictionary<string, string>> SensorsMetadata => this.GetSensorsMetadata();
 
 
-        private Room() : this(null, null) { } // for json deserialization
+        private Room() : this(null) { } // for json deserialization
 
-        public Room(MyHome owner, string name)
+        public Room(string name)
         {
-            this.Owner = owner;
             this.Name = name;
         }
 
 
         public bool SendAlert(string message)
         {
-            return this.Owner.SendAlert($"'{this.Name}' room alert: {message}");
+            return MyHome.Instance.SendAlert($"'{this.Name}' room alert: {message}");
         }
 
 

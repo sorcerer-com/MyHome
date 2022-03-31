@@ -28,15 +28,15 @@ namespace MyHome.Controllers
 
 
         [HttpGet]
-        public ActionResult GetRooms(bool settings)
+        public ActionResult GetRooms()
         {
-            return this.Ok(this.myHome.Rooms.Select(r => r.ToUiObject(settings)));
+            return this.Ok(this.myHome.Rooms.Select(r => r.ToUiObject()));
         }
 
         [HttpPost("create")]
         public ActionResult CreateRoom()
         {
-            return this.Ok(new Models.Room(this.myHome, "New Room").ToUiObject(true));
+            return this.Ok(new Models.Room("New Room").ToUiObject());
         }
 
         [HttpPost("{roomName}")]
@@ -48,7 +48,7 @@ namespace MyHome.Controllers
                 if (room == null)
                 {
                     logger.Info($"Add room '{roomName}'");
-                    room = new Models.Room(this.myHome, roomName);
+                    room = new Models.Room(roomName);
                     this.myHome.Rooms.Add(room);
                 }
 
@@ -103,7 +103,7 @@ namespace MyHome.Controllers
             var device = (Device)Activator.CreateInstance(type, true);
             device.Name = "New " + deviceType;
             device.Room = room;
-            return this.Ok(device.ToUiObject(true));
+            return this.Ok(device.ToUiObject());
         }
 
         [HttpPost("{roomName}/devices/{deviceName}")]

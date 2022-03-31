@@ -3,54 +3,52 @@ var templateUrl = scriptSrc.substr(0, scriptSrc.lastIndexOf(".")) + ".html";
 $.get(templateUrl, template => {
     Vue.component("object-editor-item", {
         template: template,
-        props: ["value", "value-type", "hint"],
+        props: ["value", "value-info"],
         data: function () {
             return {
-                localValue: null
+                debounceOnDictKeyChange: debounce(this.onDictKeyChange, 1000), // set only after no changes in 1 sec
+            }
+        },
+        computed: {
+            localDateTime: {
+                get: function () {
+                    return this.value.substr(0, 16);
+                },
+                set: function (newValue) {
+                    this.value = newValue + ":00";
+                }
             }
         },
         methods: {
-            updateLocalValue: function () {
-                if (this.valueType == "DateTime")
-                    this.localValue = this.value.substr(0, 16);
-                else
-                    this.localValue = this.value;
-            },
-
             getTitle: function () {
-                return (this.localValue + "\n" + this.hint).trim();
+                return (this.value + "\n" + this.valueInfo.hint).trim();
             },
-            getEnumValues: function () {
-                if (!this.valueType.startsWith("Enum"))
-                    return [];
-                return this.valueType.replace("Enum (", "").replace(")", "").split(", ");
-            },
-            getListType: function () {
-                return this.valueType.replace("List <", "").replace(">", "");
+            getListValueInfo: function () {
+                return { ...this.valueInfo.genericTypes[0], hint: this.valueInfo.hint, setting: this.valueInfo.setting };
             },
             onListChange: function (index, value) {
-                this.localValue[index] = value;
-                this.$emit("change", this.localValue);
+                this.value[index] = value;
+                this.$emit("change", this.value);
             },
-            getDictTypes: function () {
-                return splitTypes(this.valueType.replace("Dictionary <", "").replace(">", ""));
-            },
-            delDictItem: function (name) {
-                Vue.delete(this.localValue, name);
-            },
-            addDictItem: function () {
-                Vue.set(this.localValue, "", "");
+            getDictValueInfo: function (typeIdx) {
+                return { ...this.valueInfo.genericTypes[typeIdx], hint: this.valueInfo.hint, setting: this.valueInfo.setting };
             },
             onDictKeyChange: function (oldKey, newKey) {
                 if (oldKey != newKey) {
-                    Vue.set(this.localValue, newKey, this.localValue[oldKey]);
-                    Vue.delete(this.localValue, oldKey);
-                    this.$emit("change", this.localValue);
+                    Vue.set(this.value, newKey, this.value[oldKey]);
+                    Vue.delete(this.value, oldKey);
+                    this.$emit("change", this.value);
                 }
             },
             onDictValueChange: function (key, value) {
-                Vue.set(this.localValue, key, value);
-                this.$emit("change", this.localValue);
+                Vue.set(this.value, key, value);
+                this.$emit("change", this.value);
+            },
+            addDictItem: function () {
+                Vue.set(this.value, "", "");
+            },
+            delDictItem: function (name) {
+                Vue.delete(this.value, name);
             },
             getSelectValues: function () {
                 if (!this.valueType.startsWith("Select"))
@@ -58,15 +56,9 @@ $.get(templateUrl, template => {
                 return this.valueType.replace("Select: ", "").split(", ");
             }
         },
-        created: function () {
-            this.updateLocalValue();
-        },
         watch: {
             value: function () {
-                this.updateLocalValue();
-            },
-            localValue: function () {
-                this.$emit("change", this.localValue);
+                this.$emit("change", this.value);
             }
         }
     });

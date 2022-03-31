@@ -20,7 +20,7 @@ $.get(templateUrl, template => {
                 if (this._isDestroyed)
                     return;
 
-                getSystem("Actions", true).done(actions => {
+                getSystem("Actions").done(actions => {
                     Vue.set(this, "actions", actions);
                     setTimeout(this.refreshData, 3000);
                 }).fail(() => {
@@ -63,7 +63,7 @@ $.get(templateUrl, template => {
             onTypeChange: function (event) {
                 createAction(event.target.value).done(action => {
                     action.Name = "New Action";
-                    action["$subtypes"]["Name"] = "String";
+                    action["$subtypes"]["Name"] = { type: "String", setting: true, hint: "" };
                     this.edit.action = action;
                 });
             },
