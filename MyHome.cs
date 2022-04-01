@@ -17,6 +17,8 @@ using Newtonsoft.Json.Serialization;
 
 using NLog;
 
+using Jint;
+
 namespace MyHome
 {
     public sealed class MyHome : IDisposable
@@ -33,6 +35,7 @@ namespace MyHome
 
         public static MyHome Instance { get; private set; }
 
+
         public Config Config { get; }
 
         [JsonIgnore]
@@ -40,6 +43,10 @@ namespace MyHome
 
         [JsonIgnore]
         public MqttClientWrapper MqttClient { get; }
+
+        [JsonIgnore]
+        public Engine JintEngine { get; }
+
 
         public List<Room> Rooms { get; }
 
@@ -72,6 +79,9 @@ namespace MyHome
             //   - too many sensor values, merge Water Switch and Water State somehow
             // * multiple sensor graphics at once (for one sensor subname - motion, by multiple devices too)
 
+            // TODO: add test "Execute" button in action's edit/add modal
+            // TODO: change UI auto-refresh to use websocket (if supported only)? - server notify clients to refresh their data
+            
             logger.Info("Start My Home");
             Instance = this;
             using (var repo = new Repository("."))
@@ -83,6 +93,12 @@ namespace MyHome
             this.Config = new Config();
             this.Events = new GlobalEvent();
             this.MqttClient = new MqttClientWrapper();
+            this.JintEngine = new Jint.Engine(options =>
+            {
+                options.LimitMemory(4_000_000); // 4MB
+                options.TimeoutInterval(TimeSpan.FromSeconds(5));
+                options.MaxStatements(1000);
+            });
 
             this.Rooms = new List<Room>();
 
@@ -351,5 +367,7 @@ namespace MyHome
                 return false;
             }
         }
+
+        public Room GetRoom(string name) => this.Rooms.FirstOrDefault(r => r.Name == name);
     }
 }

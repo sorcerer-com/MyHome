@@ -25,8 +25,8 @@ namespace MyHome.Systems.Devices.Sensors
         [UiProperty(true, "names")]
         public List<string> SumAggregated { get; } // subnames
 
-        [UiProperty(true, "name / addition, multiplier")]
-        public Dictionary<string, (double addition, double multiplier)> Calibration { get; } // calibration values per subname: newValue = (realValue + addition) * multiplier
+        [UiProperty(true, "name / expression of x")]
+        public Dictionary<string, string> Calibration { get; } // calibration values per subname: newValue = expression(realValue)
 
         [UiProperty(true, "name / unit")]
         public Dictionary<string, string> Units { get; } // subname / unit name (if not provide by metadata)
@@ -49,7 +49,7 @@ namespace MyHome.Systems.Devices.Sensors
             this.Data = new Dictionary<DateTime, SensorValue>();
             this.SubNamesMap = new Dictionary<string, string>();
             this.SumAggregated = new List<string>();
-            this.Calibration = new Dictionary<string, (double addition, double multiplier)>();
+            this.Calibration = new Dictionary<string, string>();
             this.Units = new Dictionary<string, string>();
 
             this.LastReadings = new Dictionary<string, double>();
@@ -73,7 +73,11 @@ namespace MyHome.Systems.Devices.Sensors
 
                 var value = (item.Value is bool b) ? (b ? 1 : 0) : (double)item.Value;
                 if (this.Calibration.ContainsKey(name)) // mapped name
-                    value = (value + this.Calibration[name].addition) * this.Calibration[name].multiplier;
+                {
+                    Utils.Utils.Retry(_ =>
+                        value = (double)MyHome.Instance.JintEngine.SetValue("x", value).Evaluate(this.Calibration[name]).ToObject(),
+                        1, logger, "calculate value");
+                }
 
                 var sumAggr = this.SumAggregated.Contains(name);
                 if (!sumAggr)
