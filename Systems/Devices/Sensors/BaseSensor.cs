@@ -74,9 +74,8 @@ namespace MyHome.Systems.Devices.Sensors
                 var value = (item.Value is bool b) ? (b ? 1 : 0) : (double)item.Value;
                 if (this.Calibration.ContainsKey(name)) // mapped name
                 {
-                    Utils.Utils.Retry(_ =>
-                        value = (double)MyHome.Instance.JintEngine.SetValue("x", value).Evaluate(this.Calibration[name]).ToObject(),
-                        1, logger, "calculate value");
+                    MyHome.Instance.ExecuteJint(jint => value = (double)jint.SetValue("x", value).Evaluate(this.Calibration[name]).ToObject(),
+                        "calculate value: " + this.Calibration[name]);
                 }
 
                 var sumAggr = this.SumAggregated.Contains(name);

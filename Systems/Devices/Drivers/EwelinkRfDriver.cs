@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 using MyHome.Utils;
 using MyHome.Utils.Ewelink;

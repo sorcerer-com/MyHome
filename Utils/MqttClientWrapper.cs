@@ -97,7 +97,8 @@ namespace MyHome.Utils
             if (string.IsNullOrEmpty(topic))
                 return;
 
-            logger.Trace($"Unsubscribe MQTT client '{this.MqttClient.Options.ClientId}' for topic: {topic} ({this.Subscriptions[topic]})");
+            logger.Trace($"Unsubscribe MQTT client '{this.MqttClient.Options.ClientId}' for topic: {topic} " +
+                $"({(this.Subscriptions.ContainsKey(topic) ? this.Subscriptions[topic] : 0)})");
             if (this.Subscriptions.ContainsKey(topic))
             {
                 this.Subscriptions[topic] = this.Subscriptions[topic] - 1;

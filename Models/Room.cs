@@ -82,7 +82,6 @@ namespace MyHome.Models
             return MyHome.Instance.SendAlert($"'{this.Name}' room alert: {message}");
         }
 
-
         private Dictionary<string, double> GetSensorsValues()
         {
             return this.Sensors.Select(s => s.Values)

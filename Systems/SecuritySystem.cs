@@ -190,10 +190,10 @@ namespace MyHome.Systems
                     }
                 }
 
-                if (DateTime.Now - imageClearTimer > TimeSpan.FromMinutes(this.SendInterval))
+                if (DateTime.Now - this.imageClearTimer > TimeSpan.FromMinutes(this.SendInterval))
                 {
-                    imageClearTimer = DateTime.Now;
-                    ClearImages();
+                    this.imageClearTimer = DateTime.Now;
+                    this.ClearImages();
                 }
             }
         }

@@ -1,7 +1,12 @@
-﻿
-using MyHome.Systems.Actions.Conditions;
-using MyHome.Systems.Actions.Executors;
+﻿using System;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
+using MyHome.Models;
 using MyHome.Utils;
+
+using Newtonsoft.Json;
 
 using NLog;
 
@@ -17,13 +22,19 @@ namespace MyHome.Systems.Actions
         [UiProperty(true)]
         public bool IsEnabled { get; set; }
 
-        // TODO: multiple conditions and executors
+        [JsonProperty]
+        private Room targetRoom;
+
+        [JsonIgnore]
+        [UiProperty(true, selector: "GetRooms")]
+        public string TargetRoomName
+        {
+            get => this.targetRoom?.Name ?? "";
+            set => this.targetRoom = MyHome.Instance.Rooms.FirstOrDefault(r => r.Name == value);
+        }
 
         [UiProperty]
-        public BaseCondition ActionCondition { get; set; }
-
-        [UiProperty]
-        public BaseExecutor Executor { get; set; }
+        public string Script { get; set; }
 
 
         protected BaseAction()
@@ -34,26 +45,43 @@ namespace MyHome.Systems.Actions
         public virtual void Setup()
         {
             logger.Debug($"Setup action: {this.Name}");
-            if (this.Executor == null)
-                logger.Warn($"Action '{this.Name}' hasn't executor");
+            if (string.IsNullOrEmpty(this.Script))
+                logger.Warn($"Action '{this.Name}' script is empty");
         }
 
         public virtual void Update()
         {
         }
 
-        protected void Trigger()
+        public Task<bool> Trigger(bool asyncExec = true)
         {
             logger.Trace($"Action triggered: {this.Name}");
             if (this.IsEnabled)
             {
-                if (this.ActionCondition?.Check() != false) // if there is no condition or it's true
-                    this.Executor?.Execute();
-                else
-                    logger.Trace("Action condition doesn't met");
+                var script = Regex.Replace(this.Script, @" as \w*", ""); // remove " as <Type>" casts
+                if (asyncExec)
+                    return Task.Run(() => this.ExecuteScript(script));
+                else if (!this.ExecuteScript(script))
+                    return Task.FromResult(false);
             }
             else
                 logger.Trace("Action is disabled");
+            return Task.FromResult(true);
+        }
+
+
+        private bool ExecuteScript(string script)
+        {
+            logger.Trace($"Execute script: {script}");
+            // TODO: send alert if failed?
+            return MyHome.Instance.ExecuteJint(jint => jint
+                        .SetValue("logger", logger)
+                        .SetValue("myHome", MyHome.Instance)
+                        .SetValue("Rooms", MyHome.Instance.Rooms.ToDictionary(r => r.Name.Replace(" ", "")))
+                        .SetValue("Devices", MyHome.Instance.Rooms.ToDictionary(r => r.Name.Replace(" ", ""),
+                                                    r => r.Devices.ToDictionary(d => d.Name.Replace(" ", ""))))
+                        .Evaluate($"{{ {script} }}"),
+                        $"execute action '{this.Name}' script:\n{script}");
         }
     }
 }

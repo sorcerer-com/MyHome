@@ -60,20 +60,16 @@ function createAction(actionType) {
     return $.post(`./api/systems/Actions/create/${actionType}`);
 }
 
-function createActionCondition(conditionType) {
-    return $.post(`./api/systems/Actions/Condition/create/${conditionType}`);
-}
-
-function createActionExecutor(executorType) {
-    return $.post(`./api/systems/Actions/Executor/create/${executorType}`);
-}
-
 function setAction(actionName, data) {
     return $.post(`./api/systems/Actions/${actionName}`, data);
 }
 
 function deleteAction(actionName) {
     return $.post(`./api/systems/Actions/${actionName}/delete`);
+}
+
+function triggerAction(actionName) {
+    return $.post(`./api/systems/Actions/${actionName}/trigger`);
 }
 
 
@@ -103,4 +99,8 @@ function restart() {
 
 function getSubTypes(typeName) {
     return $.get(`./api/types/${typeName}`);
+}
+
+function getTypescriptModels() {
+    return $.get(`./api/typescript-models`);
 }

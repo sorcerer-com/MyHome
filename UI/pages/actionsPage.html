@@ -11,7 +11,7 @@
                 <span class="w3-show-block overflow-wrap-break-word">
                     {{name}}
                     <span class="material-icons w3-small w3-text-green" v-bind:class="{'w3-text-red': !action.IsEnabled}"
-                          v-bind:title="action.IsEnabled ? 'Disable' : 'Enable'" 
+                          v-bind:title="action.IsEnabled ? 'Disable' : 'Enable'"
                           v-on:click="toggleActionEnabled(action)" v-on:click.stop="">
                         circle
                     </span>
@@ -41,47 +41,27 @@
                 <h2>{{edit.name}}</h2>
             </header>
             <div class="w3-container w3-padding-16 height-100 overflow-y-auto bg-gray">
-                <div class="w3-margin-bottom" v-if="edit.types['action']">
+                <div class="w3-margin-bottom" v-if="edit.types">
                     <span class="w3-right-align">Types:</span>
                     <select class="w3-mobile" v-on:change="onTypeChange">
                         <option value="" disabled selected hidden>Select</option>
-                        <option v-for="v of edit.types['action']" v-bind:value="v">{{v}}</option>
+                        <option v-for="v of edit.types" v-bind:value="v">{{v}}</option>
                     </select>
                 </div>
 
                 <object-editor v-bind:object="edit.action" v-bind:settings="true"></object-editor>
 
-                <div class="w3-margin-bottom" v-if="edit.action && edit.types['condition']">
-                    <span class="w3-right-align">Condition Types:</span>
-                    <select class="w3-mobile" v-on:change="onConditionTypeChange">
-                        <option value="" selected>None</option>
-                        <option v-for="v of edit.types['condition']" v-bind:value="v"
-                                v-bind:selected="edit.action?.ActionCondition?.$type.substr(edit.action?.ActionCondition?.$type.lastIndexOf('.')+1) == v">
-                            {{v}}
-                        </option>
-                    </select>
-                </div>
+                <div class="w3-center" v-if="edit.action">Script:</div>
+                <monaco-editor v-if="edit.action" v-model="edit.action.Script" style="height: 200px"></monaco-editor>
 
-                <object-editor v-if="edit.action?.ActionCondition" 
-                               v-bind:object="edit.action.ActionCondition" 
-                               v-bind:settings="true">
-                </object-editor>
-
-                <div class="w3-margin-bottom" v-if="edit.action && edit.types['executor']">
-                    <span class="w3-right-align">Executor Types:</span>
-                    <select class="w3-mobile" v-on:change="onExecutorTypeChange">
-                        <option value="" disabled selected hidden>Select</option>
-                        <option v-for="v of edit.types['executor']" v-bind:value="v"
-                                v-bind:selected="edit.action?.Executor?.$type.substr(edit.action?.Executor?.$type.lastIndexOf('.')+1) == v">
-                            {{v}}
-                        </option>
-                    </select>
-                </div>
-
-                <object-editor v-if="edit.action?.Executor"
-                               v-bind:object="edit.action.Executor"
-                               v-bind:settings="true">
-                </object-editor>
+                <a class="w3-small margin-left-8" v-if="edit.action" href="./api/typescript-models" target="_blank"
+                   title="Open Typescript models">
+                    Models
+                </a>
+                <a class="w3-small w3-right margin-right-8" v-if="edit.name != 'Add Action'" title="Test the script"
+                   v-on:click="triggerAction()">
+                    Test
+                </a>
 
                 <div class="w3-center">
                     <a class="w3-button w3-round w3-padding-small w3-white w3-hover-blue-grey margin-8" title="Save"
@@ -89,7 +69,10 @@
                         Save
                     </a>
                 </div>
-                <div class="w3-text-red margin-bottom-8" v-if="error">{{error}}</div>
+                <div class="w3-text-green margin-bottom-8" v-if="message"
+                     v-bind:class="{'w3-text-red': message.startsWith('Error:')}">
+                    {{message}}
+                </div>
 
                 <a class="w3-button w3-round w3-padding-small w3-white w3-hover-blue margin-8"
                    title="Clone"

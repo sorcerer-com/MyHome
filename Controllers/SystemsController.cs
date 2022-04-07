@@ -1,11 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 
 using Microsoft.AspNetCore.Mvc;
 
 using MyHome.Systems.Actions;
-using MyHome.Systems.Actions.Conditions;
-using MyHome.Systems.Actions.Executors;
 using MyHome.Utils;
 
 using NLog;
@@ -108,28 +107,6 @@ namespace MyHome.Controllers
             return this.Ok(action.ToUiObject());
         }
 
-        [HttpPost("Actions/Condition/create/{conditionType}")]
-        public ActionResult CreateActionCondition(string conditionType)
-        {
-            var type = typeof(BaseCondition).GetSubClasses().FirstOrDefault(t => t.Name == conditionType);
-            if (type == null)
-                return this.NotFound("No such condition type: " + conditionType);
-
-            var condition = (BaseCondition)Activator.CreateInstance(type, true);
-            return this.Ok(condition.ToUiObject());
-        }
-
-        [HttpPost("Actions/Executor/create/{executorType}")]
-        public ActionResult CreateActionExecutor(string executorType)
-        {
-            var type = typeof(BaseExecutor).GetSubClasses().FirstOrDefault(t => t.Name == executorType);
-            if (type == null)
-                return this.NotFound("No such executor type: " + executorType);
-
-            var executor = (BaseExecutor)Activator.CreateInstance(type, true);
-            return this.Ok(executor.ToUiObject());
-        }
-
         [HttpPost("Actions/{actionName}")]
         public ActionResult SetAction(string actionName)
         {
@@ -147,30 +124,6 @@ namespace MyHome.Controllers
                     action.Setup();
                     this.myHome.ActionsSystem.Actions.Add(action);
                 }
-
-                if (this.Request.Form.ContainsKey("ActionCondition[$type]"))
-                {
-                    var conditionType = System.Reflection.Assembly.GetExecutingAssembly().GetType(this.Request.Form["ActionCondition[$type]"]);
-                    if (conditionType != null)
-                    {
-                        var condition = (BaseCondition)Activator.CreateInstance(conditionType, true);
-                        action.ActionCondition = condition;
-                    }
-                    else
-                        logger.Error($"No such condition type: {conditionType}");
-                }
-                else
-                    action.ActionCondition = null;
-
-
-                var executorType = System.Reflection.Assembly.GetExecutingAssembly().GetType(this.Request.Form["Executor[$type]"]);
-                if (executorType != null)
-                {
-                    var executor = (BaseExecutor)Activator.CreateInstance(executorType, true);
-                    action.Executor = executor;
-                }
-                else
-                    logger.Error($"No such executor type: {executorType}");
 
                 this.Request.Form.SetObject(action);
                 this.myHome.SystemChanged = true;
@@ -204,6 +157,21 @@ namespace MyHome.Controllers
                 logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
+        }
+
+        [HttpPost("Actions/{actionName}/trigger")]
+        public ActionResult TriggerAction(string actionName)
+        {
+            logger.Info($"Trigger action: {actionName}");
+            var action = this.myHome.ActionsSystem.Actions.FirstOrDefault(action => action.Name == actionName);
+            if (action == null)
+                return this.NotFound($"Action '{actionName}' not found");
+
+            var stopwatch = Stopwatch.StartNew();
+            if (!action.Trigger(false).Result)
+                return this.BadRequest("Trigger failed");
+
+            return this.Ok($"Execution time: {stopwatch.Elapsed}");
         }
     }
 }

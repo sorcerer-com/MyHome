@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 
 using Microsoft.AspNetCore.Mvc;
 
 using MyHome.Utils;
+
+using Newtonsoft.Json;
 
 using NLog;
 using NLog.Targets;
@@ -87,6 +90,24 @@ namespace MyHome.Controllers
                 return this.NotFound("Invalid type name: " + typeName);
 
             return this.Ok(type.GetSubClasses().Select(t => t.Name));
+        }
+
+        [HttpGet("typescript-models")]
+        public ActionResult GetTypescriptModels()
+        {
+            var models = Assembly.GetExecutingAssembly().ConvertToTypescript();
+            // logger
+            models += typeof(Logger).ConvertToTypescript() + "\nlet logger: Logger;\n\n";
+            // JSON
+            models += "class JSON {\n  static parse(text: string): any { }\n  static stringify(value: any): string { }\n}\n\n";
+
+            models += "let myHome: MyHome;\n\n";
+            var rooms = this.myHome.Rooms.ToDictionary(r => r.Name.Replace(" ", ""), r => $"new {r.GetType().Name}()");
+            models += $"let Rooms = {JsonConvert.SerializeObject(rooms, Formatting.Indented).Replace("\"", "")}\n\n";
+            var devices = this.myHome.Rooms.ToDictionary(r => r.Name.Replace(" ", ""), r => r.Devices.ToDictionary(d => d.Name.Replace(" ", ""), d => $"new {d.GetType().Name}()"));
+            models += $"let Devices = {JsonConvert.SerializeObject(devices, Formatting.Indented).Replace("\"", "")}\n\n";
+
+            return this.Ok(models);
         }
     }
 }

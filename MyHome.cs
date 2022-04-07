@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
+using Jint;
+
 using LibGit2Sharp;
 
 using MyHome.Models;
@@ -16,8 +18,6 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using NLog;
-
-using Jint;
 
 namespace MyHome
 {
@@ -45,7 +45,7 @@ namespace MyHome
         public MqttClientWrapper MqttClient { get; }
 
         [JsonIgnore]
-        public Engine JintEngine { get; }
+        private Engine JintEngine { get; }
 
 
         public List<Room> Rooms { get; }
@@ -77,11 +77,10 @@ namespace MyHome
             //   - show all sensors data on a single chart somewhere
             //   - maybe show devices instead of value / grouped by type -https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg
             //   - too many sensor values, merge Water Switch and Water State somehow
+            //   - change UI auto-refresh to use websocket (if supported only)? - server notify clients to refresh their data
             // * multiple sensor graphics at once (for one sensor subname - motion, by multiple devices too)
+            // * drivers to be sensors too - save state change in time
 
-            // TODO: add test "Execute" button in action's edit/add modal
-            // TODO: change UI auto-refresh to use websocket (if supported only)? - server notify clients to refresh their data
-            
             logger.Info("Start My Home");
             Instance = this;
             using (var repo = new Repository("."))
@@ -95,7 +94,7 @@ namespace MyHome
             this.MqttClient = new MqttClientWrapper();
             this.JintEngine = new Jint.Engine(options =>
             {
-                options.LimitMemory(4_000_000); // 4MB
+                options.LimitMemory(100_000_000); // 100MB
                 options.TimeoutInterval(TimeSpan.FromSeconds(5));
                 options.MaxStatements(1000);
             });
@@ -367,7 +366,23 @@ namespace MyHome
                 return false;
             }
         }
-
-        public Room GetRoom(string name) => this.Rooms.FirstOrDefault(r => r.Name == name);
+        
+        public bool ExecuteJint(Action<Engine> action, string failMessage = "execute Jint action")
+        {
+            lock (this.JintEngine)
+            {
+                try
+                {
+                    action.Invoke(this.JintEngine);
+                }
+                catch (Exception e)
+                {
+                    logger.Error($"Failed to {failMessage}");
+                    logger.Debug($"{e}\n {new StackTrace()}");
+                    return false;
+                }
+                return true;
+            }
+        }
     }
 }

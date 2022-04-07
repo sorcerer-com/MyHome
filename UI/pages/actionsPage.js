@@ -12,7 +12,7 @@ $.get(templateUrl, template => {
                     action: null,
                     types: null
                 },
-                error: ""
+                message: ""
             }
         },
         methods: {
@@ -34,7 +34,7 @@ $.get(templateUrl, template => {
 
                 // room name / action name / action
                 return this.actions.Actions.reduce((rv, x) => {
-                    let roomName = x.Executor?.Target?.split(".")[0];
+                    let roomName = x.TargetRoomName;
                     rv[roomName] = rv[roomName] || {}
                     rv[roomName][x.Name] = x;
                     return rv;
@@ -42,70 +42,53 @@ $.get(templateUrl, template => {
             },
 
             showEdit: function (name, action) {
-                this.error = "";
-                $.when(getSubTypes("BaseCondition"), getSubTypes("BaseExecutor"))
-                    .done((conditionTypes, executorTypes) => {
-                        this.edit.name = name;
-                        this.edit.action = action;
-                        this.edit.types = { "condition": conditionTypes[0], "executor": executorTypes[0] };
-                    });
+                this.message = "";
+                this.edit.name = name;
+                this.edit.action = action;
             },
             showAddAction: function () {
-                this.error = "";
-                $.when(getSubTypes("BaseAction"), getSubTypes("BaseCondition"), getSubTypes("BaseExecutor"))
-                    .done((actionTypes, conditionTypes, executorTypes) => {
-                        this.edit.name = "Add Action";
-                        this.edit.action = null;
-                        this.edit.types = { "action": actionTypes[0], "condition": conditionTypes[0], "executor": executorTypes[0] };
-                    });
+                this.message = "";
+                getSubTypes("BaseAction").done(actionTypes => {
+                    this.edit.name = "Add Action";
+                    this.edit.action = null;
+                    this.edit.types = actionTypes;
+                });
             },
             onTypeChange: function (event) {
                 createAction(event.target.value).done(action => {
                     action.Name = "New Action";
-                    action["$subtypes"]["Name"] = { type: "String", setting: true, hint: "" };
                     this.edit.action = action;
                 });
             },
-            onConditionTypeChange: function (event) {
-                if (event.target.value) {
-                    createActionCondition(event.target.value).done(condition => {
-                        this.edit.action.ActionCondition = condition;
-                    });
-                } else {
-                    this.edit.action.ActionCondition = null;
-                }
-            },
-            onExecutorTypeChange: function (event) {
-                createActionExecutor(event.target.value).done(executor => {
-                    this.edit.action.Executor = executor;
+
+            triggerAction: function () {
+                if (this.edit.name == "Add Action")
+                    return;
+                // save and then trigger
+                setAction(this.edit.name, this.edit.action).done(() => {
+                    triggerAction(this.edit.name)
+                        .done(responseText => this.message = "Successfull! " + responseText)
+                        .fail(response => this.message = "Error: " + response.responseText);
                 });
             },
-
             saveAction: function () {
                 let name = this.edit.name;
                 if (this.edit.name == "Add Action") {
                     if (this.edit.action.Name == "") {
-                        this.error = "Cannot set action without name";
+                        this.message = "Error: Cannot set action without name";
                         return;
                     }
                     if (this.actions.Actions.some(a => a.Name == this.edit.action.Name)) {
-                        this.error = "An action with the same name already exists";
+                        this.message = "Error: An action with the same name already exists";
                         return;
                     }
                     name = this.edit.action.Name;
                 }
 
-                if (this.edit.action.ActionCondition == null) // remove condition if it's empty
-                    delete this.edit.action.ActionCondition;
-
-                if (this.edit.action.Executor == null) {
-                    this.error = "Cannot set action without Executor";
-                    return;
-                }
-
                 return setAction(name, this.edit.action).done(() => this.edit.name = null);
             },
             cloneAction: function () {
+                this.message = "";
                 this.edit.name = this.edit.name + " - Clone";
                 this.edit.action = { ...this.edit.action }; // clone the object
                 this.edit.action.Name = this.edit.name;
@@ -120,14 +103,17 @@ $.get(templateUrl, template => {
             toggleActionEnabled: function (action) {
                 action.IsEnabled = !action.IsEnabled;
 
-                if (action.ActionCondition == null) // remove condition if it's empty
-                    delete action.ActionCondition;
-
                 setAction(action.Name, action);
             }
         },
         mounted: function () {
             this.refreshData();
+        },
+        watch: {
+            message: function () {
+                if (this.message)
+                    setTimeout(() => this.message = "", 3000); // hide message after 3 seconds
+            }
         }
     });
 });
