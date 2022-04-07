@@ -14,7 +14,6 @@ namespace MyHome.Systems.Actions
             get => this.interval.ToString();
             set
             {
-                // TODO: Allow every Monday at 14:00, 1st of the month, etc.
                 _ = TimeSpan.TryParse(value, out this.interval);
                 if (this.interval.TotalMilliseconds == 0)
                     this.interval = TimeSpan.FromHours(1);
