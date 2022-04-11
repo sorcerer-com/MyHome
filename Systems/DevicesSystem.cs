@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using MyHome.Models;
 using MyHome.Systems.Devices;
 using MyHome.Systems.Devices.Sensors;
 using MyHome.Utils;
@@ -90,7 +91,7 @@ namespace MyHome.Systems
             });
 
             if (!string.IsNullOrEmpty(alertMsg))
-                MyHome.Instance.SendAlert($"{alertMsg.Trim()} alarm activated!");
+                Alert.Create($"{alertMsg.Trim()} alarm activated!").Validity(TimeSpan.FromHours(1)).Send();
 
             this.nextSensorCheckTime += TimeSpan.FromMinutes(this.SensorsDataInterval);
             MyHome.Instance.SystemChanged = true;

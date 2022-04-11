@@ -30,7 +30,6 @@ namespace MyHome.Systems
             base.Update();
 
             this.Actions.RunForEach(action => action.Update());
-            // TODO: allow action execution per timer - turn on lights for 5 seconds
             // TODO: manually activated security alarm shouldn't be stopped
             // TODO: add sunset/sunrise (weather state) as time of execution
         }

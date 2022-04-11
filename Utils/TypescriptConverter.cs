@@ -33,12 +33,19 @@ namespace MyHome.Utils
                 // properties
                 foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
                     result.Append("  ").Append($"{prop.Name}: {GetTypescriptType(prop.PropertyType)};\n");
+                foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly))
+                    result.Append("  ").Append($"static {prop.Name}: {GetTypescriptType(prop.PropertyType)};\n");
 
                 // functions
                 foreach (var func in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
                 {
                     if (!func.IsSpecialName)
                         result.Append("  ").Append(GetTypescriptFunction(func));
+                }
+                foreach (var func in type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly))
+                {
+                    if (!func.IsSpecialName)
+                        result.Append("  ").Append("static " + GetTypescriptFunction(func));
                 }
 
                 result.Append('}');
@@ -59,8 +66,6 @@ namespace MyHome.Utils
         {
             if (type.IsNumericType())
                 return "number";
-            else if (type == typeof(DateTime))
-                return "Date";
             else if (type.GetInterface(nameof(IDictionary)) != null)
                 return "{} /* " + string.Join(", ", type.GenericTypeArguments.Select(t => GetTypescriptType(t))).Replace("*/", "") + " */";
             else if (type.GetInterface(nameof(IEnumerable)) != null && type.GenericTypeArguments.Length > 0)
@@ -72,7 +77,7 @@ namespace MyHome.Utils
 
         private static string GetTypescriptFunction(MethodInfo func)
         {
-            var args = string.Join(", ", func.GetParameters().Select(p => p.Name + ": " + GetTypescriptType(p.ParameterType)));
+            var args = string.Join(", ", func.GetParameters().Select(p => p.Name.Replace("function", "_function") + ": " + GetTypescriptType(p.ParameterType)));
             var returnType = func?.ReturnType != typeof(void) ? GetTypescriptType(func.ReturnType) : "void";
             return $"{func.Name}({args}): {returnType} {{ }}\n";
         }

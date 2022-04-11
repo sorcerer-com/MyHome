@@ -77,9 +77,9 @@ namespace MyHome.Models
         }
 
 
-        public bool SendAlert(string message)
+        public Alert Alert(string message)
         {
-            return MyHome.Instance.SendAlert($"'{this.Name}' room alert: {message}");
+            return Models.Alert.Create($"'{this.Name}' room alert: {message}");
         }
 
         private Dictionary<string, double> GetSensorsValues()

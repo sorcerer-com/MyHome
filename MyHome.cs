@@ -92,7 +92,7 @@ namespace MyHome
             this.Config = new Config();
             this.Events = new GlobalEvent();
             this.MqttClient = new MqttClientWrapper();
-            this.JintEngine = new Jint.Engine(options =>
+            this.JintEngine = new Engine(options =>
             {
                 options.LimitMemory(100_000_000); // 100MB
                 options.TimeoutInterval(TimeSpan.FromSeconds(5));
@@ -134,8 +134,17 @@ namespace MyHome
         {
             logger.Info("Setup My Home");
 
-            var (host, port) = Utils.Utils.SplitAddress(this.Config.MqttServerAddress);
-            this.MqttClient.Connect("MyHomeClient", host, port, this.Config.MqttUsername, this.Config.MqttPassword);
+            if (!string.IsNullOrEmpty(this.Config.MqttServerAddress))
+            {
+                var (host, port) = Utils.Utils.SplitAddress(this.Config.MqttServerAddress);
+                this.MqttClient.Connect("MyHomeClient", host, port, this.Config.MqttUsername, this.Config.MqttPassword);
+            }
+
+            this.JintEngine.SetValue("DateTime", typeof(DateTime))
+                .SetValue("TimeSpan", typeof(TimeSpan))
+                .SetValue("Task", typeof(System.Threading.Tasks.Task));
+            foreach (var type in System.Reflection.Assembly.GetExecutingAssembly().GetTypes().Where(type => type.IsEnum))
+                this.JintEngine.SetValue(type.Name, type);
 
             foreach (var system in this.Systems.Values)
                 system.Setup();
@@ -252,84 +261,17 @@ namespace MyHome
 
         private void CheckMqttStatus()
         {
+            if (string.IsNullOrEmpty(this.Config.MqttServerAddress))
+                return;
+
             var now = DateTime.Now;
             if (this.MqttClient.IsConnected)
                 this.mqttDisconnectedTime = now;
-            else if (now - this.mqttDisconnectedTime > TimeSpan.FromMinutes(this.mqttDisconnectedAlert) &&
-                now - this.mqttDisconnectedTime < TimeSpan.FromMinutes(this.mqttDisconnectedAlert * 2))
-            {
-                this.SendAlert($"MQTT broker is down from {this.mqttDisconnectedTime:dd/MM/yyyy HH:mm:ss}!");
-                this.mqttDisconnectedTime = now - TimeSpan.FromMinutes(this.mqttDisconnectedAlert * 2);
-            }
+            else if (now - this.mqttDisconnectedTime > TimeSpan.FromMinutes(this.mqttDisconnectedAlert))
+                Alert.Create("MQTT broker is down").Details($"from {this.mqttDisconnectedTime:dd/MM/yyyy HH:mm:ss}!").Validity(TimeSpan.FromDays(1)).Send();
         }
 
-
-        public bool SendAlert(string msg, List<string> fileNames = null, bool force = false)
-        {
-            try
-            {
-                logger.Info($"Send alert: {msg}");
-
-                bool result = true;
-                msg = $"{DateTime.Now:dd/MM/yyyy HH:mm:ss}\n{msg}";
-
-                var images = new List<string>();
-                foreach (var camera in this.DevicesSystem.Cameras)
-                {
-                    var filename = Path.Combine(Config.BinPath, $"{camera.Room.Name}_{camera.Name}.jpg");
-                    camera.SaveImage(filename);
-                    images.Add(filename);
-                }
-                fileNames ??= new List<string>();
-                fileNames.AddRange(images);
-
-                var latestData = this.DevicesSystem.Sensors.ToDictionary(s => s.Room.Name + "." + s.Name, s => s.Values);
-                var emailMsg = $"{msg}\n{JsonConvert.SerializeObject(latestData, Formatting.Indented)}";
-                if (!Services.SendEMail(this.Config.SmtpServerAddress, this.Config.Email, this.Config.EmailPassword,
-                    this.Config.Email, "My Home", emailMsg, fileNames))
-                {
-                    result = false;
-                }
-
-                foreach (var file in images)
-                {
-                    if (File.Exists(file))
-                        File.Delete(file);
-                }
-
-                var quietHours = this.Config.QuietHours.Split("-", StringSplitOptions.TrimEntries).Select(h => int.Parse(h)).ToArray();
-                if (force)
-                    quietHours = new int[] { 0, 0 };
-
-                var currHour = DateTime.Now.Hour;
-                if (quietHours[0] > quietHours[1] && (currHour > quietHours[0] || currHour < quietHours[1]))
-                {
-                    logger.Info($"Quiet hours: {quietHours[0]} - {quietHours[1]}");
-                }
-                else if (quietHours[0] < quietHours[1] && (currHour > quietHours[0] && currHour < quietHours[1]))
-                {
-                    logger.Info($"Quiet hours: {quietHours[0]} - {quietHours[1]}");
-                }
-                else
-                {
-                    if (!Services.SendSMS(this.Config.GsmNumber, "telenor", this.Config.MyTelenorPassword, msg))
-                    {
-                        result = false;
-                        Services.SendEMail(this.Config.SmtpServerAddress, this.Config.Email, this.Config.EmailPassword,
-                            this.Config.Email, "My Home", "Alert sending failed");
-                    }
-                }
-                return result;
-            }
-            catch (Exception e)
-            {
-                logger.Error("Cannot send alert message");
-                logger.Debug(e);
-                return false;
-            }
-        }
-
-        public bool CheckForUpgrade()
+        private void CheckForUpgrade()
         {
             logger.Debug("Checking for system update");
 
@@ -345,8 +287,8 @@ namespace MyHome
                 logger.Debug(e);
                 this.UpgradeAvailable = false;
             }
-            return this.UpgradeAvailable.Value;
         }
+
 
         public bool Upgrade()
         {
@@ -366,7 +308,7 @@ namespace MyHome
                 return false;
             }
         }
-        
+
         public bool ExecuteJint(Action<Engine> action, string failMessage = "execute Jint action")
         {
             lock (this.JintEngine)

@@ -73,8 +73,7 @@ namespace MyHome.Systems.Actions
         private bool ExecuteScript(string script)
         {
             logger.Trace($"Execute script: {script}");
-            // TODO: send alert if failed?
-            return MyHome.Instance.ExecuteJint(jint => jint
+            var result = MyHome.Instance.ExecuteJint(jint => jint
                         .SetValue("logger", logger)
                         .SetValue("myHome", MyHome.Instance)
                         .SetValue("Rooms", MyHome.Instance.Rooms.ToDictionary(r => r.Name.Replace(" ", "")))
@@ -82,6 +81,15 @@ namespace MyHome.Systems.Actions
                                                     r => r.Devices.ToDictionary(d => d.Name.Replace(" ", ""))))
                         .Evaluate($"{{ {script} }}"),
                         $"execute action '{this.Name}' script:\n{script}");
+
+            if (!result)
+            {
+                Alert.Create("Action execution failed")
+                    .Level(Alert.AlertLevel.Low)
+                    .Validity(TimeSpan.FromDays(1))
+                    .Send();
+            }
+            return result;
         }
     }
 }

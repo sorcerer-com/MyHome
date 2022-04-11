@@ -95,11 +95,17 @@ namespace MyHome.Controllers
         [HttpGet("typescript-models")]
         public ActionResult GetTypescriptModels()
         {
-            var models = Assembly.GetExecutingAssembly().ConvertToTypescript();
-            // logger
+            var models = Assembly.GetExecutingAssembly().ConvertToTypescript() + "\n";
+            // DateTime
+            models += typeof(DateTime).ConvertToTypescript() + "\n\n";
+            // TimeSpan
+            models += typeof(TimeSpan).ConvertToTypescript() + "\n\n";
+            // Task
+            models += typeof(System.Threading.Tasks.Task).ConvertToTypescript() + "\n\n";
+            // Logger
             models += typeof(Logger).ConvertToTypescript() + "\nlet logger: Logger;\n\n";
             // JSON
-            models += "class JSON {\n  static parse(text: string): any { }\n  static stringify(value: any): string { }\n}\n\n";
+            models += "class JSON {\n  static parse(text: string): any { }\n  static stringify(value: any): string { }\n}\n\n\n";
 
             models += "let myHome: MyHome;\n\n";
             var rooms = this.myHome.Rooms.ToDictionary(r => r.Name.Replace(" ", ""), r => $"new {r.GetType().Name}()");
