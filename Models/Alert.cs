@@ -68,7 +68,7 @@ namespace MyHome.Models
 
         public Alert Filenames(List<string> filenames)
         {
-            this.filenames = filenames;
+            this.filenames = filenames.ToList();
             return this;
         }
 
@@ -89,9 +89,9 @@ namespace MyHome.Models
             try
             {
                 var msg = $"{this.message} {this.details}";
-                logger.Info($"Send alert: {msg} ({this.level}, {this.validty}, {this.filenames.Count} files)");
                 if (!this.IsValid())
                     return true;
+                logger.Info($"Send alert: {msg} ({this.level}, {this.validty}, {this.filenames.Count} files)");
 
                 bool result = true;
                 msg = $"{DateTime.Now:dd/MM/yyyy HH:mm:ss}\n{msg}";
@@ -175,12 +175,12 @@ namespace MyHome.Models
             if ((quietHours[0] > quietHours[1] && (currHour > quietHours[0] || currHour < quietHours[1])) ||
                 (quietHours[0] < quietHours[1] && (currHour > quietHours[0] && currHour < quietHours[1])))
             {
-                logger.Info($"Skip sending SMS since quiet hours: {quietHours[0]} - {quietHours[1]}");
+                logger.Debug($"Skip sending SMS since quiet hours: {quietHours[0]} - {quietHours[1]}");
                 return false;
             }
             else if (this.level == AlertLevel.Low)
             {
-                logger.Info("Skip sending SMS since alert level is low");
+                logger.Debug("Skip sending SMS since alert level is low");
                 return false;
             }
             return true;

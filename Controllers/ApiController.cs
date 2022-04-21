@@ -95,15 +95,15 @@ namespace MyHome.Controllers
         [HttpGet("typescript-models")]
         public ActionResult GetTypescriptModels()
         {
-            var models = Assembly.GetExecutingAssembly().ConvertToTypescript() + "\n";
+            var models = Assembly.GetExecutingAssembly().ToTypescript() + "\n";
             // DateTime
-            models += typeof(DateTime).ConvertToTypescript() + "\n\n";
+            models += typeof(DateTime).ToTypescript() + "\n\n";
             // TimeSpan
-            models += typeof(TimeSpan).ConvertToTypescript() + "\n\n";
+            models += typeof(TimeSpan).ToTypescript() + "\n\n";
             // Task
-            models += typeof(System.Threading.Tasks.Task).ConvertToTypescript() + "\n\n";
+            models += typeof(System.Threading.Tasks.Task).ToTypescript() + "\n\n";
             // Logger
-            models += typeof(Logger).ConvertToTypescript() + "\nlet logger: Logger;\n\n";
+            models += typeof(Logger).ToTypescript() + "\nlet logger: Logger;\n\n";
             // JSON
             models += "class JSON {\n  static parse(text: string): any { }\n  static stringify(value: any): string { }\n}\n\n\n";
 

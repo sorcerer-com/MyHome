@@ -319,12 +319,6 @@ namespace MyHome.Systems.Devices.Sensors
         private Dictionary<string, object> ReadData()
         {
             var result = new Dictionary<string, object>();
-            if (!this.IsOnvifSupported)
-            {
-                logger.Debug("Not Onfiv camera, so no data to read");
-                return result;
-            }
-
             try
             {
                 var pullPointClient = this.GetOnvif<PullPointSubscriptionClient>();

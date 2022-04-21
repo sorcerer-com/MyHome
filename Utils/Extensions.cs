@@ -137,34 +137,41 @@ namespace MyHome.Utils
                     continue;
 
                 var propName = item.Key.Replace("[]", "");
+                if (propName.IndexOf('[') != propName.LastIndexOf('[')) // more than one '['
+                    continue;
                 if (propName.Contains('[')) // dictionary
                     propName = propName[..item.Key.IndexOf('[')];
+
                 var prop = type.GetProperty(propName);
                 if (prop == null)
                     continue;
 
                 if (item.Key.EndsWith("[]")) // list
                 {
-                    var list = prop.GetValue(obj) as IList;
-                    // workaround since Clear() doesn't work well with observable collections
-                    while (list.Count > 0)
-                        list.RemoveAt(0);
-                    var values = item.Value.Select(v => Utils.ParseValue(v, prop.PropertyType.GenericTypeArguments[0]));
-                    foreach (var value in values)
-                        list.Add(value);
+                    if (prop.GetValue(obj) is IList list)
+                    {
+                        // workaround since Clear() doesn't work well with observable collections
+                        while (list.Count > 0)
+                            list.RemoveAt(0);
+                        var values = item.Value.Select(v => Utils.ParseValue(v, prop.PropertyType.GenericTypeArguments[0]));
+                        foreach (var value in values)
+                            list.Add(value);
+                    }
                 }
                 else if (item.Key.IndexOf('[') < item.Key.IndexOf(']'))
                 {
                     if (prop.PropertyType.IsGenericType) // dictionary
                     {
-                        var dict = prop.GetValue(obj) as IDictionary;
-                        if (!processingDicts.Contains(propName))
+                        if (prop.GetValue(obj) is IDictionary dict)
                         {
-                            dict.Clear();
-                            processingDicts.Add(propName);
+                            if (!processingDicts.Contains(propName))
+                            {
+                                dict.Clear();
+                                processingDicts.Add(propName);
+                            }
+                            var key = Utils.ParseValue(item.Key[(item.Key.IndexOf('[') + 1)..item.Key.IndexOf(']')], prop.PropertyType.GenericTypeArguments[0]);
+                            dict[key] = Utils.ParseValue(item.Value, prop.PropertyType.GenericTypeArguments[1]);
                         }
-                        var key = Utils.ParseValue(item.Key[(item.Key.IndexOf('[') + 1)..item.Key.IndexOf(']')], prop.PropertyType.GenericTypeArguments[0]);
-                        dict[key] = Utils.ParseValue(item.Value, prop.PropertyType.GenericTypeArguments[1]);
                     }
                     else // object
                     {

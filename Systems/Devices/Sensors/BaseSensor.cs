@@ -106,16 +106,16 @@ namespace MyHome.Systems.Devices.Sensors
                 if (group.Count() == 1) // already grouped
                     continue;
 
-                var items = group.Select(t => this.Data[t]).ToList();
+                var items = group.ToDictionary(t => t, t => this.Data[t]);
                 // delete old records
                 foreach (var t in group)
                     this.Data.Remove(t);
                 // add one new
                 this.Data[group.Key] = new SensorValue();
-                var subNames = items.Select(i => i.Keys).SelectMany(x => x).Distinct();
+                var subNames = items.Select(i => i.Value.Keys).SelectMany(x => x).Distinct();
                 foreach (var subName in subNames)
                 {
-                    var values = items.Where(i => i.ContainsKey(subName)).Select(i => i[subName]);
+                    var values = items.Where(i => i.Value.ContainsKey(subName)).ToDictionary(i => i.Key, i => i.Value[subName]);
                     if (!values.Any())
                         continue;
 
@@ -123,9 +123,9 @@ namespace MyHome.Systems.Devices.Sensors
 
                     double newValue = 0.0;
                     if (!sumAggr)
-                        newValue = Math.Round(values.Average(), 2); // round to 2 decimals after the point
+                        newValue = Math.Round(AverageByTime(values), 2); // round to 2 decimals after the point
                     else
-                        newValue = Math.Round(values.Sum(), 2);
+                        newValue = Math.Round(values.Values.Sum(), 2);
                     this.Data[group.Key][subName] = newValue;
                 }
                 this.Data[group.Key].TrimExcess();
@@ -177,6 +177,26 @@ namespace MyHome.Systems.Devices.Sensors
                 .ToList();
             sumType.ForEach(g => result[g.Key] = g.Select(x => x.Value).Sum());
             return result;
+        }
+
+        private static double AverageByTime(Dictionary<DateTime, double> values)
+        {
+            if (values.Count <= 2)
+                return values.Values.Average();
+
+            double result = 0.0;
+            var ordered = values.OrderBy(kvp => kvp.Key).ToList();
+            for (int i = 0; i < ordered.Count - 1; i++)
+            {
+                var duration = (ordered[i + 1].Key - ordered[i].Key).TotalSeconds;
+                result += ordered[i].Value * duration;
+            }
+            // add last value multiplied by average duration
+            var totalTime = (ordered.Last().Key - ordered.First().Key).TotalSeconds;
+            var avgTime = totalTime / (ordered.Count - 1);
+            result += ordered.Last().Value * avgTime;
+
+            return result / (totalTime + avgTime);
         }
     }
 }

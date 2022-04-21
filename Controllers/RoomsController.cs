@@ -169,7 +169,7 @@ namespace MyHome.Controllers
 
 
         [HttpGet("{roomName}/sensors/{sensorName}/data/{valueType}")]
-        public ActionResult GetRoomSensorData(string roomName, string sensorName, string valueType)
+        public ActionResult GetSensorData(string roomName, string sensorName, string valueType)
         {
             var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
             if (room == null)
@@ -185,7 +185,7 @@ namespace MyHome.Controllers
             var result = new
             {
                 lastDay = subData.Where(kvp => kvp.Key >= prevDayTime).ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-                lastYear = subData.Where(kvp => kvp.Key < prevDayTime).ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+                lastYear = subData.Where(kvp => kvp.Key < prevDayTime - TimeSpan.FromHours(now.Hour)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
             };
 
             return this.Ok(result);

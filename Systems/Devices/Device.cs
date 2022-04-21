@@ -1,6 +1,8 @@
 ﻿using MyHome.Models;
 using MyHome.Utils;
 
+using Newtonsoft.Json;
+
 using NLog;
 
 namespace MyHome.Systems.Devices
@@ -12,6 +14,21 @@ namespace MyHome.Systems.Devices
 
         [UiProperty(true)]
         public string Name { get; set; } // unique per room
+
+        [JsonIgnore]
+        [UiProperty(true)]
+        public int Index
+        {
+            get => MyHome.Instance.DevicesSystem.Devices.IndexOf(this);
+            set
+            {
+                if (value >= 0 && MyHome.Instance.DevicesSystem.Devices.IndexOf(this) != value)
+                {
+                    MyHome.Instance.DevicesSystem.Devices.Remove(this);
+                    MyHome.Instance.DevicesSystem.Devices.Insert(value, this);
+                }
+            }
+        }
 
         public Room Room { get; set; }
 

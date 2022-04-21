@@ -19,9 +19,24 @@ namespace MyHome.Models
         [UiProperty(true)]
         public string Name { get; set; }
 
-
         [JsonIgnore]
         [UiProperty(true)]
+        public int Index
+        {
+            get => MyHome.Instance.Rooms.IndexOf(this);
+            set
+            {
+                if (value >= 0 && MyHome.Instance.Rooms.IndexOf(this) != value)
+                {
+                    MyHome.Instance.Rooms.Remove(this);
+                    MyHome.Instance.Rooms.Insert(value, this);
+                }
+            }
+        }
+
+
+        [JsonIgnore]
+        [UiProperty]
         public IEnumerable<Device> Devices => MyHome.Instance.DevicesSystem.Devices.Where(d => d.Room == this);
 
         [JsonIgnore]

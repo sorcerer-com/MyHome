@@ -19,6 +19,21 @@ namespace MyHome.Systems.Actions
         [UiProperty(true)]
         public string Name { get; set; }
 
+        [JsonIgnore]
+        [UiProperty(true)]
+        public int Index
+        {
+            get => MyHome.Instance.ActionsSystem.Actions.IndexOf(this);
+            set
+            {
+                if (value >= 0 && MyHome.Instance.ActionsSystem.Actions.IndexOf(this) != value)
+                {
+                    MyHome.Instance.ActionsSystem.Actions.Remove(this);
+                    MyHome.Instance.ActionsSystem.Actions.Insert(value, this);
+                }
+            }
+        }
+
         [UiProperty(true)]
         public bool IsEnabled { get; set; }
 

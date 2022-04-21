@@ -107,7 +107,7 @@ namespace MyHome.Systems.Devices.Sensors
                     var value = property.Value;
                     if (value.Type == JTokenType.String && ((string)value == "ON" || (string)value == "OFF"))
                         value = (string)value == "ON";
-                    data.Add(property.Path, (double)value);
+                    data.Add(jsonPath, (double)value);
                 }
                 this.AddData(DateTime.Now, data);
             }

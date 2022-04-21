@@ -6,18 +6,18 @@ using System.Text;
 
 namespace MyHome.Utils
 {
-    public static class TypescriptConverterExtension
+    public static class TypescriptExtensions
     {
-        public static string ConvertToTypescript(this Assembly assembly)
+        public static string ToTypescript(this Assembly assembly)
         {
             var result = new StringBuilder();
             foreach (var type in assembly.GetTypes().Where(type => IsValidType(type)))
-                result.Append(type.ConvertToTypescript() + "\n\n");
+                result.Append(type.ToTypescript() + "\n\n");
 
             return result.ToString();
         }
 
-        public static string ConvertToTypescript(this Type type)
+        public static string ToTypescript(this Type type)
         {
             var result = new StringBuilder();
             if (type.IsEnum)
