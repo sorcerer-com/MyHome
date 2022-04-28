@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 using MyHome.Models;
 using MyHome.Systems.Devices.Sensors;
@@ -34,6 +35,13 @@ namespace MyHome.Systems
         [UiProperty(true, "MB")]
         public double ImagesDiskUsage { get; set; } // MB
 
+        [UiProperty(true, "minutes")]
+        public int PresenceDetectionInterval { get; set; } // minutes
+
+        [UiProperty(true)]
+        public List<string> PresenceDeviceIPs { get; }
+
+
         [JsonIgnore]
         public Dictionary<Room, bool> ActivatedRooms
         {
@@ -45,6 +53,10 @@ namespace MyHome.Systems
         }
 
         public Dictionary<string, Dictionary<DateTime, string>> History { get; } // roomName / time / action
+
+        [JsonIgnore]
+        public bool Presence { get; private set; }
+
 
         private sealed class RoomInfo
         {
@@ -62,7 +74,7 @@ namespace MyHome.Systems
 
         private readonly Dictionary<string, Mat> prevImages;
 
-        private DateTime imageClearTimer;
+        private DateTime presenceDetectionTimer;
 
 
         public SecuritySystem()
@@ -71,11 +83,14 @@ namespace MyHome.Systems
             this.SendInterval = 5;
             this.MovementThreshold = 0.02;
             this.ImagesDiskUsage = 200;
+            this.PresenceDetectionInterval = 5;
+            this.PresenceDeviceIPs = new List<string>();
             this.History = new Dictionary<string, Dictionary<DateTime, string>>();
+            this.Presence = false;
 
             this.roomsInfo = new List<RoomInfo>();
             this.prevImages = new Dictionary<string, Mat>();
-            this.imageClearTimer = DateTime.Now;
+            this.presenceDetectionTimer = DateTime.Now;
 
             Directory.CreateDirectory(ImagesPath);
         }
@@ -184,6 +199,7 @@ namespace MyHome.Systems
                             logger.Info($"Skip alert sending for '{roomInfo.Room.Name}' room");
                             roomInfo.ImageFiles.Clear();
                         }
+                        this.ClearImages();
                         MyHome.Instance.SystemChanged = true;
                     }
 
@@ -193,14 +209,24 @@ namespace MyHome.Systems
                             this.SaveImage(camera, roomInfo);
                     }
                 }
+            }
 
-                if (DateTime.Now - this.imageClearTimer > TimeSpan.FromMinutes(this.SendInterval))
+            if (DateTime.Now - this.presenceDetectionTimer > TimeSpan.FromMinutes(this.PresenceDetectionInterval))
+            {
+                this.presenceDetectionTimer = DateTime.Now;
+                Task.Run(() =>
                 {
-                    this.imageClearTimer = DateTime.Now;
-                    this.ClearImages();
-                }
+                    var newPresence = this.DetectPresence();
+                    if (newPresence != this.Presence)
+                    {
+                        this.Presence = newPresence;
+                        logger.Info($"{(this.Presence ? "" : "No ")}Presence detected");
+                        MyHome.Instance.Events.Fire(this, GlobalEventTypes.PresenceChanged, this.Presence);
+                    }
+                });
             }
         }
+
 
         private void SaveImage(Camera camera, RoomInfo roomInfo)
         {
@@ -239,6 +265,53 @@ namespace MyHome.Systems
             }
         }
 
+        private bool DetectPresence()
+        {
+            using var ping = new System.Net.NetworkInformation.Ping();
+            // retry 5 times
+            for (int i = 0; i < 5; i++)
+            {
+                foreach (var ip in this.PresenceDeviceIPs)
+                {
+                    try
+                    {
+                        var reply = ping.Send(System.Net.IPAddress.Parse(ip));
+                        if (reply.Status == System.Net.NetworkInformation.IPStatus.Success)
+                            return true;
+                    }
+                    catch (Exception e)
+                    {
+                        if (i == 0)
+                        {
+                            logger.Error($"Failed to detect presence for {ip}");
+                            logger.Debug(e);
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        private void SetHistory(Room room, string action)
+        {
+            if (!this.History.ContainsKey(room.Name))
+                this.History.Add(room.Name, new Dictionary<DateTime, string>());
+
+            this.History[room.Name][DateTime.Now] = action;
+
+            // remove entries older than one week
+            var weekAgo = DateTime.Now.AddDays(-7);
+            foreach (var key in this.History.Keys)
+            {
+                foreach (var time in this.History[key].Keys)
+                {
+                    if (time < weekAgo)
+                        this.History[key].Remove(time);
+                }
+            }
+        }
+
+
         private static bool CheckCameras(Room room)
         {
             // it there is no cameras or there is offline camera
@@ -261,25 +334,6 @@ namespace MyHome.Systems
             diff = diff.Threshold(25, 255, ThresholdTypes.Binary);
             var diffPecent = (double)diff.CountNonZero() / (640 * 480);
             return diffPecent > threshold;
-        }
-
-        private void SetHistory(Room room, string action)
-        {
-            if (!this.History.ContainsKey(room.Name))
-                this.History.Add(room.Name, new Dictionary<DateTime, string>());
-
-            this.History[room.Name][DateTime.Now] = action;
-
-            // remove entries older than one week
-            var weekAgo = DateTime.Now.AddDays(-7);
-            foreach (var key in this.History.Keys)
-            {
-                foreach (var time in this.History[key].Keys)
-                {
-                    if (time < weekAgo)
-                        this.History[key].Remove(time);
-                }
-            }
         }
     }
 }

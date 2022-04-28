@@ -23,6 +23,9 @@ namespace MyHome.Systems.Actions
         [UiProperty(true)]
         public GlobalEventTypes EventType { get; set; }
 
+        [UiProperty(true)]
+        public string EventData { get; set; }
+
 
         public EventTriggeredAction()
         {
@@ -48,7 +51,10 @@ namespace MyHome.Systems.Actions
                 return false;
 
             var room = (Room)sender.GetType().GetProperty("Room")?.GetValue(sender);
-            if (room != this.eventRoom && this.eventRoom != null)
+            if (this.eventRoom != null && room != this.eventRoom)
+                return false;
+
+            if (!string.IsNullOrEmpty(this.EventData) && !e.Data?.Equals(Utils.Utils.ParseValue(this.EventData, e.Data.GetType())))
                 return false;
 
             return true;

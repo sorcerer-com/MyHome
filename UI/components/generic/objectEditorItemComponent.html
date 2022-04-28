@@ -73,6 +73,7 @@
     <!-- select -->
     <select v-if="valueInfo.type == 'select'" v-model="value" v-bind:title="getTitle()" class="w3-col m10 w3-mobile">
         <option value="" disabled selected hidden>Select</option>
+        <option value="">Null</option>
         <option v-for="(name, v) of valueInfo.select" v-bind:value="v">{{name}}</option>
     </select>
 </div>

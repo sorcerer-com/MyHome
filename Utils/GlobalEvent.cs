@@ -20,6 +20,7 @@ namespace MyHome.Utils
         MediaSeekForwardFast,
 
         SecurityAlarmActivated,
+        PresenceChanged,
 
         SensorDataAdded,
         DriverStateChanged
