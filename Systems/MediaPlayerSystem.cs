@@ -21,14 +21,14 @@ namespace MyHome.Systems
             ".mkv", ".avi", ".mov", ".wmv", ".mp4", ".mpg", ".mpeg", ".m4v", ".3gp", ".mp3" };
 
 
-        [UiProperty]
-        public int Volume { get; set; }
-
         [UiProperty(true)]
         public List<string> MediaPaths { get; }
 
         [UiProperty(true)]
         public List<string> Radios { get; }
+
+        [UiProperty]
+        public int Volume { get; set; }
 
         [UiProperty]
         public List<string> Watched { get; }
@@ -59,20 +59,30 @@ namespace MyHome.Systems
         [UiProperty]
         public string TimeDetails => this.GetTimeDetails();
 
+        private readonly List<string> mediaList;
+        private DateTime lastRefreshMediaListTimer;
         private readonly LibVLC libVLC;
         private readonly MediaPlayer player;
 
 
         public MediaPlayerSystem()
         {
-            this.Volume = 50;
             this.MediaPaths = new List<string>();
             this.Radios = new List<string>();
+            this.Volume = 50;
             this.Watched = new List<string>();
 
+            this.mediaList = new List<string>();
+            this.lastRefreshMediaListTimer = DateTime.Now - TimeSpan.FromDays(1);
             this.libVLC = new LibVLC();
             this.player = new MediaPlayer(this.libVLC);
             this.playing = "";
+        }
+
+        public override void Stop()
+        {
+            base.Stop();
+            this.StopMedia();
         }
 
         protected override void Update()
@@ -83,6 +93,7 @@ namespace MyHome.Systems
             if (this.player.State == VLCState.Ended)
                 this.player.Stop();
         }
+
 
         public void Play(string path)
         {
@@ -103,7 +114,7 @@ namespace MyHome.Systems
             MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaPlayed, this.playing);
         }
 
-        public override void Stop()
+        public void StopMedia()
         {
             logger.Debug($"Stop media: {this.playing}");
             this.player.Stop();
@@ -163,22 +174,35 @@ namespace MyHome.Systems
             MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaSeekForwardFast);
         }
 
+        public void RefreshMediaList()
+        {
+            this.lastRefreshMediaListTimer = DateTime.Now - TimeSpan.FromDays(1);
+        }
+
 
         private List<string> GetMediaList()
         {
-            var result = new List<string>();
-            for (int i = 0; i < this.MediaPaths.Count; i++)
+            lock (this.mediaList)
             {
-                if (!Directory.Exists(this.MediaPaths[i]))
-                    continue;
+                if (DateTime.Now > this.lastRefreshMediaListTimer + TimeSpan.FromDays(1))
+                {
+                    logger.Debug("Refresh media list");
+                    this.lastRefreshMediaListTimer = DateTime.Now;
+                    this.mediaList.Clear();
+                    for (int i = 0; i < this.MediaPaths.Count; i++)
+                    {
+                        if (!Directory.Exists(this.MediaPaths[i]))
+                            continue;
 
-                var filePaths = Directory.EnumerateFiles(this.MediaPaths[i], "*.*", SearchOption.AllDirectories)
-                    .Where(p => supportedFormats.Any(f => p.EndsWith(f)));
-                result.AddRange(filePaths.Select(p => $"media{i + 1}:" + p));
+                        var filePaths = Directory.EnumerateFiles(this.MediaPaths[i], "*.*", SearchOption.AllDirectories)
+                            .Where(p => supportedFormats.Any(f => p.EndsWith(f)));
+                        this.mediaList.AddRange(filePaths.Select(p => $"media{i + 1}:" + p));
+                    }
+                    this.mediaList.Sort();
+                    this.mediaList.AddRange(this.Radios.Select(r => "radios:" + r));
+                }
             }
-            result.Sort();
-            result.AddRange(this.Radios.Select(r => "radios:" + r));
-            return result;
+            return this.mediaList;
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0042:Deconstruct variable declaration")]

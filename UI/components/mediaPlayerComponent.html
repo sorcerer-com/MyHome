@@ -5,6 +5,11 @@
     <div class="w3-small w3-left-align w3-text-white margin-8 overflow-y-auto"
          id="media-list" style="max-height:300px;"
          v-if="!mediaPlayer.Playing">
+        <a class="w3-right w3-hover-text-blue-gray margin-right-8 font-size-normal material-icons" title="Refresh"
+           v-on:click="callMediaPlayer('RefreshMediaList')">
+            refresh
+        </a>
+
         <div class="margin-right-8 margin-bottom-8" v-for="(tree, media) of getMediaTree()">
             <h4 class="reset-margin">{{media}}</h4>
             <hr class="reset-margin margin-bottom-8" />
@@ -61,7 +66,7 @@
         <a class="w3-button w3-xlarge w3-padding-small w3-white w3-hover-gray w3-round-xxlarge padding-4 material-icons"
            title="Stop"
            v-show="mediaPlayer.Playing"
-           v-on:click="callMediaPlayer('Stop'); selectedMediaItem = ''">
+           v-on:click="callMediaPlayer('StopMedia'); selectedMediaItem = ''">
             stop
         </a>
         <a class="w3-button w3-padding-small w3-round-large w3-grey w3-hover-light-grey font-size-normal material-icons"
