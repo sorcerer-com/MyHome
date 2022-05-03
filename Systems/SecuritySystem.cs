@@ -90,7 +90,7 @@ namespace MyHome.Systems
 
             this.roomsInfo = new List<RoomInfo>();
             this.prevImages = new Dictionary<string, Mat>();
-            this.presenceDetectionTimer = DateTime.Now;
+            this.presenceDetectionTimer = DateTime.Now - TimeSpan.FromMinutes(this.PresenceDetectionInterval);
 
             Directory.CreateDirectory(ImagesPath);
         }
@@ -167,7 +167,7 @@ namespace MyHome.Systems
         }
 
 
-        public override void Update()
+        protected override void Update()
         {
             base.Update();
 

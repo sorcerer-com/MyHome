@@ -25,7 +25,7 @@ namespace MyHome.Systems
                 action.Setup();
         }
 
-        public override void Update()
+        protected override void Update()
         {
             base.Update();
 

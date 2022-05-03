@@ -84,7 +84,7 @@ while True:
                     break
 
             if (proc is None) or (proc.poll() is not None):
-                logger.error(f"Process didn't start, so try to restart it (ExitCode: {proc.returncode})")
+                logger.error(f"Process isn't running, so try to restart it (ExitCode: {proc.returncode})")
                 logger.error(proc.communicate()[1])
                 break
 

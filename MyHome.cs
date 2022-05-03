@@ -78,6 +78,8 @@ namespace MyHome
             //   - maybe show devices instead of value / grouped by type -https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg
             //   - too many sensor values, merge Water Switch and Water State somehow
             //   - change UI auto-refresh to use websocket (if supported only)? - server notify clients to refresh their data on systemChanged?
+            //   - remove Security button in RoomCard, leave only in Security pop-up
+            //   - when playing leave media player open
             // * multiple sensor graphics at once (for one sensor subname - motion, by multiple devices too)
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
@@ -115,13 +117,6 @@ namespace MyHome
 
             this.Setup();
 
-            var thread = new Thread(this.Update)
-            {
-                Name = "MyHome update",
-                IsBackground = true
-            };
-            thread.Start();
-
             this.Events.Fire(this, GlobalEventTypes.Start);
         }
 
@@ -149,6 +144,13 @@ namespace MyHome
 
             foreach (var system in this.Systems.Values)
                 system.Setup();
+
+            var thread = new Thread(this.Update)
+            {
+                Name = "MyHome Update",
+                IsBackground = true
+            };
+            thread.Start();
         }
 
         public void Stop()
@@ -237,8 +239,6 @@ namespace MyHome
             while (this.updateInterval > 0)
             {
                 stopwatch.Restart();
-
-                this.Systems.Values.RunForEach(system => system.Update());
 
                 this.CheckMqttStatus();
 

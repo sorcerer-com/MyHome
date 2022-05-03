@@ -59,7 +59,6 @@ namespace MyHome.Systems
         [UiProperty]
         public string TimeDetails => this.GetTimeDetails();
 
-        private DateTime timer;
         private readonly LibVLC libVLC;
         private readonly MediaPlayer player;
 
@@ -71,19 +70,14 @@ namespace MyHome.Systems
             this.Radios = new List<string>();
             this.Watched = new List<string>();
 
-            this.timer = DateTime.Now - TimeSpan.FromMinutes(1);
             this.libVLC = new LibVLC();
             this.player = new MediaPlayer(this.libVLC);
             this.playing = "";
         }
 
-        public override void Update()
+        protected override void Update()
         {
             base.Update();
-
-            if (DateTime.Now - this.timer < TimeSpan.FromMinutes(1))
-                return;
-            this.timer = DateTime.Now;
 
             // stop if end reached
             if (this.player.State == VLCState.Ended)

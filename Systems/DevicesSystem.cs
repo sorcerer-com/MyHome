@@ -18,7 +18,7 @@ namespace MyHome.Systems
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         [UiProperty(true, "minutes")]
-        public int SensorsDataInterval { get; set; } // minutes
+        public int SensorsCheckInterval { get; set; } // minutes
 
         public List<Device> Devices { get; }
 
@@ -34,7 +34,7 @@ namespace MyHome.Systems
 
         public DevicesSystem()
         {
-            this.SensorsDataInterval = 15;
+            this.SensorsCheckInterval = 15;
             this.Devices = new List<Device>();
         }
 
@@ -58,7 +58,7 @@ namespace MyHome.Systems
                 device.Stop();
         }
 
-        public override void Update()
+        protected override void Update()
         {
             base.Update();
 
@@ -67,8 +67,8 @@ namespace MyHome.Systems
             if (DateTime.Now < this.nextSensorCheckTime)
                 return;
 
-            // if SensorsDataInterval is changed
-            if (this.nextSensorCheckTime.Minute % this.SensorsDataInterval != 0)
+            // if SensorsCheckInterval is changed
+            if (this.nextSensorCheckTime.Minute % this.SensorsCheckInterval != 0)
                 this.nextSensorCheckTime = this.GetNextSensorCheckTime();
 
             var alertMsg = "";
@@ -76,24 +76,24 @@ namespace MyHome.Systems
             {
                 // check for inactive sensor
                 var lastSensorTime = sensor.Data.Keys.OrderBy(t => t).LastOrDefault();
-                if (lastSensorTime <= this.nextSensorCheckTime.AddMinutes(-this.SensorsDataInterval * 4) &&
-                    lastSensorTime > this.nextSensorCheckTime.AddMinutes(-this.SensorsDataInterval * 5))
+                if (lastSensorTime <= this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 4) &&
+                    lastSensorTime > this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 5))
                 {
                     logger.Warn($"Sensor {sensor.Name} ({sensor.Room.Name}) is not active from {lastSensorTime}");
                     alertMsg += $"{sensor.Name} ({sensor.Room.Name}) inactive ";
                 }
 
-                // aggregate one value per SensorsDataInterval
+                // aggregate one value per SensorsCheckInterval
                 var now = DateTime.Now;
                 var times = sensor.Data.Keys.Where(t => t < now.AddHours(-1) && t >= now.Date.AddHours(now.Hour).AddDays(-1)); // last 24 hours
-                var groupedDates = times.GroupBy(t => new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute / this.SensorsDataInterval * this.SensorsDataInterval, 0));
+                var groupedDates = times.GroupBy(t => new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute / this.SensorsCheckInterval * this.SensorsCheckInterval, 0));
                 sensor.AggregateData(groupedDates);
             });
 
             if (!string.IsNullOrEmpty(alertMsg))
                 Alert.Create($"{alertMsg.Trim()} alarm activated!").Validity(TimeSpan.FromHours(1)).Send();
 
-            this.nextSensorCheckTime += TimeSpan.FromMinutes(this.SensorsDataInterval);
+            this.nextSensorCheckTime += TimeSpan.FromMinutes(this.SensorsCheckInterval);
             MyHome.Instance.SystemChanged = true;
         }
 
@@ -103,7 +103,7 @@ namespace MyHome.Systems
             var now = DateTime.Now;
             var time = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0, 0);
             while (time < now)
-                time += TimeSpan.FromMinutes(this.SensorsDataInterval);
+                time += TimeSpan.FromMinutes(this.SensorsCheckInterval);
             return time;
         }
     }
