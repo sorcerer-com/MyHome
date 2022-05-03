@@ -8,9 +8,9 @@ using Newtonsoft.Json.Linq;
 
 using NLog;
 
-namespace MyHome.Systems.Devices.Drivers
+namespace MyHome.Systems.Devices.Drivers.Mqtt
 {
-    public class AcIrMqttDriver : BaseDriver
+    public class AcIrMqttDriver : MqttDriver
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 

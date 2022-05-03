@@ -269,7 +269,7 @@ namespace MyHome
             if (this.MqttClient.IsConnected)
                 this.mqttDisconnectedTime = now;
             else if (now - this.mqttDisconnectedTime > TimeSpan.FromMinutes(this.mqttDisconnectedAlert))
-                Alert.Create("MQTT broker is down").Details($"from {this.mqttDisconnectedTime:dd/MM/yyyy HH:mm:ss}!").Validity(TimeSpan.FromDays(1)).Send();
+                Models.Alert.Create("MQTT broker is down").Details($"from {this.mqttDisconnectedTime:dd/MM/yyyy HH:mm:ss}!").Validity(TimeSpan.FromDays(1)).Send();
         }
 
         private void CheckForUpgrade()
@@ -290,6 +290,11 @@ namespace MyHome
             }
         }
 
+
+        public Alert Alert(string message)
+        {
+            return Models.Alert.Create($"My Home: {message}");
+        }
 
         public bool Upgrade()
         {

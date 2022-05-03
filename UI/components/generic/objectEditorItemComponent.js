@@ -7,6 +7,7 @@ $.get(templateUrl, template => {
         data: function () {
             return {
                 debounceOnDictKeyChange: debounce(this.onDictKeyChange, 1000), // set only after no changes in 1 sec
+                showCode: false
             }
         },
         computed: {

@@ -11,12 +11,15 @@ namespace MyHome.Utils
 
         public string Selector { get; }
 
+        public bool Code { get; }
 
-        public UiPropertyAttribute(bool setting = false, string hint = "", string selector = null)
+
+        public UiPropertyAttribute(bool setting = false, string hint = "", string selector = null, bool code = false)
         {
             this.Setting = setting;
             this.Hint = hint;
             this.Selector = selector;
+            this.Code = code;
         }
     }
 }

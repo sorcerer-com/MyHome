@@ -95,6 +95,9 @@ namespace MyHome.Utils
                             subtypes[pi.Name]["select"] = values.ToDictionary(v => v.Item1, v => v.Item2);
                         }
                     }
+
+                    if (uiPropertyAttr.Code)
+                        subtypes[pi.Name]["type"] = "code";
                 }
                 result.Add("$type", obj.GetType().ToString());
                 result.Add("$subtypes", subtypes);
