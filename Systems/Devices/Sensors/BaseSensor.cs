@@ -16,14 +16,21 @@ namespace MyHome.Systems.Devices.Sensors
 
         public class SensorValue : Dictionary<string, double> { }; // subName / value
 
+        public enum AggregationType
+        {
+            AverageByTime,
+            Average,
+            Sum
+        }
+
 
         public Dictionary<DateTime, SensorValue> Data { get; }
 
         [UiProperty(true, "real name / custom name")]
         public Dictionary<string, string> SubNamesMap { get; } // map sensor subname to custom subname
 
-        [UiProperty(true, "names")]
-        public List<string> SumAggregated { get; } // subnames
+        [UiProperty(true, "name / aggregation type")]
+        public Dictionary<string, AggregationType> AggregationMap { get; } // subname / aggregation type
 
         [UiProperty(true, "name / expression of x")]
         public Dictionary<string, string> Calibration { get; } // calibration values per subname: newValue = expression(realValue)
@@ -48,7 +55,7 @@ namespace MyHome.Systems.Devices.Sensors
         {
             this.Data = new Dictionary<DateTime, SensorValue>();
             this.SubNamesMap = new Dictionary<string, string>();
-            this.SumAggregated = new List<string>();
+            this.AggregationMap = new Dictionary<string, AggregationType>();
             this.Calibration = new Dictionary<string, string>();
             this.Units = new Dictionary<string, string>();
 
@@ -78,8 +85,8 @@ namespace MyHome.Systems.Devices.Sensors
                         "calculate value: " + this.Calibration[name]);
                 }
 
-                var sumAggr = this.SumAggregated.Contains(name);
-                if (!sumAggr)
+                this.AggregationMap.TryGetValue(name, out var aggrType);
+                if (aggrType != AggregationType.Sum)
                     this.Data[time][name] = value;
                 else // sum type - differentiate
                 {
@@ -119,12 +126,14 @@ namespace MyHome.Systems.Devices.Sensors
                     if (!values.Any())
                         continue;
 
-                    var sumAggr = this.SumAggregated.Contains(subName);
+                    this.AggregationMap.TryGetValue(subName, out var aggrType);
 
                     double newValue = 0.0;
-                    if (!sumAggr)
-                        newValue = Math.Round(AverageByTime(values), 2); // round to 2 decimals after the point
-                    else
+                    if (aggrType == AggregationType.Average)
+                        newValue = Math.Round(values.Values.Average(), 2);
+                    else if (aggrType == AggregationType.AverageByTime)
+                        newValue = Math.Round(AverageByTime(values), 2);
+                    else // AggregationType.Sum
                         newValue = Math.Round(values.Values.Sum(), 2);
                     this.Data[group.Key][subName] = newValue;
                 }
@@ -151,9 +160,10 @@ namespace MyHome.Systems.Devices.Sensors
             var result = new Dictionary<string, Dictionary<string, object>>();
             foreach (var key in this.Values.Keys)
             {
+                this.AggregationMap.TryGetValue(key, out var aggrType);
                 var info = new Dictionary<string, object>
                 {
-                    { "aggrType", this.SumAggregated.Contains(key) ? "sum" : "avg" }
+                    { "aggrType", aggrType.ToString() }
                 };
                 if (this.Units.ContainsKey(key))
                     info.Add("unit", this.Units[key]);
@@ -173,7 +183,7 @@ namespace MyHome.Systems.Devices.Sensors
             var sumType = this.Data.Where(kvp => kvp.Key > DateTime.Now.Date)
                 .SelectMany(kvp => kvp.Value)
                 .GroupBy(x => x.Key)
-                .Where(g => this.SumAggregated.Contains(g.Key))
+                .Where(g => this.AggregationMap.ContainsKey(g.Key) && this.AggregationMap[g.Key] == AggregationType.Sum)
                 .ToList();
             sumType.ForEach(g => result[g.Key] = g.Select(x => x.Value).Sum());
             return result;
