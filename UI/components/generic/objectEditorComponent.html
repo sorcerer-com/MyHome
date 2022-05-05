@@ -1,6 +1,11 @@
 ﻿<form class="w3-center" v-if="object">
+    <a class="w3-right w3-hover-text-blue-gray margin-right-8 font-size-normal material-icons" title="Refresh"
+       v-on:click="showEditor = !showEditor">
+        code
+    </a>
+
     <div v-for="name of Object.keys(object)"
-         v-if="name[0] != '$' && (settings == null || object['$subtypes'][name].setting == settings)"
+         v-if="!showEditor && name[0] != '$' && (settings == null || object['$subtypes'][name].setting == settings)"
          class="w3-row w3-row-padding margin-bottom-8">
         <span class="w3-col m5 w3-right-align">{{name}}:</span>
 
@@ -17,6 +22,10 @@
                        v-bind:object="object[name]">
         </object-editor>
     </div>
+
+    <monaco-editor v-if="showEditor" v-model="json" v-bind:type="'json'" v-bind:schema="getJsonSchema(object['$subtypes'])"
+                   style="min-height: 300px; text-align: left; padding-top: 20px"></monaco-editor>
+
     <a class="w3-button w3-round w3-padding-small w3-white w3-hover-blue-grey margin-8" title="Save"
        v-if="onsave" v-on:click="save()">
         Save
