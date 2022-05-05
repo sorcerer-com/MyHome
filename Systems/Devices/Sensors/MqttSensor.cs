@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 
 using MQTTnet;
-using MQTTnet.Client.Connecting;
 
 using MyHome.Utils;
 
@@ -34,8 +33,9 @@ namespace MyHome.Systems.Devices.Sensors
         {
             base.Setup();
 
-            // subscribe to topic
-            MyHome.Instance.MqttClient.Connected += this.MqttClient_Connected;
+            // subscribe for the topics
+            foreach (var (topic, _) in this.MqttTopics)
+                MyHome.Instance.MqttClient.Subscribe(topic);
 
             // process messages
             MyHome.Instance.MqttClient.ApplicationMessageReceived += this.MqttClient_ApplicationMessageReceived;
@@ -49,7 +49,6 @@ namespace MyHome.Systems.Devices.Sensors
                 MyHome.Instance.MqttClient.Unsubscribe(topic);
 
             // remove handlers
-            MyHome.Instance.MqttClient.Connected -= this.MqttClient_Connected;
             MyHome.Instance.MqttClient.ApplicationMessageReceived -= this.MqttClient_ApplicationMessageReceived;
         }
 
@@ -76,12 +75,6 @@ namespace MyHome.Systems.Devices.Sensors
                         MyHome.Instance.MqttClient.Subscribe(topic);
                 }
             }
-        }
-
-        private void MqttClient_Connected(object sender, MqttClientConnectedEventArgs e)
-        {
-            foreach (var (topic, _) in this.MqttTopics)
-                MyHome.Instance.MqttClient.Subscribe(topic);
         }
 
         private void MqttClient_ApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs e)

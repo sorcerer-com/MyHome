@@ -43,11 +43,15 @@ namespace MyHome.Utils
             {
                 logger.Debug("MQTT client connected");
                 this.Connected?.Invoke(this, e);
+
+                // re-subscribe for the topics
+                foreach (var topic in this.Subscriptions.Keys)
+                    this.MqttClient.SubscribeAsync(topic);
             });
 
             this.MqttClient.UseDisconnectedHandler(e =>
             {
-                Disconnected?.Invoke(this, e);
+                this.Disconnected?.Invoke(this, e);
                 if (autoreconnect)
                 {
                     logger.Debug("MQTT client disconnected. Try to reconnect...");
@@ -75,8 +79,9 @@ namespace MyHome.Utils
 
         public void Disconnect()
         {
-            logger.Debug($"Disconnect MQTT client '{this.MqttClient.Options.ClientId}'");
+            logger.Debug($"Disconnect MQTT client '{this.MqttClient.Options?.ClientId}'");
             this.MqttClient.DisconnectAsync();
+            this.Subscriptions.Clear();
         }
 
         public void Subscribe(string topic)
@@ -88,7 +93,7 @@ namespace MyHome.Utils
                 this.Subscriptions.Add(topic, 0);
             this.Subscriptions[topic] = this.Subscriptions[topic] + 1;
 
-            logger.Trace($"Subscribe MQTT client '{this.MqttClient.Options.ClientId}' for topic: {topic} ({this.Subscriptions[topic]})");
+            logger.Trace($"Subscribe MQTT client '{this.MqttClient.Options?.ClientId}' for topic: {topic} ({this.Subscriptions[topic]})");
             this.MqttClient.SubscribeAsync(topic);
         }
 
@@ -97,7 +102,7 @@ namespace MyHome.Utils
             if (string.IsNullOrEmpty(topic))
                 return;
 
-            logger.Trace($"Unsubscribe MQTT client '{this.MqttClient.Options.ClientId}' for topic: {topic} " +
+            logger.Trace($"Unsubscribe MQTT client '{this.MqttClient.Options?.ClientId}' for topic: {topic} " +
                 $"({(this.Subscriptions.ContainsKey(topic) ? this.Subscriptions[topic] : 0)})");
             if (this.Subscriptions.ContainsKey(topic))
             {
