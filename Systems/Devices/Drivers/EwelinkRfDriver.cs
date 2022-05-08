@@ -14,12 +14,6 @@ namespace MyHome.Systems.Devices.Drivers
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         [UiProperty(true)]
-        public string EwelinkEmail { get; set; }
-
-        [UiProperty(true)]
-        public string EwelinkPassword { get; set; }
-
-        [UiProperty(true)]
         public string EwelinkDeviceId { get; set; }
 
         [UiProperty(true)]
@@ -49,13 +43,14 @@ namespace MyHome.Systems.Devices.Drivers
                 try
                 {
                     logger.Info($"Transmit to eWeLink RF driver {this.Name} ({this.Room.Name})");
-                    var ewelink = new Ewelink(this.EwelinkEmail, this.EwelinkPassword);
+                    var ewelink = new Ewelink(MyHome.Instance.Config.EwelinkEmail, MyHome.Instance.Config.EwelinkPassword);
                     ewelink.TransmitRfChannel(this.EwelinkDeviceId, this.EwelinkRfChannel).Wait();
                 }
                 catch (Exception e)
                 {
                     logger.Error($"Cannot transmit RF channel '{this.EwelinkRfChannel}' to device: {this.Name} ({this.Room.Name})");
                     logger.Debug(e);
+                    throw;
                 }
             }
         }

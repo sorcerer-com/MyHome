@@ -34,17 +34,17 @@ namespace MyHome.Systems.Devices.Drivers
         }
 
 
-        public bool Execute()
+        public void Execute()
         {
             logger.Trace($"Execute script: {this.Script}");
-            return MyHome.Instance.ExecuteJint(jint => jint
-                        .SetValue("logger", logger)
-                        .SetValue("myHome", MyHome.Instance)
-                        .SetValue("Rooms", MyHome.Instance.Rooms.ToDictionary(r => r.Name.Replace(" ", "")))
-                        .SetValue("Devices", MyHome.Instance.Rooms.ToDictionary(r => r.Name.Replace(" ", ""),
-                                                    r => r.Devices.ToDictionary(d => d.Name.Replace(" ", ""))))
-                        .Evaluate($"{{ {this.Script} }}"),
-                        $"execute driver '{this.Name}' ({this.Room.Name}) script:\n{this.Script}");
+            MyHome.Instance.ExecuteJint(jint => jint
+                    .SetValue("logger", logger)
+                    .SetValue("myHome", MyHome.Instance)
+                    .SetValue("Rooms", MyHome.Instance.Rooms.ToDictionary(r => r.Name.Replace(" ", "")))
+                    .SetValue("Devices", MyHome.Instance.Rooms.ToDictionary(r => r.Name.Replace(" ", ""),
+                                         r => r.Devices.ToDictionary(d => d.Name.Replace(" ", ""))))
+                    .Evaluate($"{{ {this.Script} }}"),
+                    $"execute driver '{this.Name}' ({this.Room.Name}) script:\n{this.Script}");
         }
     }
 }

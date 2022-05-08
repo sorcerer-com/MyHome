@@ -137,7 +137,7 @@ namespace MyHome.Controllers
             {
                 logger.Error($"Failed to set device '{deviceName}' ({roomName})");
                 logger.Debug(e);
-                return this.BadRequest(e.Message);
+                return this.BadRequest(e.InnerException?.Message ?? e.Message);
             }
         }
 

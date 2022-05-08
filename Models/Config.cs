@@ -40,5 +40,11 @@ namespace MyHome.Models
 
         [UiProperty(true)]
         public string MqttPassword { get; set; } = "";
+
+        [UiProperty(true)]
+        public string EwelinkEmail { get; set; }
+
+        [UiProperty(true)]
+        public string EwelinkPassword { get; set; }
     }
 }

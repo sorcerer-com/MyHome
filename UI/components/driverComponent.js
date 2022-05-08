@@ -6,19 +6,22 @@ $.get(templateUrl, template => {
         props: ["room", "driver"],
         data: function () {
             return {
+                error: null,
                 debounceSetColor: debounce(this.setColor, 1000), // set only after no changes in 1 sec
                 modalObject: null
             }
         },
         methods: {
             click: function () {
+                if (this.driver.ConfirmationRequired &&
+                    !confirm(`Are you sure you want to trigger the ${this.room.Name} ${this.driver.Name}?`))
+                    return;
                 if ("IsOn" in this.driver) {
-                    if (this.driver.ConfirmationRequired &&
-                        !confirm(`Are you sure you want to turn ${!this.driver.IsOn ? 'on' : 'off'} the ${this.room.Name} ${this.driver.Name}?`))
-                        return;
-
                     this.driver.IsOn = !this.driver.IsOn;
-                    setDevice(this.room.Name, this.driver.Name, { "IsOn": this.driver.IsOn });
+                    setDevice(this.room.Name, this.driver.Name, { "IsOn": this.driver.IsOn }).fail(response => {
+                        this.error = "Error: " + response.responseText
+                        setTimeout(() => this.error = "", 3000);
+                    });
                 }
                 if (this.modalObject == null && this.driver.$type.endsWith("AcIrMqttDriver")) {
                     this.modalObject = { ...this.driver };
