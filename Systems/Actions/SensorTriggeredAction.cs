@@ -21,7 +21,12 @@ namespace MyHome.Systems.Actions
 
         public SensorTriggeredAction()
         {
+        }
+
+        public override void Setup()
+        {
             base.EventType = GlobalEventTypes.SensorDataAdded;
+            base.Setup();
         }
 
 
