@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 
 using MyHome.Models;
 using MyHome.Utils;
@@ -42,7 +43,7 @@ namespace MyHome.Systems.Actions
         private void Events_Handler(object sender, GlobalEventArgs e)
         {
             if (this.IsTriggered(sender, e))
-                this.Trigger();
+                Task.Run(() => this.Trigger());
         }
 
         protected virtual bool IsTriggered(object sender, GlobalEventArgs e)

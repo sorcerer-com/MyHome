@@ -68,25 +68,23 @@ namespace MyHome.Systems.Actions
         {
         }
 
-        public Task<bool> Trigger(bool asyncExec = true)
+        public bool Trigger()
         {
             logger.Trace($"Action triggered: {this.Name}");
             if (this.IsEnabled)
             {
-                var script = Regex.Replace(this.Script, @" as \w*", ""); // remove " as <Type>" casts
-                if (asyncExec)
-                    return Task.Run(() => this.ExecuteScript(script));
-                else if (!this.ExecuteScript(script))
-                    return Task.FromResult(false);
+                if (!this.ExecuteScript())
+                    return false;
             }
             else
                 logger.Trace("Action is disabled");
-            return Task.FromResult(true);
+            return true;
         }
 
 
-        private bool ExecuteScript(string script)
+        private bool ExecuteScript()
         {
+            var script = Regex.Replace(this.Script, @" as \w*", ""); // remove " as <Type>" casts
             logger.Trace($"Execute script: {script}");
             var result = MyHome.Instance.ExecuteJint(jint => jint
                         .SetValue("logger", logger)

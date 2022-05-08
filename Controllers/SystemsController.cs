@@ -168,7 +168,7 @@ namespace MyHome.Controllers
                 return this.NotFound($"Action '{actionName}' not found");
 
             var stopwatch = Stopwatch.StartNew();
-            if (!action.Trigger(false).Result)
+            if (!action.Trigger())
                 return this.BadRequest("Trigger failed");
 
             return this.Ok($"Execution time: {stopwatch.Elapsed}");
