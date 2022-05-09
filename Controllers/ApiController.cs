@@ -39,7 +39,8 @@ namespace MyHome.Controllers
         {
             try
             {
-                this.Request.Form.SetObject(this.myHome.Config);
+                var body = Newtonsoft.Json.Linq.JToken.Parse(new System.IO.StreamReader(this.Request.Body).ReadToEndAsync().Result);
+                body.SetObject(this.myHome.Config);
                 this.myHome.SystemChanged = true;
                 return this.Ok();
             }

@@ -44,6 +44,8 @@ namespace MyHome.Controllers
         {
             try
             {
+                var body = Newtonsoft.Json.Linq.JToken.Parse(new System.IO.StreamReader(this.Request.Body).ReadToEndAsync().Result);
+
                 var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
                 if (room == null)
                 {
@@ -52,7 +54,7 @@ namespace MyHome.Controllers
                     this.myHome.Rooms.Add(room);
                 }
 
-                this.Request.Form.SetObject(room);
+                body.SetObject(room);
                 this.myHome.SystemChanged = true;
                 return this.Ok();
             }
@@ -111,6 +113,8 @@ namespace MyHome.Controllers
         {
             try
             {
+                var body = Newtonsoft.Json.Linq.JToken.Parse(new System.IO.StreamReader(this.Request.Body).ReadToEndAsync().Result);
+
                 var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
                 if (room == null)
                     return this.NotFound($"Room '{roomName}' not found");
@@ -119,7 +123,7 @@ namespace MyHome.Controllers
                 if (device == null)
                 {
                     logger.Info($"Add device '{deviceName}' to room '{roomName}'");
-                    var type = System.Reflection.Assembly.GetExecutingAssembly().GetType(this.Request.Form["$type"]);
+                    var type = System.Reflection.Assembly.GetExecutingAssembly().GetType((string)body["$type"]);
                     if (type == null)
                         return this.NotFound("No such device type: " + type);
 
@@ -129,7 +133,7 @@ namespace MyHome.Controllers
                     this.myHome.DevicesSystem.Devices.Add(device);
                 }
 
-                this.Request.Form.SetObject(device);
+                body.SetObject(device);
                 this.myHome.SystemChanged = true;
                 return this.Ok();
             }

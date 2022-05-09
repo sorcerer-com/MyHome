@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 using MyHome.Models;
 
+using Newtonsoft.Json.Linq;
+
 namespace MyHome.Utils
 {
     public static class Extensions
@@ -129,67 +131,60 @@ namespace MyHome.Utils
             return result;
         }
 
-        public static void SetObject(this Microsoft.AspNetCore.Http.IFormCollection form, object obj)
+        public static void SetObject(this JToken token, object obj)
         {
-            var processingDicts = new List<string>();
-
             var type = obj.GetType();
-            foreach (var item in form)
+            foreach (var item in token.OfType<JProperty>())
             {
-                if (item.Key.Contains("$subtypes"))
+                if (item.Name.StartsWith("$"))
                     continue;
 
-                var propName = item.Key.Replace("[]", "");
-                if (propName.IndexOf('[') != propName.LastIndexOf('[')) // more than one '['
-                    continue;
-                if (propName.Contains('[')) // dictionary
-                    propName = propName[..item.Key.IndexOf('[')];
-
-                var prop = type.GetProperty(propName);
+                var prop = type.GetProperty(item.Name);
                 if (prop == null)
                     continue;
 
-                if (item.Key.EndsWith("[]")) // list
+                if (item.Value.Type == JTokenType.Array) // list
                 {
                     if (prop.GetValue(obj) is IList list)
                     {
                         // workaround since Clear() doesn't work well with observable collections
                         while (list.Count > 0)
                             list.RemoveAt(0);
-                        var values = item.Value.Select(v => Utils.ParseValue(v, prop.PropertyType.GenericTypeArguments[0]));
+                        var values = item.Value.OfType<JValue>().Select(v => Utils.ParseValue(v.Value?.ToString(), prop.PropertyType.GenericTypeArguments[0]));
                         foreach (var value in values)
-                            list.Add(value);
+                        {
+                            if (value?.GetType() == prop.PropertyType.GenericTypeArguments[0])
+                                list.Add(value);
+                        }
                     }
                 }
-                else if (item.Key.IndexOf('[') < item.Key.IndexOf(']'))
+                else if (item.Value.Type == JTokenType.Object)
                 {
                     if (prop.PropertyType.IsGenericType) // dictionary
                     {
                         if (prop.GetValue(obj) is IDictionary dict)
                         {
-                            if (!processingDicts.Contains(propName))
+                            dict.Clear();
+                            var values = item.Value.OfType<JProperty>().ToDictionary(
+                                v => Utils.ParseValue(v.Name, prop.PropertyType.GenericTypeArguments[0]), 
+                                v => Utils.ParseValue(v.Value?.ToString(), prop.PropertyType.GenericTypeArguments[1]));
+                            foreach (var value in values)
                             {
-                                dict.Clear();
-                                processingDicts.Add(propName);
+                                if (value.Key?.GetType() == prop.PropertyType.GenericTypeArguments[0] &&
+                                    value.Value?.GetType() == prop.PropertyType.GenericTypeArguments[1])
+                                    dict[value.Key] = value.Value;
                             }
-                            var key = Utils.ParseValue(item.Key[(item.Key.IndexOf('[') + 1)..item.Key.IndexOf(']')], prop.PropertyType.GenericTypeArguments[0]);
-                            dict[key] = Utils.ParseValue(item.Value, prop.PropertyType.GenericTypeArguments[1]);
                         }
                     }
                     else // object
                     {
                         var obj2 = prop.GetValue(obj);
-                        var property = item.Key[(item.Key.IndexOf('[') + 1)..item.Key.IndexOf(']')];
-                        var prop2 = obj2.GetType().GetProperty(property);
-                        if (prop2 == null)
-                            continue;
-                        if (prop2.CanWrite)
-                            prop2.SetValue(obj2, Utils.ParseValue(item.Value, prop2.PropertyType));
+                        item.SetObject(obj2);
                     }
                 }
                 else if (prop.CanWrite)
                 {
-                    prop.SetValue(obj, Utils.ParseValue(item.Value, prop.PropertyType));
+                    prop.SetValue(obj, Utils.ParseValue((string)item.Value, prop.PropertyType));
                 }
             }
         }

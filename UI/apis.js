@@ -1,3 +1,12 @@
+$.postJsonBody = function(url, data) {
+    return $.ajax({
+        type: 'POST',
+        data: typeof data == "string" ? data : JSON.stringify(data),
+        contentType: 'application/json',
+        url: url
+    });
+}
+
 function getRooms() {
     return $.get(`./api/rooms`);
 }
@@ -7,7 +16,7 @@ function createRoom() {
 }
 
 function setRoom(roomName, data) {
-    return $.post(`./api/rooms/${roomName}`, data);
+    return $.postJsonBody(`./api/rooms/${roomName}`, data);
 }
 
 function deleteRoom(roomName) {
@@ -19,7 +28,7 @@ function createDevice(roomName, deviceType) {
 }
 
 function setDevice(roomName, deviceName, data) {
-    return $.post(`./api/rooms/${roomName}/devices/${deviceName}`, data);
+    return $.postJsonBody(`./api/rooms/${roomName}/devices/${deviceName}`, data);
 }
 
 function deleteDevice(roomName, deviceName) {
@@ -48,7 +57,7 @@ function getSystem(systemName) {
 }
 
 function setSystem(systemName, data) {
-    return $.post(`./api/systems/${systemName}`, data);
+    return $.postJsonBody(`./api/systems/${systemName}`, data);
 }
 
 function callSystem(systemName, funcName, ...args) {
@@ -61,7 +70,7 @@ function createAction(actionType) {
 }
 
 function setAction(actionName, data) {
-    return $.post(`./api/systems/Actions/${actionName}`, data);
+    return $.postJsonBody(`./api/systems/Actions/${actionName}`, data);
 }
 
 function deleteAction(actionName) {
@@ -78,7 +87,7 @@ function getConfig() {
 }
 
 function setConfig(data) {
-    return $.post("./api/config", data);
+    return $.postJsonBody("./api/config", data);
 }
 
 function getLogs() {

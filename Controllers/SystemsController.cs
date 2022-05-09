@@ -47,11 +47,13 @@ namespace MyHome.Controllers
         {
             try
             {
+                var body = Newtonsoft.Json.Linq.JToken.Parse(new System.IO.StreamReader(this.Request.Body).ReadToEndAsync().Result);
+
                 var system = this.myHome.Systems.FirstOrDefault(kvp => kvp.Key.ToLower() == systemName.ToLower()).Value;
                 if (system == null)
                     return this.NotFound($"System '{systemName}' not found");
 
-                this.Request.Form.SetObject(system);
+                body.SetObject(system);
                 this.myHome.SystemChanged = true;
                 return this.Ok();
             }
@@ -112,11 +114,13 @@ namespace MyHome.Controllers
         {
             try
             {
+                var body = Newtonsoft.Json.Linq.JToken.Parse(new System.IO.StreamReader(this.Request.Body).ReadToEndAsync().Result);
+
                 var action = this.myHome.ActionsSystem.Actions.FirstOrDefault(action => action.Name == actionName);
                 if (action == null)
                 {
                     logger.Info($"Add action: {actionName}");
-                    var actionType = System.Reflection.Assembly.GetExecutingAssembly().GetType(this.Request.Form["$type"]);
+                    var actionType = System.Reflection.Assembly.GetExecutingAssembly().GetType((string)body["$type"]);
                     if (actionType == null)
                         return this.NotFound("No such action type: " + actionType);
 
@@ -125,7 +129,7 @@ namespace MyHome.Controllers
                     this.myHome.ActionsSystem.Actions.Add(action);
                 }
 
-                this.Request.Form.SetObject(action);
+                body.SetObject(action);
                 this.myHome.SystemChanged = true;
                 return this.Ok();
             }

@@ -58,7 +58,7 @@ namespace MyHome.Systems
 
                 this.Update();
 
-                if (stopwatch.Elapsed > TimeSpan.FromSeconds(this.updateInterval))
+                if (stopwatch.Elapsed >= TimeSpan.FromSeconds(this.updateInterval))
                 {
                     logger.Trace($"{this.Name} system update time: {stopwatch.Elapsed}");
                 }

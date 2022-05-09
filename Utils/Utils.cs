@@ -48,10 +48,13 @@ namespace MyHome.Utils
 
         public static dynamic ParseValue(string value, Type type)
         {
+            if (value == null)
+                return null;
+
             if ((type == null || type == typeof(bool)) &&
-                (value == "true" || value == "false"))
+                (value.ToLower() == "true" || value.ToLower() == "false"))
             {
-                return value == "true";
+                return value.ToLower() == "true";
             }
             else if ((type == null || type.Name.StartsWith("Int")) &&
                 int.TryParse(value, out int i))
