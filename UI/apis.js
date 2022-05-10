@@ -39,6 +39,10 @@ function getSensorData(roomName, sensorName, valueType) {
     return $.get(`./api/rooms/${roomName}/sensors/${sensorName}/data/${valueType}`);
 }
 
+function setSensorData(roomName, sensorName, valueType, data) {
+    return $.postJsonBody(`./api/rooms/${roomName}/sensors/${sensorName}/data/${valueType}`, data);
+}
+
 function moveCamera(roomName, cameraName, movementType) {
     return $.post(`./api/rooms/${roomName}/cameras/${cameraName}/move?movementType=${movementType}`)
 }

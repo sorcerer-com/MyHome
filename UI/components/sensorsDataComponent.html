@@ -1,8 +1,23 @@
 ﻿<div>
-    <div v-for="sensor of sensors" class="w3-margin-bottom">
+    <a class="w3-right w3-hover-text-blue-gray margin-right-8 font-size-normal material-icons" title="Show JSON"
+       v-on:click="showEditor()">
+        code
+    </a>
+
+    <div v-for="sensor of sensors" v-bind:class="{'w3-hide': editorData}" class="w3-margin-bottom">
         <h4 class="reset-margin">{{sensor.Name}}</h4>
         <hr class="reset-margin margin-bottom-8" />
         <canvas v-bind:id="'chart' + sensor.Name + 'LastDay'"></canvas>
         <canvas v-bind:id="'chart' + sensor.Name + 'LastYear'"></canvas>
+    </div>
+
+    <div v-if="editorData">
+        <monaco-editor v-model="editorData" v-bind:type="'json'"
+                       style="min-height: 300px; text-align: left; padding-top: 20px"></monaco-editor>
+        <a class="w3-button w3-round w3-padding-small w3-white w3-hover-blue-grey margin-8" title="Save"
+           v-on:click="save()">
+            Save
+        </a>
+        <div class="w3-text-red margin-bottom-8" v-if="error">{{error}}</div>
     </div>
 </div>

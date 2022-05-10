@@ -195,6 +195,30 @@ namespace MyHome.Controllers
             return this.Ok(result);
         }
 
+        [HttpPost("{roomName}/sensors/{sensorName}/data/{valueType}")]
+        public ActionResult SetSensorData(string roomName, string sensorName, string valueType)
+        {
+            var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+            if (room == null)
+                return this.NotFound($"Room '{roomName}' not found");
+
+            var sensor = room.Sensors.FirstOrDefault(s => s.Name == sensorName);
+            if (sensor == null)
+                return this.NotFound($"Sensor '{sensorName}' not found");
+
+            var body = Newtonsoft.Json.Linq.JToken.Parse(new System.IO.StreamReader(this.Request.Body).ReadToEndAsync().Result);
+            foreach(var item in body["lastDay"].Concat(body["lastYear"]).OfType<Newtonsoft.Json.Linq.JProperty>())
+            {
+                var key = DateTime.Parse(item.Name);
+                if (sensor.Data.ContainsKey(key) && sensor.Data[key].ContainsKey(valueType))
+                    sensor.Data[key][valueType] = (double)item;
+            }
+            this.myHome.SystemChanged = true;
+
+            return this.Ok();
+        }
+
+
         [HttpGet("{roomName}/cameras/{cameraName}/image")]
         public void GetCameraImage(string roomName, string cameraName)
         {

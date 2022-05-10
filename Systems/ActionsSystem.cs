@@ -30,7 +30,7 @@ namespace MyHome.Systems
             base.Update();
 
             this.Actions.RunForEach(action => action.Update());
-            // TODO: manually activated security alarm shouldn't be stopped
+            // TODO: manually activated security alarm shouldn't be stopped - define who activated it
             // TODO: only manually activated security system should have delay time (15 min)?
             // TODO: add sunset/sunrise (weather state) as time of execution
         }

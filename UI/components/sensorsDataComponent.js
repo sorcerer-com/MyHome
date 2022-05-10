@@ -7,7 +7,9 @@ $.get(templateUrl, template => {
         data: function () {
             return {
                 sensorsData: {},
-                charts: {}
+                charts: {},
+                editorData: null,
+                error: ""
             }
         },
         methods: {
@@ -33,6 +35,20 @@ $.get(templateUrl, template => {
                     allRequests.push(request);
                 }
                 $.when(...allRequests).done(() => setTimeout(this.refreshData, 3000)); // auto-refresh data every 3 seconds
+            },
+            showEditor: function () {
+                this.editorData = this.editorData ? null : JSON.stringify(this.sensorsData, null, 2);
+                this.error = "";
+            },
+            save: function () {
+                let data = JSON.parse(this.editorData);
+                let allRequests = [];
+                for (let sensor of this.sensors) {
+                    allRequests.push(setSensorData(this.room.Name, sensor.Name, this.valueType, data[sensor.Name]));
+                }
+                $.when(...allRequests).done(() => this.editorData = null)
+                    .fail(response => this.error = "Error: " + response.responseText);
+
             }
         },
         mounted: function () {

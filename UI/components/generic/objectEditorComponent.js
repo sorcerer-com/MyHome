@@ -13,8 +13,6 @@ $.get(templateUrl, template => {
         computed: {
             json: {
                 get: function () {
-                    console.log(this.getJsonSchema(this.object["$subtypes"]));
-
                     let filteredObject = Object.keys(this.object)
                         .filter(key => key[0] != "$" && (this.settings == null || this.object['$subtypes'][key].setting == this.settings))
                         .reduce((cur, key) => { return Object.assign(cur, { [key]: this.object[key] }) }, {});

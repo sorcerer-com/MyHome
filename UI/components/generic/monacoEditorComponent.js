@@ -25,7 +25,7 @@ $.get(templateUrl, template => {
             }
             else if (this.type == "json") {
                 monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
-                    schemas: [{ fileMatch: ["*"], schema: this.schema }]
+                    schemas: this.schema ? [{ fileMatch: ["*"], schema: this.schema }] : []
                 });
             }
 
