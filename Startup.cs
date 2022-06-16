@@ -31,6 +31,7 @@ namespace MyHome
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
+            services.AddResponseCompression();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,6 +45,7 @@ namespace MyHome
             }
 
             app.UseSession();
+            app.UseResponseCompression();
 
             app.Use(async (context, next) =>
             {
@@ -55,18 +57,10 @@ namespace MyHome
             app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = fileProvider });
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = fileProvider,
-                OnPrepareResponse = context =>
-                {
-                    var path = context.Context.Request.Path.Value;
-                    if (path.EndsWith(".html") && path.LastIndexOf("/") == 0) // disable cache for pages only
-                    {
-                        context.Context.Response.Headers.Add("Cache-Control", "no-cache, no-store");
-                        context.Context.Response.Headers.Add("Expires", "-1");
-                    }
-                }
+                FileProvider = fileProvider
             });
 
+            app.UseWebSockets();
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>

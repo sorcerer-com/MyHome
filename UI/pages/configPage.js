@@ -20,15 +20,15 @@ $.get(templateUrl, template => {
         },
         methods: {
             refreshData: function () {
-                if (this._isDestroyed)
+                if (this._isDestroyed) {
+                    window.ws?.removeRefreshHandlers(this.refreshData);
                     return;
+                }
 
-                getRooms().done(rooms => {
-                    Vue.set(this, "rooms", rooms);
+                getRooms().done(rooms => Vue.set(this, "rooms", rooms));
+
+                if (!window.ws || window.ws.readyState != WebSocket.OPEN)
                     setTimeout(this.refreshData, 3000);
-                }).fail(() => {
-                    setTimeout(this.refreshData, 1000);
-                });
             },
 
             showEdit: function (roomName, object, onSave, onDelete) {
@@ -105,6 +105,7 @@ $.get(templateUrl, template => {
         },
         mounted: function () {
             this.refreshData();
+            window.ws?.addRefreshHandlers(this.refreshData);
         }
     });
 });

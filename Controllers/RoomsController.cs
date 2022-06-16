@@ -188,8 +188,8 @@ namespace MyHome.Controllers
             var subData = sensor.Data.Where(kvp => kvp.Value.ContainsKey(valueType)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value[valueType]);
             var result = new
             {
-                lastDay = subData.Where(kvp => kvp.Key >= prevDayTime).ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-                lastYear = subData.Where(kvp => kvp.Key < prevDayTime - TimeSpan.FromHours(now.Hour)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+                lastDay = subData.Where(kvp => kvp.Key >= prevDayTime).ToDictionary(kvp => kvp.Key.ToString("o"), kvp => kvp.Value),
+                lastYear = subData.Where(kvp => kvp.Key < prevDayTime - TimeSpan.FromHours(now.Hour)).ToDictionary(kvp => kvp.Key.ToString("o"), kvp => kvp.Value)
             };
 
             return this.Ok(result);

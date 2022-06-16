@@ -133,7 +133,6 @@ namespace MyHome.Systems
             logger.Debug($"Volume down media: {this.playing} to {this.Volume - 5}");
             this.Volume -= 5;
             this.player.Volume = this.Volume;
-            MyHome.Instance.SystemChanged = true;
             MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaVolumeDown);
         }
 
@@ -142,7 +141,6 @@ namespace MyHome.Systems
             logger.Debug($"Volume up media: {this.playing} to {this.Volume + 5}");
             this.Volume += 5;
             this.player.Volume = this.Volume;
-            MyHome.Instance.SystemChanged = true;
             MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaVolumeUp);
         }
 

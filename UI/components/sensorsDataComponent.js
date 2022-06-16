@@ -14,8 +14,10 @@ $.get(templateUrl, template => {
         },
         methods: {
             refreshData: function () {
-                if (this._isDestroyed)
+                if (this._isDestroyed) {
+                    window.ws?.removeRefreshHandlers(this.refreshData);
                     return;
+                }
 
                 let allRequests = [];
                 for (let sensor of this.sensors) {
@@ -34,7 +36,9 @@ $.get(templateUrl, template => {
                     });
                     allRequests.push(request);
                 }
-                $.when(...allRequests).done(() => setTimeout(this.refreshData, 3000)); // auto-refresh data every 3 seconds
+
+                if (!window.ws || window.ws.readyState != WebSocket.OPEN)
+                    $.when(...allRequests).done(() => setTimeout(this.refreshData, 3000)); // auto-refresh data every 3 seconds
             },
             showEditor: function () {
                 this.editorData = this.editorData ? null : JSON.stringify(this.sensorsData, null, 2);
@@ -53,6 +57,7 @@ $.get(templateUrl, template => {
         },
         mounted: function () {
             this.refreshData();
+            window.ws?.addRefreshHandlers(this.refreshData);
         }
     });
 });

@@ -13,20 +13,20 @@ $.get(templateUrl, template => {
         },
         methods: {
             refreshData: function () {
-                if (this._isDestroyed)
+                if (this._isDestroyed) {
+                    window.ws?.removeRefreshHandlers(this.refreshData);
                     return;
+                }
 
-                getRooms().done(rooms => {
-                    Vue.set(this, "rooms", rooms);
-                    setTimeout(this.refreshData, 3000);
-                }).fail(() => {
-                    setTimeout(this.refreshData, 1000);
-                });
+                getRooms().done(rooms => Vue.set(this, "rooms", rooms));
 
                 // update media player if it is opened
                 if (this.mediaPlayerHover) {
                     getSystem("MediaPlayer").done(mediaPlayer => Vue.set(this, "mediaPlayer", mediaPlayer));
                 }
+
+                if (!window.ws || window.ws.readyState != WebSocket.OPEN || this.mediaPlayerHover)
+                    setTimeout(this.refreshData, 3000);
             },
 
             allRoomsSecuritySystemEnabled: function () {
@@ -39,13 +39,14 @@ $.get(templateUrl, template => {
             hoverMediaPlayer: function () {
                 if (!this.mediaPlayerHover) {
                     this.mediaPlayerHover = true;
-                    getSystem("MediaPlayer").done(mediaPlayer => Vue.set(this, "mediaPlayer", mediaPlayer));
+                    this.refreshData();
                 }
             }
         },
         mounted: function () {
             this.refreshData();
             getSystem("MediaPlayer").done(mediaPlayer => Vue.set(this, "mediaPlayer", mediaPlayer));
+            window.ws?.addRefreshHandlers(this.refreshData);
         }
     });
 });

@@ -17,15 +17,15 @@ $.get(templateUrl, template => {
         },
         methods: {
             refreshData: function () {
-                if (this._isDestroyed)
+                if (this._isDestroyed) {
+                    window.ws?.removeRefreshHandlers(this.refreshData);
                     return;
+                }
 
-                getSystem("Actions").done(actions => {
-                    Vue.set(this, "actions", actions);
+                getSystem("Actions").done(actions => Vue.set(this, "actions", actions));
+
+                if (!window.ws || window.ws.readyState != WebSocket.OPEN)
                     setTimeout(this.refreshData, 3000);
-                }).fail(() => {
-                    setTimeout(this.refreshData, 1000);
-                });
             },
 
             getGroupedActions: function () {
@@ -108,6 +108,7 @@ $.get(templateUrl, template => {
         },
         mounted: function () {
             this.refreshData();
+            window.ws?.addRefreshHandlers(this.refreshData);
         },
         watch: {
             message: function () {

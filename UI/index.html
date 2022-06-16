@@ -16,15 +16,16 @@
     <script src="./external/Chart.bundle.min.js"></script>
 
     <!-- Monaco Editor ./external/monaco-editor/ -->
-    <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://microsoft.github.io/monaco-editor/node_modules/monaco-editor/min/vs/editor/editor.main.css">
+    <link defer rel="stylesheet" data-name="vs/editor/editor.main" href="https://microsoft.github.io/monaco-editor/node_modules/monaco-editor/min/vs/editor/editor.main.css">
     <script>var require = { paths: { 'vs': 'https://microsoft.github.io/monaco-editor/node_modules/monaco-editor/min/vs' } };</script>
-    <script rel="prefetch" src="https://microsoft.github.io/monaco-editor/node_modules/monaco-editor/min/vs/loader.js"></script>
-    <script rel="prefetch" src="https://microsoft.github.io/monaco-editor/node_modules/monaco-editor/min/vs/editor/editor.main.nls.js"></script>
-    <script rel="prefetch" src="https://microsoft.github.io/monaco-editor/node_modules/monaco-editor/min/vs/editor/editor.main.js"></script>
+    <script defer src="https://microsoft.github.io/monaco-editor/node_modules/monaco-editor/min/vs/loader.js"></script>
+    <script defer src="https://microsoft.github.io/monaco-editor/node_modules/monaco-editor/min/vs/editor/editor.main.nls.js"></script>
+    <script defer src="https://microsoft.github.io/monaco-editor/node_modules/monaco-editor/min/vs/editor/editor.main.js"></script>
 
     <link rel="stylesheet" href="./style.css" />
     <script src="./apis.js"></script>
     <script src="./scripts.js"></script>
+    <script src="./websocket.js"></script>
 
     <script src="./components/generic/objectEditorItemComponent.js"></script>
     <script src="./components/generic/objectEditorComponent.js"></script>
@@ -65,8 +66,6 @@
                             }).fail(response => {
                                 if (response.status == 401) // unauthorized
                                     window.location.replace("./login.html");
-                                else
-                                    setTimeout(this.refreshData, 1000);
                             });
 
                             // update logs if the modal is opened
