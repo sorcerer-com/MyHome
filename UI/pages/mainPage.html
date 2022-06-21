@@ -1,10 +1,10 @@
 ﻿<div id="scrollable-content">
     <div class="w3-content w3-padding-16">
         <!-- Rooms info -->
-            <div class="w3-col l3 m5 w3-margin" v-for="room of rooms">
-                <room-card v-bind:room="room"></room-card>
-            </div>
+        <div class="w3-col l3 m5 w3-margin" v-for="room of rooms">
+            <room-card v-bind:room="room"></room-card>
         </div>
+    </div>
 
     <!-- Bottom bar -->
     <div class="w3-padding-large w3-margin-bottom w3-display-bottomright">
@@ -25,11 +25,31 @@
         <div class="w3-dropdown-hover w3-transparent margin-left-8">
             <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
                title="Security"
-               v-bind:class="{'w3-text-lime': someRoomSecuritySystemEnabled(), 'w3-text-green': allRoomsSecuritySystemEnabled()}">
+               v-bind:class="{'w3-text-lime': someRoomSecuritySystemEnabled, 'w3-text-green': allRoomsSecuritySystemEnabled}">
                 security
             </a>
             <div class="w3-dropdown-content w3-transparent dropdown-top-right">
-                <security-list v-bind:rooms="rooms"></security-list>
+                <security-list v-bind:rooms="rooms" v-on:show-modal="showSecurityModal()"></security-list>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="w3-modal" v-if="modal"
+         v-bind:class="{'w3-show-block': modal}"
+         v-on:click="modal = ''">
+        <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">
+            <header class="w3-container w3-blue-gray">
+                <span class="w3-button w3-display-topright" v-on:click="modal = ''">&times;</span>
+                <h2>{{modal}}</h2>
+            </header>
+            <div class="w3-container w3-padding-16 height-100 overflow-y-auto bg-gray">
+                <!-- Security -->
+                <div v-if="modal == 'Security'" v-for="room of rooms" class="w3-margin-bottom">
+                    <h4 class="reset-margin">{{room.Name}}</h4>
+                    <hr class="reset-margin margin-bottom-8" />
+                    <canvas v-bind:id="'chart' + room.Name.replace(' ', '') + 'Security'"></canvas>
+                </div>
             </div>
         </div>
     </div>

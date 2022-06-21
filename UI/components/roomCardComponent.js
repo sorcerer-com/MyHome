@@ -6,8 +6,7 @@ $.get(templateUrl, template => {
         props: ["room"],
         data: function () {
             return {
-                selectedValueType: "",
-                securityChart: null
+                selectedValueType: ""
             }
         },
         methods: {
@@ -29,25 +28,6 @@ $.get(templateUrl, template => {
                         $(el).removeClass("w3-small");
                 });
             },
-            refreshSecurityHistory: function () {
-                if (this.selectedValueType != 'Security') {
-                    this.securityChart = null;
-                    return;
-                }
-
-                let data = Object.keys(this.room.SecurityHistory)
-                    .map(k => {
-                        return {
-                            t: new Date(k),
-                            y:this.room.SecurityHistory[k] == "Enabled" ? 1 : (this.room.SecurityHistory[k] == "Activated" ? 2 : 0)
-                        }
-                    })
-                    .sort((a, b) => (a.t > b.t) ? 1 : -1);
-                if (!this.securityChart)
-                    this.securityChart = showLineChart("securityChart", data, "SecurityHistory");
-                else
-                    updateChartData(this.securityChart, data);
-            },
             metadata: function (obj) {
                 let result = "";
                 for (let key in obj)
@@ -63,9 +43,7 @@ $.get(templateUrl, template => {
             },
             getDrivers: function () {
                 return this.room.Devices.filter(d => d.$type.endsWith("Driver"));
-            },
-
-            setRoomSecuritySystemEnabled: setRoomSecuritySystemEnabled
+            }
         },
         mounted: function () {
             this.autoResizeFontSize();
@@ -73,10 +51,6 @@ $.get(templateUrl, template => {
         watch: {
             room: function () {
                 this.autoResizeFontSize();
-                this.refreshSecurityHistory();
-            },
-            selectedValueType: function () {
-                setTimeout(() => this.refreshSecurityHistory(), 10); // wait canvas to show
             }
         }
     });

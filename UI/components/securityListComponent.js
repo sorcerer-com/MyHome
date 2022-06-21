@@ -14,6 +14,10 @@ $.get(templateUrl, template => {
                 for (let room of this.rooms)
                     this.setRoomSecuritySystemEnabled(room.Name, isEnabled);
             },
+
+            showModal: function () {
+                this.$emit("show-modal");
+            }
         }
     });
 });

@@ -8,8 +8,19 @@ $.get(templateUrl, template => {
                 rooms: [],
                 mediaPlayer: {},
 
-                mediaPlayerHover: false
+                mediaPlayerHover: false,
+
+                modal: "",
+                charts: {}
             }
+        },
+        computed: {
+            allRoomsSecuritySystemEnabled: function () {
+                return this.rooms.length > 0 && this.rooms.every(r => r.IsSecuritySystemEnabled)
+            },
+            someRoomSecuritySystemEnabled: function () {
+                return this.rooms.some(r => r.IsSecuritySystemEnabled) && !this.rooms.every(r => r.IsSecuritySystemEnabled)
+            },
         },
         methods: {
             refreshData: function () {
@@ -18,7 +29,12 @@ $.get(templateUrl, template => {
                     return;
                 }
 
-                getRooms().done(rooms => Vue.set(this, "rooms", rooms));
+                getRooms().done(rooms => {
+                    Vue.set(this, "rooms", rooms);
+                    // update security modal if opened
+                    if (this.modal == "Security")
+                        showSecurityModal();
+                });
 
                 // update media player if it is opened
                 if (this.mediaPlayerHover) {
@@ -29,17 +45,32 @@ $.get(templateUrl, template => {
                     setTimeout(this.refreshData, 3000);
             },
 
-            allRoomsSecuritySystemEnabled: function () {
-                return this.rooms.length > 0 && this.rooms.every(r => r.IsSecuritySystemEnabled)
-            },
-            someRoomSecuritySystemEnabled: function () {
-                return this.rooms.some(r => r.IsSecuritySystemEnabled) && !this.rooms.every(r => r.IsSecuritySystemEnabled)
-            },
-
             hoverMediaPlayer: function () {
                 if (!this.mediaPlayerHover) {
                     this.mediaPlayerHover = true;
                     this.refreshData();
+                }
+            },
+
+            showSecurityModal: function () {
+                this.modal = "Security";
+
+                for (let room of this.rooms) {
+                    let data = Object.keys(room.SecurityHistory)
+                        .map(k => {
+                            return {
+                                t: new Date(k),
+                                y: room.SecurityHistory[k] == "Enabled" ? 1 : (room.SecurityHistory[k] == "Activated" ? 2 : 0)
+                            }
+                        })
+                        .sort((a, b) => (a.t > b.t) ? 1 : -1);
+
+                    let chartName = "chart" + room.Name.replace(" ", "") + "Security";
+                    if (!this.charts[room.chartName])
+                        // wait canvas to show
+                        setTimeout(() => this.charts[room.chartName] = showLineChart(chartName, data, "SecurityHistory"), 10);
+                    else
+                        updateChartData(this.charts[room.chartName], data);
                 }
             }
         },
@@ -47,6 +78,12 @@ $.get(templateUrl, template => {
             this.refreshData();
             getSystem("MediaPlayer").done(mediaPlayer => Vue.set(this, "mediaPlayer", mediaPlayer));
             window.ws?.addRefreshHandlers(this.refreshData);
+        },
+        watch: {
+            modal: function (value) {
+                if (value == "")
+                    this.charts = {};
+            }
         }
     });
 });
