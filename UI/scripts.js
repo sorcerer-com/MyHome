@@ -4,19 +4,23 @@
 }
 
 
-function showLineChart(canvas, data, label) {
+function createLineChart(canvas, datasets = {}) { // datasets: {label: data}
+    let colors = generateChartColors(Object.keys(datasets).length);
+    let chartDataSets = Object.keys(datasets).map((k, idx) => {
+        return {
+            label: k,
+            data: datasets[k],
+            backgroundColor: colors[idx].alpha(0.1).rgbString(),
+            borderColor: colors[idx].alpha(0.5).rgbString(),
+            type: "line",
+            lineTension: 0,
+            pointRadius: 0,
+            borderWidth: 2
+        }
+    });
     let cfg = {
         data: {
-            datasets: [{
-                label: label,
-                backgroundColor: Chart.helpers.color("blue").alpha(0.1).rgbString(),
-                borderColor: Chart.helpers.color("blue").alpha(0.5).rgbString(),
-                data: data,
-                type: "line",
-                lineTension: 0,
-                pointRadius: 0,
-                borderWidth: 2
-            }]
+            datasets: chartDataSets
         },
         options: {
             scales: {
@@ -52,9 +56,41 @@ function showLineChart(canvas, data, label) {
     return new Chart(canvas, cfg);
 }
 
-function updateChartData(chart, data) {
-    chart.data.datasets[0].data = data;
+function updateChartData(chart, label, data) {
+    let dataset = chart.data.datasets.find(ds => ds.label == label);
+    if (dataset) {
+        dataset.data = data;
+    } else {
+        chart.data.datasets.push({
+            label: label,
+            data: data,
+            type: "line",
+            lineTension: 0,
+            pointRadius: 0,
+            borderWidth: 2
+        });
+        // update colors
+        let colors = generateChartColors(chart.data.datasets.length);
+        for (let i = 0; i < colors.length; i++) {
+            chart.data.datasets[i].backgroundColor = colors[i].alpha(0.1).rgbString();
+            chart.data.datasets[i].borderColor = colors[i].alpha(0.5).rgbString();
+        }
+    }
     chart.update();
+}
+
+function generateChartColors(count) {
+    let dHue = 360 / Math.min(count, 10);
+    let dValue = 100 / Math.ceil(count / 10);
+    let result = [];
+    for (let v = 0; v < 100; v += dValue) {
+        for (let h = 0; h < 360; h += dHue) {
+            if (result.length >= count)
+                return result;
+            result.push(Color().hsv((240 + h) % 360, 100, 100 - v));
+        }
+    }
+    return result;
 }
 
 

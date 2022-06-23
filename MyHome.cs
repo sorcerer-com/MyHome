@@ -206,7 +206,11 @@ namespace MyHome
             if (DateTime.Now - this.lastBackupTime > TimeSpan.FromDays(1))
             {
                 this.lastBackupTime = DateTime.Now;
-                File.Copy(Config.DataFilePath, Config.DataFilePath + ".bak", true);
+                // make 2 backups
+                if (File.Exists(Config.DataFilePath + ".bak"))
+                    File.Copy(Config.DataFilePath + ".bak", Config.DataFilePath + ".bak2", true);
+                if (File.Exists(Config.DataFilePath))
+                    File.Copy(Config.DataFilePath, Config.DataFilePath + ".bak", true);
             }
 
             var serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings

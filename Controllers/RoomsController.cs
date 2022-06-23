@@ -183,15 +183,7 @@ namespace MyHome.Controllers
             if (sensor == null)
                 return this.NotFound($"Sensor '{sensorName}' not found");
 
-            var now = DateTime.Now;
-            var prevDayTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0, 0) - TimeSpan.FromDays(1);
-            var subData = sensor.Data.Where(kvp => kvp.Value.ContainsKey(valueType)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value[valueType]);
-            var result = new
-            {
-                lastDay = subData.Where(kvp => kvp.Key >= prevDayTime).ToDictionary(kvp => kvp.Key.ToString("o"), kvp => kvp.Value),
-                lastYear = subData.Where(kvp => kvp.Key < prevDayTime - TimeSpan.FromHours(now.Hour)).ToDictionary(kvp => kvp.Key.ToString("o"), kvp => kvp.Value)
-            };
-
+            var result = sensor.Data.Where(kvp => kvp.Value.ContainsKey(valueType)).ToDictionary(kvp => kvp.Key.ToString("o"), kvp => kvp.Value[valueType]);
             return this.Ok(result);
         }
 
@@ -207,7 +199,7 @@ namespace MyHome.Controllers
                 return this.NotFound($"Sensor '{sensorName}' not found");
 
             var body = Newtonsoft.Json.Linq.JToken.Parse(new System.IO.StreamReader(this.Request.Body).ReadToEndAsync().Result);
-            foreach(var item in body["lastDay"].Concat(body["lastYear"]).OfType<Newtonsoft.Json.Linq.JProperty>())
+            foreach(var item in body.OfType<Newtonsoft.Json.Linq.JProperty>())
             {
                 var key = DateTime.Parse(item.Name);
                 if (sensor.Data.ContainsKey(key) && sensor.Data[key].ContainsKey(valueType))

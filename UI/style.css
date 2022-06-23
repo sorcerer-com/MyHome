@@ -105,7 +105,7 @@ a {
     cursor: pointer;
 }
 
-input {
+input, select {
     border: solid 1px dimgray;
     border-radius: 4px;
 }

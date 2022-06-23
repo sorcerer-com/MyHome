@@ -4,11 +4,30 @@
         code
     </a>
 
-    <div v-for="sensor of sensors" v-bind:class="{'w3-hide': editorData}" class="w3-margin-bottom">
-        <h4 class="reset-margin">{{sensor.Name}}</h4>
+    <div v-bind:class="{'w3-hide': editorData}">
+        <h4 class="reset-margin">Last Day</h4>
         <hr class="reset-margin margin-bottom-8" />
-        <canvas v-bind:id="'chart' + sensor.Name + 'LastDay'"></canvas>
-        <canvas v-bind:id="'chart' + sensor.Name + 'LastYear'"></canvas>
+        <canvas id="chartLastDay"></canvas>
+        <div v-for="(stat, name) of stats" class="w3-small">
+            {{name}}
+            <span class="w3-tiny w3-right">Average: {{stat.Older.Average}}, Sum: {{stat.Older.Sum}}</span>
+        </div>
+        <div class="w3-margin-bottom"></div>
+
+        <h4 class="reset-margin">
+            Older
+            <select class="w3-small margin-left-8" v-model="selectedMonth">
+                <option v-for="month in months" v-bind:value="month">
+                    {{month}}
+                </option>
+            </select>
+        </h4>
+        <hr class="reset-margin margin-bottom-8" />
+        <canvas id="chartOlder" class="margin-bottom-8"></canvas>
+        <div v-for="(stat, name) of stats" class="w3-small">
+            {{name}}
+            <span class="w3-tiny w3-right">Average: {{stat.Older.Average}}, Sum: {{stat.Older.Sum}}</span>
+        </div>
     </div>
 
     <div v-if="editorData">

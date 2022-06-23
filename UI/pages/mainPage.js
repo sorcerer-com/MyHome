@@ -33,13 +33,10 @@ $.get(templateUrl, template => {
                     Vue.set(this, "rooms", rooms);
                     // update security modal if opened
                     if (this.modal == "Security")
-                        showSecurityModal();
+                        this.showSecurityModal();
                 });
 
-                // update media player if it is opened
-                if (this.mediaPlayerHover) {
-                    getSystem("MediaPlayer").done(mediaPlayer => Vue.set(this, "mediaPlayer", mediaPlayer));
-                }
+                getSystem("MediaPlayer").done(mediaPlayer => Vue.set(this, "mediaPlayer", mediaPlayer));
 
                 if (!window.ws || window.ws.readyState != WebSocket.OPEN || this.mediaPlayerHover)
                     setTimeout(this.refreshData, 3000);
@@ -54,6 +51,8 @@ $.get(templateUrl, template => {
 
             showSecurityModal: function () {
                 this.modal = "Security";
+                // TODO: merge all chart in one?
+                // TODO: add modal with all sensors data
 
                 for (let room of this.rooms) {
                     let data = Object.keys(room.SecurityHistory)
@@ -68,15 +67,14 @@ $.get(templateUrl, template => {
                     let chartName = "chart" + room.Name.replace(" ", "") + "Security";
                     if (!this.charts[room.chartName])
                         // wait canvas to show
-                        setTimeout(() => this.charts[room.chartName] = showLineChart(chartName, data, "SecurityHistory"), 10);
+                        setTimeout(() => this.charts[room.chartName] = createLineChart(chartName, { "SecurityHistory": data }), 10);
                     else
-                        updateChartData(this.charts[room.chartName], data);
+                        updateChartData(this.charts[room.chartName], room.chartName, data);
                 }
             }
         },
         mounted: function () {
             this.refreshData();
-            getSystem("MediaPlayer").done(mediaPlayer => Vue.set(this, "mediaPlayer", mediaPlayer));
             window.ws?.addRefreshHandlers(this.refreshData);
         },
         watch: {
