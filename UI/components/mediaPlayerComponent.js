@@ -13,7 +13,7 @@ $.get(templateUrl, template => {
                 </a>
                 <details class="margin-left-8"
                     v-for="(item, key) of tree" v-if="!item.path">
-                    <summary><span>{{key}}</span></summary>
+                    <summary><span style="text-decoration:underline">{{key}}</span></summary>
                     <media-tree-item v-bind:tree="item" v-bind:media="media" v-on:change="onMediaChange"></media-tree-item>
                 </details>
             </div>`,

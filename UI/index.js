@@ -20,6 +20,7 @@
                     }).fail(response => {
                         if (response.status == 401) // unauthorized
                             window.location.replace("./login.html");
+                        setTimeout(this.refreshData, 1000);
                     });
 
                     // update logs if the modal is opened

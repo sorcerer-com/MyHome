@@ -21,6 +21,20 @@
             </div>
         </div>
 
+        <!-- Charts -->
+        <div class="w3-dropdown-hover w3-transparent margin-left-8"
+             @mouseover="hoverMediaPlayer()" @mouseleave="mediaPlayerHover = false">
+            <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
+               title="Charts" v-on:click="showChartsModal()">
+                show_chart
+            </a>
+            <div class="w3-dropdown-content w3-transparent dropdown-top-right">
+                <div class="w3-padding-small w3-round-medium w3-animate-opacity margin-8 bg-gray">
+                    Show Charts
+                </div>
+            </div>
+        </div>
+
         <!-- Security -->
         <div class="w3-dropdown-hover w3-transparent margin-left-8">
             <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
@@ -44,11 +58,33 @@
                 <h2>{{modal}}</h2>
             </header>
             <div class="w3-container w3-padding-16 height-100 overflow-y-auto bg-gray">
+                <!-- Charts -->
+                <div v-if="modal == 'Charts'">
+                    <div class="w3-bar w3-gray margin-bottom-8">
+                        <a class="w3-bar-item w3-button"
+                           v-for="room of rooms"
+                           v-bind:class="{'w3-light-gray': modalSelection == room.Name}"
+                           v-bind:title="room.Name"
+                           v-on:click="modalSelection = room.Name">
+                            {{room.Name}}
+                        </a>
+                    </div>
+                    <canvas id="charts" class="margin-bottom-8"></canvas>
+                    <div v-for="(stat, name) of stats" class="w3-small">
+                        {{name}}
+                        <span class="w3-tiny w3-right">Average: {{stat.Average}}, Sum: {{stat.Sum}}</span>
+                    </div>
+                </div>
+
                 <!-- Security -->
-                <div v-if="modal == 'Security'" v-for="room of rooms" class="w3-margin-bottom">
-                    <h4 class="reset-margin">{{room.Name}}</h4>
+                <div v-if="modal == 'Security'">
+                    <h4 class="reset-margin">History</h4>
                     <hr class="reset-margin margin-bottom-8" />
-                    <canvas v-bind:id="'chart' + room.Name.replace(' ', '') + 'Security'"></canvas>
+                    <canvas id="chartSecurity" class="margin-bottom-8"></canvas>
+                    <div v-for="(stat, name) of stats" class="w3-small">
+                        {{name}}
+                        <span class="w3-tiny w3-right">Average: {{stat.Average}}, Sum: {{stat.Sum}}</span>
+                    </div>
                 </div>
             </div>
         </div>

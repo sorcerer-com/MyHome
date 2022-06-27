@@ -4,7 +4,7 @@
 }
 
 
-function createLineChart(canvas, datasets = {}) { // datasets: {label: data}
+function createLineChart(canvasId, datasets = {}, allowZoom = true) { // datasets: {label: data}
     let colors = generateChartColors(Object.keys(datasets).length);
     let chartDataSets = Object.keys(datasets).map((k, idx) => {
         return {
@@ -50,13 +50,30 @@ function createLineChart(canvas, datasets = {}) { // datasets: {label: data}
                 labels: {
                     fontColor: "white"
                 }
+            },
+            /* Zoom plugin */
+            plugins: {
+                zoom: {
+                    pan: {
+                        enabled: allowZoom,
+                        mode: "x"
+                    },
+                    zoom: {
+                        enabled: allowZoom,
+                        mode: "x"
+                    }
+                }
             }
         }
     };
-    return new Chart(canvas, cfg);
+
+    let chart = new Chart(canvasId, cfg);
+    document.getElementById(canvasId).ondblclick = () => chart.resetZoom();
+    return chart;
 }
 
 function updateChartData(chart, label, data) {
+    chart.resetZoom();
     let dataset = chart.data.datasets.find(ds => ds.label == label);
     if (dataset) {
         dataset.data = data;

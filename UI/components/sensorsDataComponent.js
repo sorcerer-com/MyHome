@@ -29,8 +29,7 @@ $.get(templateUrl, template => {
                 const now = new Date();
                 let periodEnd = now;
                 periodEnd.setDate(periodEnd.getDate() - 1);
-                periodEnd.setUTCMinutes(0, 0, 0);
-                periodEnd.setHours(periodEnd.getHours() - 1);
+                periodEnd.setHours(0, 0, 0, 0);
                 let periodStart = new Date(periodEnd);
                 periodStart.setFullYear(periodStart.getFullYear() - 2);
 
@@ -51,13 +50,13 @@ $.get(templateUrl, template => {
                 }
 
                 if (!this.charts["chartLastDay"])
-                    this.charts["chartLastDay"] = createLineChart("chartLastDay");
+                    this.charts["chartLastDay"] = createLineChart("chartLastDay", {}, false);
                 if (!this.charts["chartOlder"])
                     this.charts["chartOlder"] = createLineChart("chartOlder");
 
                 const prevDay = new Date();
                 prevDay.setDate(prevDay.getDate() - 1);
-                prevDay.setUTCMinutes(0, 0, 0);
+                prevDay.setMinutes(0, 0, 0);
 
                 let allRequests = [];
                 for (let sensor of this.sensors) {

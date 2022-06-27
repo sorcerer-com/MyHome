@@ -41,6 +41,13 @@
     bottom: 30px;
     right: -10px;
 }
+@media (max-width:600px) { /* Mobile */
+    .dropdown-top-right {
+        bottom: 42px;
+        right: 0px;
+        position: fixed;
+    }
+}
 
 .bg-gray {
     background-color: #888888 !important;
@@ -80,7 +87,7 @@
 .w3-modal-content {
     height: 90%;
 }
-@media (min-width:993px) {
+@media (min-width:993px) { /* Large */
     .w3-modal-content {
         width: 600px;
     }
@@ -126,6 +133,7 @@ input, select {
 summary {
     cursor: pointer;
     overflow-wrap: break-word;
+    white-space: nowrap;
 }
 
     summary > * {
@@ -133,6 +141,7 @@ summary {
         width: 93%;
         vertical-align: middle;
         margin-left: 3px;
+        white-space: break-spaces;
     }
 
 

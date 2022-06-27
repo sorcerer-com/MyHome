@@ -74,11 +74,8 @@ namespace MyHome
             // TODO list 
             // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
             // * UI - mobile / landscape
-            //   - show all sensors data on a single chart somewhere
             //   - maybe show devices instead of value / grouped by type -https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg
             //   - too many sensor values, merge Water Switch and Water State somehow
-            //   - when playing leave media player open
-            // * multiple sensor graphics at once (for one sensor subname - motion, by multiple devices too)
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
 

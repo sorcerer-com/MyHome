@@ -11,7 +11,9 @@ $.get(templateUrl, template => {
                 mediaPlayerHover: false,
 
                 modal: "",
-                charts: {}
+                modalSelection: "",
+                charts: {},
+                stats: {}
             }
         },
         computed: {
@@ -49,28 +51,36 @@ $.get(templateUrl, template => {
                 }
             },
 
+            showChartsModal: function () {
+                this.modal = "Charts";
+                this.modalSelection = this.rooms[0].Name;
+            },
+
             showSecurityModal: function () {
                 this.modal = "Security";
-                // TODO: merge all chart in one?
-                // TODO: add modal with all sensors data
+                // wait canvas to show
+                setTimeout(() => {
+                    if (!this.charts["chartSecurity"])
+                        this.charts["chartSecurity"] = createLineChart("chartSecurity");
 
-                for (let room of this.rooms) {
-                    let data = Object.keys(room.SecurityHistory)
-                        .map(k => {
-                            return {
-                                t: new Date(k),
-                                y: room.SecurityHistory[k] == "Enabled" ? 1 : (room.SecurityHistory[k] == "Activated" ? 2 : 0)
-                            }
-                        })
-                        .sort((a, b) => (a.t > b.t) ? 1 : -1);
+                    for (let room of this.rooms) {
+                        let chartData = Object.keys(room.SecurityHistory)
+                            .map(k => {
+                                return {
+                                    t: new Date(k),
+                                    y: room.SecurityHistory[k] == "Enabled" ? 1 : (room.SecurityHistory[k] == "Activated" ? 2 : 0)
+                                }
+                            })
+                            .sort((a, b) => (a.t > b.t) ? 1 : -1);
 
-                    let chartName = "chart" + room.Name.replace(" ", "") + "Security";
-                    if (!this.charts[room.chartName])
-                        // wait canvas to show
-                        setTimeout(() => this.charts[room.chartName] = createLineChart(chartName, { "SecurityHistory": data }), 10);
-                    else
-                        updateChartData(this.charts[room.chartName], room.chartName, data);
-                }
+                        updateChartData(this.charts["chartSecurity"], room.Name, chartData);
+
+                        Vue.set(this.stats, room.Name, {
+                            Average: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) / chartData.length * 100) / 100,
+                            Sum: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
+                        });
+                    }
+                }, 10);
             }
         },
         mounted: function () {
@@ -79,8 +89,43 @@ $.get(templateUrl, template => {
         },
         watch: {
             modal: function (value) {
-                if (value == "")
+                if (value == "") {
                     this.charts = {};
+                    this.modalSelection = "";
+                    this.stats = {};
+                }
+            },
+            modalSelection: function (value) {
+                if (this.modal == "Charts") {
+                    // wait canvas to show
+                    setTimeout(() => {
+                        this.charts["charts"]?.destroy();
+                        this.charts["charts"] = createLineChart("charts");
+                        this.stats = {};
+
+                        const prevDay = new Date();
+                        prevDay.setDate(prevDay.getDate() - 1);
+                        prevDay.setUTCMinutes(0, 0, 0);
+
+                        let room = this.rooms.find(r => r.Name == value);
+                        for (let sensor of room.Devices.filter(d => d.$type.endsWith("Sensor") || d.$type.endsWith("Camera"))) {
+                            for (let valueType of Object.keys(sensor.Values)) {
+                                getSensorData(room.Name, sensor.Name, valueType).done(data => {
+                                    let chartData = Object.keys(data)
+                                        .map(k => { return { t: new Date(k), y: data[k] } })
+                                        .filter(e => e.t < prevDay)
+                                        .sort((a, b) => (a.t > b.t) ? 1 : -1);
+                                    updateChartData(this.charts["charts"], `${sensor.Name}.${valueType}`, chartData);
+
+                                    Vue.set(this.stats, `${sensor.Name}.${valueType}`, {
+                                        Average: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) / chartData.length * 100) / 100,
+                                        Sum: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
+                                    });
+                                });
+                            }
+                        }
+                    }, 10);
+                }
             }
         }
     });
