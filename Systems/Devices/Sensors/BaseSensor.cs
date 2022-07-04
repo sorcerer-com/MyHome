@@ -20,6 +20,7 @@ namespace MyHome.Systems.Devices.Sensors
         {
             AverageByTime,
             Average,
+            SumDiff,
             Sum
         }
 
@@ -86,9 +87,9 @@ namespace MyHome.Systems.Devices.Sensors
                 }
 
                 this.AggregationMap.TryGetValue(name, out var aggrType);
-                if (aggrType != AggregationType.Sum)
+                if (aggrType != AggregationType.SumDiff)
                     this.Data[time][name] = value;
-                else // sum type - differentiate
+                else // sum diff type - differentiate
                 {
                     this.LastReadings.TryGetValue(name, out var prevValue);
                     // TODO: uncomment once the Energy Monitor values are fixed
@@ -133,7 +134,7 @@ namespace MyHome.Systems.Devices.Sensors
                         newValue = Math.Round(values.Values.Average(), 2);
                     else if (aggrType == AggregationType.AverageByTime)
                         newValue = Math.Round(AverageByTime(values), 2);
-                    else // AggregationType.Sum
+                    else // AggregationType.SumDiff and AggregationType.Sum
                         newValue = Math.Round(values.Values.Sum(), 2);
                     this.Data[group.Key][subName] = newValue;
                 }
@@ -183,7 +184,7 @@ namespace MyHome.Systems.Devices.Sensors
             var sumType = this.Data.Where(kvp => kvp.Key > DateTime.Now.Date)
                 .SelectMany(kvp => kvp.Value)
                 .GroupBy(x => x.Key)
-                .Where(g => this.AggregationMap.ContainsKey(g.Key) && this.AggregationMap[g.Key] == AggregationType.Sum)
+                .Where(g => this.AggregationMap.ContainsKey(g.Key) && this.AggregationMap[g.Key] == AggregationType.SumDiff)
                 .ToList();
             sumType.ForEach(g => result[g.Key] = g.Select(x => x.Value).Sum());
             return result;
