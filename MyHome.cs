@@ -76,8 +76,13 @@ namespace MyHome
             // * UI - mobile / landscape
             //   - maybe show devices instead of value / grouped by type -https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg
             //   - too many sensor values, merge Water Switch and Water State somehow
+            //   - new sensor UI - add limits (like unhealty, alerts, etc.)
+            //   - security system modal with sensor statuses (muk, motion, etc), etc.
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
+            // * offline camera alert
+            // * External system (rpi2) ping system and notify on problem
+            // * MySmart speaker support + Tasmota implementation
 
             logger.Info("Start My Home");
             Instance = this;

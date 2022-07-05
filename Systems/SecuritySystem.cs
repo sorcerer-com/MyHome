@@ -62,6 +62,8 @@ namespace MyHome.Systems
         {
             public Room Room { get; set; }
 
+            public int EnableLevel { get; set; }
+
             public bool Activated { get; set; }
 
             public DateTime StartTime { get; set; }
@@ -95,7 +97,7 @@ namespace MyHome.Systems
             Directory.CreateDirectory(ImagesPath);
         }
 
-        public void SetEnable(Room room, bool enable)
+        public void SetEnable(Room room, bool enable, int level = 0)
         {
             lock (this.roomsInfo)
             {
@@ -104,14 +106,17 @@ namespace MyHome.Systems
                 {
                     if (roomInfo != null)
                     {
-                        logger.Debug($"Try to enable security alarm for '{room.Name}' room, but it's already enabled");
+                        logger.Debug($"Try to enable({level}) security alarm for '{room.Name}' room, but it's already enabled({roomInfo.EnableLevel})");
+                        if (roomInfo.EnableLevel > level)
+                            roomInfo.EnableLevel = level;
                         return;
                     }
 
-                    logger.Info($"Enable security alarm for '{room.Name}' room");
+                    logger.Info($"Enable({level}) security alarm for '{room.Name}' room");
                     this.roomsInfo.Add(new RoomInfo()
                     {
                         Room = room,
+                        EnableLevel = level,
                         Activated = false,
                         StartTime = DateTime.Now + TimeSpan.FromMinutes(this.ActivationDelay),
                         ImageFiles = new List<string>()
@@ -124,8 +129,13 @@ namespace MyHome.Systems
                         logger.Debug($"Try to disable security alarm for '{room.Name}' room, but it's not enabled");
                         return;
                     }
+                    if (roomInfo.EnableLevel < level)
+                    {
+                        logger.Debug($"Try to disable({level}) security alarm for '{room.Name}' room, but it is enabled with higher level({roomInfo.EnableLevel})");
+                        return;
+                    }
 
-                    logger.Info($"Disable security alarm for '{room.Name}' room");
+                    logger.Info($"Disable({level}) security alarm for '{room.Name}' room");
                     if (roomInfo.Activated)
                         logger.Warn("The alarm is currently activated");
                     this.roomsInfo.Remove(roomInfo);

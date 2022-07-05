@@ -11,8 +11,10 @@ $.get(templateUrl, template => {
         methods: {
             setRoomSecuritySystemEnabled: setRoomSecuritySystemEnabled,
             setAllRoomsSecuritySystemEnabled: function (isEnabled) {
-                for (let room of this.rooms)
-                    this.setRoomSecuritySystemEnabled(room.Name, isEnabled);
+                for (let room of this.rooms) {
+                    if (room.IsSecuritySystemEnabled != isEnabled)
+                        this.setRoomSecuritySystemEnabled(room.Name, isEnabled);
+                }
             },
 
             showModal: function () {

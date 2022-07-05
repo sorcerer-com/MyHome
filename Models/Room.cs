@@ -97,6 +97,12 @@ namespace MyHome.Models
             return Models.Alert.Create($"'{this.Name}' room alert: {message}");
         }
 
+        // allow enable/disable Security System with specific level
+        public void SetSecuritySystemEnable(bool enable, int level)
+        {
+            MyHome.Instance.SecuritySystem.SetEnable(this, enable, level);
+        }
+
         private Dictionary<string, double> GetSensorsValues()
         {
             return this.Sensors.Select(s => s.Values)
