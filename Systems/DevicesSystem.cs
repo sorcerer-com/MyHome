@@ -74,6 +74,8 @@ namespace MyHome.Systems
             var alertMsg = "";
             this.Sensors.RunForEach(sensor =>
             {
+                sensor.GenerateTimeseries();
+
                 // check for inactive sensor
                 var lastSensorTime = sensor.Data.Keys.OrderBy(t => t).LastOrDefault();
                 if (lastSensorTime <= this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 4) &&

@@ -37,7 +37,10 @@ namespace MyHome.Systems.Devices.Sensors
         public Dictionary<string, string> Calibration { get; } // calibration values per subname: newValue = expression(realValue)
 
         [UiProperty(true, "name / unit")]
-        public Dictionary<string, string> Units { get; } // subname / unit name (if not provide by metadata)
+        public Dictionary<string, string> Units { get; } // subname / unit name
+
+        [UiProperty(true, "name")]
+        public List<string> NotTimeseries { get; } // subnames that need code to generate intermediate values
 
 
         [JsonProperty]
@@ -59,6 +62,7 @@ namespace MyHome.Systems.Devices.Sensors
             this.AggregationMap = new Dictionary<string, AggregationType>();
             this.Calibration = new Dictionary<string, string>();
             this.Units = new Dictionary<string, string>();
+            this.NotTimeseries = new List<string>();
 
             this.LastReadings = new Dictionary<string, double>();
         }
@@ -105,6 +109,20 @@ namespace MyHome.Systems.Devices.Sensors
             }
             MyHome.Instance.Events.Fire(this, GlobalEventTypes.SensorDataAdded, this.Data[time]);
             this.ArchiveData();
+        }
+
+        public void GenerateTimeseries()
+        {
+            // if subsensor is not timeseries, add last value to fill the gaps in time
+            var now = DateTime.Now;
+            foreach (var subname in this.NotTimeseries)
+            {
+                var value = new SensorValue();
+                if (this.Data.ContainsKey(now))
+                    value = this.Data[now];
+                value.Add(subname, this.Values.ContainsKey(subname) ? this.Values[subname] : 0);
+                this.Data.Add(now, value);
+            }
         }
 
         public void AggregateData(IEnumerable<IGrouping<DateTime, DateTime>> groupedDates)

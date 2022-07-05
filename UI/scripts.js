@@ -73,11 +73,13 @@ function createLineChart(canvasId, datasets = {}, allowZoom = true) { // dataset
 }
 
 function updateChartData(chart, label, data) {
-    chart.resetZoom();
     let dataset = chart.data.datasets.find(ds => ds.label == label);
     if (dataset) {
+        if (dataset.data.length != data.length) // if data get changed
+            chart.resetZoom();
         dataset.data = data;
     } else {
+        chart.resetZoom();
         chart.data.datasets.push({
             label: label,
             data: data,

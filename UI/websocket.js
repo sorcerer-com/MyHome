@@ -7,6 +7,11 @@ function createWebSocket() {
     window.ws.lastMessage = new Date();
     window.ws.refreshHandlers = handlers || [];
 
+    // call all refresh handlers
+    for (let handler of window.ws.refreshHandlers)
+        handler();
+
+
     window.ws.addRefreshHandlers = function (handler) {
         window.ws.refreshHandlers.push(handler);
     }
@@ -15,6 +20,17 @@ function createWebSocket() {
         let idx = window.ws.refreshHandlers.indexOf(handler);
         if (idx != -1)
             window.ws.refreshHandlers.splice(idx, 1);
+    }
+
+
+    window.ws.onopen = function (event) {
+        console.debug(`${new Date().toISOString()} WebSocket opened: `);
+        console.debug(event);
+    }
+
+    window.ws.onclose = function (event) {
+        console.debug(`${new Date().toISOString()} WebSocket closed: `);
+        console.debug(event);
     }
 
     window.ws.onerror = function (event) {
@@ -33,16 +49,6 @@ function createWebSocket() {
             for (let handler of window.ws.refreshHandlers)
                 handler();
         }
-    }
-
-    window.ws.onopen = function (event) {
-        console.debug(`${new Date().toISOString()} WebSocket opened: `);
-        console.debug(event);
-    }
-
-    window.ws.onclose = function (event) {
-        console.debug(`${new Date().toISOString()} WebSocket closed: `);
-        console.debug(event);
     }
 }
 
