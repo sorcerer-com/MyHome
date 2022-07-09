@@ -169,13 +169,13 @@ namespace MyHome.Models
             if (this.level == AlertLevel.Critical)
                 return true;
 
-            var quietHours = MyHome.Instance.Config.QuietHours.Split("-", StringSplitOptions.TrimEntries).Select(h => int.Parse(h)).ToArray();
+            var quietHours = MyHome.Instance.Config.QuietHours;
 
             var currHour = DateTime.Now.Hour;
-            if ((quietHours[0] > quietHours[1] && (currHour > quietHours[0] || currHour < quietHours[1])) ||
-                (quietHours[0] < quietHours[1] && (currHour > quietHours[0] && currHour < quietHours[1])))
+            if ((quietHours.start > quietHours.end && (currHour > quietHours.start || currHour < quietHours.end)) ||
+                (quietHours.start < quietHours.end && (currHour > quietHours.start && currHour < quietHours.end)))
             {
-                logger.Debug($"Skip sending SMS since quiet hours: {quietHours[0]} - {quietHours[1]}");
+                logger.Debug($"Skip sending SMS since quiet hours: {quietHours.start} - {quietHours.end}");
                 return false;
             }
             else if (this.level == AlertLevel.Low)

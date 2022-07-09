@@ -30,7 +30,6 @@ namespace MyHome.Systems
             base.Update();
 
             this.Actions.RunForEach(action => action.Update());
-            // TODO: add sunset/sunrise (weather state) as time of execution
         }
     }
 }

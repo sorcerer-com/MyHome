@@ -13,7 +13,10 @@ namespace MyHome.Models
         public string Password { get; set; } = "";
 
         [UiProperty(true, "start - end")]
-        public string QuietHours { get; set; } = "";
+        public (int start, int end) QuietHours { get; set; } = (0, 0);
+
+        [UiProperty(true, "(Latitude, Longitude)")]
+        public (double lat, double @long) Location { get; set; } = (0.0, 0.0);
 
 
         [UiProperty(true, "08xxxxxxxx")]
