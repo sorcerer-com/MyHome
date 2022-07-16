@@ -7,6 +7,7 @@ using MQTTnet;
 
 using MyHome.Utils;
 
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using NLog;
@@ -18,11 +19,38 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
 
+        private string onlineMqttTopic;
+        [UiProperty(true)]
+        public string OnlineMqttTopic
+        {
+            get => this.onlineMqttTopic;
+            set
+            {
+                if (this.onlineMqttTopic == value)
+                    return;
+
+                if (MyHome.Instance.MqttClient.IsConnected)
+                {
+                    MyHome.Instance.MqttClient.Unsubscribe(this.onlineMqttTopic);
+                    MyHome.Instance.MqttClient.Subscribe(value);
+                }
+                this.onlineMqttTopic = value;
+            }
+        }
+
+        private DateTime lastOnline;
+        [JsonIgnore]
+        [UiProperty]
+        public override DateTime LastOnline => lastOnline;
+
+
         protected Dictionary<string, (string topic, string jsonPath)> MqttGetTopics { get; }
 
 
         protected MqttDriver()
         {
+            this.onlineMqttTopic = "";
+            this.lastOnline = DateTime.Now;
             this.MqttGetTopics = new Dictionary<string, (string topic, string jsonPath)>();
         }
 
@@ -32,6 +60,8 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             base.Setup();
 
             // subscribe for the topics
+            MyHome.Instance.MqttClient.Subscribe(this.onlineMqttTopic);
+
             foreach (var (topic, _) in this.MqttGetTopics.Values)
                 MyHome.Instance.MqttClient.Subscribe(topic);
 
@@ -43,8 +73,11 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         {
             base.Stop();
 
+            // unsubscribe for the topics
             foreach (var (topic, _) in this.MqttGetTopics.Values)
                 MyHome.Instance.MqttClient.Unsubscribe(topic);
+
+            MyHome.Instance.MqttClient.Unsubscribe(this.onlineMqttTopic);
 
             // remove handlers
             MyHome.Instance.MqttClient.ApplicationMessageReceived -= this.MqttClient_ApplicationMessageReceived;
@@ -53,13 +86,21 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         private void MqttClient_ApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs e)
         {
-            if (!this.MqttGetTopics.Values.Any(value => e.ApplicationMessage.Topic == value.topic))
+            if (this.onlineMqttTopic != e.ApplicationMessage.Topic && 
+                !this.MqttGetTopics.Values.Any(value => e.ApplicationMessage.Topic == value.topic))
                 return;
 
             logger.Trace($"Process driver '{this.Name}' ({this.Room.Name}) MQTT message with topic: {e.ApplicationMessage.Topic}");
 
             try
             {
+                // update online topic was updated, so update LastOnline time
+                if (this.onlineMqttTopic == e.ApplicationMessage.Topic)
+                {
+                    this.lastOnline = DateTime.Now;
+                    return;
+                }
+
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                 if (!this.AcceptPayload(payload))
                 {

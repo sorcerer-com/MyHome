@@ -20,7 +20,7 @@ $.get(templateUrl, template => {
                     this.driver.IsOn = !this.driver.IsOn;
                     setDevice(this.room.Name, this.driver.Name, { "IsOn": this.driver.IsOn }).fail(response => {
                         this.error = "Error: " + response.responseText
-                        setTimeout(() => this.error = "", 3000);
+                        setTimeout(() => this.error = null, 3000);
                     });
                 }
                 if (this.modalObject == null && this.driver.$type.endsWith("AcIrMqttDriver")) {

@@ -123,6 +123,7 @@ namespace MyHome.Systems.Devices.Sensors
                 value.Add(subname, this.Values.ContainsKey(subname) ? this.Values[subname] : 0);
                 this.Data.Add(now, value);
             }
+            this.ArchiveData();
         }
 
         public void AggregateData(IEnumerable<IGrouping<DateTime, DateTime>> groupedDates)

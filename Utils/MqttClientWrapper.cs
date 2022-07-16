@@ -67,7 +67,7 @@ namespace MyHome.Utils
             });
 
             var options = new MqttClientOptionsBuilder()
-                .WithClientId(clientId)
+                .WithClientId(clientId + AppDomain.CurrentDomain.BaseDirectory.GetHashCode()) // add "random" hash since cannot connect two clients with same id
                 .WithTcpServer(server, port)
                 .WithCredentials(username, password)
                 .WithCommunicationTimeout(TimeSpan.FromSeconds(10))

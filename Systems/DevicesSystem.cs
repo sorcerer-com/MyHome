@@ -4,6 +4,7 @@ using System.Linq;
 
 using MyHome.Models;
 using MyHome.Systems.Devices;
+using MyHome.Systems.Devices.Drivers;
 using MyHome.Systems.Devices.Sensors;
 using MyHome.Utils;
 
@@ -27,6 +28,9 @@ namespace MyHome.Systems
 
         [JsonIgnore]
         public IEnumerable<Camera> Cameras => this.Devices.OfType<Camera>();
+
+        [JsonIgnore]
+        public IEnumerable<BaseDriver> Drivers => this.Devices.OfType<BaseDriver>();
 
 
         private DateTime nextSensorCheckTime;
@@ -90,6 +94,17 @@ namespace MyHome.Systems
                 var times = sensor.Data.Keys.Where(t => t < now.AddHours(-1) && t >= now.Date.AddHours(now.Hour).AddDays(-1)); // last 24 hours
                 var groupedDates = times.GroupBy(t => new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute / this.SensorsCheckInterval * this.SensorsCheckInterval, 0));
                 sensor.AggregateData(groupedDates);
+            });
+
+            this.Drivers.RunForEach(driver =>
+            {
+                // check for inactive driver
+                if (driver.LastOnline <= this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 4) &&
+                    driver.LastOnline > this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 5))
+                {
+                    logger.Warn($"Driver {driver.Name} ({driver.Room.Name}) is not online from {driver.LastOnline}");
+                    alertMsg += $"{driver.Name} ({driver.Room.Name}) inactive ";
+                }
             });
 
             if (!string.IsNullOrEmpty(alertMsg))

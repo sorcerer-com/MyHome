@@ -92,6 +92,7 @@ namespace MyHome.Systems
             // stop if end reached
             if (this.player.State == VLCState.Ended)
                 this.player.Stop();
+            System.Threading.Thread.Sleep(100);
         }
 
 
