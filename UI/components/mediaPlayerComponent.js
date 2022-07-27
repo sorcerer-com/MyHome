@@ -69,6 +69,10 @@ $.get(templateUrl, template => {
             callMediaPlayer: function (funcName, ...args) {
                 callSystem("MediaPlayer", funcName, ...args)
                     .done(() => setTimeout(() => this.$parent.refreshData(), 100)); // wait to execute the call
+            },
+            sortByDate: function (value) {
+                setSystem("MediaPlayerSystem", { "SortByDate": value })
+                    .done(() => setTimeout(() => this.$parent.refreshData(), 100)); // wait to execute the call
             }
         }
     });

@@ -9,6 +9,11 @@
            v-on:click="callMediaPlayer('RefreshMediaList')">
             refresh
         </a>
+        <a class="w3-right w3-hover-text-blue-gray margin-right-8 font-size-normal material-icons"
+           v-bind:title="mediaPlayer.SortByDate ? 'Sorted By Date' : 'Sorted By Name'"
+           v-on:click="sortByDate(!mediaPlayer.SortByDate)">
+            {{ mediaPlayer.SortByDate ? "schedule" : "sort_by_alpha" }}
+        </a>
 
         <div class="margin-right-8 margin-bottom-8" v-for="(tree, media) of getMediaTree()">
             <h4 class="reset-margin">{{media}}</h4>

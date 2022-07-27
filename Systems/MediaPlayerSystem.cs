@@ -27,6 +27,21 @@ namespace MyHome.Systems
         [UiProperty(true)]
         public List<string> Radios { get; }
 
+        private bool sortByDate;
+        [UiProperty]
+        public bool SortByDate
+        {
+            get => this.sortByDate;
+            set
+            {
+                if (this.sortByDate != value)
+                {
+                    this.sortByDate = value;
+                    this.RefreshMediaList();
+                }
+            }
+        }
+
         [UiProperty]
         public int Volume { get; set; }
 
@@ -197,7 +212,13 @@ namespace MyHome.Systems
                             .Where(p => supportedFormats.Any(f => p.EndsWith(f)));
                         this.mediaList.AddRange(filePaths.Select(p => $"media{i + 1}:" + p));
                     }
-                    this.mediaList.Sort();
+                    if (this.sortByDate)
+                    {
+                        this.mediaList.Sort((a, b) => Directory.GetLastWriteTime(a[(a.IndexOf(":") + 1)..])
+                            .CompareTo(Directory.GetLastWriteTime(b[(b.IndexOf(":") + 1)..])));
+                    }
+                    else
+                        this.mediaList.Sort();
                     this.mediaList.AddRange(this.Radios.Select(r => "radios:" + r));
                 }
             }
