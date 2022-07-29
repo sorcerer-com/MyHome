@@ -103,7 +103,7 @@ namespace MyHome.Controllers
         public ActionResult GetSong(string fileName)
         {
             var file = System.IO.File.OpenRead(Path.Join(Systems.MediaPlayerSystem.SongsPath, fileName));
-            return File(file, "audio/mpeg");
+            return this.File(file, "audio/mpeg");
         }
 
 

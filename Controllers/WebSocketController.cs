@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-using NLog;
-
 namespace MyHome.Controllers
 {
     [Route("/ws")]
@@ -29,9 +27,9 @@ namespace MyHome.Controllers
         [HttpGet("refresh")]
         public async Task Refresh()
         {
-            if (HttpContext.WebSockets.IsWebSocketRequest)
+            if (this.HttpContext.WebSockets.IsWebSocketRequest)
             {
-                using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+                using var webSocket = await this.HttpContext.WebSockets.AcceptWebSocketAsync();
 
                 var buffer = new byte[1024 * 4];
                 var receiveResult = await webSocket.ReceiveAsync(
@@ -67,7 +65,7 @@ namespace MyHome.Controllers
             }
             else
             {
-                HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+                this.HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             }
         }
     }

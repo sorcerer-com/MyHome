@@ -83,8 +83,6 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         [UiProperty(true, "(topic, json path)")]
         public (string topic, string jsonPath) VolumeSetMqttTopic { get; set; }
 
-        // TODO: state getted from MQTT is with the full url and don't match the selector in UI
-
 
         public SpeakerMqttDriver()
         {
@@ -99,17 +97,21 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         protected override void NewStateReceived(string state, object oldValue, object newValue)
         {
             base.NewStateReceived(state, oldValue, newValue);
-            // if we receive empty value for playing state and we want to loop songs, start a new one
-            if (state == PLAYING_STATE_NAME && string.IsNullOrEmpty((string)newValue) && this.Loop)
+            if (state == PLAYING_STATE_NAME)
             {
-                var songs = MyHome.Instance.MediaPlayerSystem.Songs.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key).ToList();
-                if (this.Shuffle)
+                // if we receive empty value for playing state and we want to loop songs, start a new one
+                if (string.IsNullOrEmpty((string)newValue) && this.Loop)
                 {
-                    songs.Remove((string)oldValue); // remove current song and pick from the others
-                    this.Playing = songs[random.Next(songs.Count)];
+                    var songs = MyHome.Instance.MediaPlayerSystem.Songs.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key).ToList();
+                    if (this.Shuffle)
+                    {
+                        songs.Remove((string)oldValue); // remove current song and pick from the others
+                        this.Playing = songs[random.Next(songs.Count)];
+                    }
+                    else
+                        this.Playing = songs[(songs.IndexOf((string)oldValue) + 1) % songs.Count];
                 }
-                else
-                    this.Playing = songs[(songs.IndexOf((string)oldValue) + 1) % songs.Count];
+                this.State[state] = Uri.UnescapeDataString(((string)newValue).Replace($"{Startup.Host}/api/systems/MediaPlayer/songs/", ""));
             }
         }
 

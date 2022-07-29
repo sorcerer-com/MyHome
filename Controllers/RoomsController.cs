@@ -199,7 +199,7 @@ namespace MyHome.Controllers
                 return this.NotFound($"Sensor '{sensorName}' not found");
 
             var body = Newtonsoft.Json.Linq.JToken.Parse(new System.IO.StreamReader(this.Request.Body).ReadToEndAsync().Result);
-            foreach(var item in body.OfType<Newtonsoft.Json.Linq.JProperty>())
+            foreach (var item in body.OfType<Newtonsoft.Json.Linq.JProperty>())
             {
                 var key = DateTime.Parse(item.Name);
                 if (sensor.Data.ContainsKey(key) && sensor.Data[key].ContainsKey(valueType))

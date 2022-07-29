@@ -41,7 +41,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         private DateTime lastOnline;
         [JsonIgnore]
         [UiProperty]
-        public override DateTime LastOnline => lastOnline;
+        public override DateTime LastOnline => this.lastOnline;
 
 
         protected Dictionary<string, (string topic, string jsonPath)> MqttGetTopics { get; }
@@ -86,7 +86,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         private void MqttClient_ApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs e)
         {
-            if (this.onlineMqttTopic != e.ApplicationMessage.Topic && 
+            if (this.onlineMqttTopic != e.ApplicationMessage.Topic &&
                 !this.MqttGetTopics.Values.Any(value => e.ApplicationMessage.Topic == value.topic))
                 return;
 

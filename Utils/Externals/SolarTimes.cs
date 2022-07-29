@@ -80,15 +80,12 @@ namespace MyHome.Utils
         /// </summary>
         public decimal Longitude
         {
-            get
-            {
-                return _longitude;
-            }
+            get => this._longitude;
             set
             {
                 if (value >= -180M && value <= 180M)
                 {
-                    _longitude = value;
+                    this._longitude = value;
                 }
                 else
                 {
@@ -106,15 +103,12 @@ namespace MyHome.Utils
         /// </summary>
         public decimal Latitude
         {
-            get
-            {
-                return _latitude;
-            }
+            get => this._latitude;
             set
             {
                 if (value >= -90M && value <= 90M)
                 {
-                    _latitude = value;
+                    this._latitude = value;
                 }
                 else
                 {
@@ -130,13 +124,7 @@ namespace MyHome.Utils
         /// For example, Mountain Standard Time (MST) in the US is 7 hours behind UTC (MST = UTC - 7).
         /// (Spreadsheet Column B, Row 5)
         /// </summary>
-        public decimal TimeZoneOffset
-        {
-            get
-            {
-                return (decimal)this.ForDate.Offset.TotalHours;
-            }
-        }
+        public decimal TimeZoneOffset => (decimal)this.ForDate.Offset.TotalHours;
 
         /// <summary>
         /// Sun Rise Time  
@@ -255,16 +243,11 @@ namespace MyHome.Utils
         /// Time past local midnight.
         /// (Spreadsheet Column E)
         /// </summary>	
-        public decimal TimePastLocalMidnight
-        {
-            get
-            {
+        public decimal TimePastLocalMidnight =>
                 // ***
                 // *** .1 / 24
                 // ***
-                return (decimal)this.ForDate.TimeOfDay.TotalDays;
-            }
-        }
+                (decimal)this.ForDate.TimeOfDay.TotalDays;
 
         /// <summary>
         /// Julian Day: a time period used in astronomical circles, defined as the number of days 
@@ -273,16 +256,11 @@ namespace MyHome.Utils
         /// to mean the numerical day of the current year, where January 1 is defined as day 001. 
         /// (Spreadsheet Column F)
         /// </summary>
-        public decimal JulianDay
-        {
-            get
-            {
+        public decimal JulianDay =>
                 // ***
                 // *** this.TimePastLocalMidnight was removed since the time is in ForDate
                 // ***
-                return ToExcelDateValue(this.ForDate.Date) + 2415018.5M - (this.TimeZoneOffset / 24M);
-            }
-        }
+                ToExcelDateValue(this.ForDate.Date) + 2415018.5M - (this.TimeZoneOffset / 24M);
 
         /// <summary>
         /// Julian Century
@@ -292,37 +270,19 @@ namespace MyHome.Utils
         /// for past errors by skipping 10 days in October of 1582. 
         /// (Spreadsheet Column G)
         /// </summary>
-        public decimal JulianCentury
-        {
-            get
-            {
-                return (this.JulianDay - 2451545M) / 36525M;
-            }
-        }
+        public decimal JulianCentury => (this.JulianDay - 2451545M) / 36525M;
 
         /// <summary>
         /// Sun's Geometric Mean Longitude (degrees): Geometric Mean Ecliptic Longitude of Sun.
         /// (Spreadsheet Column I)
         /// </summary>
-        public decimal SunGeometricMeanLongitude
-        {
-            get
-            {
-                return Mod(280.46646M + this.JulianCentury * (36000.76983M + this.JulianCentury * 0.0003032M), 360M);
-            }
-        }
+        public decimal SunGeometricMeanLongitude => Mod(280.46646M + this.JulianCentury * (36000.76983M + this.JulianCentury * 0.0003032M), 360M);
 
         /// <summary>
         /// Sun's Mean Anomaly (degrees): Position of Sun relative to perigee
         /// (Spreadsheet Column J)
         /// </summary>
-        public decimal SunMeanAnomaly
-        {
-            get
-            {
-                return 357.52911M + this.JulianCentury * (35999.05029M - 0.0001537M * this.JulianCentury);
-            }
-        }
+        public decimal SunMeanAnomaly => 357.52911M + this.JulianCentury * (35999.05029M - 0.0001537M * this.JulianCentury);
 
         /// <summary>
         /// Eccentricity of the Earth's Orbit: Eccentricity e is the ratio of half the distance between the foci c to
@@ -330,37 +290,19 @@ namespace MyHome.Utils
         /// between 0 and 1 is elliptic.
         /// (Spreadsheet Column K)
         /// </summary>
-        public decimal EccentricityOfEarthOrbit
-        {
-            get
-            {
-                return 0.016708634M - this.JulianCentury * (0.000042037M + 0.0000001267M * this.JulianCentury);
-            }
-        }
+        public decimal EccentricityOfEarthOrbit => 0.016708634M - this.JulianCentury * (0.000042037M + 0.0000001267M * this.JulianCentury);
 
         /// <summary>
         /// Sun Equation of the Center: Difference between mean anomaly and true anomaly.
         /// (Spreadsheet Column L)
         /// </summary>
-        public decimal SunEquationOfCenter
-        {
-            get
-            {
-                return (decimal)Math.Sin(ToRadians(this.SunMeanAnomaly)) * (1.914602M - this.JulianCentury * (0.004817M + 0.000014M * this.JulianCentury)) + (decimal)Math.Sin(ToRadians(this.SunMeanAnomaly * 2)) * (0.019993M - 0.000101M * this.JulianCentury) + (decimal)Math.Sin(ToRadians(this.SunMeanAnomaly * 3)) * 0.000289M;
-            }
-        }
+        public decimal SunEquationOfCenter => (decimal)Math.Sin(ToRadians(this.SunMeanAnomaly)) * (1.914602M - this.JulianCentury * (0.004817M + 0.000014M * this.JulianCentury)) + (decimal)Math.Sin(ToRadians(this.SunMeanAnomaly * 2)) * (0.019993M - 0.000101M * this.JulianCentury) + (decimal)Math.Sin(ToRadians(this.SunMeanAnomaly * 3)) * 0.000289M;
 
         /// <summary>
         /// Sun True Longitude (degrees)
         /// (Spreadsheet Column M)
         /// </summary>
-        public decimal SunTrueLongitude
-        {
-            get
-            {
-                return this.SunGeometricMeanLongitude + this.SunEquationOfCenter;
-            }
-        }
+        public decimal SunTrueLongitude => this.SunGeometricMeanLongitude + this.SunEquationOfCenter;
 
         /// <summary>
         /// Sun Apparent Longitude (degrees)
@@ -379,17 +321,12 @@ namespace MyHome.Utils
         /// Mean Ecliptic Obliquity (degrees): Inclination of ecliptic plane w.r.t. celestial equator
         /// (Spreadsheet Column Q)
         /// </summary>
-        public decimal MeanEclipticObliquity
-        {
-            get
-            {
+        public decimal MeanEclipticObliquity =>
                 // ***
                 // *** Formula 22.3 from Page 147 of Astronomical Algorithms, Second Edition (Jean Meeus)
                 // *** Original spreadsheet formula based on 22.2 same page of book
                 // ***
-                return 23M + (26M + (21.448M - this.JulianCentury * (46.815M + this.JulianCentury * (0.00059M - this.JulianCentury * 0.001813M))) / 60M) / 60M;
-            }
-        }
+                23M + (26M + (21.448M - this.JulianCentury * (46.815M + this.JulianCentury * (0.00059M - this.JulianCentury * 0.001813M))) / 60M) / 60M;
 
         /// <summary>
         /// Obliquity Correction (degrees)
@@ -423,13 +360,7 @@ namespace MyHome.Utils
         /// Var Y
         /// (Spreadsheet Column U)
         /// </summary>
-        public decimal VarY
-        {
-            get
-            {
-                return (decimal)Math.Tan(ToRadians(this.ObliquityCorrection/2)) * (decimal)Math.Tan(ToRadians(this.ObliquityCorrection / 2));
-            }
-        }
+        public decimal VarY => (decimal)Math.Tan(ToRadians(this.ObliquityCorrection / 2)) * (decimal)Math.Tan(ToRadians(this.ObliquityCorrection / 2));
 
         /// <summary>
         /// Equation of Time (minutes)
@@ -437,17 +368,11 @@ namespace MyHome.Utils
         /// elliptical orbit and Kepler's law of equal areas in equal times are the culprits behind this phenomenon.
         /// (Spreadsheet Column V)
         /// </summary>
-        public decimal EquationOfTime
-        {
-            get
-            {
-                return 4M * ToDegrees(this.VarY * (decimal)Math.Sin(2 * ToRadians(this.SunGeometricMeanLongitude)) - 
-                    2M * this.EccentricityOfEarthOrbit * (decimal)Math.Sin(ToRadians(this.SunMeanAnomaly)) + 
-                    4M * this.EccentricityOfEarthOrbit * this.VarY * (decimal)Math.Sin(ToRadians(this.SunMeanAnomaly)) * (decimal)Math.Cos(2 * ToRadians(this.SunGeometricMeanLongitude)) - 
-                    0.5M * this.VarY * this.VarY * (decimal)Math.Sin(4 * ToRadians(this.SunGeometricMeanLongitude)) - 
+        public decimal EquationOfTime => 4M * ToDegrees(this.VarY * (decimal)Math.Sin(2 * ToRadians(this.SunGeometricMeanLongitude)) -
+                    2M * this.EccentricityOfEarthOrbit * (decimal)Math.Sin(ToRadians(this.SunMeanAnomaly)) +
+                    4M * this.EccentricityOfEarthOrbit * this.VarY * (decimal)Math.Sin(ToRadians(this.SunMeanAnomaly)) * (decimal)Math.Cos(2 * ToRadians(this.SunGeometricMeanLongitude)) -
+                    0.5M * this.VarY * this.VarY * (decimal)Math.Sin(4 * ToRadians(this.SunGeometricMeanLongitude)) -
                     1.25M * this.EccentricityOfEarthOrbit * this.EccentricityOfEarthOrbit * (decimal)Math.Sin(ToRadians(this.SunMeanAnomaly * 2)));
-            }
-        }
 
         /// <summary>
         /// HA Sunrise (degrees)
@@ -458,7 +383,7 @@ namespace MyHome.Utils
             get
             {
                 decimal a1 = 90M + this.AtmosphericRefraction;
-                decimal radians = (decimal)Math.Acos(Math.Cos(ToRadians(a1)) / (Math.Cos(ToRadians(this.Latitude)) * Math.Cos(ToRadians(this.SolarDeclination))) - 
+                decimal radians = (decimal)Math.Acos(Math.Cos(ToRadians(a1)) / (Math.Cos(ToRadians(this.Latitude)) * Math.Cos(ToRadians(this.SolarDeclination))) -
                     Math.Tan(ToRadians(this.Latitude)) * Math.Tan(ToRadians(this.SolarDeclination)));
                 return ToDegrees(radians);
             }
@@ -472,7 +397,7 @@ namespace MyHome.Utils
             get
             {
                 decimal a1 = 108M;// + this.AtmosphericRefraction; // Online calculators I could test against don't include refraction
-                decimal radians = (decimal)Math.Acos(Math.Cos(ToRadians(a1)) / (Math.Cos(ToRadians(this.Latitude)) * Math.Cos(ToRadians(this.SolarDeclination))) - 
+                decimal radians = (decimal)Math.Acos(Math.Cos(ToRadians(a1)) / (Math.Cos(ToRadians(this.Latitude)) * Math.Cos(ToRadians(this.SolarDeclination))) -
                     Math.Tan(ToRadians(this.Latitude)) * Math.Tan(ToRadians(this.SolarDeclination)));
                 return ToDegrees(radians);
             }
@@ -486,7 +411,7 @@ namespace MyHome.Utils
             get
             {
                 decimal a1 = 96M;// + this.AtmosphericRefraction; // Online calculators I could test against don't include refraction
-                decimal radians = (decimal)Math.Acos(Math.Cos(ToRadians(a1)) / (Math.Cos(ToRadians(this.Latitude)) * Math.Cos(ToRadians(this.SolarDeclination))) - 
+                decimal radians = (decimal)Math.Acos(Math.Cos(ToRadians(a1)) / (Math.Cos(ToRadians(this.Latitude)) * Math.Cos(ToRadians(this.SolarDeclination))) -
                     Math.Tan(ToRadians(this.Latitude)) * Math.Tan(ToRadians(this.SolarDeclination)));
                 return ToDegrees(radians);
             }
@@ -501,7 +426,7 @@ namespace MyHome.Utils
             get
             {
                 decimal a1 = 102M;// + this.AtmosphericRefraction; // Online calculators I could test against don't include refraction
-                decimal radians = (decimal)Math.Acos(Math.Cos(ToRadians(a1)) / (Math.Cos(ToRadians(this.Latitude)) * Math.Cos(ToRadians(this.SolarDeclination))) - 
+                decimal radians = (decimal)Math.Acos(Math.Cos(ToRadians(a1)) / (Math.Cos(ToRadians(this.Latitude)) * Math.Cos(ToRadians(this.SolarDeclination))) -
                     Math.Tan(ToRadians(this.Latitude)) * Math.Tan(ToRadians(this.SolarDeclination)));
                 return ToDegrees(radians);
             }
@@ -527,13 +452,7 @@ namespace MyHome.Utils
         /// Sunlight Duration: The amount of time the sun is visible during the specified day.
         /// (Spreadsheet Column AA)
         /// </summary>
-        public TimeSpan SunlightDuration
-        {
-            get
-            {
-                return TimeSpan.FromMinutes((double)(8M * this.HourAngleSunrise));
-            }
-        }
+        public TimeSpan SunlightDuration => TimeSpan.FromMinutes((double)(8M * this.HourAngleSunrise));
 
         /// <summary>
         /// Hour Angle (degrees)
@@ -552,29 +471,17 @@ namespace MyHome.Utils
         /// Solar Zenith (degrees)
         /// (Spreadsheet Column AD)
         /// </summary>
-        public decimal SolarZenith
-        {
-            get
-            {
-                return ToDegrees
+        public decimal SolarZenith => ToDegrees
                 (
                     (decimal)Math.Acos(Math.Sin(ToRadians(this.Latitude)) * Math.Sin(ToRadians(this.SolarDeclination)) +
                     Math.Cos(ToRadians(this.Latitude)) * Math.Cos(ToRadians(this.SolarDeclination)) * Math.Cos(ToRadians(this.HourAngleDegrees)))
                 );
-            }
-        }
 
         /// <summary>
         /// Solar Elevation (degrees)
         /// (Spreadsheet Column AE)
         /// </summary>
-        public decimal SolarElevation
-        {
-            get
-            {
-                return 90M - this.SolarZenith;
-            }
-        }
+        public decimal SolarElevation => 90M - this.SolarZenith;
 
         /// <summary>
         /// Solar Azimuth (degrees)
@@ -610,13 +517,7 @@ namespace MyHome.Utils
         /// A mean solar day is defined as the time between one solar noon and the next, averaged over the year.
         /// (Spreadsheet Column AB)
         /// </summary>
-        public decimal TrueSolarTime
-        {
-            get
-            {
-                return Mod(this.TimePastLocalMidnight * 1440M + this.EquationOfTime + 4M * this.Longitude - 60M * this.TimeZoneOffset, 1440M);
-            }
-        }
+        public decimal TrueSolarTime => Mod(this.TimePastLocalMidnight * 1440M + this.EquationOfTime + 4M * this.Longitude - 60M * this.TimeZoneOffset, 1440M);
         #endregion
 
         public static decimal ToExcelDateValue(DateTime value)

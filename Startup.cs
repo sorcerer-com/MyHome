@@ -53,7 +53,7 @@ namespace MyHome
             app.Use(async (context, next) =>
             {
                 if (Host == null)
-                    Host = $"{ context.Request.Scheme}://{context.Request.Host}";
+                    Host = $"{context.Request.Scheme}://{context.Request.Host}";
                 if (Login(context, myHome))
                     await next();
             });

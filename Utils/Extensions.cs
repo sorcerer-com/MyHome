@@ -166,7 +166,7 @@ namespace MyHome.Utils
                         {
                             dict.Clear();
                             var values = item.Value.OfType<JProperty>().ToDictionary(
-                                v => Utils.ParseValue(v.Name, prop.PropertyType.GenericTypeArguments[0]), 
+                                v => Utils.ParseValue(v.Name, prop.PropertyType.GenericTypeArguments[0]),
                                 v => Utils.ParseValue(v.Value?.ToString(), prop.PropertyType.GenericTypeArguments[1]));
                             foreach (var value in values)
                             {

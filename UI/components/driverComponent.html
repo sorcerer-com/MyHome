@@ -1,5 +1,5 @@
 ﻿<a class="w3-col l5 m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-light-gray" style="min-height: 72px"
-   v-bind:class="{'w3-text-red': error}" v-bind:title="error ?? 'Last Online: ' + new Date(driver.LastOnline).toISOString()" 
+   v-bind:class="{'w3-text-red': error}" v-bind:title="error ?? 'Last Online: ' + new Date(driver.LastOnline).toISOString()"
    v-on:click="click()">
     <!-- Switch -->
     <b class="w3-xlarge room-sensor-value" v-bind:class="{'w3-text-light-green': driver.IsOn}"
@@ -26,6 +26,22 @@
           v-if="driver.$type.endsWith('AcIrMqttDriver')">
         {{getAcIcon()}}
     </span>
+
+    <!-- eWeLink -->
+    <span class="material-icons w3-xxlarge cent" v-if="driver.$type.endsWith('EwelinkRfDriver')">
+        settings_remote
+    </span>
+
+    <!-- Script -->
+    <span class="material-icons w3-xxlarge cent" v-if="driver.$type.endsWith('ScriptDriver')">
+        code
+    </span>
+
+    <!-- Speaker -->
+    <span class="material-icons w3-xxlarge cent" v-if="driver.$type.endsWith('SpeakerMqttDriver')">
+        speaker
+    </span>
+
 
     <div class="w3-tiny">{{driver.Name}}</div>
 
