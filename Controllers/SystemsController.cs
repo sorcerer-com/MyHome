@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 using Microsoft.AspNetCore.Mvc;
@@ -95,6 +96,14 @@ namespace MyHome.Controllers
                 logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
+        }
+
+
+        [HttpGet("MediaPlayer/songs/{fileName}")]
+        public ActionResult GetSong(string fileName)
+        {
+            var file = System.IO.File.OpenRead(Path.Join(Systems.MediaPlayerSystem.SongsPath, fileName));
+            return File(file, "audio/mpeg");
         }
 
 

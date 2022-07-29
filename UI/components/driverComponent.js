@@ -23,7 +23,9 @@ $.get(templateUrl, template => {
                         setTimeout(() => this.error = null, 3000);
                     });
                 }
-                if (this.modalObject == null && this.driver.$type.endsWith("AcIrMqttDriver")) {
+                if (this.modalObject == null &&
+                    (this.driver.$type.endsWith("AcIrMqttDriver") ||
+                        this.driver.$type.endsWith("SpeakerMqttDriver"))) {
                     this.modalObject = { ...this.driver };
                 }
             },

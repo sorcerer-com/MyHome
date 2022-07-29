@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 
 using MailKit.Net.Smtp;
 
@@ -15,6 +17,9 @@ using NLog;
 
 using ScrapySharp.Html.Forms;
 using ScrapySharp.Network;
+
+using YoutubeExplode;
+using YoutubeExplode.Videos.Streams;
 
 namespace MyHome.Utils
 {
@@ -28,7 +33,6 @@ namespace MyHome.Utils
             try
             {
                 logger.Debug($"Send email to '{recipient}' subject: '{subject}' ({fileNames?.Count} files)");
-
 
                 var mail = new MimeMessage();
                 mail.From.Add(MailboxAddress.Parse("sorcerer_com@abv.bg"));
@@ -125,6 +129,59 @@ namespace MyHome.Utils
                 logger.Trace(e, $"Cannot get json content from '{url}'");
                 return null;
             }
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S112")]
+        public static async Task<string> DownloadYouTubeAudioAsync(string url, string path)
+        {
+            try
+            {
+                logger.Debug($"Getting YouTube video details: {url}");
+                var youtube = new YoutubeClient();
+                var streamManifest = await youtube.Videos.Streams.GetManifestAsync(url);
+                var streamInfo = streamManifest
+                    .GetAudioOnlyStreams()
+                    .Where(s => s.Container == Container.Mp4 || s.Container == Container.Mp3)
+                    .GetWithHighestBitrate();
+
+                // if path doesn't contains filename
+                if (path.LastIndexOf('.') <= 0) // if it is not "."
+                {
+                    var video = await youtube.Videos.GetAsync(url);
+                    // escape invalid symbols
+                    var filename = new string(video.Title.Select(c => Path.GetInvalidFileNameChars().Contains(c) || c == '\"' || c == '?' ? '_' : c).ToArray());
+                    path = Path.Join(path, $"{filename}.{streamInfo.Container}");
+                }
+
+                logger.Debug($"Downloading YouTube video '{url}' to '{path}'");
+                await youtube.Videos.Streams.DownloadAsync(streamInfo, path);
+
+                // extract mp3 from the mp4
+                if (streamInfo.Container == Container.Mp4)
+                {
+                    logger.Debug($"Converting mp4 file to mp3");
+                    var ffmpegProcess = new System.Diagnostics.Process();
+                    ffmpegProcess.StartInfo.UseShellExecute = false;
+                    ffmpegProcess.StartInfo.RedirectStandardInput = true;
+                    ffmpegProcess.StartInfo.RedirectStandardOutput = true;
+                    ffmpegProcess.StartInfo.RedirectStandardError = true;
+                    ffmpegProcess.StartInfo.CreateNoWindow = true;
+                    ffmpegProcess.StartInfo.FileName = "ffmpeg";
+                    ffmpegProcess.StartInfo.Arguments = $" -i \"{path}\" -vn -f mp3 -y \"{path.Replace(".mp4", ".mp3")}\"";
+                    ffmpegProcess.Start();
+                    await ffmpegProcess.WaitForExitAsync();
+                    if (ffmpegProcess.ExitCode != 0)
+                        throw new Exception(ffmpegProcess.StandardError.ReadToEnd());
+                    File.Delete(path); // delete the mp4
+                }
+            }
+            catch (Exception e)
+            {
+                logger.Error($"Cannot download YouTube audio: {url}");
+                logger.Debug(e);
+                return null;
+            }
+            return Path.GetFileName(path.Replace(".mp4", ".mp3"));
         }
     }
 }

@@ -60,6 +60,9 @@ namespace MyHome
 
 
         [JsonIgnore]
+        public MediaPlayerSystem MediaPlayerSystem => this.Systems.Values.OfType<MediaPlayerSystem>().FirstOrDefault();
+
+        [JsonIgnore]
         public DevicesSystem DevicesSystem => this.Systems.Values.OfType<DevicesSystem>().FirstOrDefault();
 
         [JsonIgnore]

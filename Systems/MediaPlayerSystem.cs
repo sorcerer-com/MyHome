@@ -5,6 +5,7 @@ using System.Linq;
 
 using LibVLCSharp.Shared;
 
+using MyHome.Models;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -19,6 +20,8 @@ namespace MyHome.Systems
 
         private static readonly string[] supportedFormats = {
             ".mkv", ".avi", ".mov", ".wmv", ".mp4", ".mpg", ".mpeg", ".m4v", ".3gp", ".mp3" };
+
+        public static readonly string SongsPath = Path.Combine(Config.BinPath, "Songs");
 
 
         [UiProperty(true)]
@@ -47,6 +50,8 @@ namespace MyHome.Systems
 
         [UiProperty]
         public List<string> Watched { get; }
+
+        public Dictionary<string, int> Songs { get; } // song path / play count
 
 
         [JsonIgnore]
@@ -86,12 +91,15 @@ namespace MyHome.Systems
             this.Radios = new List<string>();
             this.Volume = 50;
             this.Watched = new List<string>();
+            this.Songs = new Dictionary<string, int>();
 
             this.mediaList = new List<string>();
             this.lastRefreshMediaListTimer = DateTime.Now - TimeSpan.FromDays(1);
             this.libVLC = new LibVLC();
             this.player = new MediaPlayer(this.libVLC);
             this.playing = "";
+
+            Directory.CreateDirectory(SongsPath);
         }
 
         public override void Stop()
@@ -191,6 +199,18 @@ namespace MyHome.Systems
         public void RefreshMediaList()
         {
             this.lastRefreshMediaListTimer = DateTime.Now - TimeSpan.FromDays(1);
+        }
+
+        public string AddSong(string url)
+        {
+            logger.Debug($"Add song: {url}");
+            string filepath = url;
+            if (url.Contains("youtube"))
+                filepath = Services.DownloadYouTubeAudioAsync(url, SongsPath).Result;
+            if (!this.Songs.ContainsKey(filepath))
+                this.Songs.Add(filepath, 0);
+            // TODO: clean up old files by max songs sizes
+            return filepath;
         }
 
 

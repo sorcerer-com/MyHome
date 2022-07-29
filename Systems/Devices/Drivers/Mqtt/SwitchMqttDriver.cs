@@ -54,7 +54,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             {
                 var json = new JObject
                 {
-                    [this.IsOnSetMqttTopic.jsonPath] = this.IsOn
+                    [this.IsOnSetMqttTopic.jsonPath] = value
                 };
                 value = json.ToString();
             }

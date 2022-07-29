@@ -124,7 +124,11 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                     else
                         this.State[item.Key] = Utils.Utils.ParseValue(value, this.State[item.Key].GetType());
 
-                    changed |= oldValue != this.State[item.Key];
+                    if (oldValue != this.State[item.Key])
+                    {
+                        changed = true;
+                        this.NewStateReceived(item.Key, oldValue, this.State[item.Key]);
+                    }
                 }
                 if (changed)
                 {
@@ -156,6 +160,10 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 MyHome.Instance.MqttClient.Subscribe(value.topic);
             }
             this.MqttGetTopics[name] = value;
+        }
+
+        protected virtual void NewStateReceived(string state, object oldValue, object newValue)
+        {
         }
     }
 }

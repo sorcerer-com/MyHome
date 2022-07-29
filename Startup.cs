@@ -18,6 +18,9 @@ namespace MyHome
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
+        public static string Host { get; private set; }
+
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
@@ -49,6 +52,8 @@ namespace MyHome
 
             app.Use(async (context, next) =>
             {
+                if (Host == null)
+                    Host = $"{ context.Request.Scheme}://{context.Request.Host}";
                 if (Login(context, myHome))
                     await next();
             });
@@ -91,7 +96,7 @@ namespace MyHome
 
                 return false;
             }
-            else if (!IsResouce(context.Request.Path) && context.Request.Path != "/api/sensor/data" &&
+            else if (!IsResouce(context.Request.Path) && !context.Request.Path.StartsWithSegments("/api/systems/MediaPlayer/songs") &&
                 (context.Session.GetString("password") ?? "") != myHome.Config.Password)
             {
                 if (!context.Request.Path.StartsWithSegments("/api")) // pages only

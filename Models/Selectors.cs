@@ -6,6 +6,7 @@ namespace MyHome.Models
 {
     public static class Selectors
     {
+        // value, display name
         public static IEnumerable<(string, string)> GetRooms()
         {
             return MyHome.Instance.Rooms.Select(r => (r.Name, r.Name));
@@ -24,6 +25,12 @@ namespace MyHome.Models
         {
             return MyHome.Instance.Rooms.SelectMany(r => r.SensorsValues.Keys).Distinct().OrderBy(s => s).Select(s => (s, s));
         }
+
+        public static IEnumerable<(string, string)> GetSongs()
+        {
+            return MyHome.Instance.MediaPlayerSystem.Songs.OrderByDescending(kvp => kvp.Value).Select(kvp => (kvp.Key, kvp.Key));
+        }
+
 
         public static IEnumerable<(string, string)> GetFunctions()
         {

@@ -45,7 +45,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             {
                 var json = new JObject
                 {
-                    [this.ColorSetMqttTopic.jsonPath] = this.Color
+                    [this.ColorSetMqttTopic.jsonPath] = value
                 };
                 value = json.ToString();
             }
