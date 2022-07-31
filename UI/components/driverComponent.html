@@ -1,5 +1,6 @@
 ﻿<a class="w3-col l5 m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-light-gray" style="min-height: 72px"
-   v-bind:class="{'w3-text-red': error}" v-bind:title="error ?? 'Last Online: ' + new Date(driver.LastOnline).toISOString()"
+   v-bind:class="{'w3-text-red': error, 'w3-animate-fading': processing}" 
+   v-bind:title="error ?? 'Last Online: ' + new Date(driver.LastOnline).toISOString()"
    v-on:click="click()">
     <!-- Switch -->
     <b class="w3-xlarge room-sensor-value" v-bind:class="{'w3-text-light-green': driver.IsOn}"
@@ -18,14 +19,17 @@
 
     <!-- AC -->
     <span class="w3-xlarge"
-          v-if="driver.$type.endsWith('AcIrMqttDriver')">
+          v-if="driver.$type.endsWith('AcIrMqttDriver') && driver.Power">
         {{Math.round(driver.Temperature, 2)}}
     </span>
-    <span class="w3-tiny" v-if="driver.$type.endsWith('AcIrMqttDriver')">°C</span>
+    <span class="w3-tiny" v-if="driver.$type.endsWith('AcIrMqttDriver') && driver.Power">°C</span>
     <span class="material-icons w3-tiny" style="vertical-align:top;margin-top:8px;"
-          v-if="driver.$type.endsWith('AcIrMqttDriver')">
+          v-if="driver.$type.endsWith('AcIrMqttDriver') && driver.Power">
         {{getAcIcon()}}
     </span>
+    <b class="w3-xlarge room-sensor-value" v-if="driver.$type.endsWith('AcIrMqttDriver') && !driver.Power">
+        OFF
+    </b>
 
     <!-- eWeLink -->
     <span class="material-icons w3-xxlarge cent" v-if="driver.$type.endsWith('EwelinkRfDriver')">
@@ -39,7 +43,7 @@
 
     <!-- Speaker -->
     <span class="material-icons w3-xxlarge cent" v-if="driver.$type.endsWith('SpeakerMqttDriver')">
-        speaker
+        {{driver.Playing ? 'music_note' : 'speaker'}}
     </span>
 
 

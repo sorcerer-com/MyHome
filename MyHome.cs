@@ -81,6 +81,7 @@ namespace MyHome
             //   - too many sensor values, merge Water Switch and Water State somehow
             //   - new sensor UI - add limits (like unhealty, alerts, etc.)
             //   - security system modal with sensor statuses (muk, motion, etc), etc.
+            //   - allow custom (driver) icons?
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
             // * offline camera alert
