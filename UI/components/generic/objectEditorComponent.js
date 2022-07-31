@@ -14,7 +14,7 @@ $.get(templateUrl, template => {
             json: {
                 get: function () {
                     let filteredObject = Object.keys(this.object)
-                        .filter(key => key[0] != "$" && (this.settings == null || this.object['$subtypes'][key].setting == this.settings))
+                        .filter(key => key[0] != "$" && (this.settings == null || this.object['$subtypes'][key].setting == this.settings) && !this.object['$subtypes'][key].readonly)
                         .reduce((cur, key) => { return Object.assign(cur, { [key]: this.object[key] }) }, {});
                     return JSON.stringify(filteredObject, null, 2);
                 },

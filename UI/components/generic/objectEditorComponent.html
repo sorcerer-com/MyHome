@@ -5,7 +5,7 @@
     </a>
 
     <div v-for="name of Object.keys(object)"
-         v-if="!showEditor && name[0] != '$' && (settings == null || object['$subtypes'][name].setting == settings)"
+         v-if="!showEditor && name[0] != '$' && (settings == null || object['$subtypes'][name].setting == settings) && !object['$subtypes'][name].readonly"
          class="w3-row w3-row-padding margin-bottom-8">
         <span class="w3-col m5 w3-right-align">{{name}}:</span>
 

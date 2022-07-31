@@ -84,6 +84,8 @@ namespace MyHome.Utils
                     subtypes[pi.Name] = pi.PropertyType.ToUiType();
                     subtypes[pi.Name]["setting"] = uiPropertyAttr.Setting;
                     subtypes[pi.Name]["hint"] = uiPropertyAttr.Hint;
+                    if (!pi.CanWrite && !pi.PropertyType.IsGenericType) // exclude generic types (lists, dicts, etc.)
+                        subtypes[pi.Name]["readonly"] = true;
 
                     if (!string.IsNullOrEmpty(uiPropertyAttr.Selector))
                     {
