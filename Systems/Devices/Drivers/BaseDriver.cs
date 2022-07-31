@@ -5,31 +5,38 @@ using MyHome.Utils;
 
 using Newtonsoft.Json;
 
+using NLog;
+
 namespace MyHome.Systems.Devices.Drivers
 {
     public abstract class BaseDriver : Device
     {
+        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+
         [JsonIgnore]
         [UiProperty]
         public virtual DateTime LastOnline => DateTime.Now;
 
 
-        protected Dictionary<string, object> State { get; }
+        protected Dictionary<string, object> States { get; }
 
 
         protected BaseDriver()
         {
-            this.State = new Dictionary<string, object>();
+            this.States = new Dictionary<string, object>();
         }
 
 
-        protected void SetState(string name, object value, Action call)
+        protected bool SetState(string name, object value, Action call = null)
         {
-            if (this.State[name] == value)
-                return;
+            if (this.States[name] == value || this.States[name]?.Equals(value) == true)
+                return false;
 
-            this.State[name] = value;
+            if (this.Room != null)
+                logger.Info($"Set {name} state of {this.Name} ({this.Room.Name}): {value}");
+            this.States[name] = value;
             call?.Invoke();
+            return true;
         }
     }
 }

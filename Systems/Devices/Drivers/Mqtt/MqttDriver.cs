@@ -46,12 +46,15 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         protected Dictionary<string, (string topic, string jsonPath)> MqttGetTopics { get; }
 
+        protected Dictionary<string, (string topic, string jsonPath)> MqttSetTopics { get; }
+
 
         protected MqttDriver()
         {
             this.onlineMqttTopic = "";
             this.lastOnline = DateTime.Now;
             this.MqttGetTopics = new Dictionary<string, (string topic, string jsonPath)>();
+            this.MqttSetTopics = new Dictionary<string, (string topic, string jsonPath)>();
         }
 
 
@@ -118,22 +121,22 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                             continue;
                         value = jsonToken.ToString();
                     }
-                    var oldValue = this.State[item.Key];
-                    if (this.State[item.Key] is bool && (value.ToUpper() == "ON" || value.ToUpper() == "OFF"))
-                        this.State[item.Key] = value.ToUpper() == "ON";
+                    var oldValue = this.States[item.Key];
+                    if (this.States[item.Key] is bool && (value.ToUpper() == "ON" || value.ToUpper() == "OFF"))
+                        this.States[item.Key] = value.ToUpper() == "ON";
                     else
-                        this.State[item.Key] = Utils.Utils.ParseValue(value, this.State[item.Key].GetType());
+                        this.States[item.Key] = Utils.Utils.ParseValue(value, this.States[item.Key].GetType());
 
-                    if (oldValue != this.State[item.Key])
+                    if (oldValue != this.States[item.Key])
                     {
                         changed = true;
-                        this.NewStateReceived(item.Key, oldValue, this.State[item.Key]);
+                        this.NewStateReceived(item.Key, oldValue, this.States[item.Key]);
                     }
                 }
                 if (changed)
                 {
                     MyHome.Instance.SystemChanged = true;
-                    MyHome.Instance.Events.Fire(this, GlobalEventTypes.DriverStateChanged, this.State);
+                    MyHome.Instance.Events.Fire(this, GlobalEventTypes.DriverStateChanged, this.States);
                 }
             }
             catch (Exception ex)
@@ -162,8 +165,32 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             this.MqttGetTopics[name] = value;
         }
 
-        protected virtual void NewStateReceived(string state, object oldValue, object newValue)
+        protected virtual void NewStateReceived(string name, object oldValue, object newValue)
         {
+        }
+
+        protected void SetStateAndSend(string name, object value)
+        {
+            if (base.SetState(name, value))
+                this.SendState(name, value.ToString());
+        }
+
+        protected void SendState(string name, string value)
+        {
+            if (!string.IsNullOrEmpty(this.MqttSetTopics[name].jsonPath))
+            {
+                var json = new JObject
+                {
+                    [this.MqttSetTopics[name].jsonPath] = value
+                };
+                value = json.ToString();
+            }
+
+            if (MyHome.Instance.MqttClient.IsConnected)
+            {
+                logger.Debug($"Send {name} state of {this.Name} ({this.Room.Name}): {value}");
+                MyHome.Instance.MqttClient.Publish(this.MqttSetTopics[name].topic, value);
+            }
         }
     }
 }

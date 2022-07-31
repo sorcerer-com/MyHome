@@ -12,8 +12,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 {
     public class SpeakerMqttDriver : MqttDriver
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
-        private static readonly Random random = new Random();
+        private static readonly Random random = new();
 
         private const string PLAYING_STATE_NAME = "Playing";
         private const string VOLUME_STATE_NAME = "Volume";
@@ -22,15 +21,18 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         [UiProperty(selector: "GetSongs")]
         public string Playing
         {
-            get => (string)this.State[PLAYING_STATE_NAME];
+            get => (string)this.States[PLAYING_STATE_NAME];
             set
             {
-                if (!string.IsNullOrEmpty(value))
+                if (this.SetState(PLAYING_STATE_NAME, value))
                 {
-                    MyHome.Instance.MediaPlayerSystem.Songs[value] = MyHome.Instance.MediaPlayerSystem.Songs[value] + 1;
-                    this.SendVolumeState();
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        MyHome.Instance.MediaPlayerSystem.Songs[value] = MyHome.Instance.MediaPlayerSystem.Songs[value] + 1;
+                        this.SendState(VOLUME_STATE_NAME, this.Volume.ToString());
+                    }
+                    this.SendPlayingState();
                 }
-                this.SetState(PLAYING_STATE_NAME, value, this.SendSpeakerState);
             }
         }
 
@@ -52,8 +54,8 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         [UiProperty]
         public int Volume
         {
-            get => (int)this.State[VOLUME_STATE_NAME];
-            set => this.SetState(VOLUME_STATE_NAME, value, this.SendVolumeState);
+            get => (int)this.States[VOLUME_STATE_NAME];
+            set => this.SetStateAndSend(VOLUME_STATE_NAME, value);
         }
 
         [UiProperty]
@@ -71,7 +73,11 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         }
 
         [UiProperty(true, "(topic, json path)")]
-        public (string topic, string jsonPath) PlayingSetMqttTopic { get; set; }
+        public (string topic, string jsonPath) PlayingSetMqttTopic
+        {
+            get => this.MqttSetTopics[PLAYING_STATE_NAME];
+            set => this.MqttSetTopics[PLAYING_STATE_NAME] = value;
+        }
 
         [UiProperty(true, "(topic, json path)")]
         public (string topic, string jsonPath) VolumeGetMqttTopic
@@ -81,23 +87,27 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         }
 
         [UiProperty(true, "(topic, json path)")]
-        public (string topic, string jsonPath) VolumeSetMqttTopic { get; set; }
+        public (string topic, string jsonPath) VolumeSetMqttTopic
+        {
+            get => this.MqttSetTopics[VOLUME_STATE_NAME];
+            set => this.MqttSetTopics[VOLUME_STATE_NAME] = value;
+        }
 
 
         public SpeakerMqttDriver()
         {
-            this.State.Add(PLAYING_STATE_NAME, null);
-            this.State.Add(VOLUME_STATE_NAME, 10);
+            this.States.Add(PLAYING_STATE_NAME, null);
+            this.States.Add(VOLUME_STATE_NAME, 10);
             this.MqttGetTopics.Add(PLAYING_STATE_NAME, ("", ""));
             this.MqttGetTopics.Add(VOLUME_STATE_NAME, ("", ""));
-            this.PlayingSetMqttTopic = ("", "");
-            this.VolumeSetMqttTopic = ("", "");
+            this.MqttSetTopics.Add(PLAYING_STATE_NAME, ("", ""));
+            this.MqttSetTopics.Add(VOLUME_STATE_NAME, ("", ""));
         }
 
-        protected override void NewStateReceived(string state, object oldValue, object newValue)
+        protected override void NewStateReceived(string name, object oldValue, object newValue)
         {
-            base.NewStateReceived(state, oldValue, newValue);
-            if (state == PLAYING_STATE_NAME)
+            base.NewStateReceived(name, oldValue, newValue);
+            if (name == PLAYING_STATE_NAME)
             {
                 // if we receive empty value for playing state and we want to loop songs, start a new one
                 if (string.IsNullOrEmpty((string)newValue) && this.Loop)
@@ -111,50 +121,18 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                     else
                         this.Playing = songs[(songs.IndexOf((string)oldValue) + 1) % songs.Count];
                 }
-                this.State[state] = Uri.UnescapeDataString(((string)newValue).Replace($"{Startup.Host}/api/systems/MediaPlayer/songs/", ""));
+                this.States[name] = Uri.UnescapeDataString(((string)newValue).Replace($"{Startup.Host}/api/systems/MediaPlayer/songs/", ""));
             }
         }
 
 
-        private void SendSpeakerState()
+        private void SendPlayingState()
         {
             var value = Uri.EscapeUriString(this.Playing);
             if (!string.IsNullOrEmpty(value) && !value.StartsWith("http"))
                 value = $"{Startup.Host}/api/systems/MediaPlayer/songs/{value}";
 
-            if (!string.IsNullOrEmpty(this.PlayingSetMqttTopic.jsonPath))
-            {
-                var json = new JObject
-                {
-                    [this.PlayingSetMqttTopic.jsonPath] = value
-                };
-                value = json.ToString();
-            }
-
-            if (MyHome.Instance.MqttClient.IsConnected)
-            {
-                logger.Info($"Send state to {this.Name} ({this.Room.Name}): {value}");
-                MyHome.Instance.MqttClient.Publish(this.PlayingSetMqttTopic.topic, value);
-            }
-        }
-
-        private void SendVolumeState()
-        {
-            var value = this.Volume.ToString();
-            if (!string.IsNullOrEmpty(this.VolumeSetMqttTopic.jsonPath))
-            {
-                var json = new JObject
-                {
-                    [this.VolumeSetMqttTopic.jsonPath] = value
-                };
-                value = json.ToString();
-            }
-
-            if (MyHome.Instance.MqttClient.IsConnected)
-            {
-                logger.Info($"Send state to {this.Name} ({this.Room.Name}): {value}");
-                MyHome.Instance.MqttClient.Publish(this.VolumeSetMqttTopic.topic, value);
-            }
+            this.SendState(PLAYING_STATE_NAME, value);
         }
     }
 }

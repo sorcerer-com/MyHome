@@ -8,15 +8,13 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 {
     public class SwitchMqttDriver : MqttDriver
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
-
         private const string SWITCH_STATE_NAME = "On";
 
         [UiProperty]
         public bool IsOn
         {
-            get => (bool)this.State[SWITCH_STATE_NAME];
-            set => this.SetState(SWITCH_STATE_NAME, value, this.SendSwitchState);
+            get => (bool)this.States[SWITCH_STATE_NAME];
+            set => this.SetStateAndSend(SWITCH_STATE_NAME, value);
         }
 
         [UiProperty(true, "(topic, json path)")]
@@ -27,7 +25,11 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         }
 
         [UiProperty(true, "(topic, json path)")]
-        public (string topic, string jsonPath) IsOnSetMqttTopic { get; set; }
+        public (string topic, string jsonPath) IsOnSetMqttTopic
+        {
+            get => this.MqttSetTopics[SWITCH_STATE_NAME];
+            set => this.MqttSetTopics[SWITCH_STATE_NAME] = value;
+        }
 
         [UiProperty(true)]
         public bool ConfirmationRequired { get; set; }
@@ -35,35 +37,15 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         public SwitchMqttDriver()
         {
-            this.State.Add(SWITCH_STATE_NAME, false);
+            this.States.Add(SWITCH_STATE_NAME, false);
             this.MqttGetTopics.Add(SWITCH_STATE_NAME, ("", ""));
-            this.IsOnSetMqttTopic = ("", "");
+            this.MqttSetTopics.Add(SWITCH_STATE_NAME, ("", ""));
         }
 
         public bool Toggle()
         {
             this.IsOn = !this.IsOn;
             return this.IsOn;
-        }
-
-
-        private void SendSwitchState()
-        {
-            var value = this.IsOn.ToString();
-            if (!string.IsNullOrEmpty(this.IsOnSetMqttTopic.jsonPath))
-            {
-                var json = new JObject
-                {
-                    [this.IsOnSetMqttTopic.jsonPath] = value
-                };
-                value = json.ToString();
-            }
-
-            if (MyHome.Instance.MqttClient.IsConnected)
-            {
-                logger.Info($"Send state to {this.Name} ({this.Room.Name}): {value}");
-                MyHome.Instance.MqttClient.Publish(this.IsOnSetMqttTopic.topic, value);
-            }
         }
     }
 }
