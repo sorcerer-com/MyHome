@@ -209,7 +209,10 @@ namespace MyHome.Systems
                             logger.Info($"Skip alert sending for '{roomInfo.Room.Name}' room");
                             roomInfo.ImageFiles.Clear();
                         }
-                        this.ClearImages();
+
+                        Utils.Utils.CleanupFilesByCapacity(
+                            Directory.GetFiles(ImagesPath, "*.jpg").Select(f => new FileInfo(f)).OrderBy(f => f.CreationTime), 
+                            this.ImagesDiskUsage, logger);
                         MyHome.Instance.SystemChanged = true;
                     }
 
@@ -255,24 +258,6 @@ namespace MyHome.Systems
             var filepath = Path.Combine(ImagesPath, filename);
             if (Cv2.ImWrite(filepath, image))
                 roomInfo.ImageFiles.Add(filepath);
-        }
-
-        private void ClearImages()
-        {
-            var files = Directory.GetFiles(ImagesPath, "*.jpg").Select(f => new FileInfo(f));
-            var total = files.Sum(fi => fi.Length);
-            if (total < this.ImagesDiskUsage * 1024L * 1024L) // ImageDiskUsage is in MB
-                return;
-
-            var deleted = 0L;
-            foreach (var fileInfo in files.OrderBy(f => f.CreationTime))
-            {
-                deleted += fileInfo.Length;
-                File.Delete(fileInfo.FullName);
-
-                if (total - deleted < this.ImagesDiskUsage * 1024L * 1024L * 0.9) // reach 90%
-                    break;
-            }
         }
 
         private bool DetectPresence()

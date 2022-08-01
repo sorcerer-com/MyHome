@@ -30,6 +30,10 @@ namespace MyHome.Systems
         [UiProperty(true)]
         public List<string> Radios { get; }
 
+        [UiProperty(true, "MB")]
+        public double SongsDiskUsage { get; set; } // MB
+
+
         private bool sortByDate;
         [UiProperty]
         public bool SortByDate
@@ -89,6 +93,8 @@ namespace MyHome.Systems
         {
             this.MediaPaths = new List<string>();
             this.Radios = new List<string>();
+            this.SongsDiskUsage = 500;
+            this.sortByDate = false;
             this.Volume = 50;
             this.Watched = new List<string>();
             this.Songs = new Dictionary<string, int>();
@@ -209,7 +215,11 @@ namespace MyHome.Systems
                 filepath = Services.DownloadYouTubeAudioAsync(url, SongsPath).Result;
             if (!this.Songs.ContainsKey(filepath))
                 this.Songs.Add(filepath, 0);
-            // TODO: clean up old files by max songs sizes
+            // cleanup songs if we exceed the usage capacity
+            Utils.Utils.CleanupFilesByCapacity(this.Songs.OrderBy(kvp => kvp.Value).Select(kvp => new FileInfo(Path.Join(SongsPath, kvp.Key))), 
+                this.SongsDiskUsage, logger);
+            foreach (var file in this.Songs.Keys.Where(s => !File.Exists(Path.Join(SongsPath, s))))
+                this.Songs.Remove(file);
             return filepath;
         }
 

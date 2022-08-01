@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -117,6 +119,32 @@ namespace MyHome.Utils
                 Condition.GreaterOrEqual => compare >= 0,
                 _ => throw new Exception("Check invalid condition: " + condition),
             };
+        }
+
+        public static void CleanupFilesByCapacity(IEnumerable<FileInfo> files, double capacityMb, ILogger logger = null)
+        {
+            try
+            {
+                var total = files.Sum(fi => fi.Length);
+                if (total < capacityMb * 1024L * 1024L)
+                    return;
+
+                var deleted = 0L;
+                foreach (var fileInfo in files)
+                {
+                    logger?.Debug($"Cleanup files ({deleted}/{total}): {fileInfo.FullName}");
+                    deleted += fileInfo.Length;
+                    File.Delete(fileInfo.FullName);
+
+                    if (total - deleted < capacityMb * 1024L * 1024L * 0.9) // reach 90%
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                logger?.Error($"Failed to cleanup files ({files.Count()})");
+                logger?.Debug(e);
+            }
         }
     }
 }

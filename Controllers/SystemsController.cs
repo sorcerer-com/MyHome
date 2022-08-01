@@ -102,7 +102,8 @@ namespace MyHome.Controllers
         [HttpGet("MediaPlayer/songs/{fileName}")]
         public ActionResult GetSong(string fileName)
         {
-            var file = System.IO.File.OpenRead(Path.Join(Systems.MediaPlayerSystem.SongsPath, fileName));
+            // match buffer with the one in Tasmota
+            var file = new FileStream(Path.Join(Systems.MediaPlayerSystem.SongsPath, fileName), FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024);
             return this.File(file, "audio/mpeg");
         }
 
