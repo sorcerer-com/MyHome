@@ -60,6 +60,12 @@ $.get(templateUrl, template => {
 
                 let allRequests = [];
                 for (let sensor of this.sensors) {
+                    if (!this.stats[sensor.Name]) {
+                        // add empty values to preserve the order
+                        Vue.set(this.stats, sensor.Name, { "LastDay": { Average: 0, Sum: 0 }, "Older": { Average: 0, Sum: 0 } });
+                        updateChartData(this.charts["chartLastDay"], sensor.Name, {});
+                        updateChartData(this.charts["chartOlder"], sensor.Name, {});
+                    }
                     let request = getSensorData(this.room.Name, sensor.Name, this.valueType).done(data => {
                         let lastDayData = Object.keys(data)
                             .map(k => { return { t: new Date(k), y: data[k] } })

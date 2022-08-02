@@ -62,7 +62,16 @@ namespace MyHome
             app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = fileProvider });
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = fileProvider
+                FileProvider = fileProvider,
+                OnPrepareResponse = context =>
+                {
+                    var path = context.Context.Request.Path.Value;
+                    if (path.EndsWith(".html") && path.LastIndexOf("/") == 0) // disable cache for pages only
+                    {
+                        context.Context.Response.Headers.Add("Cache-Control", "no-cache, no-store");
+                        context.Context.Response.Headers.Add("Expires", "-1");
+                    }
+                }
             });
 
             app.UseWebSockets();

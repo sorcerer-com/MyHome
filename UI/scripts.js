@@ -3,6 +3,15 @@
         .done(() => getRooms().done(rooms => Vue.set(this.$parent, "rooms", rooms)));
 }
 
+function filterObjectBySettings(object, settings) {
+    return Object.keys(object)
+        .filter(key => key[0] == "$" || settings == null || object['$subtypes'][key].setting == settings)
+        .reduce((cur, key) => {
+            let value = object[key] && object[key]['$subtypes'] ? filterObjectBySettings(object[key]) : object[key];
+            return Object.assign(cur, {[key]: value})
+        }, {});
+}
+
 
 function createLineChart(canvasId, datasets = {}, allowZoom = true) { // datasets: {label: data}
     let colors = generateChartColors(Object.keys(datasets).length);

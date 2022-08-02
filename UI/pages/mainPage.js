@@ -110,6 +110,11 @@ $.get(templateUrl, template => {
                         let room = this.rooms.find(r => r.Name == value);
                         for (let sensor of room.Devices.filter(d => d.$type.endsWith("Sensor") || d.$type.endsWith("Camera"))) {
                             for (let valueType of Object.keys(sensor.Values)) {
+                                if (!this.stats[`${sensor.Name}.${valueType}`]) {
+                                    // add empty values to preserve the order
+                                    Vue.set(this.stats, `${sensor.Name}.${valueType}`, { Average: 0, Sum: 0 });
+                                    updateChartData(this.charts["charts"], `${sensor.Name}.${valueType}`, {});
+                                }
                                 getSensorData(room.Name, sensor.Name, valueType).done(data => {
                                     let chartData = Object.keys(data)
                                         .map(k => { return { t: new Date(k), y: data[k] } })

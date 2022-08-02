@@ -216,7 +216,7 @@ namespace MyHome.Systems
             if (!this.Songs.ContainsKey(filepath))
                 this.Songs.Add(filepath, 0);
             // cleanup songs if we exceed the usage capacity
-            Utils.Utils.CleanupFilesByCapacity(this.Songs.OrderBy(kvp => kvp.Value).Select(kvp => new FileInfo(Path.Join(SongsPath, kvp.Key))), 
+            Utils.Utils.CleanupFilesByCapacity(this.Songs.OrderBy(kvp => kvp.Value).Select(kvp => new FileInfo(Path.Join(SongsPath, kvp.Key))),
                 this.SongsDiskUsage, logger);
             foreach (var file in this.Songs.Keys.Where(s => !File.Exists(Path.Join(SongsPath, s))))
                 this.Songs.Remove(file);

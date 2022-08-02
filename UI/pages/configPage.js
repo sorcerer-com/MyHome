@@ -72,7 +72,8 @@ $.get(templateUrl, template => {
                 if (this.edit.name == "Add Room" && this.rooms.some(r => r != room && r.Name == room.Name))
                     return $.Deferred().reject({ responseText: "A room with the same name already exists" });
 
-                return setRoom(this.edit.roomName, room).done(() => this.edit.name = null);
+                let settings = filterObjectBySettings(room, true);
+                return setRoom(this.edit.roomName, settings).done(() => this.edit.name = null);
             },
             saveDevice: function (device) {
                 if (device.Name == "")
@@ -81,7 +82,8 @@ $.get(templateUrl, template => {
                 if (this.edit.name == "Add Device" && room.Devices.some(d => d != device && d.Name == device.Name))
                     return $.Deferred().reject({ responseText: "A device with the same name already exists" });
 
-                return setDevice(this.edit.roomName, this.edit.name, device).done(() => this.edit.name = null);
+                let settings = filterObjectBySettings(device, true);
+                return setDevice(this.edit.roomName, this.edit.name, settings).done(() => this.edit.name = null);
             },
 
             cloneDevice: function () {

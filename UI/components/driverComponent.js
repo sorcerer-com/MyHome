@@ -62,7 +62,7 @@ $.get(templateUrl, template => {
             },
 
             save: function () {
-                let obj = this.modalObject;
+                let obj = filterObjectBySettings(this.modalObject, false);
                 this.modalObject = null;
                 this.processing = true;
                 return setDevice(this.room.Name, this.driver.Name, obj)

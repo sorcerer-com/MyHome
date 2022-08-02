@@ -27,7 +27,13 @@ namespace MyHome.Controllers
         [HttpGet("refresh")]
         public async Task Refresh()
         {
-            if (this.HttpContext.WebSockets.IsWebSocketRequest)
+            if (!this.HttpContext.WebSockets.IsWebSocketRequest)
+            {
+                this.HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+                return;
+            }
+
+            try
             {
                 using var webSocket = await this.HttpContext.WebSockets.AcceptWebSocketAsync();
 
@@ -63,9 +69,9 @@ namespace MyHome.Controllers
                     receiveResult.CloseStatusDescription,
                     CancellationToken.None);
             }
-            else
+            catch
             {
-                this.HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+                // nothing we can do
             }
         }
     }

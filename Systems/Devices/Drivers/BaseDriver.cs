@@ -35,6 +35,7 @@ namespace MyHome.Systems.Devices.Drivers
             if (this.Room != null)
                 logger.Info($"Set {name} state of {this.Name} ({this.Room.Name}): {value}");
             this.States[name] = value;
+            MyHome.Instance.Events.Fire(this, GlobalEventTypes.DriverStateChanged, this.States);
             call?.Invoke();
             return true;
         }

@@ -79,7 +79,7 @@ namespace MyHome
             // * UI - mobile / landscape
             //   - maybe show devices instead of value / grouped by type -https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg
             //   - too many sensor values, merge Water Switch and Water State somehow
-            //   - new sensor UI - add limits (like unhealty, alerts, etc.)
+            //   - new sensor UI - add limits (like unhealty, alerts, etc.), bring back the security icon
             //   - security system modal with sensor statuses (muk, motion, etc), etc.
             //   - allow custom (driver) icons?
             //   - Speaker driver - allow to go next, prev?, control volume, loop, shuffle, pause???
@@ -102,7 +102,7 @@ namespace MyHome
             this.JintEngine = new Engine(options =>
             {
                 options.LimitMemory(100_000_000); // 100MB
-                options.TimeoutInterval(TimeSpan.FromSeconds(5));
+                options.TimeoutInterval(TimeSpan.FromMinutes(15)); // to allow "async" ops like Task.Delay(...)
                 options.MaxStatements(1000);
             });
 

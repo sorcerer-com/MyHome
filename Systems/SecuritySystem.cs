@@ -211,7 +211,7 @@ namespace MyHome.Systems
                         }
 
                         Utils.Utils.CleanupFilesByCapacity(
-                            Directory.GetFiles(ImagesPath, "*.jpg").Select(f => new FileInfo(f)).OrderBy(f => f.CreationTime), 
+                            Directory.GetFiles(ImagesPath, "*.jpg").Select(f => new FileInfo(f)).OrderBy(f => f.CreationTime),
                             this.ImagesDiskUsage, logger);
                         MyHome.Instance.SystemChanged = true;
                     }

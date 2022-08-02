@@ -1,9 +1,5 @@
 ﻿using MyHome.Utils;
 
-using Newtonsoft.Json.Linq;
-
-using NLog;
-
 namespace MyHome.Systems.Devices.Drivers.Mqtt
 {
     public class LightMqttDriver : SwitchMqttDriver

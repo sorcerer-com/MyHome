@@ -4,9 +4,6 @@ using System.Linq;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using NLog;
 
 namespace MyHome.Systems.Devices.Drivers.Mqtt
 {
