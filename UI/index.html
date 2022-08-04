@@ -51,11 +51,11 @@
     <div id="vue-content">
         <!-- Title bar -->
         <div class="w3-bar">
-            <div class="w3-center display-center">
+            <div class="w3-center display-center w3-animate-top">
                 <img src="./images/MyHome.ico" width="32" class="w3-cell-middle" />
                 <h3 class="w3-cell-middle w3-padding-small w3-show-inline-block">My Home</h3>
             </div>
-            <div class="w3-right w3-padding w3-padding-top-24">
+            <div class="w3-right w3-padding w3-padding-top-24 w3-animate-right">
                 <a class="material-icons" title="Home"
                    v-on:click="page = 'main'" v-bind:class="{'w3-text-gray w3-hover-text-white': page != 'main'}">
                     home
@@ -99,7 +99,7 @@
         <actions-page v-if="page =='actions'" ref="page"></actions-page>
 
         <!-- Modal -->
-        <div class="w3-modal" v-if="modal"
+        <div class="w3-modal w3-animate-opacity" v-if="modal"
              v-bind:class="{'w3-show-block': modal}"
              v-on:click="modal = ''">
             <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">

@@ -1,48 +1,49 @@
-﻿<a class="w3-col l5 m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-light-gray" style="min-height: 72px"
+﻿<a class="w3-center w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-blue-gray" style="min-height: 72px"
    v-bind:class="{'w3-text-red': error, 'w3-animate-fading': processing}" 
    v-bind:title="error ?? 'Last Online: ' + new Date(driver.LastOnline).toISOString()"
    v-on:click="click()">
     <!-- Switch -->
-    <b class="w3-xlarge room-sensor-value" v-bind:class="{'w3-text-light-green': driver.IsOn}"
+    <div class="w3-xlarge" v-bind:class="{'w3-text-light-green': driver.IsOn}" style="font-weight: bold; margin: 2px"
        v-if="driver.$type.endsWith('SwitchMqttDriver')">
         {{driver.IsOn ? 'ON' : 'OFF'}}
-    </b>
+    </div>
 
     <!-- Light -->
     <span class="material-icons w3-xxlarge" v-bind:class="{'w3-text-yellow': driver.IsOn}"
           v-if="driver.$type.endsWith('LightMqttDriver')">
         {{driver.IsOn ? 'lightbulb' : 'lightbulb_outline'}}
+
+        <input type="color" style="width: 12px; height: 12px;"
+               v-model="driver.Color" v-bind:title="driver.Color" v-on:click.stop="" />
     </span>
-    <input type="color" style="width: 12px; height: 12px;"
-           v-model="driver.Color" v-bind:title="driver.Color" v-on:click.stop=""
-           v-if="driver.$type.endsWith('LightMqttDriver')" />
 
     <!-- AC -->
-    <span class="w3-xlarge"
+    <div class="w3-xlarge" style="margin: 2px; white-space: nowrap;"
           v-if="driver.$type.endsWith('AcIrMqttDriver') && driver.Power">
         {{Math.round(driver.Temperature, 2)}}
-    </span>
-    <span class="w3-tiny" v-if="driver.$type.endsWith('AcIrMqttDriver') && driver.Power">°C</span>
-    <span class="material-icons w3-tiny" style="vertical-align:top;margin-top:8px;"
-          v-if="driver.$type.endsWith('AcIrMqttDriver') && driver.Power">
-        {{getAcIcon()}}
-    </span>
-    <b class="w3-xlarge room-sensor-value" v-if="driver.$type.endsWith('AcIrMqttDriver') && !driver.Power">
+
+        <span class="w3-tiny">°C</span>
+        <span class="material-icons w3-tiny" style="vertical-align:top;margin-top:8px;">
+            {{getAcIcon()}}
+        </span>
+    </div>
+    <div class="w3-xlarge" style="font-weight: bold; margin: 2px;"
+          v-if="driver.$type.endsWith('AcIrMqttDriver') && !driver.Power">
         OFF
-    </b>
+    </div>
 
     <!-- eWeLink -->
-    <span class="material-icons w3-xxlarge cent" v-if="driver.$type.endsWith('EwelinkRfDriver')">
+    <span class="material-icons w3-xxlarge" v-if="driver.$type.endsWith('EwelinkRfDriver')">
         settings_remote
     </span>
 
     <!-- Script -->
-    <span class="material-icons w3-xxlarge cent" v-if="driver.$type.endsWith('ScriptDriver')">
+    <span class="material-icons w3-xxlarge" v-if="driver.$type.endsWith('ScriptDriver')">
         code
     </span>
 
     <!-- Speaker -->
-    <span class="material-icons w3-xxlarge cent" v-if="driver.$type.endsWith('SpeakerMqttDriver')">
+    <span class="material-icons w3-xxlarge" v-if="driver.$type.endsWith('SpeakerMqttDriver')">
         {{driver.Playing ? 'music_note' : 'speaker'}}
     </span>
 
@@ -50,7 +51,7 @@
     <div class="w3-tiny">{{driver.Name}}</div>
 
     <!-- Modal -->
-    <div class="w3-modal" v-if="modalObject" v-on:click.stop=""
+    <div class="w3-modal w3-animate-opacity" v-if="modalObject" v-on:click.stop=""
          v-bind:class="{'w3-show-block': modalObject}"
          v-on:click="modalObject = null">
         <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">

@@ -1,40 +1,58 @@
-﻿<div>
+﻿<div class="w3-row margin-8 w3-animate-opacity">
     <h3 class="reset-margin margin-left-8">{{room.Name}}</h3>
 
     <!-- Sensors data -->
-    <a class="w3-col l5  m5 s3 w3-padding w3-round-large w3-hover-light-gray margin-8 bg-gray-opacity-88" style="min-height: 72px"
-       v-for="(value, name) of room.SensorsValues"
-       v-bind:title="value + '\n' + metadata(room.SensorsMetadata[name])"
-       v-on:click="selectedValueType = name">
-        <span class="w3-xlarge room-sensor-value">{{Math.round(value, 2)}}</span>
-        <span v-if="room.SensorsMetadata[name] && room.SensorsMetadata[name]['unit']" class="w3-small room-sensor-value-unit">
-            {{room.SensorsMetadata[name]['unit']}}
-        </span>
-        <div class="w3-tiny">{{name}}</div>
-    </a>
+    <div class="grid-content margin-bottom-8">
+        <a class="w3-center w3-border-bottom w3-round-large w3-hover-text-blue-gray margin-8" style="min-height: 72px;"
+           v-for="(value, name) of room.SensorsValues"
+           v-bind:title="value + '\n' + metadata(room.SensorsMetadata[name])"
+           v-on:click="selectedValueType = name">
+            <span class="w3-xlarge room-sensor-value" style="white-space: nowrap">
+                {{Math.round(value, 2)}}
+                <span v-if="room.SensorsMetadata[name] && room.SensorsMetadata[name]['unit']" class="w3-small room-sensor-value-unit">
+                    {{room.SensorsMetadata[name]['unit']}}
+                </span>
+            </span>
+            <div class="w3-tiny">{{name}}</div>
+        </a>
+    </div>
 
-    <!-- Cameras -->
-    <a class="w3-col l5 m5 s3 w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-light-gray" style="min-height: 72px"
-       v-if="getCameras().length > 0"
-       v-bind:title="getCameras().length + ' Cameras'"
-       v-on:click="selectedValueType = 'Cameras'">
-        <span class="material-icons w3-xxlarge">
-            videocam
-        </span>
-        <div class="w3-tiny">Cameras</div>
-    </a>
+    <div class="grid-content margin-bottom-8">
+        <!-- Cameras -->
+        <a class="w3-center w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-blue-gray" style="min-height: 72px"
+           v-if="getCameras().length > 0"
+           v-bind:title="getCameras().length + ' Cameras'"
+           v-on:click="selectedValueType = 'Cameras'">
+            <span class="material-icons w3-xxlarge">
+                videocam
+            </span>
+            <div class="w3-tiny">Cameras</div>
+        </a>
 
-    <!-- Drivers -->
-    <driver v-for="driver of getDrivers()"
-            v-bind:key="driver.Name"
-            v-bind:room="room"
-            v-bind:driver="driver">
-    </driver>
+        <!-- Drivers -->
+        <driver v-for="driver of getDrivers()"
+                v-bind:key="driver.Name"
+                v-bind:room="room"
+                v-bind:driver="driver">
+        </driver>
+
+        <!-- Security system -->
+        <a class="w3-center w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-blue-gray" style="min-height: 72px"
+           v-bind:title="room.IsSecuritySystemEnabled ? 'Disable' : 'Enable'"
+           v-on:click="setRoomSecuritySystemEnabled(room.Name, !room.IsSecuritySystemEnabled);">
+            <span class="material-icons w3-xxlarge"
+                  v-bind:class="{'w3-text-light-green': room.IsSecuritySystemEnabled,
+                            'w3-text-red': room.IsSecuritySystemActivated}">
+                security
+            </span>
+            <div class="w3-tiny">Security</div>
+        </a>
+    </div>
 
     <!-- Sensors Data / Cameras Modal -->
-    <div class="w3-modal" v-if="selectedValueType"
-         v-bind:class="{'w3-show-block': selectedValueType}"
-         v-on:click="selectedValueType = ''">
+    <div class="w3-modal w3-animate-opacity" v-if="selectedValueType"
+            v-bind:class="{'w3-show-block': selectedValueType}"
+            v-on:click="selectedValueType = ''">
         <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">
             <header class="w3-container w3-blue-gray">
                 <span class="w3-button w3-display-topright" v-on:click="selectedValueType = ''">&times;</span>
@@ -43,13 +61,13 @@
             <div class="w3-container w3-padding-16 height-100 overflow-y-auto bg-gray">
                 <!-- Sensors Data -->
                 <sensors-data v-if="selectedValueType != 'Cameras'"
-                              v-bind:room="room"
-                              v-bind:sensors="getSensorsBySelectedValueType()"
-                              v-bind:value-type="selectedValueType"></sensors-data>
+                                v-bind:room="room"
+                                v-bind:sensors="getSensorsBySelectedValueType()"
+                                v-bind:value-type="selectedValueType"></sensors-data>
                 <!-- Cameras -->
                 <cameras v-if="selectedValueType == 'Cameras'"
-                         v-bind:room="room"
-                         v-bind:cameras="getCameras()"></cameras>
+                            v-bind:room="room"
+                            v-bind:cameras="getCameras()"></cameras>
             </div>
         </div>
     </div>

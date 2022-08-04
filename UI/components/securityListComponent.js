@@ -9,11 +9,10 @@ $.get(templateUrl, template => {
             }
         },
         methods: {
-            setRoomSecuritySystemEnabled: setRoomSecuritySystemEnabled,
             setAllRoomsSecuritySystemEnabled: function (isEnabled) {
                 for (let room of this.rooms) {
                     if (room.IsSecuritySystemEnabled != isEnabled)
-                        this.setRoomSecuritySystemEnabled(room.Name, isEnabled);
+                        setRoomSecuritySystemEnabled(room.Name, isEnabled);
                 }
             },
 

@@ -7,10 +7,6 @@ function createWebSocket() {
     window.ws.lastMessage = new Date();
     window.ws.refreshHandlers = handlers || [];
 
-    // call all refresh handlers
-    for (let handler of window.ws.refreshHandlers)
-        handler();
-
 
     window.ws.addRefreshHandlers = function (handler) {
         window.ws.refreshHandlers.push(handler);
@@ -21,6 +17,10 @@ function createWebSocket() {
         if (idx != -1)
             window.ws.refreshHandlers.splice(idx, 1);
     }
+
+    // call all refresh handlers
+    for (let handler of window.ws.refreshHandlers)
+        handler();
 
 
     window.ws.onopen = function (event) {

@@ -129,6 +129,10 @@ $.get(templateUrl, template => {
                                 });
                             }
                         }
+                        this.charts['charts'].options.maintainAspectRatio = false;
+                        this.charts['charts'].options.legend.position = "bottom";
+                        this.charts['charts'].canvas.style["max-height"] = this.charts["charts"].height + this.charts["charts"].legend.height + "px";
+                        this.charts['charts'].resize();
                     }, 10);
                 }
             }

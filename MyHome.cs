@@ -78,8 +78,7 @@ namespace MyHome
             // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
             // * UI - mobile / landscape
             //   - maybe show devices instead of value / grouped by type -https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg
-            //   - too many sensor values, merge Water Switch and Water State somehow
-            //   - new sensor UI - add limits (like unhealty, alerts, etc.), bring back the security icon
+            //   - new sensor UI - add limits (like unhealty, alerts, etc.)
             //   - security system modal with sensor statuses (muk, motion, etc), etc.
             //   - allow custom (driver) icons?
             //   - Speaker driver - allow to go next, prev?, control volume, loop, shuffle, pause???

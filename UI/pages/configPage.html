@@ -1,7 +1,15 @@
 ﻿<div id="scrollable-content">
+    <!-- SideBar -->
+    <div class="w3-sidebar w3-bar-block w3-transparent w3-animate-left" style="margin-top: 32px; width: revert;">
+        <a class="w3-bar-item w3-hover-text-blue-gray"
+           v-bind:href="'#' + room.Name" v-for="room of rooms">
+            {{room.Name}}
+        </a>
+    </div>
+
     <div class="w3-content w3-padding-16">
         <!-- Rooms devices -->
-        <div class="w3-col l3 m5 s11 w3-margin" v-for="room of rooms">
+        <div class="w3-row w3-margin w3-animate-opacity" v-for="room of rooms" v-bind:id="room.Name">
             <h3 class="reset-margin margin-left-8">
                 {{room.Name}}
                 <a class="font-size-normal material-icons" title="Edit room"
@@ -10,7 +18,7 @@
                 </a>
             </h3>
 
-            <a class="w3-col s11 w3-center w3-padding w3-round-large w3-hover-light-gray margin-8 bg-gray-opacity-88"
+            <a class="w3-col l2 m3 s11 w3-center w3-padding w3-round-large w3-hover-light-gray margin-8 bg-gray-opacity-88"
                title="Edit device"
                v-for="device of room.Devices"
                v-on:click="showEdit(room.Name, device, saveDevice, deleteDevice)">
@@ -18,14 +26,14 @@
                 <span class="w3-small">({{device.$type.substr(device.$type.lastIndexOf(".")+1)}})</span>
             </a>
 
-            <a class="w3-col s11 w3-padding w3-round-large w3-center w3-hover-light-gray margin-8 bg-gray-opacity-88 material-icons"
+            <a class="w3-col l2 m3 s11 w3-padding w3-round-large w3-center w3-hover-light-gray margin-8 bg-gray-opacity-88 material-icons"
                title="Add device"
                v-on:click="showAddDevice(room)">
                 add
             </a>
         </div>
 
-        <a class="w3-col l3 m5 s11 w3-margin" title="Add room" v-on:click="showAddRoom">
+        <a class="w3-row w3-margin w3-animate-opacity" title="Add room" v-on:click="showAddRoom">
             <h3 class="reset-margin margin-left-8">
                 <span class="font-size-normal material-icons">add</span>
                 Add Room
@@ -34,7 +42,7 @@
     </div>
 
     <!-- Modal -->
-    <div class="w3-modal" v-if="edit.name"
+    <div class="w3-modal w3-animate-opacity" v-if="edit.name"
          v-bind:class="{'w3-show-block': edit.name}"
          v-on:click="edit.name = null">
         <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">
