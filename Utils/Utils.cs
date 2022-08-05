@@ -132,8 +132,8 @@ namespace MyHome.Utils
                 var deleted = 0L;
                 foreach (var fileInfo in files)
                 {
-                    logger?.Debug($"Cleanup files ({deleted}/{total}): {fileInfo.FullName}");
                     deleted += fileInfo.Length;
+                    logger?.Debug($"Cleanup files ({deleted}/{total}): {fileInfo.FullName}");
                     File.Delete(fileInfo.FullName);
 
                     if (total - deleted < capacityMb * 1024L * 1024L * 0.9) // reach 90%

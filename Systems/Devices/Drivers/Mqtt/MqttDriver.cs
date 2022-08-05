@@ -125,7 +125,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                     if (this.States[item.Key] is bool && (value.ToUpper() == "ON" || value.ToUpper() == "OFF"))
                         this.States[item.Key] = value.ToUpper() == "ON";
                     else
-                        this.States[item.Key] = Utils.Utils.ParseValue(value, this.States[item.Key].GetType());
+                        this.States[item.Key] = Utils.Utils.ParseValue(value, this.States[item.Key]?.GetType());
 
                     if (oldValue != this.States[item.Key])
                     {
@@ -141,7 +141,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             }
             catch (Exception ex)
             {
-                logger.Error("Failed to process MQTT message");
+                logger.Error($"Failed to process MQTT message from topic: {e.ApplicationMessage.Topic}");
                 logger.Debug(ex);
             }
         }

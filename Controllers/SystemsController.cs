@@ -103,7 +103,7 @@ namespace MyHome.Controllers
         public ActionResult GetSong(string fileName)
         {
             // match buffer with the one in Tasmota
-            var file = new FileStream(Path.Join(Systems.MediaPlayerSystem.SongsPath, fileName), FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024);
+            var file = new FileStream(Path.Join(Models.Config.SongsPath, fileName), FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024);
             return this.File(file, "audio/mpeg");
         }
 

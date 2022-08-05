@@ -31,6 +31,8 @@ $.get(templateUrl, template => {
             },
 
             click: function () {
+                if (this.processing)
+                    return;
                 if (this.driver.ConfirmationRequired &&
                     !confirm(`Are you sure you want to trigger the ${this.room.Name} ${this.driver.Name}?`))
                     return;

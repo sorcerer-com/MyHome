@@ -54,20 +54,19 @@ namespace MyHome.Systems.Devices.Sensors
         {
             get
             {
-                if (this.capture == null)
-                {
-                    this.capture = new VideoCapture();
-                    this.capture.Set(CaptureProperty.BufferSize, 1);
-                }
-
                 // if capture isn't opened try again but only if the previous try was at least 1 minute ago
                 if (!this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(1))
                 {
-                    logger.Info($"Opening camera: {this.Name} ({this.Room.Name})");
+                    logger.Debug($"Opening camera: {this.Name} ({this.Room.Name})");
                     if (int.TryParse(this.Address, out int device))
                         this.capture.Open(device);
                     else
                         this.capture.Open(this.GetStreamAddress());
+                    if (this.capture.IsOpened())
+                    {
+                        this.capture.Set(CaptureProperty.BufferSize, 1);
+                        this.capture.Read(new Mat()); // dump one image to prepare the capture
+                    }
                     this.lastUse = DateTime.Now;
                 }
                 if (this.capture.IsOpened())
@@ -76,6 +75,12 @@ namespace MyHome.Systems.Devices.Sensors
                 return this.capture;
             }
         }
+
+
+        private DateTime lastOnline;
+        [JsonIgnore]
+        [UiProperty]
+        public override DateTime LastOnline => this.lastOnline > base.LastOnline ? this.lastOnline : base.LastOnline; // take the soonest image capture or sensor data received
 
         private DateTime lastUse;
         private DateTime nextDataRead;
@@ -88,13 +93,20 @@ namespace MyHome.Systems.Devices.Sensors
             this.IsOnvifSupported = true;
             this.ReadDataInterval = 15;
 
-            this.capture = null;
+            this.capture = new VideoCapture();
+            this.lastOnline = DateTime.Now;
             this.lastUse = DateTime.Now.AddMinutes(-1);
             this.nextDataRead = DateTime.Now.AddMinutes(1); // start reading 1 minute after start
 
             this.onvif = new Dictionary<Type, object>();
+        }
 
-            Task.Run(() => { lock (this.Capture) this.Capture.Release(); }); // prepare capture for opening
+        public override void Setup()
+        {
+            base.Setup();
+
+            // prepare capture for opening
+            Task.Run(() => { lock (this.capture) this.Capture.IsOpened(); });
         }
 
 
@@ -103,10 +115,22 @@ namespace MyHome.Systems.Devices.Sensors
             base.Update();
 
             // release the capture if it isn't used for more then 5 minutes
-            if (this.capture != null && this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(5))
+            //if (this.capture != null && this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(5))
+            //{
+            //    logger.Debug($"Release camera: {this.Name} ({this.Room.Name})");
+            //    this.capture.Release();
+            //}
+            
+            // after 1 minute idle start grabbing and dropping frames keep buffer up to date
+            if (this.lastUse < DateTime.Now - TimeSpan.FromMinutes(1) && this.capture.IsOpened())
             {
-                logger.Info($"Release camera: {this.Name} ({this.Room.Name})");
-                this.capture.Release();
+                lock (this.capture)
+                {
+                    // do it for 100 ms
+                    var t = new System.Threading.CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+                    while (!t.IsCancellationRequested)
+                        this.capture.Grab();
+                }
             }
 
             // read sensor data
@@ -126,23 +150,25 @@ namespace MyHome.Systems.Devices.Sensors
 
         public Mat GetImage(bool initIfEmpty = true, Size? size = null, bool timestamp = true)
         {
-            lock (this.Capture)
+            lock (this.capture)
             {
                 var image = new Mat();
                 this.Capture.Read(image);
                 if (image.Empty())
                 {
+                    // release the camera if it is open and try to open it again next time
                     if (this.Capture.IsOpened())
-                    {
-                        this.Capture.Release(); // try to release the camera and open it again next time
-                        this.lastUse = DateTime.Now.AddMinutes(-1);
-                    }
+                        this.Capture.Release();
+                    this.lastUse = DateTime.Now.AddMinutes(-1);
+
                     if (!initIfEmpty)
                         return null;
                     image = new Mat(480, 640, MatType.CV_8UC3, 0);
                     image.Line(0, 0, 640, 480, Scalar.Red, 2, LineTypes.AntiAlias);
                     image.Line(640, 0, 0, 480, Scalar.Red, 2, LineTypes.AntiAlias);
                 }
+                else
+                    this.lastOnline = DateTime.Now;
                 if (size.HasValue)
                     image.Resize(size.Value);
                 if (timestamp)
@@ -162,6 +188,11 @@ namespace MyHome.Systems.Devices.Sensors
             logger.Debug($"Camera '{this.Name}' ({this.Room.Name}) save image: {filepath}");
 
             var image = this.GetImage(initIfEmpty, size, timestamp);
+            if (image == null)
+            {
+                logger.Warn($"Camera '{this.Name}' ({this.Room.Name}) failed to save image: {filepath}");
+                return false;
+            }
             return Cv2.ImWrite(filepath, image);
         }
 
@@ -238,9 +269,6 @@ namespace MyHome.Systems.Devices.Sensors
             // rtsp://192.168.0.120:554/user=admin_password=12345_channel=1_stream=0.sdp?real_stream
             if (this.Address.StartsWith("rtsp://") || !this.IsOnvifSupported)
                 return this.Address;
-
-            if (!this.IsOnvifSupported)
-                return null;
 
             try
             {

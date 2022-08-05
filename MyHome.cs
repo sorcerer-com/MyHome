@@ -84,8 +84,8 @@ namespace MyHome
             //   - Speaker driver - allow to go next, prev?, control volume, loop, shuffle, pause???
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
-            // * offline camera alert
             // * External system (rpi2) ping system and notify on problem
+            // * Remove sensor metadata, cannot remove subsensor data
 
             logger.Info("Start My Home");
             Instance = this;

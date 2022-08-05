@@ -9,6 +9,9 @@ namespace MyHome.Models
         public static readonly string BinPath = "bin";
         public static readonly string DataFilePath = Path.Join(BinPath, "data.json");
 
+        public static readonly string ImagesPath = Path.Combine(BinPath, "Images");
+        public static readonly string SongsPath = Path.Combine(BinPath, "Songs");
+
         [UiProperty(true, "sha256 hash")]
         public string Password { get; set; } = "";
 

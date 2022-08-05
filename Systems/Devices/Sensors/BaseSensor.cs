@@ -24,6 +24,8 @@ namespace MyHome.Systems.Devices.Sensors
             Sum
         }
 
+        public override DateTime LastOnline => this.Data.Keys.OrderBy(t => t).LastOrDefault();
+
 
         public Dictionary<DateTime, SensorValue> Data { get; }
 

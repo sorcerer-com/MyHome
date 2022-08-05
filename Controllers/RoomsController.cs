@@ -234,8 +234,10 @@ namespace MyHome.Controllers
             {
                 this.Response.ContentType = "multipart/x-mixed-replace;boundary=frame";
 
+                Stopwatch stopwatch = new Stopwatch();
                 while (true)
                 {
+                    stopwatch.Restart();
                     var imageBytes = camera.GetImage().ToBytes(".jpg");
 
                     var header = $"--frame\r\nContent-Type: image/jpeg\r\nContent-Length: {imageBytes.Length}\r\n\r\n";
@@ -247,7 +249,8 @@ namespace MyHome.Controllers
 
                     if (this.HttpContext.RequestAborted.IsCancellationRequested)
                         break;
-                    System.Threading.Thread.Sleep(50); // sleep 50 ms for 20 FPS
+                    if (stopwatch.Elapsed < TimeSpan.FromMilliseconds(50)) // sleep to 50 ms for 20 FPS
+                        System.Threading.Thread.Sleep(50 - (int)stopwatch.ElapsedMilliseconds);
                 }
             }
             catch (OperationCanceledException)

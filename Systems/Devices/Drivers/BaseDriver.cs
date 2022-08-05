@@ -13,10 +13,6 @@ namespace MyHome.Systems.Devices.Drivers
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
-        [JsonIgnore]
-        [UiProperty]
-        public virtual DateTime LastOnline => DateTime.Now;
-
 
         protected Dictionary<string, object> States { get; }
 

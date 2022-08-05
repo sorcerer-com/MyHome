@@ -20,8 +20,6 @@ namespace MyHome.Systems
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
-        private static readonly string ImagesPath = Path.Combine(Config.BinPath, "Images");
-
 
         [UiProperty(true, "minutes")]
         public int ActivationDelay { get; set; } // minutes
@@ -31,9 +29,6 @@ namespace MyHome.Systems
 
         [UiProperty(true, "percents")]
         public double MovementThreshold { get; set; } // percents
-
-        [UiProperty(true, "MB")]
-        public double ImagesDiskUsage { get; set; } // MB
 
         [UiProperty(true, "minutes")]
         public int PresenceDetectionInterval { get; set; } // minutes
@@ -84,7 +79,6 @@ namespace MyHome.Systems
             this.ActivationDelay = 15;
             this.SendInterval = 5;
             this.MovementThreshold = 0.02;
-            this.ImagesDiskUsage = 200;
             this.PresenceDetectionInterval = 5;
             this.PresenceDeviceIPs = new List<string>();
             this.History = new Dictionary<string, Dictionary<DateTime, string>>();
@@ -94,7 +88,7 @@ namespace MyHome.Systems
             this.prevImages = new Dictionary<string, Mat>();
             this.presenceDetectionTimer = DateTime.Now - TimeSpan.FromMinutes(this.PresenceDetectionInterval);
 
-            Directory.CreateDirectory(ImagesPath);
+            Directory.CreateDirectory(Config.ImagesPath);
         }
 
         public void SetEnable(Room room, bool enable, int level = 0)
@@ -210,9 +204,6 @@ namespace MyHome.Systems
                             roomInfo.ImageFiles.Clear();
                         }
 
-                        Utils.Utils.CleanupFilesByCapacity(
-                            Directory.GetFiles(ImagesPath, "*.jpg").Select(f => new FileInfo(f)).OrderBy(f => f.CreationTime),
-                            this.ImagesDiskUsage, logger);
                         MyHome.Instance.SystemChanged = true;
                     }
 
@@ -255,7 +246,7 @@ namespace MyHome.Systems
             this.prevImages[camera.Room.Name + "." + camera.Name] = image.Resize(new Size(640, 480));
 
             var filename = $"{camera.Room.Name}_{camera.Name}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.jpg";
-            var filepath = Path.Combine(ImagesPath, filename);
+            var filepath = Path.Combine(Config.ImagesPath, filename);
             if (Cv2.ImWrite(filepath, image))
                 roomInfo.ImageFiles.Add(filepath);
         }

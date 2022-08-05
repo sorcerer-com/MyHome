@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 using MyHome.Models;
@@ -21,6 +22,9 @@ namespace MyHome.Systems
         [UiProperty(true, "minutes")]
         public int SensorsCheckInterval { get; set; } // minutes
 
+        [UiProperty(true, "MB")]
+        public double ImagesDiskUsage { get; set; } // MB
+
         public List<Device> Devices { get; }
 
         [JsonIgnore]
@@ -39,7 +43,10 @@ namespace MyHome.Systems
         public DevicesSystem()
         {
             this.SensorsCheckInterval = 15;
+            this.ImagesDiskUsage = 200;
             this.Devices = new List<Device>();
+
+            Directory.CreateDirectory(Config.ImagesPath);
         }
 
 
@@ -76,36 +83,40 @@ namespace MyHome.Systems
                 this.nextSensorCheckTime = this.GetNextSensorCheckTime();
 
             var alertMsg = "";
-            this.Sensors.RunForEach(sensor =>
+            this.Devices.RunForEach(device =>
             {
-                sensor.GenerateTimeseries();
-
-                // check for inactive sensor
-                var lastSensorTime = sensor.Data.Keys.OrderBy(t => t).LastOrDefault();
-                if (lastSensorTime <= this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 4) &&
-                    lastSensorTime > this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 5))
+                if (device is BaseSensor sensor)
                 {
-                    logger.Warn($"Sensor {sensor.Name} ({sensor.Room.Name}) is not active from {lastSensorTime}");
-                    alertMsg += $"{sensor.Name} ({sensor.Room.Name}) inactive ";
+                    sensor.GenerateTimeseries();
+
+                    // aggregate one value per SensorsCheckInterval
+                    var now = DateTime.Now;
+                    var times = sensor.Data.Keys.Where(t => t < now.AddHours(-1) && t >= now.Date.AddHours(now.Hour).AddDays(-1)); // last 24 hours
+                    var groupedDates = times.GroupBy(t => new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute / this.SensorsCheckInterval * this.SensorsCheckInterval, 0));
+                    sensor.AggregateData(groupedDates);
                 }
 
-                // aggregate one value per SensorsCheckInterval
-                var now = DateTime.Now;
-                var times = sensor.Data.Keys.Where(t => t < now.AddHours(-1) && t >= now.Date.AddHours(now.Hour).AddDays(-1)); // last 24 hours
-                var groupedDates = times.GroupBy(t => new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute / this.SensorsCheckInterval * this.SensorsCheckInterval, 0));
-                sensor.AggregateData(groupedDates);
-            });
-
-            this.Drivers.RunForEach(driver =>
-            {
-                // check for inactive driver
-                if (driver.LastOnline <= this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 4) &&
-                    driver.LastOnline > this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 5))
+                // save camera image every interval
+                if (device is Camera camera)
                 {
-                    logger.Warn($"Driver {driver.Name} ({driver.Room.Name}) is not online from {driver.LastOnline}");
-                    alertMsg += $"{driver.Name} ({driver.Room.Name}) inactive ";
+                    var imageFilename = $"{camera.Room.Name}_{camera.Name}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.jpg";
+                    camera.SaveImage(Path.Combine(Config.ImagesPath, imageFilename), false);
+                }
+
+                // check for inactive device
+                if (device.LastOnline <= this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 4) &&
+                    device.LastOnline > this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 5))
+                {
+                    var type = device is BaseSensor ? "Sensor" : "Driver";
+                    logger.Warn($"{type} {device.Name} ({device.Room.Name}) is not active from {device.LastOnline}");
+                    alertMsg += $"{device.Name} ({device.Room.Name}) inactive ";
                 }
             });
+
+            // cleanup cameras images
+            Utils.Utils.CleanupFilesByCapacity(
+                Directory.GetFiles(Config.ImagesPath, "*.jpg").Select(f => new FileInfo(f)).OrderBy(f => f.CreationTime),
+                this.ImagesDiskUsage, logger);
 
             if (!string.IsNullOrEmpty(alertMsg))
                 Alert.Create($"{alertMsg.Trim()} alarm activated!").Validity(TimeSpan.FromHours(1)).Send();

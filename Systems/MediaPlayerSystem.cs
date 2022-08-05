@@ -21,8 +21,6 @@ namespace MyHome.Systems
         private static readonly string[] supportedFormats = {
             ".mkv", ".avi", ".mov", ".wmv", ".mp4", ".mpg", ".mpeg", ".m4v", ".3gp", ".mp3" };
 
-        public static readonly string SongsPath = Path.Combine(Config.BinPath, "Songs");
-
 
         [UiProperty(true)]
         public List<string> MediaPaths { get; }
@@ -105,7 +103,7 @@ namespace MyHome.Systems
             this.player = new MediaPlayer(this.libVLC);
             this.playing = "";
 
-            Directory.CreateDirectory(SongsPath);
+            Directory.CreateDirectory(Config.SongsPath);
         }
 
         public override void Stop()
@@ -212,13 +210,13 @@ namespace MyHome.Systems
             logger.Debug($"Add song: {url}");
             string filepath = url;
             if (url.Contains("youtube"))
-                filepath = Services.DownloadYouTubeAudioAsync(url, SongsPath).Result;
+                filepath = Services.DownloadYouTubeAudioAsync(url, Config.SongsPath).Result;
             if (!this.Songs.ContainsKey(filepath))
                 this.Songs.Add(filepath, 0);
             // cleanup songs if we exceed the usage capacity
-            Utils.Utils.CleanupFilesByCapacity(this.Songs.OrderBy(kvp => kvp.Value).Select(kvp => new FileInfo(Path.Join(SongsPath, kvp.Key))),
+            Utils.Utils.CleanupFilesByCapacity(this.Songs.OrderBy(kvp => kvp.Value).Select(kvp => new FileInfo(Path.Join(Config.SongsPath, kvp.Key))),
                 this.SongsDiskUsage, logger);
-            foreach (var file in this.Songs.Keys.Where(s => !File.Exists(Path.Join(SongsPath, s))))
+            foreach (var file in this.Songs.Keys.Where(s => !File.Exists(Path.Join(Config.SongsPath, s))))
                 this.Songs.Remove(file);
             return filepath;
         }

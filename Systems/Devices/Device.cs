@@ -1,4 +1,6 @@
-﻿using MyHome.Models;
+﻿using System;
+
+using MyHome.Models;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -29,6 +31,10 @@ namespace MyHome.Systems.Devices
                 }
             }
         }
+
+        [JsonIgnore]
+        [UiProperty]
+        public virtual DateTime LastOnline => DateTime.Now;
 
         public Room Room { get; set; }
 
