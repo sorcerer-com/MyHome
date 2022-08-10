@@ -8,7 +8,7 @@ $.get(templateUrl, template => {
             return {
                 processing: false,
                 error: null,
-                debounceSetColor: debounce(this.setColor, 1000), // set only after no changes in 1 sec
+                debounceSetColor: debounce(this.setDevice({ "Color": this.driver.Color }), 1000), // set only after no changes in 1 sec
                 modalObject: null
             }
         },
@@ -56,8 +56,14 @@ $.get(templateUrl, template => {
                 }
             },
 
-            setColor: function () {
-                setDevice(this.room.Name, this.driver.Name, { "Color": this.driver.Color })
+            setDevice: function (value) {
+                setDevice(this.room.Name, this.driver.Name, value)
+                    .done(() => this.processing = false)
+                    .fail(() => this.processing = false);
+                this.processing = true;
+            },
+            callDevice: function (funcName, ...args) {
+                callDevice(this.room.Name, this.driver.Name, funcName, args)
                     .done(() => this.processing = false)
                     .fail(() => this.processing = false);
                 this.processing = true;
@@ -75,7 +81,7 @@ $.get(templateUrl, template => {
         watch: {
             "driver.Color": function () {
                 if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
-                    this.setColor(); // don't debounce for mobile version
+                    this.setDevice({ "Color": this.driver.Color }); // don't debounce for mobile version
                 else
                     this.debounceSetColor();
             }

@@ -9,10 +9,13 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 {
     public class SpeakerMqttDriver : MqttDriver
     {
+        private static readonly string Host = "http://192.168.0.100:5000";
+
         private static readonly Random random = new();
 
         private const string PLAYING_STATE_NAME = "Playing";
         private const string VOLUME_STATE_NAME = "Volume";
+        private const string PAUSED_STATE_NAME = "Paused";
 
         [JsonIgnore]
         [UiProperty(selector: "GetSongs")]
@@ -56,6 +59,13 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         }
 
         [UiProperty]
+        public bool Paused
+        {
+            get => (bool)this.States[PAUSED_STATE_NAME];
+            set => this.SetStateAndSend(PAUSED_STATE_NAME, value);
+        }
+
+        [UiProperty]
         public bool Loop { get; set; }
 
         [UiProperty]
@@ -90,16 +100,48 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             set => this.MqttSetTopics[VOLUME_STATE_NAME] = value;
         }
 
+        [UiProperty(true, "(topic, json path)")]
+        public (string topic, string jsonPath) PausedGetMqttTopic
+        {
+            get => this.MqttGetTopics[PAUSED_STATE_NAME];
+            set => this.MqttGetTopics[PAUSED_STATE_NAME] = value;
+        }
+
+        [UiProperty(true, "(topic, json path)")]
+        public (string topic, string jsonPath) PausedSetMqttTopic
+        {
+            get => this.MqttSetTopics[PAUSED_STATE_NAME];
+            set => this.MqttSetTopics[PAUSED_STATE_NAME] = value;
+        }
+
 
         public SpeakerMqttDriver()
         {
             this.States.Add(PLAYING_STATE_NAME, null);
             this.States.Add(VOLUME_STATE_NAME, 10);
+            this.States.Add(PAUSED_STATE_NAME, false);
+
             this.MqttGetTopics.Add(PLAYING_STATE_NAME, ("", ""));
             this.MqttGetTopics.Add(VOLUME_STATE_NAME, ("", ""));
+            this.MqttGetTopics.Add(PAUSED_STATE_NAME, ("", ""));
+
             this.MqttSetTopics.Add(PLAYING_STATE_NAME, ("", ""));
             this.MqttSetTopics.Add(VOLUME_STATE_NAME, ("", ""));
+            this.MqttSetTopics.Add(PAUSED_STATE_NAME, ("", ""));
         }
+
+        public void NextSong(string currentSong)
+        {
+            var songs = MyHome.Instance.MediaPlayerSystem.Songs.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key).ToList();
+            if (this.Shuffle)
+            {
+                songs.Remove(currentSong); // remove current song and pick from the others
+                this.Playing = songs[random.Next(songs.Count)];
+            }
+            else
+                this.Playing = songs[(songs.IndexOf(currentSong) + 1) % songs.Count];
+        }
+
 
         protected override void NewStateReceived(string name, object oldValue, object newValue)
         {
@@ -108,17 +150,9 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             {
                 // if we receive empty value for playing state and we want to loop songs, start a new one
                 if (string.IsNullOrEmpty((string)newValue) && this.Loop)
-                {
-                    var songs = MyHome.Instance.MediaPlayerSystem.Songs.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key).ToList();
-                    if (this.Shuffle)
-                    {
-                        songs.Remove((string)oldValue); // remove current song and pick from the others
-                        this.Playing = songs[random.Next(songs.Count)];
-                    }
-                    else
-                        this.Playing = songs[(songs.IndexOf((string)oldValue) + 1) % songs.Count];
-                }
-                this.States[name] = Uri.UnescapeDataString(((string)newValue).Replace($"{Startup.Host}/api/systems/MediaPlayer/songs/", ""));
+                    this.NextSong((string)oldValue);
+
+                this.States[name] = Uri.UnescapeDataString(((string)newValue).Replace($"{Host}/api/systems/MediaPlayer/songs/", ""));
             }
         }
 
@@ -127,7 +161,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         {
             var value = Uri.EscapeUriString(this.Playing);
             if (!string.IsNullOrEmpty(value) && !value.StartsWith("http"))
-                value = $"{Startup.Host}/api/systems/MediaPlayer/songs/{value}";
+                value = $"{Host}/api/systems/MediaPlayer/songs/{value}";
 
             this.SendState(PLAYING_STATE_NAME, value);
         }

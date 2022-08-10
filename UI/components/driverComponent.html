@@ -43,9 +43,24 @@
     </span>
 
     <!-- Speaker -->
-    <span class="material-icons w3-xxlarge" v-if="driver.$type.endsWith('SpeakerMqttDriver')">
+    <span class="material-icons w3-xxlarge" v-if="driver.$type.endsWith('SpeakerMqttDriver') && !driver.Playing">
         {{driver.Playing ? 'music_note' : 'speaker'}}
     </span>
+    <div v-if="driver.$type.endsWith('SpeakerMqttDriver') && driver.Playing" style="overflow: hidden; line-height: 1;">
+        <span class="w3-tiny w3-show-inline-block scroll-text no-mobile"
+             v-bind:title="driver.Playing">
+            {{driver.Playing}}
+        </span>
+        <span class="material-icons w3-xlarge" title="Pause" v-on:click.stop="" v-on:click="setDevice({ 'Paused': !driver.Paused })">
+            {{driver.Paused ? 'play_arrow' : 'pause'}}
+        </span>
+        <span class="material-icons w3-xlarge" title="Stop" v-on:click.stop="" v-on:click="setDevice({ 'Playing': '' })">
+            stop
+        </span>
+        <span class="material-icons w3-xlarge" title="Next" v-on:click.stop="" v-on:click="callDevice('NextSong', driver.Playing)">
+            skip_next
+        </span><br/>
+    </div>
 
 
     <div class="w3-tiny">{{driver.Name}}</div>

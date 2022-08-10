@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 
 using Microsoft.AspNetCore.Http;
@@ -142,6 +143,30 @@ namespace MyHome.Controllers
                 logger.Error($"Failed to set device '{deviceName}' ({roomName})");
                 logger.Debug(e);
                 return this.BadRequest(e.InnerException?.Message ?? e.Message);
+            }
+        }
+
+        [HttpPost("{roomName}/devices/{deviceName}/{funcName}")]
+        public ActionResult CallDevice(string roomName, string deviceName, string funcName)
+        {
+            try
+            {
+                var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+                if (room == null)
+                    return this.NotFound($"Room '{roomName}' not found");
+
+                var device = room.Devices.FirstOrDefault(d => d.Name == deviceName);
+                if (device == null)
+                    return this.NotFound($"Device '{deviceName}' not found");
+
+                var result = device.CallMethod(funcName, this.Request.Form);
+                return this.Ok(result);
+            }
+            catch (Exception e)
+            {
+                logger.Error($"Failed to call '{deviceName}' device's function '{funcName}'");
+                logger.Debug(e);
+                return this.BadRequest(e.Message);
             }
         }
 

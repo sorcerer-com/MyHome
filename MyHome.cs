@@ -81,7 +81,6 @@ namespace MyHome
             //   - new sensor UI - add limits (like unhealty, alerts, etc.)
             //   - security system modal with sensor statuses (muk, motion, etc), etc.
             //   - allow custom (driver) icons?
-            //   - Speaker driver - allow to go next, prev?, control volume, loop, shuffle, pause???
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
             // * External system (rpi2) ping system and notify on problem

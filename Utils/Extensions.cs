@@ -191,6 +191,19 @@ namespace MyHome.Utils
             }
         }
 
+        public static object CallMethod(this object obj, string funcName, Microsoft.AspNetCore.Http.IFormCollection form)
+        {
+            var method = obj.GetType().GetMethod(funcName);
+            if (method != null)
+            {
+                var methodParams = method.GetParameters();
+                var args = form?.Select((kvp, i) =>
+                        Utils.ParseValue(kvp.Value.ToString(), methodParams[i].ParameterType)).ToArray();
+                return method.Invoke(obj, args);
+            }
+            throw new ArgumentException("No such function: " + funcName);
+        }
+
         public static Action Debounce(this Action func, int milliseconds = 100)
         {
             System.Threading.CancellationTokenSource cancelTokenSource = null;

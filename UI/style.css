@@ -90,6 +90,29 @@
     }
 }
 
+
+@media (max-width:600px) { /* Mobile */
+    .no-mobile {
+        display: none !important;
+    }
+}
+
+.scroll-text {
+    white-space: nowrap;
+    animation: scroll-text 10s linear infinite;
+}
+@keyframes scroll-text {
+    from {
+        left: 100%;
+        transform: translate(0, 0);
+    }
+
+    to {
+        left: -100%;
+        transform: translate(-100%, 0);
+    }
+}
+
 .w3-bar .w3-dropdown-hover {
     display: inline-block;
     cursor: pointer;

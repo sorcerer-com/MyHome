@@ -31,6 +31,11 @@ function setDevice(roomName, deviceName, data) {
     return $.postJsonBody(`./api/rooms/${roomName}/devices/${deviceName}`, data);
 }
 
+function callDevice(roomName, deviceName, funcName, ...args) {
+    let data = Object.assign({}, args);
+    return $.post(`./api/rooms/${roomName}/devices/${deviceName}/${funcName}`, data);
+}
+
 function deleteDevice(roomName, deviceName) {
     return $.post(`./api/rooms/${roomName}/devices/${deviceName}/delete`);
 }

@@ -75,20 +75,8 @@ namespace MyHome.Controllers
                 if (system == null)
                     return this.NotFound($"System '{systemName}' not found");
 
-                var method = system.GetType().GetMethod(funcName);
-                if (method != null)
-                {
-                    var methodParams = method.GetParameters();
-                    var args = Array.Empty<object>();
-                    if (this.Request.HasFormContentType)
-                    {
-                        args = this.Request.Form.Select((kvp, i) =>
-                            Utils.Utils.ParseValue(kvp.Value.ToString(), methodParams[i].ParameterType)).ToArray();
-                    }
-                    var result = method.Invoke(system, args);
-                    return this.Ok(result);
-                }
-                return this.NotFound("No such function: " + funcName);
+                var result = system.CallMethod(funcName, this.Request.HasFormContentType ? this.Request.Form : null);
+                return this.Ok(result);
             }
             catch (Exception e)
             {
