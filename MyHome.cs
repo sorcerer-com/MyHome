@@ -85,6 +85,7 @@ namespace MyHome
             // * per person presence reporting - Hristo is home, Dida not
             // * External system (rpi2) ping system and notify on problem
             // * Remove sensor metadata, cannot remove subsensor data
+            // * Integrate speaker with security system - siren when is activated, play speaking while no one home
 
             logger.Info("Start My Home");
             Instance = this;

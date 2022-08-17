@@ -95,6 +95,7 @@ namespace MyHome
                 }
                 else
                 {
+                    logger.Warn("LogIn: Incorrect password");
                     context.Response.Redirect("./login.html?invalid");
                 }
 

@@ -52,7 +52,7 @@ $.get(templateUrl, template => {
                 if (!this.charts["chartLastDay"])
                     this.charts["chartLastDay"] = createLineChart("chartLastDay", {}, false);
                 if (!this.charts["chartOlder"])
-                    this.charts["chartOlder"] = createLineChart("chartOlder");
+                    this.charts["chartOlder"] = createLineChart("chartOlder", {}, !window.vue.isMobile);
 
                 const prevDay = new Date();
                 prevDay.setDate(prevDay.getDate() - 1);
@@ -116,7 +116,7 @@ $.get(templateUrl, template => {
             window.ws?.addRefreshHandlers(this.refreshData);
         },
         watch: {
-            selectedMonth: function (value) {
+            selectedMonth: function () {
                 this.refreshData(false);
             }
         }

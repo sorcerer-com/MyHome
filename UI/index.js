@@ -12,6 +12,11 @@
                 modal: "",
                 selectedSettings: ""
             },
+            computed: {
+                isMobile: function () {
+                    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                }
+            },
             methods: {
                 refreshData: function () {
                     getUpgradeAvailable().done(value => {
@@ -54,7 +59,7 @@
 
                     upgrade().done(() => {
                         $("#vue-content").html("Upgrade was successful! Rebooting...");
-                        setTimeout(() => window.location.reload(true), 30000);
+                        setTimeout(() => window.location.reload(true), 60000);
                     });
                 },
                 restart: function () {
@@ -63,11 +68,12 @@
 
                     restart().done(() => {
                         $("#vue-content").html("Rebooting...");
-                        setTimeout(() => window.location.reload(true), 30000);
+                        setTimeout(() => window.location.reload(true), 60000);
                     });
                 }
             },
             mounted: function () {
+                $("#vue-content").removeClass("w3-hide");
                 this.refreshData();
             },
         });

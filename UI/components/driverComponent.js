@@ -8,7 +8,7 @@ $.get(templateUrl, template => {
             return {
                 processing: false,
                 error: null,
-                debounceSetColor: debounce(this.setDevice({ "Color": this.driver.Color }), 1000), // set only after no changes in 1 sec
+                debounceSetColor: debounce(this.setDevice, 1000), // set only after no changes in 1 sec
                 modalObject: null
             }
         },
@@ -80,10 +80,10 @@ $.get(templateUrl, template => {
         },
         watch: {
             "driver.Color": function () {
-                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
+                if (window.vue.isMobile)
                     this.setDevice({ "Color": this.driver.Color }); // don't debounce for mobile version
                 else
-                    this.debounceSetColor();
+                    this.debounceSetColor({ "Color": this.driver.Color });
             }
         }
     });

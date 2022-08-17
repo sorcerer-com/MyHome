@@ -85,6 +85,15 @@ namespace MyHome.Systems
             var alertMsg = "";
             this.Devices.RunForEach(device =>
             {
+                // check for inactive device
+                if (device.LastOnline <= this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 4) &&
+                    device.LastOnline > this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 5))
+                {
+                    var type = device is BaseSensor ? "Sensor" : "Driver";
+                    logger.Warn($"{type} {device.Name} ({device.Room.Name}) is not active from {device.LastOnline}");
+                    alertMsg += $"{device.Name} ({device.Room.Name}) inactive ";
+                }
+
                 if (device is BaseSensor sensor)
                 {
                     sensor.GenerateTimeseries();
@@ -102,24 +111,15 @@ namespace MyHome.Systems
                     var imageFilename = $"{camera.Room.Name}_{camera.Name}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.jpg";
                     camera.SaveImage(Path.Combine(Config.ImagesPath, imageFilename), false);
                 }
-
-                // check for inactive device
-                if (device.LastOnline <= this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 4) &&
-                    device.LastOnline > this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 5))
-                {
-                    var type = device is BaseSensor ? "Sensor" : "Driver";
-                    logger.Warn($"{type} {device.Name} ({device.Room.Name}) is not active from {device.LastOnline}");
-                    alertMsg += $"{device.Name} ({device.Room.Name}) inactive ";
-                }
             });
+
+            if (!string.IsNullOrEmpty(alertMsg))
+                Alert.Create($"{alertMsg.Trim()} alarm activated!").Send();
 
             // cleanup cameras images
             Utils.Utils.CleanupFilesByCapacity(
                 Directory.GetFiles(Config.ImagesPath, "*.jpg").Select(f => new FileInfo(f)).OrderBy(f => f.CreationTime),
                 this.ImagesDiskUsage, logger);
-
-            if (!string.IsNullOrEmpty(alertMsg))
-                Alert.Create($"{alertMsg.Trim()} alarm activated!").Validity(TimeSpan.FromHours(1)).Send();
 
             this.nextSensorCheckTime += TimeSpan.FromMinutes(this.SensorsCheckInterval);
             MyHome.Instance.SystemChanged = true;

@@ -185,7 +185,8 @@ namespace MyHome.Systems.Devices.Sensors
                 this.AggregationMap.TryGetValue(key, out var aggrType);
                 var info = new Dictionary<string, object>
                 {
-                    { "aggrType", aggrType.ToString() }
+                    { "aggrType", aggrType.ToString() },
+                    { "LastOnline", this.LastOnline }
                 };
                 if (this.Units.ContainsKey(key))
                     info.Add("unit", this.Units[key]);

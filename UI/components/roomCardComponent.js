@@ -51,6 +51,12 @@ $.get(templateUrl, template => {
         watch: {
             room: function () {
                 this.autoResizeFontSize();
+            },
+            selectedValueType: function () {
+                if (this.selectedValueType == "") {
+                    // stop loading the motion image (cameras' images)
+                    $("img[id^='camera'][id$='Image']").attr("src", "");
+                }
             }
         }
     });
