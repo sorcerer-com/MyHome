@@ -55,10 +55,13 @@ function createWebSocket() {
 
 if (window.WebSocket) {
     let retry = 0;
-    // ping every 3 seconds
+    // ping every 1 seconds
     setInterval(() => {
-        if (retry > 10)
+        // retry 10 times every second, after that once per 10 seconds
+        if (retry > 10 && retry % 10 != 0) {
+            retry += 1;
             return;
+        }
 
         if (window.ws.readyState == WebSocket.CLOSED) {
             retry += 1;

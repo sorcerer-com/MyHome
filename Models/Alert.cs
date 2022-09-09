@@ -25,7 +25,7 @@ namespace MyHome.Models
         private readonly string message;
         private string details;
         private AlertLevel level;
-        private TimeSpan validty;
+        private TimeSpan validity;
         private List<string> filenames;
         private bool camerasImages;
         private bool sensorsData;
@@ -37,7 +37,7 @@ namespace MyHome.Models
             this.message = message;
             this.details = "";
             this.level = AlertLevel.Medium;
-            this.validty = TimeSpan.Zero;
+            this.validity = TimeSpan.Zero;
             this.filenames = new List<string>();
             this.camerasImages = true;
             this.sensorsData = true;
@@ -48,7 +48,7 @@ namespace MyHome.Models
             return new Alert(message);
         }
 
-        public Alert Details(string details)
+        public Alert Details(string details) // not part of validity check
         {
             this.details = details;
             return this;
@@ -60,9 +60,9 @@ namespace MyHome.Models
             return this;
         }
 
-        public Alert Validity(TimeSpan validty)
+        public Alert Validity(TimeSpan validity)
         {
-            this.validty = validty;
+            this.validity = validity;
             return this;
         }
 
@@ -91,7 +91,7 @@ namespace MyHome.Models
                 var msg = $"{this.message} {this.details}";
                 if (!this.IsValid())
                     return true;
-                logger.Info($"Send alert: {msg} ({this.level}, {this.validty}, {this.filenames.Count} files)");
+                logger.Info($"Send alert: {msg} ({this.level}, {this.validity}, {this.filenames.Count} files)");
 
                 bool result = true;
                 msg = $"{DateTime.Now:dd/MM/yyyy HH:mm:ss}\n{msg}";
@@ -141,8 +141,8 @@ namespace MyHome.Models
 
             if (result)
             {
-                if (this.validty != TimeSpan.Zero)
-                    validities[this.message] = DateTime.Now + this.validty;
+                if (this.validity != TimeSpan.Zero)
+                    validities[this.message] = DateTime.Now + this.validity;
                 else
                     validities.Remove(this.message);
             }
