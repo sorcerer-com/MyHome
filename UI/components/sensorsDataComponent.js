@@ -31,7 +31,7 @@ $.get(templateUrl, template => {
                 periodEnd.setDate(periodEnd.getDate() - 1);
                 periodEnd.setHours(0, 0, 0, 0);
                 let periodStart = new Date(periodEnd);
-                periodStart.setFullYear(periodStart.getFullYear() - 2);
+                periodStart.setFullYear(periodStart.getFullYear() - 1);
 
                 if (this.selectedMonth != "All") {
                     let year = monthNames.indexOf(this.selectedMonth) <= now.getMonth() ?
@@ -97,7 +97,14 @@ $.get(templateUrl, template => {
                     $.when(...allRequests).done(() => setTimeout(this.refreshData, 3000)); // auto-refresh data every 3 seconds
             },
             showEditor: function () {
-                this.editorData = this.editorData ? null : JSON.stringify(this.sensorsData, null, 2);
+                let ordered = {};
+                for (let sensorName of Object.keys(this.sensorsData)) {
+                    ordered[sensorName] = Object.keys(this.sensorsData[sensorName]).sort().reduce(
+                        (obj, key) => {
+                            obj[key] = this.sensorsData[sensorName][key]; return obj;
+                        }, {});
+                }
+                this.editorData = this.editorData ? null : JSON.stringify(ordered, null, 2);
                 this.error = "";
             },
             save: function () {

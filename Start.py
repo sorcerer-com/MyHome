@@ -13,7 +13,7 @@ import robobrowser
 
 logging_stdout_handler = logging.StreamHandler()
 logging_file_handler = logging.handlers.RotatingFileHandler(
-    "bin/starter.log", maxBytes=1024)
+    "bin/starter.log", maxBytes=1024*1024, backupCount=1)
 logging.root.handlers.clear()
 logging.basicConfig(format="%(asctime)s.%(msecs)03d %(levelname)-7s %(message)s",
                     datefmt="%Y-%m-%d %H:%M:%S", level=logging.INFO,

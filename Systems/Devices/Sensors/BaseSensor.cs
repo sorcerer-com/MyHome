@@ -166,13 +166,14 @@ namespace MyHome.Systems.Devices.Sensors
         private void ArchiveData()
         {
             var now = DateTime.Now;
-            // delete entries older then 1 year
-            var times = this.Data.Keys.Where(t => t < now.AddYears(-1));
+            // TODO: don't delete for now to see how file size will be
+            // delete entries older then 3 year
+            /*var times = this.Data.Keys.Where(t => t < now.AddYears(-3));
             foreach (var time in times)
-                this.Data.Remove(time);
+                this.Data.Remove(time);*/
 
             // for older then 24 hour, save only 1 per day
-            times = this.Data.Keys.Where(t => t < now.Date.AddDays(-1));
+            var times = this.Data.Keys.Where(t => t < now.Date.AddDays(-1));
             var groupedDates = times.GroupBy(t => t.Date);
             this.AggregateData(groupedDates);
         }

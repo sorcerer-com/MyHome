@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using MyHome.Utils;
@@ -31,6 +32,8 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                         MyHome.Instance.MediaPlayerSystem.Songs[value] = MyHome.Instance.MediaPlayerSystem.Songs[value] + 1;
                         this.SendState(VOLUME_STATE_NAME, this.Volume.ToString());
                     }
+                    else
+                        this.orderedSongs = null;
                     this.SendPlayingState();
                 }
             }
@@ -46,6 +49,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 if (!string.IsNullOrEmpty(value))
                 {
                     var path = MyHome.Instance.MediaPlayerSystem.AddSong(value);
+                    this.orderedSongs = null;
                     this.Playing = path;
                 }
             }
@@ -115,6 +119,9 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         }
 
 
+        private List<string> orderedSongs = null;
+
+
         public SpeakerMqttDriver()
         {
             this.States.Add(PLAYING_STATE_NAME, null);
@@ -132,14 +139,14 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         public void NextSong(string currentSong)
         {
-            var songs = MyHome.Instance.MediaPlayerSystem.Songs.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key).ToList();
-            if (this.Shuffle)
+            if (this.orderedSongs == null)
             {
-                songs.Remove(currentSong); // remove current song and pick from the others
-                this.Playing = songs[random.Next(songs.Count)];
+                if (this.Shuffle)
+                    this.orderedSongs = MyHome.Instance.MediaPlayerSystem.Songs.Keys.OrderBy(_ => random.Next()).ToList();
+                else
+                    this.orderedSongs = MyHome.Instance.MediaPlayerSystem.Songs.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key).ToList();
             }
-            else
-                this.Playing = songs[(songs.IndexOf(currentSong) + 1) % songs.Count];
+            this.Playing = this.orderedSongs[(this.orderedSongs.IndexOf(currentSong) + 1) % this.orderedSongs.Count];
         }
 
 
@@ -151,8 +158,8 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 // if we receive empty value for playing state and we want to loop songs, start a new one
                 if (string.IsNullOrEmpty((string)newValue) && this.Loop)
                     this.NextSong((string)oldValue);
-
-                this.States[name] = Uri.UnescapeDataString(((string)newValue).Replace($"{Host}/api/systems/MediaPlayer/songs/", ""));
+                else
+                    this.States[name] = Uri.UnescapeDataString(((string)newValue).Replace($"{Host}/api/systems/MediaPlayer/songs/", ""));
             }
         }
 

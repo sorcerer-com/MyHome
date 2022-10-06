@@ -81,11 +81,13 @@ namespace MyHome
             //   - new sensor UI - add limits (like unhealty, alerts, etc.)
             //   - security system modal with sensor statuses (muk, motion, etc), etc.
             //   - allow custom (driver) icons?
+            //   - improve Speaker UI - allow enqueue (like WinAmp)
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
-            // * External system (rpi2) ping system and notify on problem
+            // * External system (rpi2) ping system and notify on problem - to agent?
             // * Remove sensor metadata, cannot remove subsensor data
             // * Integrate speaker with security system - siren when is activated, play speaking while no one home
+            // * Security system cameras - save image every minute (in seprate folder) and only on 15th save in Images
 
             logger.Info("Start My Home");
             Instance = this;

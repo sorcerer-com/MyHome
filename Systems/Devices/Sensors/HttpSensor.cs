@@ -39,7 +39,7 @@ namespace MyHome.Systems.Devices.Sensors
             // read sensor data
             if (DateTime.Now > this.nextDataRead)
             {
-                logger.Debug($"Requesting data from {this.Name} ({this.Room.Name}) sensor");
+                logger.Trace($"Requesting data from {this.Name} ({this.Room.Name}) sensor");
                 var data = this.ReadData();
                 if (data != null)
                     this.AddData(DateTime.Now, data);

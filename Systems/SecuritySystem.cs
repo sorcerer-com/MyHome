@@ -79,7 +79,7 @@ namespace MyHome.Systems
             this.ActivationDelay = 15;
             this.SendInterval = 5;
             this.MovementThreshold = 0.02;
-            this.PresenceDetectionInterval = 5;
+            this.PresenceDetectionInterval = 1;
             this.PresenceDeviceIPs = new List<string>();
             this.History = new Dictionary<string, Dictionary<DateTime, string>>();
             this.Presence = false;
@@ -261,7 +261,8 @@ namespace MyHome.Systems
                 {
                     try
                     {
-                        var reply = ping.Send(System.Net.IPAddress.Parse(ip));
+                        var reply = ping.Send(System.Net.IPAddress.Parse(ip), 1000);
+                        logger.Trace($"Ping: {ip}, {reply.RoundtripTime}, {reply.Status}");
                         if (reply.Status == System.Net.NetworkInformation.IPStatus.Success)
                             return true;
                     }

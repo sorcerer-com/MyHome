@@ -169,6 +169,12 @@ namespace MyHome.Models
             if (this.level == AlertLevel.Critical)
                 return true;
 
+            if (this.level == AlertLevel.Low)
+            {
+                logger.Debug("Skip sending SMS since alert level is low");
+                return false;
+            }
+
             var quietHours = MyHome.Instance.Config.QuietHours;
 
             var currHour = DateTime.Now.Hour;
@@ -176,11 +182,6 @@ namespace MyHome.Models
                 (quietHours.start < quietHours.end && (currHour > quietHours.start && currHour < quietHours.end)))
             {
                 logger.Debug($"Skip sending SMS since quiet hours: {quietHours.start} - {quietHours.end}");
-                return false;
-            }
-            else if (this.level == AlertLevel.Low)
-            {
-                logger.Debug("Skip sending SMS since alert level is low");
                 return false;
             }
             return true;

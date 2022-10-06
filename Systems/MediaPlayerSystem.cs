@@ -209,14 +209,15 @@ namespace MyHome.Systems
         {
             logger.Debug($"Add song: {url}");
             string filepath = url;
-            if (url.Contains("youtube"))
+            if (url.Contains("youtube") || url.Contains("youtu.be"))
                 filepath = Services.DownloadYouTubeAudioAsync(url, Config.SongsPath).Result;
             if (!this.Songs.ContainsKey(filepath))
                 this.Songs.Add(filepath, 0);
             // cleanup songs if we exceed the usage capacity
-            Utils.Utils.CleanupFilesByCapacity(this.Songs.OrderBy(kvp => kvp.Value).Select(kvp => new FileInfo(Path.Join(Config.SongsPath, kvp.Key))),
+            Utils.Utils.CleanupFilesByCapacity(this.Songs.OrderBy(kvp => kvp.Value).Select(kvp => Path.Join(Config.SongsPath, kvp.Key))
+                    .Where(p => File.Exists(p)).Select(p => new FileInfo(p)),
                 this.SongsDiskUsage, logger);
-            foreach (var file in this.Songs.Keys.Where(s => !File.Exists(Path.Join(Config.SongsPath, s))))
+            foreach (var file in this.Songs.Keys.Where(s => !s.StartsWith("http") && !File.Exists(Path.Join(Config.SongsPath, s))))
                 this.Songs.Remove(file);
             return filepath;
         }
@@ -277,8 +278,8 @@ namespace MyHome.Systems
                 this.Watched.Add(path);
 
             // cleanup watched list from nonexistent files
-            var mediaList = this.GetMediaList();
-            this.Watched.RemoveAll(w => !mediaList.Contains(w));
+            var list = this.GetMediaList();
+            this.Watched.RemoveAll(w => !list.Contains(w));
             MyHome.Instance.SystemChanged = true;
         }
     }
