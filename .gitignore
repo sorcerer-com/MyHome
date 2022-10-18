@@ -228,3 +228,8 @@ pip-log.txt
 
 # VS Code
 .vscode/
+
+
+# agent
+*.log.*
+*.cfg

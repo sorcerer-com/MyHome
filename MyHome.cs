@@ -84,10 +84,15 @@ namespace MyHome
             //   - improve Speaker UI - allow enqueue (like WinAmp)
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
-            // * External system (rpi2) ping system and notify on problem - to agent?
             // * Remove sensor metadata, cannot remove subsensor data
             // * Integrate speaker with security system - siren when is activated, play speaking while no one home
-            // * Security system cameras - save image every minute (in seprate folder) and only on 15th save in Images
+            // * Security system cameras - save image every minute (in seprate folder) and only on 15th save in Images (ffmpeg for compression to movie?)
+            // * Agent
+            //   - host data - temp, cpu, memory, df -h, network?
+            //   - video player - vlc?
+            //   - tv CEC support
+            //   - External system (rpi2) ping system and notify on problem?
+            // * Support Tuya devices - use wireshark to network capture when connecting device
 
             logger.Info("Start My Home");
             Instance = this;
