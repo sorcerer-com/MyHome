@@ -20,8 +20,8 @@ namespace MyHome.Systems.Devices.Sensors
         {
             AverageByTime,
             Average,
-            SumDiff,
-            Sum
+            SumDiff, // differentiate income values and sum them on aggregate
+            Sum // sum incoming values on aggregate
         }
 
         public override DateTime LastOnline => this.Data.Keys.OrderBy(t => t).LastOrDefault();
@@ -165,6 +165,8 @@ namespace MyHome.Systems.Devices.Sensors
 
         private void ArchiveData()
         {
+            this.RemoveUnwantedSubData();
+
             var now = DateTime.Now;
             // TODO: don't delete for now to see how file size will be
             // delete entries older then 3 year
@@ -176,6 +178,24 @@ namespace MyHome.Systems.Devices.Sensors
             var times = this.Data.Keys.Where(t => t < now.Date.AddDays(-1));
             var groupedDates = times.GroupBy(t => t.Date);
             this.AggregateData(groupedDates);
+        }
+
+        private void RemoveUnwantedSubData()
+        {
+            // remove subdata with subname not defined in SubNamesMap
+            var unwantedDataSubNames = this.Values.Keys.Where(subName => !this.SubNamesMap.ContainsValue(subName));
+            if (!unwantedDataSubNames.Any())
+                return;
+            
+            logger.Warn($"The following '{this.Name}' sensor sub-data will be removed: {string.Join(", ", unwantedDataSubNames)}");
+            foreach (var date in this.Data.Keys)
+            {
+                foreach (var subName in unwantedDataSubNames)
+                    this.Data[date].Remove(subName);
+            }
+
+            foreach (var subName in unwantedDataSubNames)
+                this.LastReadings.Remove(subName);
         }
 
         private Dictionary<string, Dictionary<string, object>> GetMetadata()

@@ -56,7 +56,8 @@ namespace MyHome.Systems.Devices.Sensors
             {
                 var content = Services.GetJsonContent(this.Address);
                 return content?.OfType<JObject>()
-                    .Where(item => item.ContainsKey("name") && item.ContainsKey("value"))
+                    .Where(item => item.ContainsKey("name") && item.ContainsKey("value") && 
+                        this.SubNamesMap.ContainsKey((string)item["name"]))
                     .ToDictionary(item => (string)item["name"], item => (object)(double)item["value"]);
             }
             else
