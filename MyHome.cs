@@ -80,12 +80,11 @@ namespace MyHome
             //   - maybe show devices instead of value / grouped by type -https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg
             //   - new sensor UI - add limits (like unhealty, alerts, etc.)
             //   - security system modal with sensor statuses (muk, motion, etc), etc.
-            //   - allow custom (driver) icons?
+            //   - allow custom (driver) icons? / UI
             //   - improve Speaker UI - allow enqueue (like WinAmp)
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
             // * Integrate speaker with security system - siren when is activated, play speaking while no one home
-            // * Security system cameras - save image every minute (in seprate folder) and only on 15th save in Images (ffmpeg for compression to movie?)
             // * Agent
             //   - host data - temp, cpu, memory, df -h, network?
             //   - video player - vlc?

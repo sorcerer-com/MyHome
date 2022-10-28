@@ -88,7 +88,7 @@ namespace MyHome.Systems
             this.prevImages = new Dictionary<string, Mat>();
             this.presenceDetectionTimer = DateTime.Now - TimeSpan.FromMinutes(this.PresenceDetectionInterval);
 
-            Directory.CreateDirectory(Config.ImagesPath);
+            Directory.CreateDirectory(MyHome.Instance.Config.ImagesPath);
         }
 
         public void SetEnable(Room room, bool enable, int level = 0)
@@ -246,7 +246,7 @@ namespace MyHome.Systems
             this.prevImages[camera.Room.Name + "." + camera.Name] = image.Resize(new Size(640, 480));
 
             var filename = $"{camera.Room.Name}_{camera.Name}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.jpg";
-            var filepath = Path.Combine(Config.ImagesPath, filename);
+            var filepath = Path.Combine(MyHome.Instance.Config.ImagesPath, filename);
             if (Cv2.ImWrite(filepath, image))
                 roomInfo.ImageFiles.Add(filepath);
         }

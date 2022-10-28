@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -25,6 +27,8 @@ namespace MyHome.Systems.Devices.Sensors
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
+        private const int ArchiveImagesCount = 300;
+
         public enum Movement
         {
             UP,
@@ -45,11 +49,14 @@ namespace MyHome.Systems.Devices.Sensors
         [UiProperty(true, "seconds")]
         public int ReadDataInterval { get; set; } // seconds
 
+        [UiProperty(true)]
+        public bool Record { get; set; }
+
         [JsonIgnore]
         public bool IsOpened => this.Capture.IsOpened();
 
 
-        private VideoCapture capture;
+        private readonly VideoCapture capture;
         private VideoCapture Capture
         {
             get
@@ -84,6 +91,7 @@ namespace MyHome.Systems.Devices.Sensors
 
         private DateTime lastUse;
         private DateTime nextDataRead;
+        private DateTime lastImageSaved;
 
         private readonly Dictionary<Type, object> onvif;
 
@@ -92,11 +100,13 @@ namespace MyHome.Systems.Devices.Sensors
         {
             this.IsOnvifSupported = true;
             this.ReadDataInterval = 15;
+            this.Record = true;
 
             this.capture = new VideoCapture();
             this.lastOnline = DateTime.Now;
             this.lastUse = DateTime.Now.AddMinutes(-1);
             this.nextDataRead = DateTime.Now.AddMinutes(1); // start reading 1 minute after start
+            this.lastImageSaved = DateTime.Now.AddMinutes(1);
 
             this.onvif = new Dictionary<Type, object>();
         }
@@ -120,9 +130,9 @@ namespace MyHome.Systems.Devices.Sensors
             //    logger.Debug($"Release camera: {this.Name} ({this.Room.Name})");
             //    this.capture.Release();
             //}
-            
-            // after 1 minute idle start grabbing and dropping frames keep buffer up to date
-            if (this.lastUse < DateTime.Now - TimeSpan.FromMinutes(1) && this.capture.IsOpened())
+
+            // dropping frames to keep buffer up to date
+            if (this.capture.IsOpened())
             {
                 lock (this.capture)
                 {
@@ -144,6 +154,16 @@ namespace MyHome.Systems.Devices.Sensors
                 }
                 else // if doesn't succeed wait more before next try
                     this.nextDataRead = DateTime.Now.AddSeconds(this.ReadDataInterval * 4);
+            }
+
+            if (this.Record && this.lastImageSaved.Minute != DateTime.Now.Minute)
+            {
+                var imageFilename = $"{this.Room.Name}_{this.Name}_{DateTime.Now:HH-mm}.jpg";
+                this.SaveImage(Path.Combine(MyHome.Instance.Config.ImagesPath, imageFilename), false);
+                this.lastImageSaved = DateTime.Now;
+
+                if (DateTime.Now.Hour == 23 && DateTime.Now.Minute == 59) // if we are in the end of a day
+                    Task.Run(() => this.ArchiveRecords());
             }
         }
 
@@ -185,12 +205,12 @@ namespace MyHome.Systems.Devices.Sensors
 
         public bool SaveImage(string filepath, bool initIfEmpty = true, Size? size = null, bool timestamp = true)
         {
-            logger.Debug($"Camera '{this.Name}' ({this.Room.Name}) save image: {filepath}");
+            logger.Trace($"Camera '{this.Name}' ({this.Room.Name}) save image: {filepath}");
 
             var image = this.GetImage(initIfEmpty, size, timestamp);
             if (image == null)
             {
-                logger.Warn($"Camera '{this.Name}' ({this.Room.Name}) failed to save image: {filepath}");
+                logger.Debug($"Camera '{this.Name}' ({this.Room.Name}) failed to save image: {filepath}");
                 return false;
             }
             return Cv2.ImWrite(filepath, image);
@@ -370,6 +390,23 @@ namespace MyHome.Systems.Devices.Sensors
                 logger.Debug(e);
                 return null;
             }
+        }
+
+        private void ArchiveRecords()
+        {
+            // get images older than 24 hours
+            var images = Directory.GetFiles(MyHome.Instance.Config.ImagesPath, $"{this.Room.Name}_{this.Name}_*.jpg")
+                .Select(f => new FileInfo(f)).Where(f => f.CreationTime >= DateTime.Now.AddHours(-24)).OrderBy(f => f.CreationTime)
+                .Select(f => f.FullName).ToList();
+            if (images.Count > ArchiveImagesCount)
+            {
+                // leave only every Nth element if images are too many
+                var step = images.Count / ArchiveImagesCount + 1;
+                images = images.Where((x, i) => i % step == 0).ToList();
+            }
+
+            var videoFilename = $"{this.Room.Name}_{this.Name}_{DateTime.Now.Date:yyyy-MM-dd}.mp4";
+            Services.CreateVideo(images, Path.Join(MyHome.Instance.Config.ImagesPath, videoFilename));
         }
     }
 }

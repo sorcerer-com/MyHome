@@ -9,7 +9,6 @@ namespace MyHome.Models
         public static readonly string BinPath = "bin";
         public static readonly string DataFilePath = Path.Join(BinPath, "data.json");
 
-        public static readonly string ImagesPath = Path.Combine(BinPath, "Images");
         public static readonly string SongsPath = Path.Combine(BinPath, "Songs");
 
         [UiProperty(true, "sha256 hash")]
@@ -48,9 +47,12 @@ namespace MyHome.Models
         public string MqttPassword { get; set; } = "";
 
         [UiProperty(true)]
-        public string EwelinkEmail { get; set; }
+        public string EwelinkEmail { get; set; } = "";
 
         [UiProperty(true)]
-        public string EwelinkPassword { get; set; }
+        public string EwelinkPassword { get; set; } = "";
+
+        [UiProperty(true)]
+        public string ImagesPath { get; set; } = Path.Combine(BinPath, "Images");
     }
 }

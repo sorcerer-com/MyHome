@@ -46,7 +46,7 @@ namespace MyHome.Systems
             this.ImagesDiskUsage = 200;
             this.Devices = new List<Device>();
 
-            Directory.CreateDirectory(Config.ImagesPath);
+            Directory.CreateDirectory(MyHome.Instance.Config.ImagesPath);
         }
 
 
@@ -104,21 +104,15 @@ namespace MyHome.Systems
                     var groupedDates = times.GroupBy(t => new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute / this.SensorsCheckInterval * this.SensorsCheckInterval, 0));
                     sensor.AggregateData(groupedDates);
                 }
-
-                // save camera image every interval
-                if (device is Camera camera)
-                {
-                    var imageFilename = $"{camera.Room.Name}_{camera.Name}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.jpg";
-                    camera.SaveImage(Path.Combine(Config.ImagesPath, imageFilename), false);
-                }
             });
 
             if (!string.IsNullOrEmpty(alertMsg))
                 Alert.Create($"{alertMsg.Trim()} alarm activated!").Send();
 
-            // cleanup cameras images
+            // cleanup cameras records
             Utils.Utils.CleanupFilesByCapacity(
-                Directory.GetFiles(Config.ImagesPath, "*.jpg").Select(f => new FileInfo(f)).OrderBy(f => f.CreationTime),
+                Directory.GetFiles(MyHome.Instance.Config.ImagesPath, "*.mp4")
+                    .Select(f => new FileInfo(f)).OrderBy(f => f.CreationTime),
                 this.ImagesDiskUsage, logger);
 
             this.nextSensorCheckTime += TimeSpan.FromMinutes(this.SensorsCheckInterval);

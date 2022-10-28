@@ -174,6 +174,7 @@ namespace MyHome.Utils
                         throw new Exception(ffmpegProcess.StandardError.ReadToEnd());
                     File.Delete(path); // delete the mp4
                 }
+                return Path.GetFileName(path.Replace(".mp4", ".mp3"));
             }
             catch (Exception e)
             {
@@ -181,7 +182,47 @@ namespace MyHome.Utils
                 logger.Debug(e);
                 return null;
             }
-            return Path.GetFileName(path.Replace(".mp4", ".mp3"));
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S112")]
+        public static bool CreateVideo(List<string> imageFilePaths, string outputFilePath)
+        {
+            if (imageFilePaths.Count == 0)
+            {
+                logger.Debug($"Skip creating video '{outputFilePath}' from {imageFilePaths.Count} images");
+                return false;
+            }
+
+            logger.Debug($"Creating video '{outputFilePath}' from {imageFilePaths.Count} images");
+            try
+            {
+                var inputFilePath = Path.Join(Path.GetDirectoryName(outputFilePath), "list.txt");
+                File.WriteAllText(inputFilePath, string.Join("\n", imageFilePaths.Select(f => $"file '{f}'\nduration 1")));
+
+                var ffmpegProcess = new System.Diagnostics.Process();
+                ffmpegProcess.StartInfo.UseShellExecute = false;
+                ffmpegProcess.StartInfo.RedirectStandardInput = true;
+                ffmpegProcess.StartInfo.RedirectStandardOutput = true;
+                ffmpegProcess.StartInfo.RedirectStandardError = true;
+                ffmpegProcess.StartInfo.CreateNoWindow = true;
+                ffmpegProcess.StartInfo.FileName = "ffmpeg";
+                ffmpegProcess.StartInfo.Arguments = $" -f concat -safe 0 -i \"{inputFilePath}\" -y \"{outputFilePath}\"";
+                ffmpegProcess.Start();
+
+                var stdErr = new StringBuilder();
+                while (!ffmpegProcess.HasExited) // we need to start reading the output ffmpeg to start processing
+                    stdErr.Append(ffmpegProcess.StandardError.ReadToEnd());
+                File.Delete(inputFilePath);
+                if (ffmpegProcess.ExitCode != 0)
+                    throw new Exception(stdErr.ToString());
+                return true;
+            }
+            catch (Exception e)
+            {
+                logger.Error($"Failed to create video '{outputFilePath}' from {imageFilePaths.Count} images");
+                logger.Debug(e);
+                return false;
+            }
         }
     }
 }
