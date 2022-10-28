@@ -84,7 +84,6 @@ namespace MyHome
             //   - improve Speaker UI - allow enqueue (like WinAmp)
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
-            // * Integrate speaker with security system - siren when is activated, play speaking while no one home
             // * Agent
             //   - host data - temp, cpu, memory, df -h, network?
             //   - video player - vlc?
@@ -120,6 +119,7 @@ namespace MyHome
             this.lastBackupTime = DateTime.Now;
             this.mqttDisconnectedTime = DateTime.Now;
             this.SystemChanged = false;
+            this.UpgradeAvailable = false;
 
             this.Load();
 
@@ -292,13 +292,12 @@ namespace MyHome
             {
                 using var repo = new Repository(".");
                 Commands.Fetch(repo, repo.Head.RemoteName, Array.Empty<string>(), null, "");
-                this.UpgradeAvailable = repo.Head.TrackingDetails.BehindBy.GetValueOrDefault() > 0;
+                this.UpgradeAvailable |= repo.Head.TrackingDetails.BehindBy.GetValueOrDefault() > 0;
             }
             catch (Exception e)
             {
                 logger.Error("Cannot check for system update");
                 logger.Debug(e);
-                this.UpgradeAvailable = false;
             }
         }
 
@@ -333,6 +332,13 @@ namespace MyHome
             {
                 try
                 {
+                    this.JintEngine
+                        .SetValue("logger", logger)
+                        .SetValue("myHome", this)
+                        .SetValue("Rooms", this.Rooms.ToDictionary(r => r.Name.Replace(" ", "")))
+                        .SetValue("Devices", this.Rooms.ToDictionary(r => r.Name.Replace(" ", ""),
+                                                r => r.Devices.ToDictionary(d => d.Name.Replace(" ", ""))));
+
                     action.Invoke(this.JintEngine);
                 }
                 catch (Exception e)

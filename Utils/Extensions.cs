@@ -206,22 +206,8 @@ namespace MyHome.Utils
 
         public static Action Debounce(this Action func, int milliseconds = 100)
         {
-            System.Threading.CancellationTokenSource cancelTokenSource = null;
-
-            return () =>
-            {
-                cancelTokenSource?.Cancel();
-                cancelTokenSource = new System.Threading.CancellationTokenSource();
-
-                Task.Delay(milliseconds, cancelTokenSource.Token)
-                    .ContinueWith(t =>
-                    {
-                        if (t.IsCompletedSuccessfully)
-                        {
-                            func();
-                        }
-                    }, TaskScheduler.Default);
-            };
+            var debouncer = Utils.Debouncer(milliseconds);
+            return () => debouncer(func);
         }
     }
 }

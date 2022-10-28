@@ -8,8 +8,8 @@ namespace MyHome.Models
     {
         public static readonly string BinPath = "bin";
         public static readonly string DataFilePath = Path.Join(BinPath, "data.json");
-
-        public static readonly string SongsPath = Path.Combine(BinPath, "Songs");
+        
+        public static readonly string SoundsPath = Path.Combine("External", "Sounds");
 
         [UiProperty(true, "sha256 hash")]
         public string Password { get; set; } = "";
@@ -54,5 +54,8 @@ namespace MyHome.Models
 
         [UiProperty(true)]
         public string ImagesPath { get; set; } = Path.Combine(BinPath, "Images");
+
+        [UiProperty(true)]
+        public string SongsPath { get; set; } = Path.Combine(BinPath, "Songs");
     }
 }

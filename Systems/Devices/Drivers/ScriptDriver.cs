@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 using MyHome.Utils;
 
@@ -39,14 +38,8 @@ namespace MyHome.Systems.Devices.Drivers
         {
             var script = Regex.Replace(this.Script, @" as \w*", ""); // remove " as <Type>" casts
             logger.Trace($"Execute script: {script}");
-            MyHome.Instance.ExecuteJint(jint => jint
-                    .SetValue("logger", logger)
-                    .SetValue("myHome", MyHome.Instance)
-                    .SetValue("Rooms", MyHome.Instance.Rooms.ToDictionary(r => r.Name.Replace(" ", "")))
-                    .SetValue("Devices", MyHome.Instance.Rooms.ToDictionary(r => r.Name.Replace(" ", ""),
-                                         r => r.Devices.ToDictionary(d => d.Name.Replace(" ", ""))))
-                    .Evaluate($"{{ {script} }}"),
-                    $"execute driver '{this.Name}' ({this.Room.Name}) script:\n{script}");
+            MyHome.Instance.ExecuteJint(jint => jint.Evaluate($"{{ {script} }}"),
+                $"execute driver '{this.Name}' ({this.Room.Name}) script:\n{script}");
         }
     }
 }

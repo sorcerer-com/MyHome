@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using MyHome.Models;
+using MyHome.Systems.Devices.Drivers.Mqtt;
 using MyHome.Systems.Devices.Sensors;
 using MyHome.Utils;
 
@@ -163,6 +164,12 @@ namespace MyHome.Systems
                 roomInfo.StartTime = DateTime.Now;
                 foreach (var camera in roomInfo.Room.Cameras)
                     this.prevImages.Remove(camera.Room.Name + "." + camera.Name);
+
+                // play security alarm if there is a speakers in the room
+                var speakers = roomInfo.Room.Devices.OfType<SpeakerMqttDriver>();
+                foreach (var speaker in speakers)
+                    speaker.PlayAlarm(SpeakerMqttDriver.AlarmType.Security);
+
                 logger.Info($"Security alarm activated in '{room.Name}' room");
                 this.SetHistory(room, "Activated");
                 MyHome.Instance.SystemChanged = true;

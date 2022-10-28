@@ -14,6 +14,12 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         private static readonly Random random = new();
 
+        public enum AlarmType
+        {
+            Fire,
+            Security
+        }
+
         private const string PLAYING_STATE_NAME = "Playing";
         private const string VOLUME_STATE_NAME = "Volume";
         private const string PAUSED_STATE_NAME = "Paused";
@@ -29,11 +35,15 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 {
                     if (!string.IsNullOrEmpty(value))
                     {
-                        MyHome.Instance.MediaPlayerSystem.Songs[value] = MyHome.Instance.MediaPlayerSystem.Songs[value] + 1;
+                        if (MyHome.Instance.MediaPlayerSystem.Songs.ContainsKey(value))
+                            MyHome.Instance.MediaPlayerSystem.Songs[value] = MyHome.Instance.MediaPlayerSystem.Songs[value] + 1;
                         this.SendState(VOLUME_STATE_NAME, this.Volume.ToString());
                     }
-                    else
+                    else // on empty value - stop
+                    {
                         this.orderedSongs = null;
+                        this.alarmType = null;
+                    }
                     this.SendPlayingState();
                 }
             }
@@ -74,6 +84,9 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         [UiProperty]
         public bool Shuffle { get; set; }
+
+        [UiProperty]
+        public int AlarmVolume { get; set; }
 
 
         [UiProperty(true, "(topic, json path)")]
@@ -119,7 +132,9 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         }
 
 
-        private List<string> orderedSongs = null;
+        private readonly Action<Action> newStateReceivedDebouncer;
+        private List<string> orderedSongs;
+        private AlarmType? alarmType;
 
 
         public SpeakerMqttDriver()
@@ -135,6 +150,14 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             this.MqttSetTopics.Add(PLAYING_STATE_NAME, ("", ""));
             this.MqttSetTopics.Add(VOLUME_STATE_NAME, ("", ""));
             this.MqttSetTopics.Add(PAUSED_STATE_NAME, ("", ""));
+
+            this.Loop = false;
+            this.Shuffle = false;
+            this.AlarmVolume = 100;
+
+            this.newStateReceivedDebouncer = Utils.Utils.Debouncer(1000);
+            this.orderedSongs = null;
+            this.alarmType = null;
         }
 
         public void NextSong(string currentSong)
@@ -149,17 +172,32 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             this.Playing = this.orderedSongs[(this.orderedSongs.IndexOf(currentSong) + 1) % this.orderedSongs.Count];
         }
 
+        public void PlayAlarm(AlarmType alarmType)
+        {
+            this.alarmType = alarmType;
+            this.Playing = $"{alarmType}Alarm.mp3";
+            this.Volume = this.AlarmVolume;
+        }
+
 
         protected override void NewStateReceived(string name, object oldValue, object newValue)
         {
             base.NewStateReceived(name, oldValue, newValue);
             if (name == PLAYING_STATE_NAME)
             {
-                // if we receive empty value for playing state and we want to loop songs, start a new one
-                if (string.IsNullOrEmpty((string)newValue) && this.Loop)
-                    this.NextSong((string)oldValue);
-                else
-                    this.States[name] = Uri.UnescapeDataString(((string)newValue).Replace($"{Host}/api/systems/MediaPlayer/songs/", ""));
+                // debounce because before starting a new song speaker stop the previous one
+                this.newStateReceivedDebouncer(() =>
+                {
+                    // if we receive empty value for playing state and we want to loop songs, start a new one
+                    if (string.IsNullOrEmpty((string)newValue) && !string.IsNullOrEmpty((string)oldValue))
+                    {
+                        if (this.alarmType != null) // if alarm was playing repeat it
+                            this.Playing = (string)oldValue;
+                        else if (this.Loop)
+                            this.NextSong((string)oldValue);
+                    }
+                });
+                this.States[name] = Uri.UnescapeDataString(((string)newValue).Replace($"{Host}/api/systems/MediaPlayer/songs/", ""));
             }
         }
 

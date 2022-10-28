@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using System.Threading;
 
 using NLog;
 
@@ -38,6 +40,26 @@ namespace MyHome.Utils
                 }
             }
             logger?.Error($"Action {operation} failed, retries exceeded");
+        }
+
+        public static Action<Action> Debouncer(int milliseconds = 100)
+        {
+            CancellationTokenSource cancelTokenSource = null;
+
+            return (Action func) =>
+            {
+                cancelTokenSource?.Cancel();
+                cancelTokenSource = new CancellationTokenSource();
+
+                Task.Delay(milliseconds, cancelTokenSource.Token)
+                    .ContinueWith(t =>
+                    {
+                        if (t.IsCompletedSuccessfully)
+                        {
+                            func();
+                        }
+                    }, TaskScheduler.Default);
+            };
         }
 
         public static Type GetType(string typeName)

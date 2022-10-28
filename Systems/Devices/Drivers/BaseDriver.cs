@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 using MyHome.Utils;
 
-using Newtonsoft.Json;
-
 using NLog;
 
 namespace MyHome.Systems.Devices.Drivers

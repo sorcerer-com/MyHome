@@ -105,9 +105,9 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 }
 
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                if (!this.AcceptPayload(payload))
+                if (string.IsNullOrEmpty(payload) || !this.AcceptPayload(payload))
                 {
-                    logger.Trace("The received payload is not accepted");
+                    logger.Trace($"The received payload is not accepted: {payload}");
                     return;
                 }
                 bool changed = false;

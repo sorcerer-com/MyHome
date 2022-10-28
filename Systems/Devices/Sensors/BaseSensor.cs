@@ -186,7 +186,7 @@ namespace MyHome.Systems.Devices.Sensors
             var unwantedDataSubNames = this.Values.Keys.Where(subName => !this.SubNamesMap.ContainsValue(subName));
             if (!unwantedDataSubNames.Any())
                 return;
-            
+
             logger.Warn($"The following '{this.Name}' sensor sub-data will be removed: {string.Join(", ", unwantedDataSubNames)}");
             foreach (var date in this.Data.Keys)
             {
