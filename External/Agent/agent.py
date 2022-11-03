@@ -1,11 +1,12 @@
+import json
 import logging
-from shutil import disk_usage
-import subprocess
+import socket
 
 import paho.mqtt.client
 import psutil
-import socket
-import json
+
+from datetime import datetime, timedelta
+import utils
 
 
 class Agent:
@@ -13,8 +14,11 @@ class Agent:
     def __init__(self, config):
         self._config = config
         self._hostname = socket.gethostname()
+        self._next_update_2 = datetime.now()
 
         self._mqtt = paho.mqtt.client.Client(self._hostname + "Client")
+        self._cec = None
+        self._cec_devices = {}
 
     def setup(self):
         self._mqtt.on_connect = self._mqtt_on_connect
@@ -26,8 +30,20 @@ class Agent:
 
         self._mqtt.loop_start()
 
+        self._cec = utils.init_cec()
+
+        features = {"telemetry": True, "CEC": self._cec is not None}
+        logging.info(f"Supported features: {features}")
+        self._mqtt.publish(
+            f"tele/{self._hostname}/FEATURES", json.dumps(features), retain=True)
+
     def update(self):
-        self._sendTelemetry()
+        self._send_telemetry()
+
+        if datetime.now() > self._next_update_2:
+            self._next_update_2 = datetime.now(
+            ) + timedelta(minutes=int(self._config["AGENT"]["update_2_interval"]))
+            self._update_cec_devices()
 
     def stop(self):
         self._mqtt.loop_stop()
@@ -37,14 +53,21 @@ class Agent:
         logging.info(
             f"MQTT client {client._client_id} connected to {client._host}:{client._port}")
 
+        self._mqtt.subscribe(f"cmnd/{self._hostname}/cec")
+
     def _mqtt_on_message(self, client, userdata, msg):
         logging.info(
             f"MQTT message received with topic '{msg.topic}': {msg.payload}")
 
-    def _sendTelemetry(self):
+        payload = json.loads(str(msg.payload))
+        if msg.topic == f"cmnd/{self._hostname}/cec":
+            self._handle_cec_cmd(payload)
+
+    @utils.try_catch()
+    def _send_telemetry(self):
         result = {}
 
-        output = self._callSystem(
+        output = utils.call_system(
             ["cat /sys/class/thermal/thermal_zone0/temp"])
         if output and output[0]:
             result["cpu_temp"] = int(output[0]) / 1000
@@ -61,10 +84,42 @@ class Agent:
         logging.info(f"Telemetry: {result}")
         self._mqtt.publish(f"tele/{self._hostname}/SENSOR", json.dumps(result))
 
-    def _callSystem(self, cmd):
-        try:
-            proc = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            return proc.communicate()
-        except Exception as e:
-            logging.debug(e)
+    @utils.try_catch()
+    def _update_cec_devices(self):
+        if self._cec is None:
+            return
+
+        self._cec_devices = {
+            f"{item[1].osd_string}_{item[0]}": item[1] for item in self._cec.list_devices().items()}
+
+        devices = []
+        for item in self._cec_devices.items():
+            try:
+                is_on = item[1].is_on()
+            except:
+                is_on = None
+            devices.append({"address": item[0], "cec_version": item[1].cec_version,
+                            "language": item[1].language, "is_on": is_on})
+        logging.info(f"CEC devices: {devices}")
+        self._mqtt.publish(
+            f"tele/{self._hostname}/CEC_DEVICES", json.dumps(devices))
+
+    @utils.try_catch()
+    def _handle_cec_cmd(self, payload):
+        # expected payload { "address": "...", "command": "power_on/standby/transmit?", "args"? }, address is not device.address, but {device.osd_string}_{device.address}
+        logging.info(f"Processing CEC command: {payload}")
+        if self._cec is None:
+            logging.warn(f"CEC is not supported")
+            return
+
+        if "address" not in payload or "command" not in payload:
+            logging.warn("Invalid CEC command")
+            return
+
+        # device if address is provided else cec
+        target = self._cec_devices[payload["address"]
+                                   ] if payload["address"] in self._cec_devices else self._cec
+        func = getattr(target, payload["command"])
+        func()
+
+        self._update_cec_devices()
