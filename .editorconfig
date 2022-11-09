@@ -207,3 +207,6 @@ dotnet_naming_style.begins_with_i.capitalization = pascal_case
 
 # S3358: Ternary operators should not be nested
 dotnet_diagnostic.S3358.severity = silent
+
+# S1066: Collapsible "if" statements should be merged
+dotnet_diagnostic.S1066.severity = suggestion

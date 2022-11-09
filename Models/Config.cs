@@ -8,7 +8,7 @@ namespace MyHome.Models
     {
         public static readonly string BinPath = "bin";
         public static readonly string DataFilePath = Path.Join(BinPath, "data.json");
-        
+
         public static readonly string SoundsPath = Path.Combine("External", "Sounds");
 
         [UiProperty(true, "sha256 hash")]

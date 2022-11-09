@@ -1,5 +1,5 @@
 ﻿<a class="w3-center w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-blue-gray" style="min-height: 72px"
-   v-bind:class="{'w3-text-red': error, 'w3-disabled': processing, 'w3-animate-fading': processing}" 
+   v-bind:class="{'w3-text-red': error, 'w3-disabled': processing, 'w3-animate-fading': processing}"
    v-bind:title="error ?? 'Last Online: ' + new Date(driver.LastOnline).toISOString()"
    v-on:click="click()">
     <!-- Switch -->
@@ -46,9 +46,9 @@
     <span class="material-icons w3-xxlarge" v-if="driver.$type.endsWith('SpeakerMqttDriver') && !driver.Playing">
         {{driver.Playing ? 'music_note' : 'speaker'}}
     </span>
-    <div v-if="driver.$type.endsWith('SpeakerMqttDriver') && driver.Playing" style="overflow: hidden; line-height: 1;">
-        <span class="w3-tiny w3-show-inline-block scroll-text no-mobile"
-             v-bind:title="driver.Playing">
+    <div v-if="driver.$type.endsWith('SpeakerMqttDriver') && driver.Playing" style="overflow: hidden; line-height: 1;"
+         v-bind:title="'Volume: ' + driver.Volume + '\nBufferLevel: ' + driver.BufferLevel + '%'">
+        <span class="w3-tiny w3-show-inline-block scroll-text no-mobile" v-bind:title="driver.Playing + ' (' + driver.Position + '%)'">
             {{driver.Playing}}
         </span>
         <span class="material-icons w3-xlarge" title="Pause" v-on:click.stop="" v-on:click="setDevice({ 'Paused': !driver.Paused })">
@@ -59,7 +59,10 @@
         </span>
         <span class="material-icons w3-xlarge" title="Next" v-on:click.stop="" v-on:click="callDevice('NextSong', driver.Playing)">
             skip_next
-        </span><br/>
+        </span>
+        <div style="height: 2px;"
+             v-bind:style="{'background': 'linear-gradient(90deg, #ffffff ' + driver.Position + '%, #7494a4 0%)'}">
+        </div>
     </div>
 
 

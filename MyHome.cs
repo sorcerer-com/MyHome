@@ -82,14 +82,14 @@ namespace MyHome
             //   - security system modal with sensor statuses (muk, motion, etc), etc.
             //   - allow custom (driver) icons? / UI
             //   - improve Speaker UI - allow enqueue (like WinAmp)
+            //   - improve power consumption UI
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
             // * Agent
-            //   - host data - temp, cpu, memory, df -h, network?
             //   - video player - vlc?
             //   - tv CEC support
             //   - External system (rpi2) ping system and notify on problem?
-            // * Support Tuya devices - use wireshark to network capture when connecting device
+            // * Support Tuya devices
 
             logger.Info("Start My Home");
             Instance = this;

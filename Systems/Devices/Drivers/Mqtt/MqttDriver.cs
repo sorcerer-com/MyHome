@@ -110,7 +110,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                     logger.Trace($"The received payload is not accepted: {payload}");
                     return;
                 }
-                bool changed = false;
+                bool changed = false, save = false;
                 foreach (var item in this.MqttGetTopics.Where(kvp => kvp.Value.topic == e.ApplicationMessage.Topic))
                 {
                     var value = payload;
@@ -130,12 +130,14 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                     if (oldValue != this.States[item.Key])
                     {
                         changed = true;
-                        this.NewStateReceived(item.Key, oldValue, this.States[item.Key]);
+                        // allow every sub-driver to return if specific state should be saved
+                        if (this.NewStateReceived(item.Key, oldValue, this.States[item.Key]))
+                            save = true;
                     }
                 }
                 if (changed)
                 {
-                    MyHome.Instance.SystemChanged = true;
+                    MyHome.Instance.SystemChanged = save;
                     MyHome.Instance.Events.Fire(this, GlobalEventTypes.DriverStateChanged, this.States);
                 }
             }
@@ -165,8 +167,9 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             this.MqttGetTopics[name] = value;
         }
 
-        protected virtual void NewStateReceived(string name, object oldValue, object newValue)
+        protected virtual bool NewStateReceived(string name, object oldValue, object newValue)
         {
+            return true;
         }
 
         protected void SetStateAndSend(string name, object value)

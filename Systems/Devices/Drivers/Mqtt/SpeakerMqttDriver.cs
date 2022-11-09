@@ -23,8 +23,9 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         private const string PLAYING_STATE_NAME = "Playing";
         private const string VOLUME_STATE_NAME = "Volume";
         private const string PAUSED_STATE_NAME = "Paused";
+        private const string POSITION_STATE_NAME = "Position";
+        private const string BUFFER_LEVEL_STATE_NAME = "BufferLevel";
 
-        [JsonIgnore]
         [UiProperty(selector: "GetSongs")]
         public string Playing
         {
@@ -72,12 +73,22 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             set => this.SetStateAndSend(VOLUME_STATE_NAME, value);
         }
 
+        [JsonIgnore]
         [UiProperty]
         public bool Paused
         {
             get => (bool)this.States[PAUSED_STATE_NAME];
             set => this.SetStateAndSend(PAUSED_STATE_NAME, value);
         }
+
+
+        [JsonIgnore]
+        [UiProperty]
+        public int Position => (int)this.States[POSITION_STATE_NAME];
+
+        [JsonIgnore]
+        [UiProperty]
+        public int BufferLevel => (int)this.States[BUFFER_LEVEL_STATE_NAME];
 
         [UiProperty]
         public bool Loop { get; set; }
@@ -131,6 +142,20 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             set => this.MqttSetTopics[PAUSED_STATE_NAME] = value;
         }
 
+        [UiProperty(true, "(topic, json path)")]
+        public (string topic, string jsonPath) PositionGetMqttTopic
+        {
+            get => this.MqttGetTopics[POSITION_STATE_NAME];
+            set => this.MqttGetTopics[POSITION_STATE_NAME] = value;
+        }
+
+        [UiProperty(true, "(topic, json path)")]
+        public (string topic, string jsonPath) BufferLevelGetMqttTopic
+        {
+            get => this.MqttGetTopics[BUFFER_LEVEL_STATE_NAME];
+            set => this.MqttGetTopics[BUFFER_LEVEL_STATE_NAME] = value;
+        }
+
 
         private readonly Action<Action> newStateReceivedDebouncer;
         private List<string> orderedSongs;
@@ -142,10 +167,14 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             this.States.Add(PLAYING_STATE_NAME, null);
             this.States.Add(VOLUME_STATE_NAME, 10);
             this.States.Add(PAUSED_STATE_NAME, false);
+            this.States.Add(POSITION_STATE_NAME, 0);
+            this.States.Add(BUFFER_LEVEL_STATE_NAME, 0);
 
             this.MqttGetTopics.Add(PLAYING_STATE_NAME, ("", ""));
             this.MqttGetTopics.Add(VOLUME_STATE_NAME, ("", ""));
             this.MqttGetTopics.Add(PAUSED_STATE_NAME, ("", ""));
+            this.MqttGetTopics.Add(POSITION_STATE_NAME, ("", ""));
+            this.MqttGetTopics.Add(BUFFER_LEVEL_STATE_NAME, ("", ""));
 
             this.MqttSetTopics.Add(PLAYING_STATE_NAME, ("", ""));
             this.MqttSetTopics.Add(VOLUME_STATE_NAME, ("", ""));
@@ -165,7 +194,11 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             if (this.orderedSongs == null)
             {
                 if (this.Shuffle)
-                    this.orderedSongs = MyHome.Instance.MediaPlayerSystem.Songs.Keys.OrderBy(_ => random.Next()).ToList();
+                {
+                    var max = MyHome.Instance.MediaPlayerSystem.Songs.Values.Max();
+                    this.orderedSongs = MyHome.Instance.MediaPlayerSystem.Songs
+                        .OrderByDescending(kvp => random.NextDouble() + (double)kvp.Value / max).Select(kvp => kvp.Key).ToList();
+                }
                 else
                     this.orderedSongs = MyHome.Instance.MediaPlayerSystem.Songs.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key).ToList();
             }
@@ -180,7 +213,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         }
 
 
-        protected override void NewStateReceived(string name, object oldValue, object newValue)
+        protected override bool NewStateReceived(string name, object oldValue, object newValue)
         {
             base.NewStateReceived(name, oldValue, newValue);
             if (name == PLAYING_STATE_NAME)
@@ -199,12 +232,22 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 });
                 this.States[name] = Uri.UnescapeDataString(((string)newValue).Replace($"{Host}/api/systems/MediaPlayer/songs/", ""));
             }
+            else if (name == POSITION_STATE_NAME)
+            {
+                // play next song if loop when we reached 100% of the current
+                if ((int)newValue >= 100 && this.Loop)
+                    this.NextSong(this.Playing);
+                return false;
+            }
+            else if (name == BUFFER_LEVEL_STATE_NAME)
+                return false;
+            return true;
         }
 
 
         private void SendPlayingState()
         {
-            var value = Uri.EscapeUriString(this.Playing);
+            var value = Uri.EscapeDataString(this.Playing);
             if (!string.IsNullOrEmpty(value) && !value.StartsWith("http"))
                 value = $"{Host}/api/systems/MediaPlayer/songs/{value}";
 
