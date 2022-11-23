@@ -19,6 +19,12 @@
             },
             methods: {
                 refreshData: function () {
+                    // if the page is not visible don't refresh
+                    if (document.hidden) {
+                        setTimeout(this.refreshData, 1000);
+                        return;
+                    }
+
                     getUpgradeAvailable().done(value => {
                         Vue.set(this, "upgradeAvailable", value);
                         setTimeout(this.refreshData, 3000);

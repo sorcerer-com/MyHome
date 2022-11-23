@@ -57,6 +57,12 @@ if (window.WebSocket) {
     let retry = 0;
     // ping every 1 seconds
     setInterval(() => {
+        // if the page is not visible close the websocket
+        if (document.hidden) {
+            window.ws.close();
+            return;
+        }
+
         // retry 10 times every second, after that once per 10 seconds
         if (retry > 10 && retry % 10 != 0) {
             retry += 1;
