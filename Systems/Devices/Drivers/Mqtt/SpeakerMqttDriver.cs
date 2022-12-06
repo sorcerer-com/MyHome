@@ -34,12 +34,8 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             {
                 if (this.SetState(PLAYING_STATE_NAME, value))
                 {
-                    if (!string.IsNullOrEmpty(value))
-                    {
-                        if (MyHome.Instance.MediaPlayerSystem.Songs.ContainsKey(value))
-                            MyHome.Instance.MediaPlayerSystem.Songs[value] = MyHome.Instance.MediaPlayerSystem.Songs[value] + 1;
+                    if (!string.IsNullOrEmpty(value)) // set volume on start playing
                         this.SendState(VOLUME_STATE_NAME, this.Volume.ToString());
-                    }
                     else // on empty value - stop
                     {
                         this.orderedSongs = null;
@@ -224,6 +220,9 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                     // if we receive empty value for playing state and we want to loop songs, start a new one
                     if (string.IsNullOrEmpty((string)newValue) && !string.IsNullOrEmpty((string)oldValue))
                     {
+                        if (MyHome.Instance.MediaPlayerSystem.Songs.ContainsKey((string)oldValue)) // increase song rating
+                            MyHome.Instance.MediaPlayerSystem.Songs[(string)oldValue] = MyHome.Instance.MediaPlayerSystem.Songs[(string)oldValue] + 1;
+
                         if (this.alarmType != null) // if alarm was playing repeat it
                             this.Playing = (string)oldValue;
                         else if (this.Loop)
@@ -236,7 +235,12 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             {
                 // play next song if loop when we reached 100% of the current
                 if ((int)newValue >= 100 && this.Loop)
+                {
+                    if (MyHome.Instance.MediaPlayerSystem.Songs.ContainsKey(this.Playing)) // increase song rating
+                        MyHome.Instance.MediaPlayerSystem.Songs[this.Playing] = MyHome.Instance.MediaPlayerSystem.Songs[this.Playing] + 1;
+
                     this.NextSong(this.Playing);
+                }
                 return false;
             }
             else if (name == BUFFER_LEVEL_STATE_NAME)
