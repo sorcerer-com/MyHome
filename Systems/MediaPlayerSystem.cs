@@ -52,7 +52,7 @@ namespace MyHome.Systems
         [UiProperty]
         public List<string> Watched { get; }
 
-        public Dictionary<string, int> Songs { get; } // song path / play count
+        public Dictionary<string, int> Songs { get; } // song path / play count (rating)
 
 
         [JsonIgnore]
