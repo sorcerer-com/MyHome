@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 using MyHome.Utils;
@@ -32,6 +33,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             get => (string)this.States[PLAYING_STATE_NAME];
             set
             {
+                value = MyHome.Instance.MediaPlayerSystem.EnsureSong(value); // ensure song is downloaded
                 if (this.SetState(PLAYING_STATE_NAME, value))
                 {
                     if (!string.IsNullOrEmpty(value)) // set volume on start playing
@@ -193,10 +195,12 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 {
                     var max = MyHome.Instance.MediaPlayerSystem.Songs.Values.Max();
                     this.orderedSongs = MyHome.Instance.MediaPlayerSystem.Songs
-                        .OrderByDescending(kvp => random.NextDouble() + (double)kvp.Value / max).Select(kvp => kvp.Key).ToList();
+                        .OrderByDescending(kvp => random.NextDouble() + (double)kvp.Value / max).Select(kvp => kvp.Key)
+                        .Where(s => File.Exists(Path.Join(MyHome.Instance.Config.SongsPath, s))).ToList();
                 }
                 else
-                    this.orderedSongs = MyHome.Instance.MediaPlayerSystem.Songs.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key).ToList();
+                    this.orderedSongs = MyHome.Instance.MediaPlayerSystem.Songs.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key)
+                        .Where(s => File.Exists(Path.Join(MyHome.Instance.Config.SongsPath, s))).ToList();
             }
             this.Playing = this.orderedSongs[(this.orderedSongs.IndexOf(currentSong) + 1) % this.orderedSongs.Count];
         }
@@ -220,13 +224,14 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                     // if we receive empty value for playing state and we want to loop songs, start a new one
                     if (string.IsNullOrEmpty((string)newValue) && !string.IsNullOrEmpty((string)oldValue))
                     {
-                        if (MyHome.Instance.MediaPlayerSystem.Songs.ContainsKey((string)oldValue)) // increase song rating
-                            MyHome.Instance.MediaPlayerSystem.Songs[(string)oldValue] = MyHome.Instance.MediaPlayerSystem.Songs[(string)oldValue] + 1;
-
                         if (this.alarmType != null) // if alarm was playing repeat it
                             this.Playing = (string)oldValue;
-                        else if (this.Loop)
-                            this.NextSong((string)oldValue);
+                        else
+                        {
+                            MyHome.Instance.MediaPlayerSystem.IncreaseSongRating((string)oldValue);
+                            if (this.Loop)
+                                this.NextSong((string)oldValue);
+                        }
                     }
                 });
                 this.States[name] = Uri.UnescapeDataString(((string)newValue).Replace($"{Host}/api/systems/MediaPlayer/songs/", ""));
@@ -234,20 +239,18 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             else if (name == POSITION_STATE_NAME)
             {
                 // play next song if loop when we reached 100% of the current
-                if ((int)newValue >= 100 && this.Loop)
+                if ((int)newValue >= 100 && this.Loop && this.alarmType == null)
                 {
-                    if (MyHome.Instance.MediaPlayerSystem.Songs.ContainsKey(this.Playing)) // increase song rating
-                        MyHome.Instance.MediaPlayerSystem.Songs[this.Playing] = MyHome.Instance.MediaPlayerSystem.Songs[this.Playing] + 1;
+                    MyHome.Instance.MediaPlayerSystem.IncreaseSongRating(this.Playing);
 
                     this.NextSong(this.Playing);
                 }
                 return false;
             }
-            else if (name == BUFFER_LEVEL_STATE_NAME)
+            else if (name == BUFFER_LEVEL_STATE_NAME) // do not save state on buffer level update
                 return false;
             return true;
         }
-
 
         private void SendPlayingState()
         {

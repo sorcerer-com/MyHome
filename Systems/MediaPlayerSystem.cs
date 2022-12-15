@@ -52,7 +52,8 @@ namespace MyHome.Systems
         [UiProperty]
         public List<string> Watched { get; }
 
-        public Dictionary<string, int> Songs { get; } // song path / play count (rating)
+        [JsonIgnore]
+        public Dictionary<string, int> Songs => this.songsList.ToDictionary(s => s.Name, s => s.Rating); // song path / play count (rating)
 
 
         [JsonIgnore]
@@ -80,6 +81,14 @@ namespace MyHome.Systems
         [UiProperty]
         public string TimeDetails => this.GetTimeDetails();
 
+        private sealed class SongInfo
+        {
+            public string Name { get; set; }
+            public string Url { get; set; }
+            public int Rating { get; set; }
+        }
+        [JsonProperty]
+        private readonly List<SongInfo> songsList;
         private readonly List<string> mediaList;
         private DateTime lastRefreshMediaListTimer;
         private readonly LibVLC libVLC;
@@ -94,7 +103,7 @@ namespace MyHome.Systems
             this.sortByDate = false;
             this.Volume = 50;
             this.Watched = new List<string>();
-            this.Songs = new Dictionary<string, int>();
+            this.songsList = new List<SongInfo>();
 
             this.mediaList = new List<string>();
             this.lastRefreshMediaListTimer = DateTime.Now - TimeSpan.FromDays(1);
@@ -207,20 +216,38 @@ namespace MyHome.Systems
         public string AddSong(string url)
         {
             logger.Debug($"Add song: {url}");
-            string filepath = url;
+            string name = url;
             if (url.Contains("youtube") || url.Contains("youtu.be"))
-                filepath = Services.DownloadYouTubeAudioAsync(url, MyHome.Instance.Config.SongsPath).Result;
-            if (!this.Songs.ContainsKey(filepath))
-                this.Songs.Add(filepath, this.Songs.Values.Max());
+                name = Services.DownloadYouTubeAudioAsync(url, MyHome.Instance.Config.SongsPath).Result;
+            if (!this.songsList.Any(s => s.Name == name))
+                this.songsList.Add(new SongInfo() { Name = name, Url = url, Rating = this.songsList.Select(s => s.Rating).Max() });
 
             // cleanup songs if we exceed the usage capacity
-            Utils.Utils.CleanupFilesByCapacity(this.Songs.OrderBy(kvp => kvp.Value)
-                    .Select(kvp => Path.Join(MyHome.Instance.Config.SongsPath, kvp.Key))
+            Utils.Utils.CleanupFilesByCapacity(this.songsList.OrderBy(s => s.Rating)
+                .Select(s => Path.Join(MyHome.Instance.Config.SongsPath, s.Name))
                     .Where(p => File.Exists(p)).Select(p => new FileInfo(p)),
                 this.SongsDiskUsage, logger);
-            foreach (var file in this.Songs.Keys.Where(s => !s.StartsWith("http") && !File.Exists(Path.Join(MyHome.Instance.Config.SongsPath, s))))
-                this.Songs.Remove(file);
-            return filepath;
+            return name;
+        }
+
+        public string EnsureSong(string name)
+        {
+            if (string.IsNullOrEmpty(name) || File.Exists(Path.Join(MyHome.Instance.Config.SongsPath, name)))
+                return name;
+
+            var song = this.songsList.FirstOrDefault(s => s.Name == name);
+            if (song == null)
+                return name;
+            if (song.Url.Contains("youtube") || song.Url.Contains("youtu.be"))
+                song.Name = Services.DownloadYouTubeAudioAsync(song.Url, MyHome.Instance.Config.SongsPath).Result ?? song.Name;
+            return song.Name;
+        }
+
+        public void IncreaseSongRating(string name, int rating = 1)
+        {
+            var song = this.songsList.FirstOrDefault(s => s.Name == name);
+            if (song != null)
+                song.Rating += rating;
         }
 
 
