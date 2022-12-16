@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -124,25 +125,6 @@ namespace MyHome.Systems.Devices.Sensors
         {
             base.Update();
 
-            // release the capture if it isn't used for more then 5 minutes
-            //if (this.capture != null && this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(5))
-            //{
-            //    logger.Debug($"Release camera: {this.Name} ({this.Room.Name})");
-            //    this.capture.Release();
-            //}
-
-            // dropping frames to keep buffer up to date
-            if (this.capture.IsOpened())
-            {
-                lock (this.capture)
-                {
-                    // do it for 100 ms
-                    var t = new System.Threading.CancellationTokenSource(TimeSpan.FromMilliseconds(100));
-                    while (!t.IsCancellationRequested)
-                        this.capture.Grab();
-                }
-            }
-
             // read sensor data
             if (this.IsOnvifSupported && DateTime.Now > this.nextDataRead)
             {
@@ -158,8 +140,11 @@ namespace MyHome.Systems.Devices.Sensors
 
             if (this.Record && this.lastImageSaved.Minute != DateTime.Now.Minute)
             {
-                var imageFilename = $"{this.Room.Name}_{this.Name}_{DateTime.Now:HH-mm}.jpg";
-                this.SaveImage(Path.Combine(MyHome.Instance.Config.ImagesPath, imageFilename), false);
+                this.DropOldFrames();
+
+                var path = Path.Combine(MyHome.Instance.Config.ImagesPath, $"{this.Room.Name}_{this.Name}");
+                Directory.CreateDirectory(path);
+                this.SaveImage(Path.Combine(path, $"{this.Room.Name}_{this.Name}_{DateTime.Now:HH-mm}.jpg"), false);
                 this.lastImageSaved = DateTime.Now;
 
                 if (DateTime.Now.Hour == 23 && DateTime.Now.Minute == 59) // if we are in the end of a day
@@ -395,7 +380,8 @@ namespace MyHome.Systems.Devices.Sensors
         private void ArchiveRecords()
         {
             // get images older than 24 hours
-            var images = Directory.GetFiles(MyHome.Instance.Config.ImagesPath, $"{this.Room.Name}_{this.Name}_*.jpg")
+            var path = Path.Combine(MyHome.Instance.Config.ImagesPath, $"{this.Room.Name}_{this.Name}");
+            var images = Directory.GetFiles(path, "*.jpg")
                 .Select(f => new FileInfo(f)).Where(f => f.CreationTime >= DateTime.Now.AddHours(-24)).OrderBy(f => f.CreationTime)
                 .Select(f => f.FullName).ToList();
             if (images.Count > ArchiveImagesCount)
@@ -406,7 +392,25 @@ namespace MyHome.Systems.Devices.Sensors
             }
 
             var videoFilename = $"{this.Room.Name}_{this.Name}_{DateTime.Now.Date:yyyy-MM-dd}.mp4";
-            Services.CreateVideo(images, Path.Join(MyHome.Instance.Config.ImagesPath, videoFilename));
+            Services.CreateVideo(images, Path.Join(path, videoFilename));
+        }
+
+        private void DropOldFrames()
+        {
+            if (!this.capture.IsOpened())
+                return;
+
+            lock (this.capture)
+            {
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                // drop frames until it took less than 100 ms for a frame (not buffered) or timeout - 3 sec
+                var t = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(3));
+                while (stopwatch.Elapsed.Milliseconds < 100 && !t.IsCancellationRequested)
+                {
+                    stopwatch.Restart();
+                    this.Capture.Grab();
+                }
+            }
         }
     }
 }

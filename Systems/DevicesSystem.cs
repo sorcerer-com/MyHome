@@ -22,8 +22,8 @@ namespace MyHome.Systems
         [UiProperty(true, "minutes")]
         public int SensorsCheckInterval { get; set; } // minutes
 
-        [UiProperty(true, "MB")]
-        public double ImagesDiskUsage { get; set; } // MB
+        [UiProperty(true, "MB per camera")]
+        public double CameraRecordsDiskUsage { get; set; } // MB
 
         public List<Device> Devices { get; }
 
@@ -43,7 +43,7 @@ namespace MyHome.Systems
         public DevicesSystem()
         {
             this.SensorsCheckInterval = 15;
-            this.ImagesDiskUsage = 200;
+            this.CameraRecordsDiskUsage = 200;
             this.Devices = new List<Device>();
 
             Directory.CreateDirectory(MyHome.Instance.Config.ImagesPath);
@@ -104,16 +104,20 @@ namespace MyHome.Systems
                     var groupedDates = times.GroupBy(t => new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute / this.SensorsCheckInterval * this.SensorsCheckInterval, 0));
                     sensor.AggregateData(groupedDates);
                 }
+
+                if (device is Camera camera)
+                {
+                    // cleanup cameras records
+                    var path = Path.Combine(MyHome.Instance.Config.ImagesPath, $"{camera.Room.Name}_{camera.Name}");
+                    Utils.Utils.CleanupFilesByCapacity(
+                        Directory.GetFiles(path, "*.mp4")
+                            .Select(f => new FileInfo(f)).OrderBy(f => f.CreationTime),
+                        this.CameraRecordsDiskUsage, logger);
+                }
             });
 
             if (!string.IsNullOrEmpty(alertMsg))
                 Alert.Create($"{alertMsg.Trim()} alarm activated!").Send();
-
-            // cleanup cameras records
-            Utils.Utils.CleanupFilesByCapacity(
-                Directory.GetFiles(MyHome.Instance.Config.ImagesPath, "*.mp4")
-                    .Select(f => new FileInfo(f)).OrderBy(f => f.CreationTime),
-                this.ImagesDiskUsage, logger);
 
             this.nextSensorCheckTime += TimeSpan.FromMinutes(this.SensorsCheckInterval);
             MyHome.Instance.SystemChanged = true;
