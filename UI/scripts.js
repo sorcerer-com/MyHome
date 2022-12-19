@@ -134,6 +134,11 @@ function splitTypes(list) {
     return split;
 }
 
+function dateToString(date) {
+    return `${date.getDate()}/`.padStart(3, '0') + `${date.getMonth() + 1}/`.padStart(3, '0') + `${date.getFullYear()} ` +
+        `${date.getHours()}:`.padStart(3, '0') + `${date.getMinutes()}:`.padStart(3, '0') + `${date.getSeconds()}`.padStart(2, '0');
+}
+
 
 // execute func once after no call for delay period of time
 const debounce = function (func, delay) {

@@ -12,6 +12,11 @@ $.get(templateUrl, template => {
                 modalObject: null
             }
         },
+        computed: {
+            isOffline: function () {
+                return (new Date() - new Date(this.driver.LastOnline)) > 60 * 60 * 1000; // if online before more than 1 hour in millis
+            }
+        },
         methods: {
             getAcIcon: function () {
                 switch (this.driver.Mode) {

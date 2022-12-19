@@ -1,6 +1,6 @@
 ﻿<a class="w3-center w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-blue-gray" style="min-height: 72px"
-   v-bind:class="{'w3-text-red': error, 'w3-disabled': processing, 'w3-animate-fading': processing}"
-   v-bind:title="error ?? 'Last Online: ' + new Date(driver.LastOnline).toISOString()"
+   v-bind:class="{'w3-text-red': error, 'w3-disabled': processing, 'animate-fading-5s': processing, 'w3-text-dark-gray': isOffline}"
+   v-bind:title="error ?? 'Last Online: ' + dateToString(new Date(driver.LastOnline))"
    v-on:click="click()">
     <!-- Switch -->
     <div class="w3-xlarge" v-bind:class="{'w3-text-light-green': driver.IsOn}" style="font-weight: bold; margin: 2px"

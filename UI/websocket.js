@@ -24,27 +24,27 @@ function createWebSocket() {
 
 
     window.ws.onopen = function (event) {
-        console.debug(`${new Date().toISOString()} WebSocket opened: `);
+        console.debug(`${dateToString(new Date())} WebSocket opened: `);
         console.debug(event);
     }
 
     window.ws.onclose = function (event) {
-        console.debug(`${new Date().toISOString()} WebSocket closed: `);
+        console.debug(`${dateToString(new Date())} WebSocket closed: `);
         console.debug(event);
     }
 
     window.ws.onerror = function (event) {
-        console.warn(`${new Date().toISOString()} WebSocket error occurs:`);
+        console.warn(`${dateToString(new Date())} WebSocket error occurs:`);
         console.warn(event);
     }
 
     window.ws.onmessage = function (event) {
-        //console.debug(`${new Date().toISOString()} WebSocket message received:`);
+        //console.debug(`${dateToString(new Date())} WebSocket message received:`);
         //console.debug(event);
         window.ws.lastMessage = new Date();
 
         if (event.data == "refresh") {
-            console.debug(`${new Date().toISOString()} WebSocket 'refresh' received`)
+            console.debug(`${dateToString(new Date())} WebSocket 'refresh' received`)
             // call all refresh handlers
             for (let handler of window.ws.refreshHandlers)
                 handler();

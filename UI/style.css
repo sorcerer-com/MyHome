@@ -113,6 +113,24 @@
     }
 }
 
+animate-fading-5s {
+    animation: fading 5s infinite;
+}
+
+@keyframes fading {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
 .w3-bar .w3-dropdown-hover {
     display: inline-block;
     cursor: pointer;

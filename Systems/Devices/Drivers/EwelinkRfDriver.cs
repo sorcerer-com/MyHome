@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+using Microsoft.FSharp.Core.CompilerServices;
 
 using MyHome.Utils;
 using MyHome.Utils.Ewelink;
@@ -12,6 +16,9 @@ namespace MyHome.Systems.Devices.Drivers
     public class EwelinkRfDriver : BaseDriver
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+
+        public override DateTime LastOnline => lastOnlineCache[this.EwelinkDeviceId];
+
 
         [UiProperty(true)]
         public string EwelinkDeviceId { get; set; }
@@ -31,8 +38,40 @@ namespace MyHome.Systems.Devices.Drivers
         public bool ConfirmationRequired { get; set; }
 
 
+        // TODO: move to base Ewelink device?
+        private static readonly Dictionary<string, DateTime> lastOnlineCache = new Dictionary<string, DateTime>();
+
+
         public EwelinkRfDriver()
         {
+        }
+
+        public override void Update()
+        {
+            base.Update();
+
+            lock (lastOnlineCache)
+            {
+                if (!lastOnlineCache.ContainsKey(this.EwelinkDeviceId))
+                    lastOnlineCache[this.EwelinkDeviceId] = DateTime.Now;
+                var minutes = (DateTime.Now - lastOnlineCache[this.EwelinkDeviceId]).Minutes;
+                if (minutes >= 5 && minutes % 5 == 0) // refresh online status every 5 minutes
+                {
+                    lastOnlineCache[this.EwelinkDeviceId] -= TimeSpan.FromMinutes(1);
+                    try
+                    {
+                        var ewelink = new Ewelink(MyHome.Instance.Config.EwelinkEmail, MyHome.Instance.Config.EwelinkPassword);
+                        var dev = ewelink.GetDevice(this.EwelinkDeviceId).Result;
+                        if (dev?.Online == true)
+                            lastOnlineCache[this.EwelinkDeviceId] = DateTime.Now;
+                        logger.Trace($"Device '{this.EwelinkDeviceId}' online status: {dev?.Online}");
+                    }
+                    catch (Exception e)
+                    {
+                        logger.Trace(e, $"Failed to check device '{this.EwelinkDeviceId}' online status");
+                    }
+                }
+            }
         }
 
 
