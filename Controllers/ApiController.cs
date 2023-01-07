@@ -108,6 +108,7 @@ namespace MyHome.Controllers
             // JSON
             models += "class JSON {\n  static parse(text: string): any { }\n  static stringify(value: any): string { }\n}\n\n\n";
 
+            models += "var globals = {};\n\n";
             models += "let myHome: MyHome;\n\n";
             var rooms = this.myHome.Rooms.ToDictionary(r => r.Name.Replace(" ", ""), r => $"new {r.GetType().Name}()");
             models += $"let Rooms = {JsonConvert.SerializeObject(rooms, Formatting.Indented).Replace("\"", "")}\n\n";

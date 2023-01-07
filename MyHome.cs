@@ -149,6 +149,7 @@ namespace MyHome
                 .SetValue("Task", typeof(System.Threading.Tasks.Task));
             foreach (var type in System.Reflection.Assembly.GetExecutingAssembly().GetTypes().Where(type => type.IsEnum))
                 this.JintEngine.SetValue(type.Name, type);
+            this.JintEngine.Evaluate("var globals = {};"); // add global dictionary
 
             foreach (var system in this.Systems.Values)
                 system.Setup();
