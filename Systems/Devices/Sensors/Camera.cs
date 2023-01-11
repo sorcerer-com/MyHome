@@ -393,22 +393,31 @@ namespace MyHome.Systems.Devices.Sensors
 
             var videoFilename = $"{this.Room.Name}_{this.Name}_{DateTime.Now.Date:yyyy-MM-dd}.mp4";
             Services.CreateVideo(images, Path.Join(path, videoFilename));
+
+            // cleanup cameras records
+            Utils.Utils.CleanupFilesByCapacity(
+                Directory.GetFiles(path, "*.mp4")
+                    .Select(f => new FileInfo(f)).OrderBy(f => f.CreationTime),
+                MyHome.Instance.DevicesSystem.CameraRecordsDiskUsage, logger);
         }
 
         private void DropOldFrames()
         {
-            if (!this.capture.IsOpened())
-                return;
-
             lock (this.capture)
             {
+                // if capture is not open or we use it less than 1 seconds ago
+                if (!this.capture.IsOpened() || DateTime.Now - this.lastUse < TimeSpan.FromSeconds(1))
+                    return;
+
                 Stopwatch stopwatch = Stopwatch.StartNew();
                 // drop frames until it took less than 100 ms for a frame (not buffered) or timeout - 3 sec
-                var t = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(3));
-                while (stopwatch.Elapsed.Milliseconds < 100 && !t.IsCancellationRequested)
+                var start = DateTime.Now;
+                var image = new Mat();
+                while (stopwatch.Elapsed.Milliseconds < 100 && DateTime.Now - start < TimeSpan.FromSeconds(3))
                 {
                     stopwatch.Restart();
-                    this.Capture.Grab();
+                    if (!this.capture.Read(image))
+                        break;
                 }
             }
         }
