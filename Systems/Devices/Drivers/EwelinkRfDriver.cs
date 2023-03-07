@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-
-using Microsoft.FSharp.Core.CompilerServices;
+using System.Text;
 
 using MyHome.Utils;
 using MyHome.Utils.Ewelink;
@@ -60,7 +58,8 @@ namespace MyHome.Systems.Devices.Drivers
                     lastOnlineCache[this.EwelinkDeviceId] -= TimeSpan.FromMinutes(1);
                     try
                     {
-                        var ewelink = new Ewelink(MyHome.Instance.Config.EwelinkEmail, MyHome.Instance.Config.EwelinkPassword);
+                        var password = Encoding.UTF8.GetString(Convert.FromBase64String(MyHome.Instance.Config.EwelinkPassword));
+                        var ewelink = new Ewelink(MyHome.Instance.Config.EwelinkEmail, password);
                         var dev = ewelink.GetDevice(this.EwelinkDeviceId).Result;
                         if (dev?.Online == true)
                             lastOnlineCache[this.EwelinkDeviceId] = DateTime.Now;
@@ -82,7 +81,8 @@ namespace MyHome.Systems.Devices.Drivers
                 try
                 {
                     logger.Info($"Transmit to eWeLink RF driver {this.Name} ({this.Room.Name})");
-                    var ewelink = new Ewelink(MyHome.Instance.Config.EwelinkEmail, MyHome.Instance.Config.EwelinkPassword);
+                    var password = Encoding.UTF8.GetString(Convert.FromBase64String(MyHome.Instance.Config.EwelinkPassword));
+                    var ewelink = new Ewelink(MyHome.Instance.Config.EwelinkEmail, password);
                     ewelink.TransmitRfChannel(this.EwelinkDeviceId, this.EwelinkRfChannel).Wait();
                 }
                 catch (Exception e)

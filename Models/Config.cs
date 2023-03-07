@@ -11,6 +11,10 @@ namespace MyHome.Models
 
         public static readonly string SoundsPath = Path.Combine("External", "Sounds");
 
+
+        [UiProperty(true)]
+        public bool SavePrettyJson { get; set; } = false;
+
         [UiProperty(true, "sha256 hash")]
         public string Password { get; set; } = "";
 
@@ -24,7 +28,7 @@ namespace MyHome.Models
         [UiProperty(true, "08xxxxxxxx")]
         public string GsmNumber { get; set; } = "";
 
-        [UiProperty(true)]
+        [UiProperty(true, "base64 encode")]
         public string MyTelenorPassword { get; set; } = "";
 
         [UiProperty(true, "host[:port]")]
@@ -33,7 +37,7 @@ namespace MyHome.Models
         [UiProperty(true)]
         public string Email { get; set; } = "";
 
-        [UiProperty(true)]
+        [UiProperty(true, "base64 encode")]
         public string EmailPassword { get; set; } = "";
 
 
@@ -43,13 +47,13 @@ namespace MyHome.Models
         [UiProperty(true)]
         public string MqttUsername { get; set; } = "";
 
-        [UiProperty(true)]
+        [UiProperty(true, "base64 encode")]
         public string MqttPassword { get; set; } = "";
 
         [UiProperty(true)]
         public string EwelinkEmail { get; set; } = "";
 
-        [UiProperty(true)]
+        [UiProperty(true, "base64 encode")]
         public string EwelinkPassword { get; set; } = "";
 
         [UiProperty(true)]

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 using Jint;
@@ -142,7 +143,8 @@ namespace MyHome
             if (!string.IsNullOrEmpty(this.Config.MqttServerAddress))
             {
                 var (host, port) = Utils.Utils.SplitAddress(this.Config.MqttServerAddress);
-                this.MqttClient.Connect("MyHomeClient", host, port, this.Config.MqttUsername, this.Config.MqttPassword);
+                var password = Encoding.UTF8.GetString(Convert.FromBase64String(this.Config.MqttPassword));
+                this.MqttClient.Connect("MyHomeClient", host, port, this.Config.MqttUsername, password);
             }
 
             this.JintEngine.SetValue("DateTime", typeof(DateTime))
@@ -238,7 +240,7 @@ namespace MyHome
             Utils.Utils.Retry(_ =>
             {
                 var data = JObject.FromObject(this, serializer);
-                var json = data.ToString();
+                var json = data.ToString(this.Config.SavePrettyJson ? Formatting.Indented : Formatting.None);
                 File.WriteAllText(Config.DataFilePath, json);
             }, 3, logger, "save");
 

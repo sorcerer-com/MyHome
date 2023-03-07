@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 using MyHome.Utils;
 
@@ -105,7 +106,8 @@ namespace MyHome.Models
                     var latestData = MyHome.Instance.DevicesSystem.Sensors.ToDictionary(s => s.Room.Name + "." + s.Name, s => s.Values);
                     emailMsg = $"{msg}\n\n{JsonConvert.SerializeObject(latestData, Formatting.Indented)}";
                 }
-                if (!Services.SendEMail(MyHome.Instance.Config.SmtpServerAddress, MyHome.Instance.Config.Email, MyHome.Instance.Config.EmailPassword,
+                var emailPassword = Encoding.UTF8.GetString(Convert.FromBase64String(MyHome.Instance.Config.EmailPassword));
+                if (!Services.SendEMail(MyHome.Instance.Config.SmtpServerAddress, MyHome.Instance.Config.Email, emailPassword,
                     MyHome.Instance.Config.Email, "My Home", emailMsg, this.filenames))
                 {
                     result = false;
@@ -114,10 +116,11 @@ namespace MyHome.Models
                 foreach (var file in images.Where(file => File.Exists(file)))
                     File.Delete(file);
 
-                if (this.ShouldSendSMS() && !Services.SendSMS(MyHome.Instance.Config.GsmNumber, "telenor", MyHome.Instance.Config.MyTelenorPassword, msg))
+                var smsPassword = Encoding.UTF8.GetString(Convert.FromBase64String(MyHome.Instance.Config.MyTelenorPassword));
+                if (this.ShouldSendSMS() && !Services.SendSMS(MyHome.Instance.Config.GsmNumber, "telenor", smsPassword, msg))
                 {
                     result = false;
-                    Services.SendEMail(MyHome.Instance.Config.SmtpServerAddress, MyHome.Instance.Config.Email, MyHome.Instance.Config.EmailPassword,
+                    Services.SendEMail(MyHome.Instance.Config.SmtpServerAddress, MyHome.Instance.Config.Email, emailPassword,
                         MyHome.Instance.Config.Email, "My Home", "Alert sending failed");
                 }
                 return result;
