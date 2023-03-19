@@ -102,7 +102,7 @@ namespace MyHome.Systems.Devices.Sensors
                     //if (prevValue - 1 > value) // if the new value is smaller (with epsilon - 1) than previous - it's reset
                     //    prevValue = 0;
                     if (prevValue + 1 < value)
-                        this.Data[time][name] = Math.Round(value - prevValue, 2); // round to 2 decimals after the point
+                        this.Data[time][name] = Math.Round(value - prevValue, 4); // round to 4 decimals after the point
                     else
                         this.Data[time][name] = 0;
                     this.LastReadings[name] = value;
@@ -117,13 +117,10 @@ namespace MyHome.Systems.Devices.Sensors
         {
             // if subsensor is not timeseries, add last value to fill the gaps in time
             var now = DateTime.Now;
-            foreach (var subname in this.NotTimeseries)
+                foreach (var subname in this.NotTimeseries.Distinct())
             {
-                var value = new SensorValue();
-                if (this.Data.ContainsKey(now))
-                    value = this.Data[now];
-                value.Add(subname, this.Values.ContainsKey(subname) ? this.Values[subname] : 0);
-                this.Data.Add(now, value);
+                    if (!this.Data.ContainsKey(now))
+                        this.Data[now] = new SensorValue();
             }
             this.ArchiveData();
         }
@@ -152,11 +149,11 @@ namespace MyHome.Systems.Devices.Sensors
 
                     double newValue = 0.0;
                     if (aggrType == AggregationType.Average)
-                        newValue = Math.Round(values.Values.Average(), 2);
+                            newValue = Math.Round(values.Values.Average(), 4);
                     else if (aggrType == AggregationType.AverageByTime)
-                        newValue = Math.Round(AverageByTime(values), 2);
+                            newValue = Math.Round(AverageByTime(values), 4);
                     else // AggregationType.SumDiff and AggregationType.Sum
-                        newValue = Math.Round(values.Values.Sum(), 2);
+                            newValue = Math.Round(values.Values.Sum(), 4);
                     this.Data[group.Key][subName] = newValue;
                 }
                 this.Data[group.Key].TrimExcess();

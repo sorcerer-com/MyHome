@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -167,6 +168,16 @@ namespace MyHome.Utils
                 logger?.Error($"Failed to cleanup files ({files.Count()})");
                 logger?.Debug(e);
             }
+        }
+
+        public static string GetValidFileName(string fileName, char replacer = '?')
+        {
+            StringBuilder sb = new StringBuilder(fileName);
+            foreach (var c in Path.GetInvalidFileNameChars())
+            {
+                sb.Replace(c, replacer);
+            }
+            return sb.ToString();
         }
     }
 }

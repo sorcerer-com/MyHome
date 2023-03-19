@@ -57,6 +57,12 @@ namespace MyHome.Models
         public string EwelinkPassword { get; set; } = "";
 
         [UiProperty(true)]
+        public string WigleApiName { get; set; } = "";
+
+        [UiProperty(true, "base64 encode")]
+        public string WigleApiToken { get; set; } = "";
+
+        [UiProperty(true)]
         public string ImagesPath { get; set; } = Path.Combine(BinPath, "Images");
 
         [UiProperty(true)]
