@@ -105,10 +105,11 @@ namespace MyHome.Models
 
         private Dictionary<string, double> GetSensorsValues()
         {
-            return this.Sensors.Select(s => s.Values)
-                 .SelectMany(dict => dict)
-                 .GroupBy(kvp => kvp.Key)
-                 .ToDictionary(g => g.Key, g => g.Average(kvp => kvp.Value));
+            return this.Sensors.Where(s => !s.Grouped)
+                .Select(s => s.Values)
+                .SelectMany(dict => dict)
+                .GroupBy(kvp => kvp.Key)
+                .ToDictionary(g => g.Key, g => g.Average(kvp => kvp.Value));
         }
 
         private Dictionary<string, Dictionary<string, string>> GetSensorsMetadata()

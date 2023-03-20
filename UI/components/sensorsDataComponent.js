@@ -9,6 +9,8 @@ $.get(templateUrl, template => {
         props: ["room", "sensors", "valueType"],
         data: function () {
             return {
+                valueTypes: [],
+                selection: "",
                 sensorsData: {},
                 charts: {},
                 stats: {},
@@ -60,13 +62,14 @@ $.get(templateUrl, template => {
 
                 let allRequests = [];
                 for (let sensor of this.sensors) {
-                    if (!this.stats[sensor.Name]) {
+                    let name = this.valueType != null ? sensor.Name : this.selection;
+                    if (!this.stats[name]) {
                         // add empty values to preserve the order
-                        Vue.set(this.stats, sensor.Name, { "LastDay": { Average: 0, Sum: 0 }, "Older": { Average: 0, Sum: 0 } });
-                        updateChartData(this.charts["chartLastDay"], sensor.Name, {});
-                        updateChartData(this.charts["chartOlder"], sensor.Name, {});
+                        Vue.set(this.stats, name, { "LastDay": { Average: 0, Sum: 0 }, "Older": { Average: 0, Sum: 0 } });
+                        updateChartData(this.charts["chartLastDay"], name, {});
+                        updateChartData(this.charts["chartOlder"], name, {});
                     }
-                    let request = getSensorData(this.room.Name, sensor.Name, this.valueType).done(data => {
+                    let request = getSensorData(this.room.Name, sensor.Name, this.selection).done(data => {
                         let lastDayData = Object.keys(data)
                             .map(k => { return { t: new Date(k), y: data[k] } })
                             .filter(e => e.t >= prevDay)
@@ -75,10 +78,10 @@ $.get(templateUrl, template => {
                             .map(k => { return { t: new Date(k), y: data[k] } })
                             .filter(e => e.t >= this.selectedPeriod[0] && e.t < this.selectedPeriod[1])
                             .sort((a, b) => (a.t > b.t) ? 1 : -1);
-                        updateChartData(this.charts["chartLastDay"], sensor.Name, lastDayData);
-                        updateChartData(this.charts["chartOlder"], sensor.Name, olderData);
+                        updateChartData(this.charts["chartLastDay"], name, lastDayData);
+                        updateChartData(this.charts["chartOlder"], name, olderData);
 
-                        Vue.set(this.stats, sensor.Name, {
+                        Vue.set(this.stats, name, {
                             "LastDay": {
                                 Average: Math.round(lastDayData.reduce((sum, curr) => sum + curr.y, 0) / lastDayData.length * 100) / 100,
                                 Sum: Math.round(lastDayData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
@@ -88,7 +91,7 @@ $.get(templateUrl, template => {
                             }
                         });
 
-                        this.sensorsData[sensor.Name] = data;
+                        this.sensorsData[name] = data;
                     });
                     allRequests.push(request);
                 }
@@ -98,10 +101,10 @@ $.get(templateUrl, template => {
             },
             showEditor: function () {
                 let ordered = {};
-                for (let sensorName of Object.keys(this.sensorsData)) {
-                    ordered[sensorName] = Object.keys(this.sensorsData[sensorName]).sort().reduce(
+                for (let name of Object.keys(this.sensorsData)) {
+                    ordered[name] = Object.keys(this.sensorsData[name]).sort().reduce(
                         (obj, key) => {
-                            obj[key] = this.sensorsData[sensorName][key]; return obj;
+                            obj[key] = this.sensorsData[name][key]; return obj;
                         }, {});
                 }
                 this.editorData = this.editorData ? null : JSON.stringify(ordered, null, 2);
@@ -111,7 +114,8 @@ $.get(templateUrl, template => {
                 let data = JSON.parse(this.editorData);
                 let allRequests = [];
                 for (let sensor of this.sensors) {
-                    allRequests.push(setSensorData(this.room.Name, sensor.Name, this.valueType, data[sensor.Name]));
+                    let name = this.valueType != null ? sensor.Name : this.selection;
+                    allRequests.push(setSensorData(this.room.Name, sensor.Name, this.selection, data[name]));
                 }
                 $.when(...allRequests).done(() => this.editorData = null)
                     .fail(response => this.error = "Error: " + response.responseText);
@@ -119,10 +123,27 @@ $.get(templateUrl, template => {
             }
         },
         mounted: function () {
+            this.valueTypes = this.valueType != null ? [this.valueType] : Object.keys(this.sensors[0].Values);
+            this.selection = this.valueTypes[0];
+
             this.refreshData();
             window.ws?.addRefreshHandlers(this.refreshData);
         },
         watch: {
+            selection: function () {
+                if (this.charts["chartLastDay"])
+                    this.charts["chartLastDay"].destroy();
+                if (this.charts["chartOlder"])
+                    this.charts["chartOlder"].destroy();
+
+                this.sensorsData = {};
+                this.charts = {};
+                this.stats = {};
+                this.selectedMonth = "All";
+                this.editorData = null;
+
+                this.refreshData(false);
+            },
             selectedMonth: function () {
                 this.refreshData(false);
             }

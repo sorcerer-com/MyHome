@@ -1,4 +1,14 @@
 ﻿<div>
+    <div class="w3-bar w3-gray margin-bottom-8" v-if="valueTypes.length > 1">
+        <a class="w3-bar-item w3-button w3-small"
+           v-for="vt of valueTypes"
+           v-bind:class="{'w3-light-gray': selection == vt}"
+           v-bind:title="vt"
+           v-on:click="selection = vt">
+            {{vt}}
+        </a>
+    </div>
+
     <a class="w3-right w3-hover-text-blue-gray margin-right-8 font-size-normal material-icons" title="Show JSON"
        v-on:click="showEditor()">
         code

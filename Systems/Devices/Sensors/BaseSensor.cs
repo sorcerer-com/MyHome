@@ -44,6 +44,9 @@ namespace MyHome.Systems.Devices.Sensors
         [UiProperty(true, "name")]
         public List<string> NotTimeseries { get; } // subnames that need code to generate intermediate values
 
+        [UiProperty(true)]
+        public bool Grouped { get; set; } // whether subnames should be grouped in UI 
+
 
         [JsonProperty]
         private Dictionary<string, double> LastReadings { get; } // subname / value
@@ -65,6 +68,7 @@ namespace MyHome.Systems.Devices.Sensors
             this.Calibration = new Dictionary<string, string>();
             this.Units = new Dictionary<string, string>();
             this.NotTimeseries = new List<string>();
+            this.Grouped = false;
 
             this.LastReadings = new Dictionary<string, double>();
         }

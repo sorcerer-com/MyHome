@@ -23,7 +23,7 @@ namespace MyHome.Models
 
         public static IEnumerable<(string, string)> GetSensorsSubnames()
         {
-            return MyHome.Instance.Rooms.SelectMany(r => r.SensorsValues.Keys).Distinct().OrderBy(s => s).Select(s => (s, s));
+            return MyHome.Instance.DevicesSystem.Sensors.SelectMany(s => s.Values.Keys).Distinct().OrderBy(s => s).Select(s => (s, s));
         }
 
         public static IEnumerable<(string, string)> GetSongs()

@@ -73,6 +73,12 @@
     font-size: initial !important;
 }
 
+.text-overflow-dots {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
 .grid-content {
     display: grid;
     grid-template-columns: repeat(auto-fill, 20%);

@@ -15,6 +15,16 @@
             </span>
             <div class="w3-tiny">{{name}}</div>
         </a>
+
+        <!-- Grouped sensors -->
+        <a class="w3-center w3-border-bottom w3-round-large w3-hover-text-blue-gray margin-8" style="min-height: 72px;"
+           v-for="sensor of getGroupedSensors()"
+           v-on:click="selectedValueType = sensor.Name">
+            <span class="material-icons w3-xxlarge">
+                query_stats
+            </span>
+            <div class="w3-tiny text-overflow-dots">{{sensor.Name}}</div>
+        </a>
     </div>
 
     <div class="grid-content margin-bottom-8">
@@ -51,8 +61,8 @@
 
     <!-- Sensors Data / Cameras Modal -->
     <div class="w3-modal w3-animate-opacity" v-if="selectedValueType"
-            v-bind:class="{'w3-show-block': selectedValueType}"
-            v-on:click="selectedValueType = ''">
+         v-bind:class="{'w3-show-block': selectedValueType}"
+         v-on:click="selectedValueType = ''">
         <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">
             <header class="w3-container w3-blue-gray">
                 <span class="w3-button w3-display-topright" v-on:click="selectedValueType = ''">&times;</span>
@@ -60,14 +70,19 @@
             </header>
             <div class="w3-container w3-padding-16 height-100 overflow-y-auto bg-gray">
                 <!-- Sensors Data -->
-                <sensors-data v-if="selectedValueType != 'Cameras'"
-                                v-bind:room="room"
-                                v-bind:sensors="getSensorsBySelectedValueType()"
-                                v-bind:value-type="selectedValueType"></sensors-data>
+                <sensors-data v-if="!getSensorByName(selectedValueType) && selectedValueType != 'Cameras'"
+                              v-bind:room="room"
+                              v-bind:sensors="getSensorsBySelectedValueType()"
+                              v-bind:value-type="selectedValueType"></sensors-data>
+                <!-- Grouped Sensor Data -->
+                <sensors-data v-if="getSensorByName(selectedValueType)"
+                              v-bind:room="room"
+                              v-bind:sensors="[getSensorByName(selectedValueType)]"
+                              v-bind:value-type="null"></sensors-data>
                 <!-- Cameras -->
                 <cameras v-if="selectedValueType == 'Cameras'"
-                            v-bind:room="room"
-                            v-bind:cameras="getCameras()"></cameras>
+                         v-bind:room="room"
+                         v-bind:cameras="getCameras()"></cameras>
             </div>
         </div>
     </div>

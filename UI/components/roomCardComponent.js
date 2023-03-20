@@ -34,12 +34,18 @@ $.get(templateUrl, template => {
                     result += `${key}: ${obj[key]}\n`;
                 return result.trim();
             },
+            getGroupedSensors: function () {
+                return this.room.Devices.filter(d => d.$type.endsWith("Sensor") && d.Grouped);
+            },
             getCameras: function () {
                 return this.room.Devices.filter(d => d.$type.endsWith("Camera"));
             },
             getSensorsBySelectedValueType: function () {
                 return this.room.Devices.filter(d => (d.$type.endsWith("Sensor") || d.$type.endsWith("Camera")) &&
                     this.selectedValueType in d.Values);
+            },
+            getSensorByName: function (name) {
+                return this.room.Devices.find(d => d.$type.endsWith("Sensor") && d.Name == name);
             },
             getDrivers: function () {
                 return this.room.Devices.filter(d => d.$type.endsWith("Driver"));

@@ -91,7 +91,7 @@ namespace MyHome
             //   - tv CEC support
             //   - External system (rpi2) ping system and notify on problem?
             // * Support Tuya devices
-            // * Device auto discovery?
+            // * EventTriggeredAction (and SensorTriggeredAction) don't have sender check (device)
 
             logger.Info("Start My Home");
             Instance = this;
