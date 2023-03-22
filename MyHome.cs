@@ -12,6 +12,7 @@ using LibGit2Sharp;
 
 using MyHome.Models;
 using MyHome.Systems;
+using MyHome.Systems.Devices.Drivers.Mqtt;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -84,6 +85,7 @@ namespace MyHome
             //   - allow custom (driver) icons? / UI
             //   - improve Speaker UI - allow enqueue (like WinAmp)
             //   - improve power consumption UI
+            //   - add photo-frame functionality - slide show of images of specific folder(s)
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
             // * Agent
@@ -309,6 +311,12 @@ namespace MyHome
         public Alert Alert(string message)
         {
             return Models.Alert.Create($"My Home: {message}");
+        }
+
+        public void PlayAlarm(SpeakerMqttDriver.AlarmType alarmType)
+        {
+            foreach (var speaker in this.DevicesSystem.Devices.OfType<SpeakerMqttDriver>())
+                speaker.PlayAlarm(alarmType);
         }
 
         public bool Upgrade()

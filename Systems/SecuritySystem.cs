@@ -165,10 +165,12 @@ namespace MyHome.Systems
                 foreach (var camera in roomInfo.Room.Cameras)
                     this.prevImages.Remove(camera.Room.Name + "." + camera.Name);
 
-                // play security alarm if there is a speakers in the room
-                var speakers = roomInfo.Room.Devices.OfType<SpeakerMqttDriver>();
-                foreach (var speaker in speakers)
-                    speaker.PlayAlarm(SpeakerMqttDriver.AlarmType.Security);
+                // play security alarm on speakers if no presence detected
+                Task.Delay(TimeSpan.FromMinutes(this.PresenceDetectionInterval * 3)).ContinueWith(t =>
+                {
+                    if (this.roomsInfo.FirstOrDefault(r => r.Room == room)?.Activated == true)
+                        MyHome.Instance.PlayAlarm(SpeakerMqttDriver.AlarmType.Security);
+                });
 
                 logger.Info($"Security alarm activated in '{room.Name}' room");
                 this.SetHistory(room, "Activated");
