@@ -59,7 +59,7 @@ namespace MyHome.Systems.Devices.Drivers
                     try
                     {
                         var password = Encoding.UTF8.GetString(Convert.FromBase64String(MyHome.Instance.Config.EwelinkPassword));
-                        var ewelink = new Ewelink(MyHome.Instance.Config.EwelinkEmail, password);
+                        var ewelink = new EwelinkV2(MyHome.Instance.Config.EwelinkCountryCode, MyHome.Instance.Config.EwelinkEmail, password);
                         var dev = ewelink.GetDevice(this.EwelinkDeviceId).Result;
                         if (dev?.Online == true)
                             lastOnlineCache[this.EwelinkDeviceId] = DateTime.Now;
@@ -82,7 +82,7 @@ namespace MyHome.Systems.Devices.Drivers
                 {
                     logger.Info($"Transmit to eWeLink RF driver {this.Name} ({this.Room.Name})");
                     var password = Encoding.UTF8.GetString(Convert.FromBase64String(MyHome.Instance.Config.EwelinkPassword));
-                    var ewelink = new Ewelink(MyHome.Instance.Config.EwelinkEmail, password);
+                    var ewelink = new EwelinkV2(MyHome.Instance.Config.EwelinkCountryCode, MyHome.Instance.Config.EwelinkEmail, password);
                     ewelink.TransmitRfChannel(this.EwelinkDeviceId, this.EwelinkRfChannel).Wait();
                 }
                 catch (Exception e)

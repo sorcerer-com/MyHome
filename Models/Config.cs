@@ -51,6 +51,9 @@ namespace MyHome.Models
         public string MqttPassword { get; set; } = "";
 
         [UiProperty(true)]
+        public string EwelinkCountryCode { get; set; } = "";
+
+        [UiProperty(true)]
         public string EwelinkEmail { get; set; } = "";
 
         [UiProperty(true, "base64 encode")]
