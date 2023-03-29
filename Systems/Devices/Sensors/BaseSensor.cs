@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
+using MyHome.Models;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -27,6 +29,7 @@ namespace MyHome.Systems.Devices.Sensors
         public override DateTime LastOnline => this.Data.Keys.OrderBy(t => t).LastOrDefault();
 
 
+        [JsonIgnore]
         public Dictionary<DateTime, SensorValue> Data { get; }
 
         [UiProperty(true, "real name / custom name")]
@@ -60,6 +63,13 @@ namespace MyHome.Systems.Devices.Sensors
         public Dictionary<string, double> Values => this.GetValues();
 
 
+        [JsonProperty]
+        protected string dataFilePath;
+        private DateTime? saveTime;
+        [JsonProperty]
+        private DateTime lastBackupTime;
+
+
         protected BaseSensor()
         {
             this.Data = new Dictionary<DateTime, SensorValue>();
@@ -71,96 +81,173 @@ namespace MyHome.Systems.Devices.Sensors
             this.Grouped = false;
 
             this.LastReadings = new Dictionary<string, double>();
+            this.dataFilePath = null;
+
+            this.saveTime = null;
+            this.lastBackupTime = DateTime.Now;
+        }
+
+        public override void Setup()
+        {
+            base.Setup();
+
+            if (File.Exists(this.dataFilePath))
+            {
+                var json = File.ReadAllText(this.dataFilePath);
+                JsonConvert.PopulateObject(json, this.Data);
+            }
+        }
+
+        public override void Update()
+        {
+            base.Update();
+
+            if (DateTime.Now > this.saveTime)
+            {
+                this.saveTime = null;
+
+                logger.Trace($"Save sensor '{this.Name}' ({this.Room.Name}) data");
+                var fileName = Path.Join(Config.BinPath, Utils.Utils.GetValidFileName($"data_{this.Room.Name}_{this.Name}.json"));
+                this.dataFilePath ??= fileName; // initial set if  DataFilePath is null
+                if (this.dataFilePath != fileName) // if there is a change in the name (room/sensor rename)
+                {
+                    if (File.Exists(fileName))
+                        logger.Warn($"Sensor data file already exists: {fileName}");
+                    else
+                    {
+                        if (File.Exists(this.dataFilePath))
+                            File.Move(this.dataFilePath, fileName);
+                        this.dataFilePath = fileName;
+                    }
+                }
+
+                // backup data file every day
+                if (DateTime.Now - this.lastBackupTime > TimeSpan.FromDays(1))
+                {
+                    this.lastBackupTime = DateTime.Now;
+                    if (File.Exists(this.dataFilePath))
+                        File.Copy(this.dataFilePath, this.dataFilePath + ".bak", true);
+                }
+
+                lock (this.Data)
+                {
+                    Utils.Utils.Retry(_ =>
+                    {
+                        var formatting = MyHome.Instance.Config.SavePrettyJson ? Formatting.Indented : Formatting.None;
+                        var json = JsonConvert.SerializeObject(this.Data, formatting);
+                        File.WriteAllText(this.dataFilePath, json);
+                    }, 3, logger, $"save sensor '{this.Name}' ({this.Room.Name}) data");
+                }
+            }
+        }
+
+        public virtual void SaveData()
+        {
+            // save only once per minute
+            if (this.saveTime == null)
+                this.saveTime = DateTime.Now + TimeSpan.FromMinutes(1);
         }
 
 
         public void AddData(DateTime time, Dictionary<string, object> data)
         {
-            logger.Trace($"Sensor '{this.Name}' ({this.Room.Name}) add data at {time:dd/MM/yyyy HH:mm:ss}: {string.Join('\n', data)}");
-            if (data.Count == 0)
-                return;
-
-            if (!this.Data.ContainsKey(time))
-                this.Data.Add(time, new SensorValue());
-
-            foreach (var item in data)
+            lock (this.Data)
             {
-                var name = item.Key;
-                if (this.SubNamesMap.ContainsKey(name))
-                    name = this.SubNamesMap[name];
+                logger.Trace($"Sensor '{this.Name}' ({this.Room.Name}) add data at {time:dd/MM/yyyy HH:mm:ss}: {string.Join('\n', data)}");
+                if (data.Count == 0)
+                    return;
 
-                var value = (item.Value is bool b) ? (b ? 1 : 0) : (double)item.Value;
-                if (this.Calibration.ContainsKey(name)) // mapped name
-                {
-                    MyHome.Instance.ExecuteJint(jint => value = (double)jint.SetValue("x", value).Evaluate(this.Calibration[name]).ToObject(),
-                        "calculate value: " + this.Calibration[name]);
-                }
+                if (!this.Data.ContainsKey(time))
+                    this.Data.Add(time, new SensorValue());
 
-                this.AggregationMap.TryGetValue(name, out var aggrType);
-                if (aggrType != AggregationType.SumDiff)
-                    this.Data[time][name] = value;
-                else // sum diff type - differentiate
+                foreach (var item in data)
                 {
-                    this.LastReadings.TryGetValue(name, out var prevValue);
-                    // TODO: uncomment once the Energy Monitor values are fixed
-                    //if (prevValue - 1 > value) // if the new value is smaller (with epsilon - 1) than previous - it's reset
-                    //    prevValue = 0;
-                    if (prevValue + 1 < value)
-                        this.Data[time][name] = Math.Round(value - prevValue, 4); // round to 4 decimals after the point
-                    else
-                        this.Data[time][name] = 0;
-                    this.LastReadings[name] = value;
+                    var name = item.Key;
+                    if (this.SubNamesMap.ContainsKey(name))
+                        name = this.SubNamesMap[name];
+
+                    var value = (item.Value is bool b) ? (b ? 1 : 0) : (double)item.Value;
+                    if (this.Calibration.ContainsKey(name)) // mapped name
+                    {
+                        MyHome.Instance.ExecuteJint(jint => value = (double)jint.SetValue("x", value).Evaluate(this.Calibration[name]).ToObject(),
+                            "calculate value: " + this.Calibration[name]);
+                    }
+
+                    this.AggregationMap.TryGetValue(name, out var aggrType);
+                    if (aggrType != AggregationType.SumDiff)
+                        this.Data[time][name] = value;
+                    else // sum diff type - differentiate
+                    {
+                        this.LastReadings.TryGetValue(name, out var prevValue);
+                        // TODO: uncomment once the Energy Monitor values are fixed
+                        //if (prevValue - 1 > value) // if the new value is smaller (with epsilon - 1) than previous - it's reset
+                        //    prevValue = 0;
+                        if (prevValue + 1 < value)
+                            this.Data[time][name] = Math.Round(value - prevValue, 4); // round to 4 decimals after the point
+                        else
+                            this.Data[time][name] = 0;
+                        this.LastReadings[name] = value;
+                    }
+                    this.Data[time].TrimExcess();
                 }
-                this.Data[time].TrimExcess();
+                MyHome.Instance.Events.Fire(this, GlobalEventTypes.SensorDataAdded, this.Data[time]);
+                this.ArchiveData();
+                this.SaveData();
             }
-            MyHome.Instance.Events.Fire(this, GlobalEventTypes.SensorDataAdded, this.Data[time]);
-            this.ArchiveData();
         }
 
         public void GenerateTimeseries()
         {
-            // if subsensor is not timeseries, add last value to fill the gaps in time
-            var now = DateTime.Now;
-                foreach (var subname in this.NotTimeseries.Distinct())
+            lock (this.Data)
             {
+                // if subsensor is not timeseries, add last value to fill the gaps in time
+                var now = DateTime.Now;
+                foreach (var subname in this.NotTimeseries.Distinct())
+                {
                     if (!this.Data.ContainsKey(now))
                         this.Data[now] = new SensorValue();
+                    this.Data[now].Add(subname, this.Values.ContainsKey(subname) ? this.Values[subname] : 0);
+                }
+                this.ArchiveData();
+                this.SaveData();
             }
-            this.ArchiveData();
         }
 
         public void AggregateData(IEnumerable<IGrouping<DateTime, DateTime>> groupedDates)
         {
-            foreach (var group in groupedDates) // new time / list of times to be grouped
+            lock (this.Data)
             {
-                if (group.Count() == 1) // already grouped
-                    continue;
-
-                var items = group.ToDictionary(t => t, t => this.Data[t]);
-                // delete old records
-                foreach (var t in group)
-                    this.Data.Remove(t);
-                // add one new
-                this.Data[group.Key] = new SensorValue();
-                var subNames = items.Select(i => i.Value.Keys).SelectMany(x => x).Distinct();
-                foreach (var subName in subNames)
+                foreach (var group in groupedDates) // new time / list of times to be grouped
                 {
-                    var values = items.Where(i => i.Value.ContainsKey(subName)).ToDictionary(i => i.Key, i => i.Value[subName]);
-                    if (!values.Any())
+                    if (group.Count() == 1) // already grouped
                         continue;
 
-                    this.AggregationMap.TryGetValue(subName, out var aggrType);
+                    var items = group.ToDictionary(t => t, t => this.Data[t]);
+                    // delete old records
+                    foreach (var t in group)
+                        this.Data.Remove(t);
+                    // add one new
+                    this.Data[group.Key] = new SensorValue();
+                    var subNames = items.Select(i => i.Value.Keys).SelectMany(x => x).Distinct();
+                    foreach (var subName in subNames)
+                    {
+                        var values = items.Where(i => i.Value.ContainsKey(subName)).ToDictionary(i => i.Key, i => i.Value[subName]);
+                        if (!values.Any())
+                            continue;
 
-                    double newValue = 0.0;
-                    if (aggrType == AggregationType.Average)
+                        this.AggregationMap.TryGetValue(subName, out var aggrType);
+
+                        double newValue = 0.0;
+                        if (aggrType == AggregationType.Average)
                             newValue = Math.Round(values.Values.Average(), 4);
-                    else if (aggrType == AggregationType.AverageByTime)
+                        else if (aggrType == AggregationType.AverageByTime)
                             newValue = Math.Round(AverageByTime(values), 4);
-                    else // AggregationType.SumDiff and AggregationType.Sum
+                        else // AggregationType.SumDiff and AggregationType.Sum
                             newValue = Math.Round(values.Values.Sum(), 4);
-                    this.Data[group.Key][subName] = newValue;
+                        this.Data[group.Key][subName] = newValue;
+                    }
+                    this.Data[group.Key].TrimExcess();
                 }
-                this.Data[group.Key].TrimExcess();
             }
         }
 

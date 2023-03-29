@@ -230,7 +230,7 @@ namespace MyHome.Controllers
                 if (sensor.Data.ContainsKey(key) && sensor.Data[key].ContainsKey(valueType))
                     sensor.Data[key][valueType] = (double)item;
             }
-            this.myHome.SystemChanged = true;
+            sensor.SaveData();
 
             return this.Ok();
         }

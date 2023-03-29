@@ -94,6 +94,7 @@ namespace MyHome.Systems
                     alertMsg += $"{device.Name} ({device.Room.Name}) inactive ";
                 }
 
+                // TODO: maybe move to sensor update
                 if (device is BaseSensor sensor)
                 {
                     sensor.GenerateTimeseries();

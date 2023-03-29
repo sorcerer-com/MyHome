@@ -51,6 +51,8 @@ namespace MyHome.Systems.Devices.Sensors
         [JsonIgnore]
         public Dictionary<DateTime, string> WifiLists { get; private set; }
 
+        private string WifiListsFilePath => Path.Join(Config.BinPath, Path.GetFileNameWithoutExtension(this.dataFilePath) + "_wifi_lists.json");
+
         private DateTime nextCall;
         private readonly HttpClient httpClient;
         private int wifiIdx;
@@ -196,18 +198,10 @@ namespace MyHome.Systems.Devices.Sensors
             if (this.baseMqttTopic == null)
                 return;
 
-            var trackerId = this.baseMqttTopic[this.baseMqttTopic.LastIndexOf("/")..];
-            if (File.Exists($"bin/{trackerId}.txt"))
+            if (File.Exists(this.WifiListsFilePath))
             {
-                var lines = File.ReadAllLines($"bin/{trackerId}.txt");
-                var now = DateTime.Now;
-                for (int i = 0; i < lines.Length; i += 2)
-                {
-                    var time = DateTime.Parse(lines[i]);
-                    if (lines.Length - i > 2 && now - time > TimeSpan.FromDays(1)) // if there are another entries skip older than 1 day
-                        continue;
-                    this.WifiLists.Add(time, lines[i + 1]);
-                }
+                var json = File.ReadAllText(this.WifiListsFilePath);
+                JsonConvert.PopulateObject(json, this.WifiLists);
                 logger.Trace($"Load sensor '{this.Name}' ({this.Room.Name}) Wifi lists: {this.WifiLists.Count}");
             }
         }
@@ -215,8 +209,12 @@ namespace MyHome.Systems.Devices.Sensors
         private void SaveWifiLists()
         {
             logger.Trace($"Save sensor '{this.Name}' ({this.Room.Name}) Wifi lists: {this.WifiLists.Count}");
-            var trackerId = this.baseMqttTopic[this.baseMqttTopic.LastIndexOf("/")..];
-            File.WriteAllLines($"bin/{trackerId}.txt", this.WifiLists.Select(kvp => kvp.Key + "\n" + kvp.Value));
+            Utils.Utils.Retry(_ =>
+            {
+                var formatting = MyHome.Instance.Config.SavePrettyJson ? Formatting.Indented : Formatting.None;
+                var json = JsonConvert.SerializeObject(this.WifiLists, formatting);
+                File.WriteAllText(this.WifiListsFilePath, json);
+            }, 3, logger, $"save sensor '{this.Name}' ({this.Room.Name}) Wifi lists");
 
             // remove invalid entries and save net info cache
             var now = DateTime.Now;
