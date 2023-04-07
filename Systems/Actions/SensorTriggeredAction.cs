@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 using MyHome.Utils;
+
+using Newtonsoft.Json;
 
 namespace MyHome.Systems.Actions
 {
@@ -8,6 +11,23 @@ namespace MyHome.Systems.Actions
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0051:Remove unused private members")]
         private new GlobalEventTypes EventType { get; set; }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0051:Remove unused private members")]
+        private new string DeviceName { get; set; }
+
+
+        [JsonIgnore]
+        [UiProperty(true, selector: "GetSensors")]
+        public string SensorName
+        {
+            get => this.device != null ? $"{this.device.Room.Name}.{this.device.Name}" : "";
+            set
+            {
+                var split = value?.Split('.');
+                if (split?.Length == 2)
+                    this.device = MyHome.Instance.Rooms.FirstOrDefault(r => r.Name == split[0])?.Sensors.FirstOrDefault(s => s.Name == split[1]);
+            }
+        }
 
         [UiProperty(true, selector: "GetSensorsSubnames")]
         public string SensorSubname { get; set; }

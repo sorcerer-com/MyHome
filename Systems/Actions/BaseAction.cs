@@ -37,7 +37,7 @@ namespace MyHome.Systems.Actions
         public bool IsEnabled { get; set; }
 
         [JsonProperty]
-        private Room targetRoom;
+        protected Room targetRoom;
 
         [JsonIgnore]
         [UiProperty(true, selector: "GetRooms")]
