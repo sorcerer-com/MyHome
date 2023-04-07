@@ -55,7 +55,7 @@ namespace MyHome.Utils
                 if (autoreconnect)
                 {
                     logger.Debug("MQTT client disconnected. Try to reconnect...");
-                    Thread.Sleep(5000);
+                    Thread.Sleep(1000);
                     this.MqttClient.ReconnectAsync();
                 }
             });
