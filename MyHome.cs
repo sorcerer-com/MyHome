@@ -93,6 +93,8 @@ namespace MyHome
             //   - tv CEC support
             //   - External system (rpi2) ping system and notify on problem?
             // * Support Tuya devices
+            // * Device auto discovery?
+            // * extract drivers types as interfaces ILightDriver, ISpeaker, etc., and replace places like ".OfType<SpeakerMqttDriver>"
 
             logger.Info("Start My Home");
             Instance = this;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 using MyHome.Utils;
 
@@ -94,8 +95,11 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         [UiProperty]
         public bool Shuffle { get; set; }
 
-        [UiProperty]
+        [UiProperty(true)]
         public int AlarmVolume { get; set; }
+
+        [UiProperty(true, "minutes")]
+        public int AlarmDuration { get; set; }
 
 
         [UiProperty(true, "(topic, json path)")]
@@ -181,6 +185,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             this.Loop = false;
             this.Shuffle = false;
             this.AlarmVolume = 100;
+            this.AlarmDuration = 5;
 
             this.newStateReceivedDebouncer = Utils.Utils.Debouncer(1000);
             this.orderedSongs = null;
@@ -207,9 +212,22 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         public void PlayAlarm(AlarmType alarmType)
         {
-            this.alarmType = alarmType;
-            this.Playing = $"{alarmType}Alarm.mp3";
-            this.Volume = this.AlarmVolume;
+            if (this.alarmType == null)
+            {
+                this.alarmType = alarmType;
+                this.Playing = $"{alarmType}Alarm.mp3";
+                this.Volume = this.AlarmVolume;
+
+                // stop alarm after AlarmDuration minutes
+                Task.Delay(TimeSpan.FromMinutes(this.AlarmDuration)).ContinueWith(_ =>
+                {
+                    if (this.alarmType != null)
+                    {
+                        this.Playing = "";
+                        this.Volume = 10;
+                    }
+                });
+            }
         }
 
 
@@ -236,18 +254,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 });
                 this.States[name] = Uri.UnescapeDataString(((string)newValue).Replace($"{Host}/api/systems/MediaPlayer/songs/", ""));
             }
-            else if (name == POSITION_STATE_NAME)
-            {
-                // play next song if loop when we reached 100% of the current
-                if ((int)newValue >= 100 && this.Loop && this.alarmType == null)
-                {
-                    MyHome.Instance.MediaPlayerSystem.IncreaseSongRating(this.Playing);
-
-                    this.NextSong(this.Playing);
-                }
-                return false;
-            }
-            else if (name == BUFFER_LEVEL_STATE_NAME) // do not save state on buffer level update
+            else if (name == POSITION_STATE_NAME || name == BUFFER_LEVEL_STATE_NAME) // do not save state on position or buffer level update
                 return false;
             return true;
         }
