@@ -31,6 +31,8 @@
                     }).fail(response => {
                         if (response.status == 401) // unauthorized
                             window.location.replace("./login.html");
+                        if (response.status == 0) // no connection
+                            window.location.reload();
                         setTimeout(this.refreshData, 1000);
                     });
 

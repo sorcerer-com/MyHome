@@ -56,7 +56,15 @@ namespace MyHome.Systems
             {
                 stopwatch.Restart();
 
-                this.Update();
+                try
+                {
+                    this.Update();
+                }
+                catch (Exception e)
+                {
+                    logger.Error($"Failed to update system: {this.Name}");
+                    logger.Debug(e);
+                }
 
                 if (stopwatch.Elapsed >= TimeSpan.FromSeconds(this.updateInterval))
                 {
