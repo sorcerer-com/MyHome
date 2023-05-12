@@ -78,6 +78,7 @@ namespace MyHome.Controllers
         [HttpPost("restart")]
         public ActionResult Restart()
         {
+            myHome.Stop();
             System.Threading.Tasks.Task.Delay(100).ContinueWith(_ => Environment.Exit(0));
             return this.Ok();
         }

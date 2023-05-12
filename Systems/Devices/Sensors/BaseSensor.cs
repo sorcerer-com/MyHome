@@ -98,6 +98,15 @@ namespace MyHome.Systems.Devices.Sensors
             }
         }
 
+        public override void Stop()
+        {
+            base.Stop();
+
+            // ensure saved on stop
+            this.saveTime = DateTime.Now - TimeSpan.FromSeconds(1);
+            this.Update();
+        }
+
         public override void Update()
         {
             base.Update();
