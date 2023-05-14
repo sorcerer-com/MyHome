@@ -1,8 +1,9 @@
-﻿using MyHome.Utils;
+﻿using MyHome.Systems.Devices.Drivers.Types;
+using MyHome.Utils;
 
 namespace MyHome.Systems.Devices.Drivers.Mqtt
 {
-    public class SwitchMqttDriver : MqttDriver
+    public class SwitchMqttDriver : MqttDriver, ISwitchDriver
     {
         private const string SWITCH_STATE_NAME = "On";
 

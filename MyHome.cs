@@ -12,7 +12,7 @@ using LibGit2Sharp;
 
 using MyHome.Models;
 using MyHome.Systems;
-using MyHome.Systems.Devices.Drivers.Mqtt;
+using MyHome.Systems.Devices.Drivers.Types;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -94,7 +94,6 @@ namespace MyHome
             //   - External system (rpi2) ping system and notify on problem?
             // * Support Tuya devices
             // * Device auto discovery?
-            // * extract drivers types as interfaces ILightDriver, ISpeaker, etc., and replace places like ".OfType<SpeakerMqttDriver>"
 
             logger.Info("Start My Home");
             Instance = this;
@@ -314,9 +313,9 @@ namespace MyHome
             return Models.Alert.Create($"My Home: {message}");
         }
 
-        public void PlayAlarm(SpeakerMqttDriver.AlarmType alarmType)
+        public void PlayAlarm(ISpeakerDriver.AlarmType alarmType)
         {
-            foreach (var speaker in this.DevicesSystem.Devices.OfType<SpeakerMqttDriver>())
+            foreach (var speaker in this.DevicesSystem.Devices.OfType<ISpeakerDriver>())
                 speaker.PlayAlarm(alarmType);
         }
 

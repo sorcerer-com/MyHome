@@ -4,23 +4,20 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+using MyHome.Systems.Devices.Drivers.Types;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
 
+using static MyHome.Systems.Devices.Drivers.Types.ISpeakerDriver;
+
 namespace MyHome.Systems.Devices.Drivers.Mqtt
 {
-    public class SpeakerMqttDriver : MqttDriver
+    public class SpeakerMqttDriver : MqttDriver, ISpeakerDriver
     {
         private static readonly string Host = "http://192.168.0.100:5000";
 
         private static readonly Random random = new();
-
-        public enum AlarmType
-        {
-            Fire,
-            Security
-        }
 
         private const string PLAYING_STATE_NAME = "Playing";
         private const string VOLUME_STATE_NAME = "Volume";

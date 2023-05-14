@@ -58,7 +58,7 @@ namespace MyHome.Utils
         private static bool IsValidType(Type type)
         {
             return type.Namespace?.Contains(type.Assembly.GetName().Name) == true &&
-                    !type.IsNestedPrivate && !(type.IsAbstract && type.IsSealed) && // not anonymous and static
+                    !type.IsNestedPrivate && !(type.IsAbstract && type.IsSealed) && !type.IsInterface && // not anonymous, static or interface
                     (IsValidType(type.BaseType) || type.BaseType == typeof(object) || type.IsEnum);
         }
 

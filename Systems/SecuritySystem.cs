@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using MyHome.Models;
-using MyHome.Systems.Devices.Drivers.Mqtt;
 using MyHome.Systems.Devices.Sensors;
 using MyHome.Utils;
 
@@ -169,7 +168,7 @@ namespace MyHome.Systems
                 Task.Delay(TimeSpan.FromMinutes(this.PresenceDetectionInterval * 3)).ContinueWith(t =>
                 {
                     if (this.roomsInfo.FirstOrDefault(r => r.Room == room)?.Activated == true)
-                        MyHome.Instance.PlayAlarm(SpeakerMqttDriver.AlarmType.Security);
+                        MyHome.Instance.PlayAlarm(Devices.Drivers.Types.ISpeakerDriver.AlarmType.Security);
                 });
 
                 logger.Info($"Security alarm activated in '{room.Name}' room");

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
+using MyHome.Systems.Devices.Drivers.Types;
 using MyHome.Utils;
 using MyHome.Utils.Ewelink;
 
@@ -11,7 +12,7 @@ using NLog;
 
 namespace MyHome.Systems.Devices.Drivers
 {
-    public class EwelinkRfDriver : BaseDriver
+    public class EwelinkRfDriver : BaseDriver, ISwitchDriver
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
@@ -29,7 +30,11 @@ namespace MyHome.Systems.Devices.Drivers
         public bool IsOn
         {
             get => false;
-            set => this.TransmitRfDriver(value);
+            set
+            {
+                if (value)
+                    this.TransmitRfDriver();
+            }
         }
 
         [UiProperty(true)]
@@ -73,24 +78,27 @@ namespace MyHome.Systems.Devices.Drivers
             }
         }
 
-
-        private void TransmitRfDriver(bool value)
+        public bool Toggle()
         {
-            if (value)
+            this.IsOn = !this.IsOn;
+            return this.IsOn;
+        }
+
+
+        private void TransmitRfDriver()
+        {
+            try
             {
-                try
-                {
-                    logger.Info($"Transmit to eWeLink RF driver {this.Name} ({this.Room.Name})");
-                    var password = Encoding.UTF8.GetString(Convert.FromBase64String(MyHome.Instance.Config.EwelinkPassword));
-                    var ewelink = new EwelinkV2(MyHome.Instance.Config.EwelinkCountryCode, MyHome.Instance.Config.EwelinkEmail, password);
-                    ewelink.TransmitRfChannel(this.EwelinkDeviceId, this.EwelinkRfChannel).Wait();
-                }
-                catch (Exception e)
-                {
-                    logger.Error($"Cannot transmit RF channel '{this.EwelinkRfChannel}' to device: {this.Name} ({this.Room.Name})");
-                    logger.Debug(e);
-                    throw;
-                }
+                logger.Info($"Transmit to eWeLink RF driver {this.Name} ({this.Room.Name})");
+                var password = Encoding.UTF8.GetString(Convert.FromBase64String(MyHome.Instance.Config.EwelinkPassword));
+                var ewelink = new EwelinkV2(MyHome.Instance.Config.EwelinkCountryCode, MyHome.Instance.Config.EwelinkEmail, password);
+                ewelink.TransmitRfChannel(this.EwelinkDeviceId, this.EwelinkRfChannel).Wait();
+            }
+            catch (Exception e)
+            {
+                logger.Error($"Cannot transmit RF channel '{this.EwelinkRfChannel}' to device: {this.Name} ({this.Room.Name})");
+                logger.Debug(e);
+                throw;
             }
         }
     }

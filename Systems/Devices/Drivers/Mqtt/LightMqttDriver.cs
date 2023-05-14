@@ -1,8 +1,9 @@
-﻿using MyHome.Utils;
+﻿using MyHome.Systems.Devices.Drivers.Types;
+using MyHome.Utils;
 
 namespace MyHome.Systems.Devices.Drivers.Mqtt
 {
-    public class LightMqttDriver : SwitchMqttDriver
+    public class LightMqttDriver : SwitchMqttDriver, ILightDriver
     {
         private const string COLOR_STATE_NAME = "Color";
 

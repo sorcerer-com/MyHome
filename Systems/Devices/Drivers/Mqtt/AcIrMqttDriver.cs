@@ -1,14 +1,17 @@
 ﻿using System;
 
+using MyHome.Systems.Devices.Drivers.Types;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
+using static MyHome.Systems.Devices.Drivers.Types.IAcDriver;
+
 namespace MyHome.Systems.Devices.Drivers.Mqtt
 {
-    public class AcIrMqttDriver : MqttDriver
+    public class AcIrMqttDriver : MqttDriver, IAcDriver
     {
         private const string AC_STATE_NAME = "AC";
 
@@ -29,50 +32,6 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             Beep,
             Sleep
         }
-
-        public enum AcMode
-        {
-            Off,
-            Auto,
-            Cool,
-            Heat,
-            Dry,
-            Fan
-        }
-
-        public enum AcFanSpeed
-        {
-            Auto,
-            Min,
-            Low,
-            Medium,
-            High,
-            Max,
-        }
-
-        public enum AcSwingV
-        {
-            Auto,
-            Off,
-            Min,
-            Low,
-            Middle,
-            High,
-            Highest
-        }
-
-        public enum AcSwingH
-        {
-            Auto,
-            Off,
-            LeftMax,
-            Left,
-            Middle,
-            Right,
-            RightMax,
-            Wide
-        }
-
 
         [UiProperty]
         public bool Power
