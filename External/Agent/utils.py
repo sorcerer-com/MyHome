@@ -8,14 +8,14 @@ except:
     pass
 
 
-def try_catch(defaultReturn=None):
+def try_catch(defaultReturn=None, message=None):
     def wrapper(decorator):
         @wraps(decorator)
         def wrapped_decorator(*args, **kwargs):
             try:
                 return decorator(*args, **kwargs)
-            except Exception as e:
-                logging.debug(e)
+            except:
+                logging.exception(message or "Failed to execute function: " + decorator.__name__)
                 return defaultReturn
         return wrapped_decorator
 

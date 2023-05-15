@@ -1,11 +1,12 @@
+import base64
 import json
 import logging
 import socket
+from datetime import datetime, timedelta
 
 import paho.mqtt.client
 import psutil
 
-from datetime import datetime, timedelta
 import utils
 
 
@@ -24,7 +25,7 @@ class Agent:
         self._mqtt.on_connect = self._mqtt_on_connect
         self._mqtt.on_message = self._mqtt_on_message
         self._mqtt.username_pw_set(
-            self._config["MQTT"]["username"], self._config["MQTT"]["password"])
+            self._config["MQTT"]["username"], base64.b64decode(self._config["MQTT"]["password"]))
         self._mqtt.connect(
             self._config["MQTT"]["host"], int(self._config["MQTT"]["port"]))
 
@@ -54,12 +55,13 @@ class Agent:
             f"MQTT client {client._client_id} connected to {client._host}:{client._port}")
 
         self._mqtt.subscribe(f"cmnd/{self._hostname}/cec")
-
+        
+    @utils.try_catch()
     def _mqtt_on_message(self, client, userdata, msg):
         logging.info(
             f"MQTT message received with topic '{msg.topic}': {msg.payload}")
 
-        payload = json.loads(str(msg.payload))
+        payload = json.loads(msg.payload.decode())
         if msg.topic == f"cmnd/{self._hostname}/cec":
             self._handle_cec_cmd(payload)
 
@@ -89,6 +91,7 @@ class Agent:
         if self._cec is None:
             return
 
+        self._cec.init()
         self._cec_devices = {
             f"{item[1].osd_string}_{item[0]}": item[1] for item in self._cec.list_devices().items()}
 
@@ -98,7 +101,7 @@ class Agent:
                 is_on = item[1].is_on()
             except:
                 is_on = None
-            devices.append({"address": item[0], "cec_version": item[1].cec_version,
+            devices.append({"address": item[0], "physical_address": item[1].physical_address, "cec_version": item[1].cec_version,
                             "language": item[1].language, "is_on": is_on})
         logging.info(f"CEC devices: {devices}")
         self._mqtt.publish(
@@ -106,20 +109,25 @@ class Agent:
 
     @utils.try_catch()
     def _handle_cec_cmd(self, payload):
-        # expected payload { "address": "...", "command": "power_on/standby/transmit?", "args"? }, address is not device.address, but {device.osd_string}_{device.address}
+        # expected payload: { "address": "...", "command": "power_on/standby/transmit", "args": [] }
+        # address is not device.address, but {device.osd_string}_{device.address}
+        # to change source to HDMI 2: {"command": "transmit", "args": [15, 130, "2000"]} - cec.transmit(cec.CECDEVICE_BROADCAST, cec.CEC_OPCODE_ACTIVE_SOURCE, b'\x20\x00')
+        # https://www.cec-o-matic.com/
         logging.info(f"Processing CEC command: {payload}")
         if self._cec is None:
             logging.warn(f"CEC is not supported")
             return
 
-        if "address" not in payload or "command" not in payload:
+        if "command" not in payload:
             logging.warn("Invalid CEC command")
             return
 
         # device if address is provided else cec
-        target = self._cec_devices[payload["address"]
-                                   ] if payload["address"] in self._cec_devices else self._cec
+        target = self._cec_devices[payload["address"]] if "address" in payload and payload["address"] in self._cec_devices else self._cec
         func = getattr(target, payload["command"])
-        func()
+        if payload["command"] == "transmit":
+            payload["args"][-1] = bytes.fromhex(payload["args"][-1])
+        res = func(*payload["args"]) if "args" in payload else func()
+        logging.info(f"Result: {res}")
 
         self._update_cec_devices()
