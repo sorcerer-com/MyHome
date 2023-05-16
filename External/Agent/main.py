@@ -42,8 +42,9 @@ if __name__ == "__main__":
             agent.update()
             elapsed = time.time() - start
 
-            logging.info(f"Update: {elapsed} sec")
-            time.sleep(max(0, int(config["AGENT"]["sleep_time"]) - elapsed))
+            if elapsed > 0.1:
+                logging.info(f"Update: {elapsed} sec")
+            time.sleep(max(0.0, float(config["AGENT"]["sleep_time"]) - elapsed))
 
     except Exception as e:
         logging.exception("Agent exception")
