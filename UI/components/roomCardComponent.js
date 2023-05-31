@@ -49,6 +49,9 @@ $.get(templateUrl, template => {
             },
             getDrivers: function () {
                 return this.room.Devices.filter(d => d.$type.endsWith("Driver"));
+            },
+            isGenericDriver: function (driver) {
+                return !driver.$type.endsWith("MediaAgentMqttDriver");
             }
         },
         mounted: function () {

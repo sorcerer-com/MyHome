@@ -159,7 +159,7 @@ namespace MyHome.Controllers
                 if (device == null)
                     return this.NotFound($"Device '{deviceName}' not found");
 
-                var result = device.CallMethod(funcName, this.Request.Form);
+                var result = device.CallMethod(funcName, this.Request.HasFormContentType ? this.Request.Form : null);
                 return this.Ok(result);
             }
             catch (Exception e)

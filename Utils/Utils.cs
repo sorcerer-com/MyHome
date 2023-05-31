@@ -81,6 +81,11 @@ namespace MyHome.Utils
             {
                 return value.ToLower() == "true";
             }
+            else if ((type == null || type.Name.StartsWith("Int64")) &&
+                long.TryParse(value, out long l))
+            {
+                return l;
+            }
             else if ((type == null || type.Name.StartsWith("Int")) &&
                 int.TryParse(value, out int i))
             {

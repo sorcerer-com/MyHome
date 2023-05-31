@@ -40,11 +40,18 @@
         </a>
 
         <!-- Drivers -->
-        <driver v-for="driver of getDrivers()"
-                v-bind:key="driver.Name"
-                v-bind:room="room"
-                v-bind:driver="driver">
-        </driver>
+        <template v-for="driver of getDrivers()">
+            <driver v-if="isGenericDriver(driver)"
+                    v-bind:key="driver.Name"
+                    v-bind:room="room"
+                    v-bind:driver="driver">
+            </driver>
+            <media-driver v-if="driver.$type.endsWith('MediaAgentMqttDriver')"
+                          v-bind:key="driver.Name"
+                          v-bind:room="room"
+                          v-bind:driver="driver">
+            </media-driver>
+        </template>
 
         <!-- Security system -->
         <a class="w3-center w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-blue-gray" style="min-height: 72px"

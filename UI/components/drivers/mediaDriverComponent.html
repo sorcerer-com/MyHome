@@ -1,0 +1,110 @@
+﻿<div class="w3-center w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-blue-gray" style="min-height: 72px"
+     v-bind:class="{'w3-text-red': error, 'w3-disabled': processing, 'animate-fading-5s': processing, 'w3-text-dark-gray': isOffline}"
+     v-bind:style="{'cursor': (driver.Playing ? 'auto' : 'pointer'), 'grid-column': 'span ' + (driver.Playing ? '2' : '1')}"
+     v-bind:title="error ?? 'Last Online: ' + dateToString(new Date(driver.LastOnline))"
+     v-on:click="click()">
+
+    <!-- not playing -->
+    <span class="material-icons w3-xxlarge" v-if="!driver.Playing">
+        {{'play_circle'}}
+    </span>
+
+    <div class="w3-tiny" v-if="!driver.Playing">{{driver.Name}}</div>
+
+    <!-- playing -->
+    <div v-if="driver.Playing" style="white-space: nowrap; overflow: hidden; line-height: 1;">
+        <!-- title -->
+        <span class="w3-tiny w3-show-inline-block scroll-text">
+            {{driver.Playing.substr(lastIndexOfPathSeparator(driver.Playing) + 1)}}
+        </span>
+
+        <!-- buttons -->
+        <div class="w3-tiny w3-text-black w3-left-align margin-right-8" v-if="driver.Playing">
+            <!-- TODO: update speaker UI to use border progressbar -->
+            <span style="line-height: 1.3; border-bottom: 2px solid;"
+                  v-bind:style="{'border-image': 'linear-gradient(90deg, #ffffff ' + position + '%, #7494a4 0%) 1'}">
+                {{timeDetails}}
+            </span>
+            <span class="w3-right">
+                <a class="w3-small w3-hover-text-white w3-cell-middle material-icons" title="Volume down"
+                   v-on:click="callDriver('VolumeDown')">
+                    volume_down
+                </a>
+                <span class="w3-tiny">{{driver.Volume}}</span>
+                <a class="w3-small w3-hover-text-white w3-cell-middle material-icons" title="Volume up"
+                   v-on:click="callDriver('VolumeUp')">
+                    volume_up
+                </a>
+            </span>
+        </div>
+
+        <div class="w3-center">
+            <a class="w3-button w3-small w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
+               title="Seek back fast"
+               v-on:click="callDriver('SeekBackFast')">
+                fast_rewind
+            </a>
+            <a class="w3-button w3-small w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
+               title="Seek back"
+               v-on:click="callDriver('SeekBack')">
+                keyboard_arrow_left
+            </a>
+            <a class="w3-button w3-large w3-padding-small w3-white w3-hover-gray w3-round-xxlarge padding-4 material-icons"
+               title="Play"
+               v-show="driver.Paused"
+               v-on:click="callDriver('Pause')">
+                play_arrow
+            </a>
+            <a class="w3-button w3-large w3-padding-small w3-white w3-hover-gray w3-round-xxlarge padding-4 material-icons"
+               title="Pause"
+               v-show="!driver.Paused"
+               v-on:click="callDriver('Pause')">
+                pause
+            </a>
+            <a class="w3-button w3-large w3-padding-small w3-white w3-hover-gray w3-round-xxlarge padding-4 material-icons"
+               title="Stop"
+               v-on:click="callDriver('StopMedia')">
+                stop
+            </a>
+            <a class="w3-button w3-small w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
+               title="Seek forward"
+               v-on:click="callDriver('SeekForward')">
+                keyboard_arrow_right
+            </a>
+            <a class="w3-button w3-small w3-padding-small w3-round-large w3-grey w3-hover-light-grey material-icons"
+               title="Seek forward fast"
+               v-on:click="callDriver('SeekForwardFast')">
+                fast_forward
+            </a>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="w3-modal w3-animate-opacity" style="cursor: auto" v-if="showModal" v-on:click.stop=""
+         v-bind:class="{'w3-show-block': showModal}"
+         v-on:click="showModal = false">
+        <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">
+            <header class="w3-container w3-blue-gray">
+                <span class="w3-button w3-display-topright" v-on:click="showModal = false">&times;</span>
+                <h2>Select Media</h2>
+            </header>
+            <div class="w3-container w3-text-white w3-padding-16 height-100 overflow-y-auto bg-gray">
+                <a class="w3-right w3-hover-text-blue-gray margin-right-8 font-size-normal material-icons" title="Refresh"
+                   v-on:click="callDriver('RefreshMediaList')">
+                    refresh
+                </a>
+                <a class="w3-right w3-hover-text-blue-gray margin-right-8 font-size-normal material-icons"
+                   v-bind:title="driver.SortByDate ? 'Sorted By Date' : 'Sorted By Name'"
+                   v-on:click="sortByDate(!driver.SortByDate)">
+                    {{ driver.SortByDate ? "schedule" : "sort_by_alpha" }}
+                </a>
+
+                <div class="w3-left-align margin-right-8 margin-bottom-8" v-for="(tree, media, idx) of getMediaTree()">
+                    <h4 class="reset-margin">Media {{idx+1}}</h4>
+                    <hr class="reset-margin margin-bottom-8" />
+                    <tree v-bind:rootEl="$el" v-bind:root="media" v-bind:tree="tree" v-on:change="onMediaChange"></tree>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

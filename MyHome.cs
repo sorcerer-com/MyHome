@@ -83,17 +83,18 @@ namespace MyHome
             //   - new sensor UI - add limits (like unhealty, alerts, etc.)
             //   - security system modal with sensor statuses (muk, motion, etc), etc.
             //   - allow custom (driver) icons? / UI
-            //   - improve Speaker UI - allow enqueue (like WinAmp)
+            //   - improve Speaker UI - allow enqueue (like WinAmp), multiple playlists
             //   - improve power consumption UI
             //   - add photo-frame functionality - slide show of images of specific folder(s)
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
             // * Agent
-            //   - video player - vlc?
+            //   - video player - vlc? - once play video change the tv source to the right HDMI (cec)
             //   - tv CEC support
             //   - External system (rpi2) ping system and notify on problem?
             // * Support Tuya devices
             // * Device auto discovery?
+            // * Update NuGet packages and UI libraries (charts, vue, etc.)
 
             logger.Info("Start My Home");
             Instance = this;
