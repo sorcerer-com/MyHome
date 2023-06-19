@@ -32,7 +32,7 @@ namespace MyHome.Systems.Devices.Sensors
         private const string WIGLE_API_URL = "https://api.wigle.net/api/v2";
 
         private string baseMqttTopic;
-        [UiProperty(true)]
+        [UiProperty(true, "e.g. tele/tracker_xxx")]
         public string BaseMqttTopic
         {
             get => this.baseMqttTopic;

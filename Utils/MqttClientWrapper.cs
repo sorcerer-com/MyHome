@@ -21,6 +21,7 @@ namespace MyHome.Utils
         private readonly Dictionary<string, int> Subscriptions;
 
         public bool IsConnected => this.MqttClient.IsConnected;
+        public DateTime LastMessageReceived { get; private set; }
 
         public event EventHandler<MqttClientConnectedEventArgs> Connected;
         public event EventHandler<MqttClientDisconnectedEventArgs> Disconnected;
@@ -32,6 +33,8 @@ namespace MyHome.Utils
             var factory = new MqttFactory();
             this.MqttClient = factory.CreateMqttClient();
             this.Subscriptions = new Dictionary<string, int>();
+
+            this.LastMessageReceived = DateTime.Now;
         }
 
 
@@ -63,6 +66,7 @@ namespace MyHome.Utils
             this.MqttClient.UseApplicationMessageReceivedHandler(e =>
             {
                 logger.Trace($"Process MQTT message with topic '{e.ApplicationMessage.Topic}': {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
+                this.LastMessageReceived = DateTime.Now;
                 this.ApplicationMessageReceived?.Invoke(this, e);
             });
 
@@ -118,6 +122,9 @@ namespace MyHome.Utils
 
         public void Publish(string topic, string payload, int qualityOfService = 0, bool retain = false)
         {
+            if (!this.MqttClient.IsConnected)
+                return;
+
             logger.Trace($"Publish message on topic '{topic}' (QoS: {qualityOfService}, retain: {retain}): {payload}");
             try
             {

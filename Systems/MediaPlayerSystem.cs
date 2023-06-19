@@ -15,6 +15,7 @@ namespace MyHome.Systems
 {
     public class MediaPlayerSystem : BaseSystem
     {
+        // TODO: remove once verify agent's functionality
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         private static readonly string[] supportedFormats = {

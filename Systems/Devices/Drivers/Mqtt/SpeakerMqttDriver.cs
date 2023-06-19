@@ -25,6 +25,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         private const string POSITION_STATE_NAME = "Position";
         private const string BUFFER_LEVEL_STATE_NAME = "BufferLevel";
 
+
         [UiProperty(selector: "GetSongs")]
         public string Playing
         {

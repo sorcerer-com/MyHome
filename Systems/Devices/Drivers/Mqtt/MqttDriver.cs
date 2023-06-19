@@ -180,6 +180,9 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         protected void SendState(string name, string value)
         {
+            if (!MyHome.Instance.MqttClient.IsConnected)
+                return;
+
             if (!string.IsNullOrEmpty(this.MqttSetTopics[name].jsonPath))
             {
                 var json = new JObject
@@ -189,11 +192,8 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 value = json.ToString();
             }
 
-            if (MyHome.Instance.MqttClient.IsConnected)
-            {
-                logger.Debug($"Send {name} state of {this.Name} ({this.Room.Name}): {value}");
-                MyHome.Instance.MqttClient.Publish(this.MqttSetTopics[name].topic, value);
-            }
+            logger.Debug($"Send {name} state of {this.Name} ({this.Room.Name}): {value}");
+            MyHome.Instance.MqttClient.Publish(this.MqttSetTopics[name].topic, value);
         }
     }
 }

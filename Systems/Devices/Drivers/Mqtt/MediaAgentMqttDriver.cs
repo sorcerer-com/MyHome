@@ -72,16 +72,16 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 if (this.agentHostName == value) return;
                 this.agentHostName = value;
 
-                this.MqttGetTopics[MEDIA_LIST_STATE_NAME] = ($"tele/{this.agentHostName}/MEDIA_LIST", "");
-                this.MqttGetTopics[PLAYING_STATE_NAME]    = ($"tele/{this.agentHostName}/MEDIA", "playing");
-                this.MqttGetTopics[STATE_STATE_NAME]      = ($"tele/{this.agentHostName}/MEDIA", "state");
-                this.MqttGetTopics[VOLUME_STATE_NAME]     = ($"tele/{this.agentHostName}/MEDIA", "volume");
-                this.MqttGetTopics[TIME_STATE_NAME]       = ($"tele/{this.agentHostName}/MEDIA", "time");
-                this.MqttGetTopics[LENGTH_STATE_NAME]     = ($"tele/{this.agentHostName}/MEDIA", "length");
+                this.SetGetTopic(MEDIA_LIST_STATE_NAME, ($"tele/{this.agentHostName}/MEDIA_LIST", ""));
+                this.SetGetTopic(PLAYING_STATE_NAME, ($"tele/{this.agentHostName}/MEDIA", "playing"));
+                this.SetGetTopic(STATE_STATE_NAME, ($"tele/{this.agentHostName}/MEDIA", "state"));
+                this.SetGetTopic(VOLUME_STATE_NAME, ($"tele/{this.agentHostName}/MEDIA", "volume"));
+                this.SetGetTopic(TIME_STATE_NAME, ($"tele/{this.agentHostName}/MEDIA", "time"));
+                this.SetGetTopic(LENGTH_STATE_NAME, ($"tele/{this.agentHostName}/MEDIA", "length"));
 
-                this.MqttSetTopics[PLAYING_STATE_NAME]    = ($"cmnd/{this.agentHostName}/media", "play");
-                this.MqttSetTopics[VOLUME_STATE_NAME]     = ($"cmnd/{this.agentHostName}/media", "volume");
-                this.MqttSetTopics[TIME_STATE_NAME]       = ($"cmnd/{this.agentHostName}/media", "time");
+                this.MqttSetTopics[PLAYING_STATE_NAME] = ($"cmnd/{this.agentHostName}/media", "play");
+                this.MqttSetTopics[VOLUME_STATE_NAME] = ($"cmnd/{this.agentHostName}/media", "volume");
+                this.MqttSetTopics[TIME_STATE_NAME] = ($"cmnd/{this.agentHostName}/media", "time");
             }
         }
 
@@ -131,16 +131,15 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         public void StopMedia()
         {
             logger.Debug($"Stop media: {this.Playing}");
-            if (MyHome.Instance.MqttClient.IsConnected)
-                MyHome.Instance.MqttClient.Publish($"cmnd/{this.AgentHostName}/media", "{\"stop\": true}");
+            this.States[PLAYING_STATE_NAME] = "";
+            MyHome.Instance.MqttClient.Publish($"cmnd/{this.AgentHostName}/media", "{\"stop\": true}");
             MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaStopped);
         }
 
         public void Pause()
         {
             logger.Debug($"Pause media: {this.Playing}");
-            if (MyHome.Instance.MqttClient.IsConnected)
-                MyHome.Instance.MqttClient.Publish($"cmnd/{this.AgentHostName}/media", $"{{\"pause\": {(this.Paused ? "false" : "true")}}}");
+            MyHome.Instance.MqttClient.Publish($"cmnd/{this.AgentHostName}/media", $"{{\"pause\": {(this.Paused ? "false" : "true")}}}");
             MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaPaused);
         }
 
@@ -189,22 +188,18 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         public void RefreshMediaList()
         {
             logger.Debug("Refresh media list");
-            if (MyHome.Instance.MqttClient.IsConnected)
-                MyHome.Instance.MqttClient.Publish($"cmnd/{this.AgentHostName}/media", "{\"refresh\": true}");
+            MyHome.Instance.MqttClient.Publish($"cmnd/{this.AgentHostName}/media", "{\"refresh\": true}");
         }
 
         public void PowerOffTV()
         {
             logger.Debug("Power off TV");
-            if (MyHome.Instance.MqttClient.IsConnected)
+            var json = new JObject
             {
-                var json = new JObject
-                {
-                    ["address"] = "TV_0",
-                    ["command"] = "standby"
-                };
-                MyHome.Instance.MqttClient.Publish($"cmnd/{this.AgentHostName}/cec", json.ToString());
-            }
+                ["address"] = "TV_0",
+                ["command"] = "standby"
+            };
+            MyHome.Instance.MqttClient.Publish($"cmnd/{this.AgentHostName}/cec", json.ToString());
         }
 
 

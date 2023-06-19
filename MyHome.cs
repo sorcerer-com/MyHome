@@ -78,23 +78,19 @@ namespace MyHome
         {
             // TODO list 
             // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
-            // * UI - mobile / landscape
-            //   - maybe show devices instead of value / grouped by type -https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg
+            // * UI - mobile / landscape (https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg)
             //   - new sensor UI - add limits (like unhealty, alerts, etc.)
             //   - security system modal with sensor statuses (muk, motion, etc), etc.
-            //   - allow custom (driver) icons? / UI
             //   - improve Speaker UI - allow enqueue (like WinAmp), multiple playlists
-            //   - improve power consumption UI
-            //   - add photo-frame functionality - slide show of images of specific folder(s)
+            //   - improve power consumption UI (as plugin somehow)
+            //   - add photo-frame functionality - slide show of images of specific folder(s) (as plugin somehow)
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
-            // * Agent
-            //   - video player - vlc? - once play video change the tv source to the right HDMI (cec)
-            //   - tv CEC support
-            //   - External system (rpi2) ping system and notify on problem?
+            // * External system (rpi2, agent) ping system and notify on problem?
             // * Support Tuya devices
-            // * Device auto discovery?
+            // * Devices auto discovery?
             // * Update NuGet packages and UI libraries (charts, vue, etc.)
+            // * Improve camera movement capability - move to specific point, saved positions
 
             logger.Info("Start My Home");
             Instance = this;
@@ -288,7 +284,20 @@ namespace MyHome
             if (this.MqttClient.IsConnected)
                 this.mqttDisconnectedTime = now;
             else if (now - this.mqttDisconnectedTime > TimeSpan.FromMinutes(this.mqttDisconnectedAlert))
-                Models.Alert.Create("MQTT broker is down").Details($"from {this.mqttDisconnectedTime:dd/MM/yyyy HH:mm:ss}!").Validity(TimeSpan.FromDays(1)).Send();
+            {
+                Models.Alert.Create("MQTT broker is down")
+                    .Details($"from {this.mqttDisconnectedTime:dd/MM/yyyy HH:mm:ss}!")
+                    .Validity(TimeSpan.FromHours(1))
+                    .Send();
+            }
+
+            if (now - this.MqttClient.LastMessageReceived > TimeSpan.FromMinutes(this.DevicesSystem.SensorsCheckInterval))
+            {
+                Models.Alert.Create("No MQTT messages")
+                    .Details($"from {this.MqttClient.LastMessageReceived:dd/MM/yyyy HH:mm:ss}!")
+                    .Validity(TimeSpan.FromHours(1))
+                    .Send();
+            }
         }
 
         private void CheckForUpgrade()
