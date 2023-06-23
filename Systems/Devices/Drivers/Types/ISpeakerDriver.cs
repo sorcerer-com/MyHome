@@ -9,16 +9,16 @@ public interface ISpeakerDriver
     }
 
     string Playing { get; set; }
-    string PlayYouTube { get; set; }
     int Volume { get; set; }
     bool Paused { get; set; }
     int Position { get; }
     int BufferLevel { get; }
-    bool Loop { get; set; }
     bool Shuffle { get; set; }
     int AlarmVolume { get; set; }
     int AlarmDuration { get; set; }
 
+
+    void AddSong(string value);
     void NextSong(string currentSong);
     void PlayAlarm(AlarmType alarmType);
 }

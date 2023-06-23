@@ -40,6 +40,8 @@ namespace MyHome
 
         public Config Config { get; }
 
+        public SongsManager SongsManager { get; }
+
         [JsonIgnore]
         public GlobalEvent Events { get; }
 
@@ -81,7 +83,7 @@ namespace MyHome
             // * UI - mobile / landscape (https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg)
             //   - new sensor UI - add limits (like unhealty, alerts, etc.)
             //   - security system modal with sensor statuses (muk, motion, etc), etc.
-            //   - improve Speaker UI - allow enqueue (like WinAmp), multiple playlists
+            //   - improve Speaker UI - multiple playlists
             //   - improve power consumption UI (as plugin somehow)
             //   - add photo-frame functionality - slide show of images of specific folder(s) (as plugin somehow)
             // * drivers to be sensors too - save state change in time
@@ -101,6 +103,7 @@ namespace MyHome
             }
 
             this.Config = new Config();
+            this.SongsManager = new SongsManager();
             this.Events = new GlobalEvent();
             this.MqttClient = new MqttClientWrapper();
             this.JintEngine = new Engine(options =>

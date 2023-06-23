@@ -15,7 +15,7 @@ namespace MyHome.Systems
 {
     public class MediaPlayerSystem : BaseSystem
     {
-        // TODO: remove once verify agent's functionality
+        // TODO: remove once verify agent's functionality, move songs
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         private static readonly string[] supportedFormats = {
@@ -53,6 +53,7 @@ namespace MyHome.Systems
         [UiProperty]
         public List<string> Watched { get; }
 
+        // TODO: move songs to MyHome/DevicesSystem
         [JsonIgnore]
         public Dictionary<string, int> Songs => this.songsList.ToDictionary(s => s.Name, s => s.Rating); // song path / play count (rating)
 
@@ -82,14 +83,14 @@ namespace MyHome.Systems
         [UiProperty]
         public string TimeDetails => this.GetTimeDetails();
 
-        private sealed class SongInfo
+        internal sealed class SongInfo
         {
             public string Name { get; set; }
             public string Url { get; set; }
             public int Rating { get; set; }
         }
         [JsonProperty]
-        private readonly List<SongInfo> songsList;
+        internal readonly List<SongInfo> songsList;
         private readonly List<string> mediaList;
         private DateTime lastRefreshMediaListTimer;
         private readonly LibVLC libVLC;

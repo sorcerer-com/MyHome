@@ -8,7 +8,7 @@ $.get(templateUrl, template => {
             return {
                 processing: false,
                 error: null,
-                showModal: null
+                showModal: false
             }
         },
         computed: {
@@ -59,9 +59,6 @@ $.get(templateUrl, template => {
 
             click: function () {
                 if (this.processing || this.driver.Playing)
-                    return;
-                if (this.driver.ConfirmationRequired &&
-                    !confirm(`Are you sure you want to trigger the ${this.room.Name} ${this.driver.Name}?`))
                     return;
 
                 this.showModal = true;

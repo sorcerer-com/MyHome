@@ -4,7 +4,7 @@
    v-on:click="click()">
     <!-- Switch -->
     <div class="w3-xlarge" v-bind:class="{'w3-text-light-green': driver.IsOn}" style="font-weight: bold; margin: 2px"
-       v-if="driver.$type.endsWith('SwitchMqttDriver')">
+         v-if="driver.$type.endsWith('SwitchMqttDriver')">
         {{driver.IsOn ? 'ON' : 'OFF'}}
     </div>
 
@@ -19,7 +19,7 @@
 
     <!-- AC -->
     <div class="w3-xlarge" style="margin: 2px; white-space: nowrap;"
-          v-if="driver.$type.endsWith('AcIrMqttDriver') && driver.Power">
+         v-if="driver.$type.endsWith('AcIrMqttDriver') && driver.Power">
         {{Math.round(driver.Temperature, 2)}}
 
         <span class="w3-tiny">°C</span>
@@ -28,7 +28,7 @@
         </span>
     </div>
     <div class="w3-xlarge" style="font-weight: bold; margin: 2px;"
-          v-if="driver.$type.endsWith('AcIrMqttDriver') && !driver.Power">
+         v-if="driver.$type.endsWith('AcIrMqttDriver') && !driver.Power">
         OFF
     </div>
 
@@ -42,34 +42,11 @@
         code
     </span>
 
-    <!-- Speaker -->
-    <span class="material-icons w3-xxlarge" v-if="driver.$type.endsWith('SpeakerMqttDriver') && !driver.Playing">
-        {{driver.Playing ? 'music_note' : 'speaker'}}
-    </span>
-    <div v-if="driver.$type.endsWith('SpeakerMqttDriver') && driver.Playing" style="overflow: hidden; line-height: 1;"
-         v-bind:title="'Volume: ' + driver.Volume + '\nBufferLevel: ' + driver.BufferLevel + '%'">
-        <span class="w3-tiny w3-show-inline-block scroll-text no-mobile" v-bind:title="driver.Playing + ' (' + driver.Position + '%)'">
-            {{driver.Playing}}
-        </span>
-        <span class="material-icons w3-xlarge" title="Pause" v-on:click.stop="" v-on:click="setDevice({ 'Paused': !driver.Paused })">
-            {{driver.Paused ? 'play_arrow' : 'pause'}}
-        </span>
-        <span class="material-icons w3-xlarge" title="Stop" v-on:click.stop="" v-on:click="setDevice({ 'Playing': '' })">
-            stop
-        </span>
-        <span class="material-icons w3-xlarge" title="Next" v-on:click.stop="" v-on:click="callDevice('NextSong', driver.Playing)">
-            skip_next
-        </span>
-        <div style="height: 2px;"
-             v-bind:style="{'background': 'linear-gradient(90deg, #ffffff ' + driver.Position + '%, #7494a4 0%)'}">
-        </div>
-    </div>
-
 
     <div class="w3-tiny">{{driver.Name}}</div>
 
     <!-- Modal -->
-    <div class="w3-modal w3-animate-opacity" v-if="modalObject" v-on:click.stop=""
+    <div class="w3-modal w3-animate-opacity" v-if="modalObject" v-on:click.stop="" title=""
          v-bind:class="{'w3-show-block': modalObject}"
          v-on:click="modalObject = null">
         <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">

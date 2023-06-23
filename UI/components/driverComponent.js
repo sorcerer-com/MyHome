@@ -18,6 +18,7 @@ $.get(templateUrl, template => {
             }
         },
         methods: {
+            dateToString: dateToString,
             getAcIcon: function () {
                 switch (this.driver.Mode) {
                     case "AcMode.Off":
@@ -55,8 +56,7 @@ $.get(templateUrl, template => {
                 }
 
                 if (this.modalObject == null &&
-                    (this.driver.$type.endsWith("AcIrMqttDriver") ||
-                        this.driver.$type.endsWith("SpeakerMqttDriver"))) {
+                    this.driver.$type.endsWith("AcIrMqttDriver")) {
                     this.modalObject = { ...this.driver };
                 }
             },

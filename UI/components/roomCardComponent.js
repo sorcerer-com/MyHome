@@ -51,7 +51,7 @@ $.get(templateUrl, template => {
                 return this.room.Devices.filter(d => d.$type.endsWith("Driver"));
             },
             isGenericDriver: function (driver) {
-                return !driver.$type.endsWith("MediaAgentMqttDriver");
+                return !driver.$type.endsWith("MediaAgentMqttDriver") && !driver.$type.endsWith("SpeakerMqttDriver");
             }
         },
         mounted: function () {

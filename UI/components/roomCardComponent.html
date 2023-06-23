@@ -51,6 +51,11 @@
                           v-bind:room="room"
                           v-bind:driver="driver">
             </media-driver>
+            <speaker-driver v-if="driver.$type.endsWith('SpeakerMqttDriver')"
+                          v-bind:key="driver.Name"
+                          v-bind:room="room"
+                          v-bind:driver="driver">
+            </speaker-driver>
         </template>
 
         <!-- Security system -->

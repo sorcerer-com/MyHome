@@ -61,7 +61,6 @@ namespace MyHome.Utils
             }
             else if (type.GetInterface(nameof(IEnumerable)) != null)
             {
-
                 var list = new List<object>();
                 var value = (IEnumerable)obj;
                 foreach (var item in value)

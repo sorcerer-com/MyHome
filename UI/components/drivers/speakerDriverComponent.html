@@ -1,0 +1,138 @@
+﻿<div class="w3-center w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-blue-gray" style="min-height: 72px; cursor: pointer;"
+     v-bind:class="{'w3-text-red': error, 'w3-disabled': processing, 'w3-text-dark-gray': isOffline}"
+     v-bind:title="error ?? 'Last Online: ' + dateToString(new Date(driver.LastOnline))"
+     v-on:click="click()">
+
+    <!-- not playing -->
+    <span class="material-icons w3-xxlarge" v-if="!driver.Playing">
+        speaker
+    </span>
+
+    <div class="w3-tiny" v-if="!driver.Playing">{{driver.Name}}</div>
+
+    <!-- playing -->
+    <div v-if="driver.Playing" style="overflow: hidden; line-height: 1; border-bottom: 2px solid;"
+         v-bind:style="{'border-image': 'linear-gradient(90deg, #ffffff ' + driver.Position + '%, #7494a4 0%) 1'}"
+         v-bind:title="'Volume: ' + driver.Volume + '\nBufferLevel: ' + driver.BufferLevel + '%'">
+        <!-- title -->
+        <span class="w3-tiny w3-show-inline-block scroll-text no-mobile" v-bind:title="driver.Playing + ' (' + driver.Position + '%)'">
+            {{driver.Playing}}
+        </span>
+
+        <div>
+            <span class="w3-xlarge w3-hover-text-dark-gray material-icons" title="Pause" v-on:click.stop=""
+                  v-on:click="setDevice({ 'Paused': !driver.Paused })">
+                {{driver.Paused ? 'play_arrow' : 'pause'}}
+            </span>
+            <span class="w3-xlarge w3-hover-text-dark-gray material-icons" title="Stop" v-on:click.stop=""
+                  v-on:click="setDevice({ 'Playing': '' })">
+                stop
+            </span>
+            <span class="w3-xlarge w3-hover-text-dark-gray material-icons" title="Next" v-on:click.stop=""
+                  v-on:click="callDevice('NextSong', driver.Playing)">
+                skip_next
+            </span>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="w3-modal w3-animate-opacity" v-if="showModal" v-on:click.stop="" title=""
+         v-bind:class="{'w3-show-block': showModal}"
+         v-on:click="showModal = false">
+        <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">
+            <header class="w3-container w3-blue-gray">
+                <span class="w3-button w3-display-topright" v-on:click="showModal = false">&times;</span>
+                <h2>{{driver.Name}}</h2>
+            </header>
+            <div class="w3-container w3-text-white w3-padding-16 height-100 overflow-y-auto bg-gray">
+                <div v-if="driver.Playing">
+                    <div class="font-size-normal" v-bind:title="driver.Playing + ' (' + driver.Position + '%)'">
+                        {{driver.Playing}}
+                    </div>
+
+                    <div class="w3-left" style="width: 70px">
+                        <a class="w3-large w3-hover-text-dark-gray w3-cell-middle material-icons" title="Volume down"
+                           v-on:click="setDevice({ 'Volume': driver.Volume - 1 })">
+                            volume_down
+                        </a>
+                        <span class="font-size-normal">{{driver.Volume}}</span>
+                        <a class="w3-large w3-hover-text-dark-gray w3-cell-middle material-icons" title="Volume up"
+                           v-on:click="setDevice({ 'Volume': driver.Volume + 1 })">
+                            volume_up
+                        </a>
+                    </div>
+                    <div class="w3-show-inline-block" style="border-top: 2px solid;"
+                         v-bind:style="{'border-image': 'linear-gradient(90deg, #ffffff ' + driver.Position + '%, #7494a4 0%) 1'}">
+                        <a class="w3-xxlarge w3-hover-text-dark-gray material-icons" title="Pause"
+                           v-on:click="setDevice({ 'Paused': !driver.Paused })">
+                            {{driver.Paused ? 'play_arrow' : 'pause'}}
+                        </a>
+                        <a class="w3-xxlarge w3-hover-text-dark-gray material-icons" title="Stop"
+                           v-on:click="setDevice({'Playing': ''})">
+                            stop
+                        </a>
+                        <a class="w3-xxlarge w3-hover-text-dark-gray material-icons" title="Next"
+                           v-on:click="callDevice('NextSong', driver.Playing)">
+                            skip_next
+                        </a>
+                    </div>
+                    <div class="w3-right w3-right-align" style="width: 70px;">
+                        <a class="w3-large w3-hover-text-dark-gray w3-cell-middle material-icons" title="Shuffle"
+                           v-bind:class="{'w3-text-indigo': driver.Shuffle}"
+                           v-on:click="setDevice({ 'Shuffle': !driver.Shuffle })">
+                            shuffle
+                        </a>
+                    </div>
+                </div>
+
+                <hr class="reset-margin margin-bottom-8" />
+                <!-- add new song-->
+                <details class="w3-left-align margin-bottom-8">
+                    <summary class="w3-show-inline-block w3-cell-top w3-hover-text-dark-gray margin-right-8 material-icons"
+                             title="Add Song">
+                        add_circle
+                    </summary>
+                    <input type="text" placeholder="URL" v-model="songUrl" v-on:keyup.enter="addSong" />
+                    <a class="w3-cell-top w3-hover-text-dark-gray material-icons" title="Download"
+                       v-on:click="addSong">
+                        download
+                    </a>
+                </details>
+
+                <!-- songs list -->
+                <div class="w3-row" style="padding: 0 4px"
+                     v-bind:class="{'w3-blue-gray': driver.Playing == song.Name}"
+                     v-for="song of songs">
+
+                    <span class="w3-col m10 s9 w3-left-align overflow-wrap-break-word" style="user-select: none;"
+                          v-bind:class="{'w3-text-gray': !song.Exists}"
+                          v-bind:title="song.Name + ' (Rating: ' + song.Rating + ')'"
+                          v-on:dblclick="setDevice({ 'Playing': song.Name })">
+                        {{song.Name}}
+                    </span>
+
+                    <span class="w3-col m2 s3 w3-right-align" style="line-height: 1">
+                        <a class="w3-hover-text-dark-gray material-icons margin-right-8" title="Play"
+                           v-if="driver.Playing != song.Name"
+                           v-on:click="setDevice({ 'Playing': song.Name })">
+                            play_circle
+                        </a>
+
+                        <!-- TODO: delete, rename? -->
+                        <a class="w3-hover-text-dark-gray material-icons" title="Enqueue"
+                           v-if="getQueueIndex(song) == -1"
+                           v-on:click="enqueue(song)">
+                            add_to_queue
+                        </a>
+                        <a class="w3-hover-text-dark-gray w3-cell-top w3-large margin-right-8"
+                           style="font-style:italic;" title="Dequeue"
+                           v-if="getQueueIndex(song) != -1"
+                           v-on:click="dequeue(song)">
+                            {{getQueueIndex(song) + 1}}
+                        </a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

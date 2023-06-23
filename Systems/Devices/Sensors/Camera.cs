@@ -142,7 +142,7 @@ namespace MyHome.Systems.Devices.Sensors
             {
                 this.DropOldFrames();
 
-                var path = Path.Combine(MyHome.Instance.Config.ImagesPath, $"{this.Room.Name}_{this.Name}");
+                var path = Path.Combine(MyHome.Instance.Config.CameraRecordsPath, $"{this.Room.Name}_{this.Name}");
                 Directory.CreateDirectory(path);
                 this.SaveImage(Path.Combine(path, $"{this.Room.Name}_{this.Name}_{DateTime.Now:HH-mm}.jpg"), false);
                 this.lastImageSaved = DateTime.Now;
@@ -380,7 +380,7 @@ namespace MyHome.Systems.Devices.Sensors
         private void ArchiveRecords()
         {
             // get images older than 24 hours
-            var path = Path.Combine(MyHome.Instance.Config.ImagesPath, $"{this.Room.Name}_{this.Name}");
+            var path = Path.Combine(MyHome.Instance.Config.CameraRecordsPath, $"{this.Room.Name}_{this.Name}");
             var images = Directory.GetFiles(path, "*.jpg")
                 .Select(f => new FileInfo(f)).Where(f => f.CreationTime >= DateTime.Now.AddHours(-24)).OrderBy(f => f.CreationTime)
                 .Select(f => f.FullName).ToList();
@@ -398,7 +398,7 @@ namespace MyHome.Systems.Devices.Sensors
             Utils.Utils.CleanupFilesByCapacity(
                 Directory.GetFiles(path, "*.mp4")
                     .Select(f => new FileInfo(f)).OrderBy(f => f.CreationTime),
-                MyHome.Instance.DevicesSystem.CameraRecordsDiskUsage, logger);
+                MyHome.Instance.Config.CameraRecordsDiskUsage, logger);
         }
 
         private void DropOldFrames()

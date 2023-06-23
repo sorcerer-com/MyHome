@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,6 +8,7 @@ using MyHome.Utils;
 
 using Newtonsoft.Json;
 
+using static MyHome.Models.SongsManager;
 using static MyHome.Systems.Devices.Drivers.Types.ISpeakerDriver;
 
 namespace MyHome.Systems.Devices.Drivers.Mqtt
@@ -32,7 +32,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             get => (string)this.States[PLAYING_STATE_NAME];
             set
             {
-                value = MyHome.Instance.MediaPlayerSystem.EnsureSong(value); // ensure song is downloaded
+                value = MyHome.Instance.SongsManager.EnsureSong(value); // ensure song is downloaded
                 if (this.SetState(PLAYING_STATE_NAME, value))
                 {
                     if (!string.IsNullOrEmpty(value)) // set volume on start playing
@@ -43,22 +43,6 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                         this.alarmType = null;
                     }
                     this.SendPlayingState();
-                }
-            }
-        }
-
-        [JsonIgnore]
-        [UiProperty]
-        public string PlayYouTube
-        {
-            get => "";
-            set
-            {
-                if (!string.IsNullOrEmpty(value))
-                {
-                    var path = MyHome.Instance.MediaPlayerSystem.AddSong(value);
-                    this.orderedSongs = null;
-                    this.Playing = path;
                 }
             }
         }
@@ -86,18 +70,6 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         [JsonIgnore]
         [UiProperty]
         public int BufferLevel => (int)this.States[BUFFER_LEVEL_STATE_NAME];
-
-        [UiProperty]
-        public bool Loop { get; set; }
-
-        [UiProperty]
-        public bool Shuffle { get; set; }
-
-        [UiProperty(true)]
-        public int AlarmVolume { get; set; }
-
-        [UiProperty(true, "minutes")]
-        public int AlarmDuration { get; set; }
 
 
         [UiProperty(true, "(topic, json path)")]
@@ -157,6 +129,24 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         }
 
 
+        [JsonIgnore]
+        [UiProperty]
+        public List<SongInfo> Songs => MyHome.Instance.SongsManager.Songs;
+
+        [JsonIgnore]
+        [UiProperty]
+        public List<int> Queue { get; }
+
+        [UiProperty]
+        public bool Shuffle { get; set; }
+
+        [UiProperty(true)]
+        public int AlarmVolume { get; set; }
+
+        [UiProperty(true, "minutes")]
+        public int AlarmDuration { get; set; }
+
+
         private readonly Action<Action> newStateReceivedDebouncer;
         private List<string> orderedSongs;
         private AlarmType? alarmType;
@@ -180,30 +170,50 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             this.MqttSetTopics.Add(VOLUME_STATE_NAME, ("", ""));
             this.MqttSetTopics.Add(PAUSED_STATE_NAME, ("", ""));
 
-            this.Loop = false;
             this.Shuffle = false;
             this.AlarmVolume = 100;
             this.AlarmDuration = 5;
+
+            this.Queue = new List<int>();
 
             this.newStateReceivedDebouncer = Utils.Utils.Debouncer(1000);
             this.orderedSongs = null;
             this.alarmType = null;
         }
 
+        public void AddSong(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return;
+
+            MyHome.Instance.SongsManager.AddSong(value);
+            this.orderedSongs = null;
+            MyHome.Instance.SystemChanged = true;
+        }
+
         public void NextSong(string currentSong)
         {
+            if (this.Queue.Count != 0)
+            {
+                var song = this.Songs[this.Queue.First()];
+                this.Queue.RemoveAt(0);
+                this.Playing = song.Name;
+                return;
+            }
+
             if (this.orderedSongs == null)
             {
                 if (this.Shuffle)
                 {
-                    var max = MyHome.Instance.MediaPlayerSystem.Songs.Values.Max();
-                    this.orderedSongs = MyHome.Instance.MediaPlayerSystem.Songs
-                        .OrderByDescending(kvp => random.NextDouble() + (double)kvp.Value / max).Select(kvp => kvp.Key)
-                        .Where(s => File.Exists(Path.Join(MyHome.Instance.Config.SongsPath, s))).ToList();
+                    var max = MyHome.Instance.SongsManager.Songs.Max(s => s.Rating);
+                    this.orderedSongs = MyHome.Instance.SongsManager.Songs.Where(s => s.Exists)
+                        .OrderByDescending(s => random.NextDouble() + (double)s.Rating / max).Select(s => s.Name).ToList();
                 }
                 else
-                    this.orderedSongs = MyHome.Instance.MediaPlayerSystem.Songs.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key)
-                        .Where(s => File.Exists(Path.Join(MyHome.Instance.Config.SongsPath, s))).ToList();
+                {
+                    this.orderedSongs = MyHome.Instance.SongsManager.Songs.Where(s => s.Exists)
+                        .OrderByDescending(s => s.Rating).Select(s => s.Name).ToList();
+                }
             }
             this.Playing = this.orderedSongs[(this.orderedSongs.IndexOf(currentSong) + 1) % this.orderedSongs.Count];
         }
@@ -244,9 +254,8 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                             this.Playing = (string)oldValue;
                         else
                         {
-                            MyHome.Instance.MediaPlayerSystem.IncreaseSongRating((string)oldValue);
-                            if (this.Loop)
-                                this.NextSong((string)oldValue);
+                            MyHome.Instance.SongsManager.IncreaseSongRating((string)oldValue);
+                            this.NextSong((string)oldValue);
                         }
                     }
                 });

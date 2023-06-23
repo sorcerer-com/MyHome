@@ -22,9 +22,6 @@ namespace MyHome.Systems
         [UiProperty(true, "minutes")]
         public int SensorsCheckInterval { get; set; } // minutes
 
-        [UiProperty(true, "MB per camera")]
-        public double CameraRecordsDiskUsage { get; set; } // MB
-
         public List<Device> Devices { get; }
 
         [JsonIgnore]
@@ -43,10 +40,9 @@ namespace MyHome.Systems
         public DevicesSystem()
         {
             this.SensorsCheckInterval = 15;
-            this.CameraRecordsDiskUsage = 200;
             this.Devices = new List<Device>();
 
-            Directory.CreateDirectory(MyHome.Instance.Config.ImagesPath);
+            Directory.CreateDirectory(MyHome.Instance.Config.CameraRecordsPath);
         }
 
 

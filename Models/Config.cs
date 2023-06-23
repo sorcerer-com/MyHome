@@ -50,6 +50,7 @@ namespace MyHome.Models
         [UiProperty(true, "base64 encode")]
         public string MqttPassword { get; set; } = "";
 
+
         [UiProperty(true)]
         public string EwelinkCountryCode { get; set; } = "";
 
@@ -59,16 +60,24 @@ namespace MyHome.Models
         [UiProperty(true, "base64 encode")]
         public string EwelinkPassword { get; set; } = "";
 
+
         [UiProperty(true)]
         public string WigleApiName { get; set; } = "";
 
         [UiProperty(true, "base64 encode")]
         public string WigleApiToken { get; set; } = "";
 
+
         [UiProperty(true)]
-        public string ImagesPath { get; set; } = Path.Combine(BinPath, "Images");
+        public string CameraRecordsPath { get; set; } = Path.Combine(BinPath, "CameraRecords");
+
+        [UiProperty(true, "MB per camera")]
+        public double CameraRecordsDiskUsage { get; set; } = 200;
 
         [UiProperty(true)]
         public string SongsPath { get; set; } = Path.Combine(BinPath, "Songs");
+
+        [UiProperty(true, "MB")]
+        public double SongsDiskUsage { get; set; } = 500;
     }
 }
