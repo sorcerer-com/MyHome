@@ -33,9 +33,9 @@ public class SongsManager
     {
         get
         {
-            songs ??= MyHome.Instance.MediaPlayerSystem.songsList
+            this.songs ??= MyHome.Instance.MediaPlayerSystem.songsList
                     .Select(s => new SongInfo { Name = s.Name, Url = s.Url, Rating = s.Rating }).ToList();
-            return songs;
+            return this.songs;
         }
     }
 

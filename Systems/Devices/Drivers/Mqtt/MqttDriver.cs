@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 using MQTTnet;
+using MQTTnet.Client;
 
 using MyHome.Utils;
 
@@ -104,7 +104,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                     return;
                 }
 
-                var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                var payload = e.ApplicationMessage.ConvertPayloadToString();
                 if (string.IsNullOrEmpty(payload) || !this.AcceptPayload(payload))
                 {
                     logger.Trace($"The received payload is not accepted: {payload}");

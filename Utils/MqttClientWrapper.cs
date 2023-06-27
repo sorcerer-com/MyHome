@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 using MQTTnet;
 using MQTTnet.Client;
-using MQTTnet.Client.Connecting;
-using MQTTnet.Client.Disconnecting;
-using MQTTnet.Client.Options;
+using MQTTnet.Protocol;
 
 using NLog;
 
@@ -42,7 +40,7 @@ namespace MyHome.Utils
         {
             logger.Debug($"Connect MQTT client '{clientId}' to {server}:{port}");
 
-            this.MqttClient.UseConnectedHandler(e =>
+            this.MqttClient.ConnectedAsync += e =>
             {
                 logger.Debug("MQTT client connected");
                 this.Connected?.Invoke(this, e);
@@ -50,9 +48,11 @@ namespace MyHome.Utils
                 // re-subscribe for the topics
                 foreach (var topic in this.Subscriptions.Keys)
                     this.MqttClient.SubscribeAsync(topic);
-            });
 
-            this.MqttClient.UseDisconnectedHandler(e =>
+                return Task.CompletedTask;
+            };
+
+            this.MqttClient.DisconnectedAsync += e =>
             {
                 this.Disconnected?.Invoke(this, e);
                 if (autoreconnect)
@@ -61,20 +61,24 @@ namespace MyHome.Utils
                     Thread.Sleep(1000);
                     this.MqttClient.ReconnectAsync();
                 }
-            });
 
-            this.MqttClient.UseApplicationMessageReceivedHandler(e =>
+                return Task.CompletedTask;
+            };
+
+            this.MqttClient.ApplicationMessageReceivedAsync += e =>
             {
-                logger.Trace($"Process MQTT message with topic '{e.ApplicationMessage.Topic}': {Encoding.UTF8.GetString(e.ApplicationMessage.Payload)}");
+                logger.Trace($"Process MQTT message with topic '{e.ApplicationMessage.Topic}': {e.ApplicationMessage.ConvertPayloadToString()}");
                 this.LastMessageReceived = DateTime.Now;
                 this.ApplicationMessageReceived?.Invoke(this, e);
-            });
+
+                return Task.CompletedTask;
+            };
 
             var options = new MqttClientOptionsBuilder()
                 .WithClientId(clientId + AppDomain.CurrentDomain.BaseDirectory.GetHashCode()) // add "random" hash since cannot connect two clients with same id
                 .WithTcpServer(server, port)
                 .WithCredentials(username, password)
-                .WithCommunicationTimeout(TimeSpan.FromSeconds(10))
+                .WithTimeout(TimeSpan.FromSeconds(10))
                 .WithCleanSession()
                 .Build();
 
@@ -98,7 +102,8 @@ namespace MyHome.Utils
             this.Subscriptions[topic] = this.Subscriptions[topic] + 1;
 
             logger.Trace($"Subscribe MQTT client '{this.MqttClient.Options?.ClientId}' for topic: {topic} ({this.Subscriptions[topic]})");
-            this.MqttClient.SubscribeAsync(topic);
+            if (this.MqttClient.IsConnected)
+                this.MqttClient.SubscribeAsync(topic);
         }
 
         public void Unsubscribe(string topic)
@@ -117,7 +122,8 @@ namespace MyHome.Utils
                     this.Subscriptions.Remove(topic);
             }
 
-            this.MqttClient.UnsubscribeAsync(topic);
+            if (this.MqttClient.IsConnected)
+                this.MqttClient.UnsubscribeAsync(topic);
         }
 
         public void Publish(string topic, string payload, int qualityOfService = 0, bool retain = false)
@@ -131,7 +137,7 @@ namespace MyHome.Utils
                 var message = new MqttApplicationMessageBuilder()
                     .WithTopic(topic)
                     .WithPayload(payload)
-                    .WithQualityOfServiceLevel(qualityOfService)
+                    .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qualityOfService)
                     .WithRetainFlag(retain)
                     .Build();
 

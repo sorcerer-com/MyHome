@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 using System.Text;
 
 using MQTTnet;
+using MQTTnet.Client;
 
 using MyHome.Models;
 using MyHome.Utils;
@@ -158,7 +159,7 @@ namespace MyHome.Systems.Devices.Sensors
 
             try
             {
-                var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                var payload = e.ApplicationMessage.ConvertPayloadToString();
 
                 if (e.ApplicationMessage.Topic == this.BaseMqttTopic + "/" + STATE_TOPIC)
                 {

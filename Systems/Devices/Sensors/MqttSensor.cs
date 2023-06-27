@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
 
 using MQTTnet;
+using MQTTnet.Client;
 
 using MyHome.Utils;
 
@@ -86,7 +86,7 @@ namespace MyHome.Systems.Devices.Sensors
 
             try
             {
-                var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                var payload = e.ApplicationMessage.ConvertPayloadToString();
                 var json = JToken.Parse(payload);
 
                 var data = new Dictionary<string, object>();
