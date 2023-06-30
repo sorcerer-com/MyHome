@@ -67,11 +67,11 @@ $.get(templateUrl, template => {
                         let chartData = Object.keys(room.SecurityHistory)
                             .map(k => {
                                 return {
-                                    t: new Date(k),
+                                    x: new Date(k),
                                     y: room.SecurityHistory[k] == "Enabled" ? 1 : (room.SecurityHistory[k] == "Activated" ? 2 : 0)
                                 }
                             })
-                            .sort((a, b) => (a.t > b.t) ? 1 : -1);
+                            .sort((a, b) => (a.x > b.x) ? 1 : -1);
 
                         updateChartData(this.charts["chartSecurity"], room.Name, chartData);
 
@@ -117,9 +117,9 @@ $.get(templateUrl, template => {
                                 }
                                 getSensorData(room.Name, sensor.Name, valueType).done(data => {
                                     let chartData = Object.keys(data)
-                                        .map(k => { return { t: new Date(k), y: data[k] } })
-                                        .filter(e => e.t < prevDay)
-                                        .sort((a, b) => (a.t > b.t) ? 1 : -1);
+                                        .map(k => { return { x: new Date(k), y: data[k] } })
+                                        .filter(e => e.x < prevDay)
+                                        .sort((a, b) => (a.x > b.x) ? 1 : -1);
                                     updateChartData(this.charts["charts"], `${sensor.Name}.${valueType}`, chartData);
 
                                     Vue.set(this.stats, `${sensor.Name}.${valueType}`, {
@@ -130,7 +130,7 @@ $.get(templateUrl, template => {
                             }
                         }
                         this.charts['charts'].options.maintainAspectRatio = false;
-                        this.charts['charts'].options.legend.position = "bottom";
+                        this.charts['charts'].options.plugins.legend.position = "bottom";
                         this.charts['charts'].canvas.style["max-height"] = this.charts["charts"].height + this.charts["charts"].legend.height + "px";
                         this.charts['charts'].resize();
                     }, 10);

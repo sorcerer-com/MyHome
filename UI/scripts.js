@@ -19,24 +19,25 @@ function createLineChart(canvasId, datasets = {}, allowZoom = true) { // dataset
         return {
             label: k,
             data: datasets[k],
-            backgroundColor: colors[idx].alpha(0.1).rgbString(),
-            borderColor: colors[idx].alpha(0.5).rgbString(),
-            type: "line",
-            lineTension: 0,
+            backgroundColor: `hsla(${colors[idx]}, 0.1)`,
+            borderColor: `hsla(${colors[idx]}, 0.5)`,
+            tension: 0,
             pointRadius: 0,
-            borderWidth: 2
+            borderWidth: 2,
+            fill: true
         }
     });
     let cfg = {
+        type: 'line',
         data: {
             datasets: chartDataSets
         },
         options: {
             scales: {
-                xAxes: [{
+                x: {
                     type: "time",
                     ticks: {
-                        fontColor: "white"
+                        color: "white"
                     },
                     time: {
                         displayFormats: {
@@ -44,31 +45,36 @@ function createLineChart(canvasId, datasets = {}, allowZoom = true) { // dataset
                         },
                         tooltipFormat: "DD MMM YYYY, HH:mm:ss"
                     }
-                }],
-                yAxes: [{
+                },
+                y: {
                     ticks: {
-                        fontColor: "white"
+                        color: "white"
                     }
-                }]
-            },
-            tooltips: {
-                intersect: false,
-                mode: "index"
-            },
-            legend: {
-                labels: {
-                    fontColor: "white"
                 }
             },
-            /* Zoom plugin */
             plugins: {
+                colors: {
+                    forceOverride: true,
+                    enabled: false
+                },
+                legend: {
+                    labels: {
+                        color: "white"
+                    }
+                },
+                tooltip: {
+                    intersect: false,
+                    mode: "index"
+                },
                 zoom: {
                     pan: {
                         enabled: allowZoom,
                         mode: "x"
                     },
                     zoom: {
-                        enabled: allowZoom,
+                        wheel: {
+                            enabled: allowZoom
+                        },
                         mode: "x"
                     }
                 }
@@ -81,7 +87,7 @@ function createLineChart(canvasId, datasets = {}, allowZoom = true) { // dataset
     return chart;
 }
 
-function updateChartData(chart, label, data) {
+function updateChartData(chart, label, data) { // data: {x: date, y: value}
     let dataset = chart.data.datasets.find(ds => ds.label == label);
     if (dataset) {
         if (dataset.data.length != data.length) // if data get changed
@@ -92,16 +98,16 @@ function updateChartData(chart, label, data) {
         chart.data.datasets.push({
             label: label,
             data: data,
-            type: "line",
-            lineTension: 0,
+            tension: 0,
             pointRadius: 0,
-            borderWidth: 2
+            borderWidth: 2,
+            fill: true
         });
         // update colors
         let colors = generateChartColors(chart.data.datasets.length);
         for (let i = 0; i < colors.length; i++) {
-            chart.data.datasets[i].backgroundColor = colors[i].alpha(0.1).rgbString();
-            chart.data.datasets[i].borderColor = colors[i].alpha(0.5).rgbString();
+            chart.data.datasets[i].backgroundColor = `hsla(${colors[i]}, 0.1)`;
+            chart.data.datasets[i].borderColor = `hsla(${colors[i]}, 0.5)`;
         }
     }
     chart.update();
@@ -109,13 +115,13 @@ function updateChartData(chart, label, data) {
 
 function generateChartColors(count) {
     let dHue = 360 / Math.min(count, 10);
-    let dValue = 100 / Math.ceil(count / 10);
+    let dLight = 50 / Math.ceil(count / 10);
     let result = [];
-    for (let v = 0; v < 100; v += dValue) {
+    for (let l = 0; l < 50; l += dLight) {
         for (let h = 0; h < 360; h += dHue) {
             if (result.length >= count)
                 return result;
-            result.push(Color().hsv((240 + h) % 360, 100, 100 - v));
+            result.push(`${(240 + h) % 360}, 100%, ${50 - l}%`); // HSL
         }
     }
     return result;

@@ -71,13 +71,13 @@ $.get(templateUrl, template => {
                     }
                     let request = getSensorData(this.room.Name, sensor.Name, this.selection).done(data => {
                         let lastDayData = Object.keys(data)
-                            .map(k => { return { t: new Date(k), y: data[k] } })
-                            .filter(e => e.t >= prevDay)
-                            .sort((a, b) => (a.t > b.t) ? 1 : -1);
+                            .map(k => { return { x: new Date(k), y: data[k] } })
+                            .filter(e => e.x >= prevDay)
+                            .sort((a, b) => (a.x > b.x) ? 1 : -1);
                         let olderData = Object.keys(data)
-                            .map(k => { return { t: new Date(k), y: data[k] } })
-                            .filter(e => e.t >= this.selectedPeriod[0] && e.t < this.selectedPeriod[1])
-                            .sort((a, b) => (a.t > b.t) ? 1 : -1);
+                            .map(k => { return { x: new Date(k), y: data[k] } })
+                            .filter(e => e.x >= this.selectedPeriod[0] && e.x < this.selectedPeriod[1])
+                            .sort((a, b) => (a.x > b.x) ? 1 : -1);
                         updateChartData(this.charts["chartLastDay"], name, lastDayData);
                         updateChartData(this.charts["chartOlder"], name, olderData);
 
