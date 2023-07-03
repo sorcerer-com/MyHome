@@ -16,7 +16,8 @@ namespace MyHome.Systems.Devices.Drivers
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
-        public override DateTime LastOnline => lastOnlineCache[this.EwelinkDeviceId];
+        public override DateTime LastOnline => !string.IsNullOrEmpty(this.EwelinkDeviceId) && lastOnlineCache.ContainsKey(this.EwelinkDeviceId)
+            ? lastOnlineCache[this.EwelinkDeviceId] : DateTime.Now;
 
 
         [UiProperty(true)]
@@ -41,6 +42,20 @@ namespace MyHome.Systems.Devices.Drivers
         public bool ConfirmationRequired { get; set; }
 
 
+        private static EwelinkV2 ewelink;
+        private static EwelinkV2 Ewelink
+        {
+            get
+            {
+                if (ewelink == null)
+                {
+                    var password = Encoding.UTF8.GetString(Convert.FromBase64String(MyHome.Instance.Config.EwelinkPassword));
+                    ewelink = new EwelinkV2(MyHome.Instance.Config.EwelinkCountryCode, MyHome.Instance.Config.EwelinkEmail, password);
+                }
+                return ewelink;
+            }
+        }
+
         // TODO: move to base Ewelink device?
         private static readonly Dictionary<string, DateTime> lastOnlineCache = new Dictionary<string, DateTime>();
 
@@ -63,9 +78,7 @@ namespace MyHome.Systems.Devices.Drivers
                     lastOnlineCache[this.EwelinkDeviceId] -= TimeSpan.FromMinutes(1);
                     try
                     {
-                        var password = Encoding.UTF8.GetString(Convert.FromBase64String(MyHome.Instance.Config.EwelinkPassword));
-                        var ewelink = new EwelinkV2(MyHome.Instance.Config.EwelinkCountryCode, MyHome.Instance.Config.EwelinkEmail, password);
-                        var dev = ewelink.GetDevice(this.EwelinkDeviceId).Result;
+                        var dev = Ewelink.GetDevice(this.EwelinkDeviceId).Result;
                         if (dev?.Online == true)
                             lastOnlineCache[this.EwelinkDeviceId] = DateTime.Now;
                         logger.Trace($"Device '{this.EwelinkDeviceId}' online status: {dev?.Online}");
@@ -90,9 +103,7 @@ namespace MyHome.Systems.Devices.Drivers
             try
             {
                 logger.Info($"Transmit to eWeLink RF driver {this.Name} ({this.Room.Name})");
-                var password = Encoding.UTF8.GetString(Convert.FromBase64String(MyHome.Instance.Config.EwelinkPassword));
-                var ewelink = new EwelinkV2(MyHome.Instance.Config.EwelinkCountryCode, MyHome.Instance.Config.EwelinkEmail, password);
-                ewelink.TransmitRfChannel(this.EwelinkDeviceId, this.EwelinkRfChannel).Wait();
+                Ewelink.TransmitRfChannel(this.EwelinkDeviceId, this.EwelinkRfChannel).Wait();
             }
             catch (Exception e)
             {

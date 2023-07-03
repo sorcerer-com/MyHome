@@ -337,7 +337,7 @@ namespace MyHome.Utils.Ewelink
             var result = await this.CheckDeviceUpdates(new[] { device });
 
             var info = result.FirstOrDefault();
-            return new UpdateCheckResult(info.Version != device.Paramaters.FirmWareVersion, info);
+            return new UpdateCheckResult(info != null && info.Version != device.Paramaters.FirmWareVersion, info);
         }
 
         public async Task<string?> GetFirmwareVersion(string deviceId)
