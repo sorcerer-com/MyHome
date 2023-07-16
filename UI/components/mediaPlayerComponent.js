@@ -1,21 +1,24 @@
 ﻿var scriptSrc = document.currentScript.src;
 var templateUrl = scriptSrc.substr(0, scriptSrc.lastIndexOf(".")) + ".html";
 $.get(templateUrl, template => {
-    Vue.component("media-tree-item", {
+    window.vue.component("media-tree-item", {
         template:
             `<div>
-                <a class="w3-show-block w3-hover-blue-gray padding-4 overflow-wrap-break-word margin-left-8"
-                    v-for="(item, key) of tree" v-if="item.path"
-                    v-bind:class="{'w3-text-dark-gray': item.watched}"
-                    v-bind:title="media + ':' + item.path"
-                    v-on:click="selectMediaItem">
-                    {{key}}
-                </a>
-                <details class="margin-left-8"
-                    v-for="(item, key) of tree" v-if="!item.path">
-                    <summary><span style="text-decoration:underline">{{key}}</span></summary>
-                    <media-tree-item v-bind:tree="item" v-bind:media="media" v-on:change="onMediaChange"></media-tree-item>
-                </details>
+                <template v-for="(item, key) of tree">
+                    <a class="w3-show-block w3-hover-blue-gray padding-4 overflow-wrap-break-word margin-left-8"
+                        v-if="item.path"
+                        v-bind:class="{'w3-text-dark-gray': item.watched}"
+                        v-bind:title="media + ':' + item.path"
+                        v-on:click="selectMediaItem">
+                        {{key}}
+                    </a>
+                </template>
+                <template v-for="(item, key) of tree">
+                    <details class="margin-left-8" v-if="!item.path">
+                        <summary><span style="text-decoration:underline">{{key}}</span></summary>
+                        <media-tree-item v-bind:tree="item" v-bind:media="media" v-on:change="onMediaChange"></media-tree-item>
+                    </details>
+                </template>
             </div>`,
         props: ["tree", "media"],
         methods: {
@@ -30,7 +33,7 @@ $.get(templateUrl, template => {
         }
     });
 
-    Vue.component("media-player", {
+    window.vue.component("media-player", {
         template: template,
         props: ["mediaPlayer"],
         data: function () {

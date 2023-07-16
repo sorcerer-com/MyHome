@@ -1,7 +1,7 @@
 ﻿var scriptSrc = document.currentScript.src;
 var templateUrl = scriptSrc.substr(0, scriptSrc.lastIndexOf(".")) + ".html";
 $.get(templateUrl, template => {
-    Vue.component("tree", {
+    window.vue.component("tree", {
         template: template,
         props: ["rootEl", "root", "tree"],
         methods: {

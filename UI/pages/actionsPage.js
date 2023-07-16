@@ -1,7 +1,7 @@
 ﻿var scriptSrc = document.currentScript.src;
 var templateUrl = scriptSrc.substr(0, scriptSrc.lastIndexOf(".")) + ".html";
 $.get(templateUrl, template => {
-    Vue.component("actions-page", {
+    window.vue.component("actions-page", {
         template: template,
         data: function () {
             return {
@@ -22,7 +22,7 @@ $.get(templateUrl, template => {
                     return;
                 }
 
-                getSystem("Actions").done(actions => Vue.set(this, "actions", actions));
+                getSystem("Actions").done(actions => this.actions = actions);
 
                 if (!window.ws || window.ws.readyState != WebSocket.OPEN)
                     setTimeout(this.refreshData, 3000);

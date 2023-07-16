@@ -4,7 +4,7 @@ $.get(templateUrl, template => {
     const monthNames = ["January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"];
 
-    Vue.component("sensors-data", {
+    window.vue.component("sensors-data", {
         template: template,
         props: ["room", "sensors", "valueType"],
         data: function () {
@@ -12,7 +12,6 @@ $.get(templateUrl, template => {
                 valueTypes: [],
                 selection: "",
                 sensorsData: {},
-                charts: {},
                 stats: {},
                 selectedMonth: "All",
                 editorData: null,
@@ -51,10 +50,9 @@ $.get(templateUrl, template => {
                     return;
                 }
 
-                if (!this.charts["chartLastDay"])
-                    this.charts["chartLastDay"] = createLineChart("chartLastDay", {}, false);
-                if (!this.charts["chartOlder"])
-                    this.charts["chartOlder"] = createLineChart("chartOlder", {}, !window.vue.isMobile);
+                this.charts = this.charts || {}; // not part of 'data' as it cause stack overflow
+                this.charts["chartLastDay"] = this.charts["chartLastDay"] || createLineChart("chartLastDay", {}, false);
+                this.charts["chartOlder"] = this.charts["chartOlder"] || createLineChart("chartOlder", {}, !window.vue.isMobile);
 
                 const prevDay = new Date();
                 prevDay.setDate(prevDay.getDate() - 1);
@@ -65,7 +63,7 @@ $.get(templateUrl, template => {
                     let name = this.valueType != null ? sensor.Name : this.selection;
                     if (!this.stats[name]) {
                         // add empty values to preserve the order
-                        Vue.set(this.stats, name, { "LastDay": { Average: 0, Sum: 0 }, "Older": { Average: 0, Sum: 0 } });
+                        this.stats[name] = { "LastDay": { Average: 0, Sum: 0 }, "Older": { Average: 0, Sum: 0 } };
                         updateChartData(this.charts["chartLastDay"], name, {});
                         updateChartData(this.charts["chartOlder"], name, {});
                     }
@@ -81,7 +79,7 @@ $.get(templateUrl, template => {
                         updateChartData(this.charts["chartLastDay"], name, lastDayData);
                         updateChartData(this.charts["chartOlder"], name, olderData);
 
-                        Vue.set(this.stats, name, {
+                        this.stats[name] = {
                             "LastDay": {
                                 Average: Math.round(lastDayData.reduce((sum, curr) => sum + curr.y, 0) / lastDayData.length * 100) / 100,
                                 Sum: Math.round(lastDayData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
@@ -89,7 +87,7 @@ $.get(templateUrl, template => {
                                 Average: Math.round(olderData.reduce((sum, curr) => sum + curr.y, 0) / olderData.length * 100) / 100,
                                 Sum: Math.round(olderData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
                             }
-                        });
+                        };
 
                         this.sensorsData[name] = data;
                     });

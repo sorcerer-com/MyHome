@@ -1,7 +1,7 @@
 ﻿var scriptSrc = document.currentScript.src;
 var templateUrl = scriptSrc.substr(0, scriptSrc.lastIndexOf(".")) + ".html";
 $.get(templateUrl, template => {
-    Vue.component("media-driver", {
+    window.vue.component("media-driver", {
         template: template,
         props: ["room", "driver"],
         data: function () {

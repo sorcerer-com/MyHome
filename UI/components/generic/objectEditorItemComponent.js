@@ -1,9 +1,10 @@
 ﻿var scriptSrc = document.currentScript.src;
 var templateUrl = scriptSrc.substr(0, scriptSrc.lastIndexOf(".")) + ".html";
 $.get(templateUrl, template => {
-    Vue.component("object-editor-item", {
+    window.vue.component("object-editor-item", {
         template: template,
         props: ["value", "value-info"],
+        emits: ["change"],
         data: function () {
             return {
                 debounceOnDictKeyChange: debounce(this.onDictKeyChange, 1000), // set only after no changes in 1 sec
@@ -11,6 +12,14 @@ $.get(templateUrl, template => {
             }
         },
         computed: {
+            valueModel: {
+                get() {
+                    return this.value;
+                },
+                set(value) {
+                    this.$emit("change", value);
+                }
+            },
             localDateTime: {
                 get: function () {
                     return this.value.substr(0, 16);
@@ -36,25 +45,20 @@ $.get(templateUrl, template => {
             },
             onDictKeyChange: function (oldKey, newKey) {
                 if (oldKey != newKey) {
-                    Vue.set(this.value, newKey, this.value[oldKey]);
-                    Vue.delete(this.value, oldKey);
+                    this.value[newKey] = this.value[oldKey];
+                    delete this.value[oldKey];
                     this.$emit("change", this.value);
                 }
             },
             onDictValueChange: function (key, value) {
-                Vue.set(this.value, key, value);
+                this.value[key] = value;
                 this.$emit("change", this.value);
             },
             addDictItem: function () {
-                Vue.set(this.value, "", "");
+                this.value[""] = "";
             },
             delDictItem: function (name) {
-                Vue.delete(this.value, name);
-            }
-        },
-        watch: {
-            value: function () {
-                this.$emit("change", this.value);
+                delete this.value[name];
             }
         }
     });

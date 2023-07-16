@@ -1,32 +1,32 @@
 ﻿<div>
     <!-- bool -->
-    <select v-if="valueInfo.type == 'Boolean'" v-model="value" v-bind:title="getTitle()" class="w3-col m10 w3-mobile">
+    <select v-if="valueInfo.type == 'Boolean'" v-model="valueModel" v-bind:title="getTitle()" class="w3-col m10 w3-mobile">
         <option value="true">True</option>
         <option value="false">False</option>
     </select>
 
     <!-- enum -->
-    <select v-if="valueInfo.enums" v-model="value" v-bind:title="getTitle()" class="w3-col m10 w3-mobile">
+    <select v-if="valueInfo.enums" v-model="valueModel" v-bind:title="getTitle()" class="w3-col m10 w3-mobile">
         <option v-for="v of valueInfo.enums" v-bind:value="valueInfo.type + '.' + v">{{v}}</option>
     </select>
 
     <!-- int -->
-    <input v-if="valueInfo.type.startsWith('Int')" v-model="value" v-bind:title="getTitle()" type="number" class="w3-col m10 w3-mobile" />
+    <input v-if="valueInfo.type.startsWith('Int')" v-model="valueModel" v-bind:title="getTitle()" type="number" class="w3-col m10 w3-mobile" />
 
     <!-- double -->
-    <input v-if="valueInfo.type == 'Double'" v-model="value" v-bind:title="getTitle()" type="number" step="0.01" class="w3-col m10 w3-mobile" />
+    <input v-if="valueInfo.type == 'Double'" v-model="valueModel" v-bind:title="getTitle()" type="number" step="0.01" class="w3-col m10 w3-mobile" />
 
     <!-- datetime -->
     <input v-if="valueInfo.type == 'DateTime'" v-model="localDateTime" v-bind:title="getTitle()" type="datetime-local" class="w3-col m10 w3-mobile" />
 
     <!-- timespan -->
-    <input v-if="valueInfo.type == 'TimeSpan'" v-model="value" v-bind:title="getTitle()" type="time" class="w3-col m10 w3-mobile" />
+    <input v-if="valueInfo.type == 'TimeSpan'" v-model="valueModel" v-bind:title="getTitle()" type="time" class="w3-col m10 w3-mobile" />
 
     <!-- string -->
-    <input v-if="valueInfo.type == 'String'" v-model="value" v-bind:title="getTitle()" type="text" class="w3-col m10 w3-mobile" />
+    <input v-if="valueInfo.type == 'String'" v-model="valueModel" v-bind:title="getTitle()" type="text" class="w3-col m10 w3-mobile" />
 
     <!-- tuple -->
-    <input v-if="valueInfo.type.startsWith('ValueTuple')" v-model="value" v-bind:title="getTitle()" type="text" class="w3-col m10 w3-mobile" />
+    <input v-if="valueInfo.type.startsWith('ValueTuple')" v-model="valueModel" v-bind:title="getTitle()" type="text" class="w3-col m10 w3-mobile" />
 
     <!-- list -->
     <div v-if="valueInfo.type == 'List'">
@@ -71,7 +71,7 @@
     </div>
 
     <!-- select -->
-    <select v-if="valueInfo.type == 'select'" v-model="value" v-bind:title="getTitle()" class="w3-col m10 w3-mobile">
+    <select v-if="valueInfo.type == 'select'" v-model="valueModel" v-bind:title="getTitle()" class="w3-col m10 w3-mobile">
         <option value="" disabled selected hidden>Select</option>
         <option value="">Null</option>
         <option v-for="(name, v) of valueInfo.select" v-bind:value="v">{{name}}</option>
@@ -88,7 +88,7 @@
          v-on:click="showCode = false">
         <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="" style="height: 300px">
             <div class="w3-container w3-padding-16 height-100 overflow-y-auto bg-gray">
-                <monaco-editor v-model="value" style="height: 100%; text-align: left;"></monaco-editor>
+                <monaco-editor v-model="valueModel" style="height: 100%; text-align: left;"></monaco-editor>
             </div>
         </div>
     </div>

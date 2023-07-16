@@ -5,7 +5,7 @@
         <a v-bind:href="`./api/rooms/${room.Name}/cameras/${camera.Name}/image`" target="_blank" title="Open full screen">
             <img v-bind:id="'camera' + camera.Name + 'Image'"
                  v-bind:src="`./api/rooms/${room.Name}/cameras/${camera.Name}/image`"
-                 width="100%" class="w3-margin-bottom" />
+                 class="w3-margin-bottom" style="width: 100%" />
         </a>
         <!-- Movement controls -->
         <div class="w3-center margin-bottom-8" v-if="camera.IsOnvifSupported">

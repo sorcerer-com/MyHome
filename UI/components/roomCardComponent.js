@@ -1,7 +1,7 @@
 ﻿var scriptSrc = document.currentScript.src;
 var templateUrl = scriptSrc.substr(0, scriptSrc.lastIndexOf(".")) + ".html";
 $.get(templateUrl, template => {
-    Vue.component("room-card", {
+    window.vue.component("room-card", {
         template: template,
         props: ["room"],
         data: function () {
@@ -52,7 +52,8 @@ $.get(templateUrl, template => {
             },
             isGenericDriver: function (driver) {
                 return !driver.$type.endsWith("MediaAgentMqttDriver") && !driver.$type.endsWith("SpeakerMqttDriver");
-            }
+            },
+            setRoomSecuritySystemEnabled: setRoomSecuritySystemEnabled
         },
         mounted: function () {
             this.autoResizeFontSize();

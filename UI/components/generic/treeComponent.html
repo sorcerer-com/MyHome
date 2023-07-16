@@ -1,14 +1,17 @@
 ﻿<div>
-    <a class="w3-show-block w3-hover-blue-gray padding-4 overflow-wrap-break-word margin-left-8"
-       v-for="(item, key) of tree" v-if="item.path"
-       v-bind:class="{'w3-text-dark-gray': item.marked}"
-       v-bind:title="root + item.path"
-       v-on:click="selectItem">
-        {{key}}
-    </a>
-    <details class="margin-left-8"
-             v-for="(item, key) of tree" v-if="!item.path">
-        <summary><span style="text-decoration:underline">{{key}}</span></summary>
-        <tree v-bind:rootEl="rootEl" v-bind:root="root" v-bind:tree="item" v-on:change="onChange"></tree>
-    </details>
+    <template v-for="(item, key) of tree">
+        <a class="w3-show-block w3-hover-blue-gray padding-4 overflow-wrap-break-word margin-left-8"
+           v-if="item.path"
+           v-bind:class="{'w3-text-dark-gray': item.marked}"
+           v-bind:title="root + item.path"
+           v-on:click="selectItem">
+            {{key}}
+        </a>
+    </template>
+    <template v-for="(item, key) of tree">
+        <details class="margin-left-8" v-if="!item.path">
+            <summary><span style="text-decoration:underline">{{key}}</span></summary>
+            <tree v-bind:rootEl="rootEl" v-bind:root="root" v-bind:tree="item" v-on:change="onChange"></tree>
+        </details>
+    </template>
 </div>

@@ -1,7 +1,7 @@
 ﻿var scriptSrc = document.currentScript.src;
 var templateUrl = scriptSrc.substr(0, scriptSrc.lastIndexOf(".")) + ".html";
 $.get(templateUrl, template => {
-    Vue.component("config-page", {
+    window.vue.component("config-page", {
         template: template,
         data: function () {
             return {
@@ -25,7 +25,7 @@ $.get(templateUrl, template => {
                     return;
                 }
 
-                getRooms().done(rooms => Vue.set(this, "rooms", rooms));
+                getRooms().done(rooms => this.rooms = rooms);
 
                 if (!window.ws || window.ws.readyState != WebSocket.OPEN)
                     setTimeout(this.refreshData, 3000);

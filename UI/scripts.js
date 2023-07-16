@@ -1,6 +1,6 @@
 ﻿function setRoomSecuritySystemEnabled(roomName, isEnabled) {
     setRoom(roomName, { IsSecuritySystemEnabled: isEnabled })
-        .done(() => getRooms().done(rooms => Vue.set(this.$parent, "rooms", rooms)));
+        .done(() => getRooms().done(rooms => this.$parent.rooms = rooms));
 }
 
 function filterObjectBySettings(object, settings) {

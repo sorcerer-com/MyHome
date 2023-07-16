@@ -1,7 +1,7 @@
 ﻿var scriptSrc = document.currentScript.src;
 var templateUrl = scriptSrc.substr(0, scriptSrc.lastIndexOf(".")) + ".html";
 $.get(templateUrl, template => {
-    Vue.component("main-page", {
+    window.vue.component("main-page", {
         template: template,
         data: function () {
             return {
@@ -12,7 +12,6 @@ $.get(templateUrl, template => {
 
                 modal: "",
                 modalSelection: "",
-                charts: {},
                 stats: {}
             }
         },
@@ -32,13 +31,13 @@ $.get(templateUrl, template => {
                 }
 
                 getRooms().done(rooms => {
-                    Vue.set(this, "rooms", rooms);
+                    this.rooms = rooms;
                     // update security modal if opened
                     if (this.modal == "Security")
                         this.showSecurityModal();
                 });
 
-                getSystem("MediaPlayer").done(mediaPlayer => Vue.set(this, "mediaPlayer", mediaPlayer));
+                getSystem("MediaPlayer").done(mediaPlayer => this.mediaPlayer = mediaPlayer);
 
                 if (!window.ws || window.ws.readyState != WebSocket.OPEN || this.mediaPlayerHover)
                     setTimeout(this.refreshData, 3000);
@@ -60,8 +59,8 @@ $.get(templateUrl, template => {
                 this.modal = "Security";
                 // wait canvas to show
                 setTimeout(() => {
-                    if (!this.charts["chartSecurity"])
-                        this.charts["chartSecurity"] = createLineChart("chartSecurity");
+                    this.charts = this.charts || {};
+                    this.charts["chartSecurity"] = this.charts["chartSecurity"] || createLineChart("chartSecurity");
 
                     for (let room of this.rooms) {
                         let chartData = Object.keys(room.SecurityHistory)
@@ -75,10 +74,10 @@ $.get(templateUrl, template => {
 
                         updateChartData(this.charts["chartSecurity"], room.Name, chartData);
 
-                        Vue.set(this.stats, room.Name, {
+                        this.stats[room.Name] = {
                             Average: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) / chartData.length * 100) / 100,
                             Sum: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
-                        });
+                        };
                     }
                 }, 10);
             }
@@ -99,6 +98,7 @@ $.get(templateUrl, template => {
                 if (this.modal == "Charts") {
                     // wait canvas to show
                     setTimeout(() => {
+                        this.charts = this.charts || {};
                         this.charts["charts"]?.destroy();
                         this.charts["charts"] = createLineChart("charts");
                         this.stats = {};
@@ -112,7 +112,7 @@ $.get(templateUrl, template => {
                             for (let valueType of Object.keys(sensor.Values)) {
                                 if (!this.stats[`${sensor.Name}.${valueType}`]) {
                                     // add empty values to preserve the order
-                                    Vue.set(this.stats, `${sensor.Name}.${valueType}`, { Average: 0, Sum: 0 });
+                                    this.stats[`${sensor.Name}.${valueType}`] = { Average: 0, Sum: 0 };
                                     updateChartData(this.charts["charts"], `${sensor.Name}.${valueType}`, {});
                                 }
                                 getSensorData(room.Name, sensor.Name, valueType).done(data => {
@@ -122,10 +122,10 @@ $.get(templateUrl, template => {
                                         .sort((a, b) => (a.x > b.x) ? 1 : -1);
                                     updateChartData(this.charts["charts"], `${sensor.Name}.${valueType}`, chartData);
 
-                                    Vue.set(this.stats, `${sensor.Name}.${valueType}`, {
+                                    this.stats[`${sensor.Name}.${valueType}`] = {
                                         Average: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) / chartData.length * 100) / 100,
                                         Sum: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
-                                    });
+                                    };
                                 });
                             }
                         }

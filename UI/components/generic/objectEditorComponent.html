@@ -4,24 +4,25 @@
         code
     </a>
 
-    <div v-for="name of Object.keys(object)"
-         v-if="!showEditor && name[0] != '$' && (settings == null || object['$subtypes'][name].setting == settings) && !object['$subtypes'][name].readonly"
-         class="w3-row w3-row-padding margin-bottom-8">
-        <span class="w3-col m5 w3-right-align">{{name}}:</span>
+    <template v-for="name of Object.keys(object)">
+        <div v-if="!showEditor && name[0] != '$' && (settings == null || object['$subtypes'][name].setting == settings) && !object['$subtypes'][name].readonly"
+             class="w3-row w3-row-padding margin-bottom-8">
+            <span class="w3-col m5 w3-right-align">{{name}}:</span>
 
-        <object-editor-item class="w3-col m5"
-                            v-bind:key="name"
-                            v-bind:value="object[name]"
-                            v-bind:value-info="object['$subtypes'][name]"
-                            v-on:change="value => onItemChange(name, value)">
-        </object-editor-item>
+            <object-editor-item class="w3-col m5"
+                                v-bind:key="name"
+                                v-bind:value="object[name]"
+                                v-bind:value-info="object['$subtypes'][name]"
+                                v-on:change="value => onItemChange(name, value)">
+            </object-editor-item>
 
-        <object-editor style="background-color: #0000001A"
-                       v-if="object[name] && object[name]['$subtypes']"
-                       v-bind:settings="settings"
-                       v-bind:object="object[name]">
-        </object-editor>
-    </div>
+            <object-editor style="background-color: #0000001A"
+                           v-if="object[name] && object[name]['$subtypes']"
+                           v-bind:settings="settings"
+                           v-bind:object="object[name]">
+            </object-editor>
+        </div>
+    </template>
 
     <monaco-editor v-if="showEditor" v-model="json" v-bind:type="'json'" v-bind:schema="getJsonSchema(object['$subtypes'])"
                    style="min-height: 300px; text-align: left; padding-top: 20px"></monaco-editor>
