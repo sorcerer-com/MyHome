@@ -57,6 +57,9 @@ $.get(templateUrl, template => {
         },
         mounted: function () {
             this.autoResizeFontSize();
+
+            if (this.$route.query.room == this.room.Name)
+                this.selectedValueType = this.$route.query.selectedValueType;
         },
         watch: {
             room: function () {
@@ -66,7 +69,11 @@ $.get(templateUrl, template => {
                 if (this.selectedValueType == "") {
                     // stop loading the motion image (cameras' images)
                     $("img[id^='camera'][id$='Image']").attr("src", "");
+
+                    this.$router.push("/");
                 }
+                else
+                    this.$router.push({ query: { room: this.room.Name, selectedValueType: this.selectedValueType } });
             }
         }
     });

@@ -124,15 +124,14 @@ $.get(templateUrl, template => {
             this.valueTypes = this.valueType != null ? [this.valueType] : Object.keys(this.sensors[0].Values);
             this.selection = this.valueTypes[0];
 
-            this.refreshData();
             window.ws?.addRefreshHandlers(this.refreshData);
         },
         watch: {
             selection: function () {
-                if (this.charts["chartLastDay"])
-                    this.charts["chartLastDay"].destroy();
-                if (this.charts["chartOlder"])
-                    this.charts["chartOlder"].destroy();
+                if (this.charts) {
+                    this.charts["chartLastDay"]?.destroy();
+                    this.charts["chartOlder"]?.destroy();
+                }
 
                 this.sensorsData = {};
                 this.charts = {};

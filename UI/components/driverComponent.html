@@ -46,16 +46,16 @@
     <div class="w3-tiny">{{driver.Name}}</div>
 
     <!-- Modal -->
-    <div class="w3-modal w3-animate-opacity" v-if="modalObject" v-on:click.stop="" title=""
-         v-bind:class="{'w3-show-block': modalObject}"
-         v-on:click="modalObject = null">
+    <div class="w3-modal w3-animate-opacity" v-if="showModal" v-on:click.stop="" title=""
+         v-bind:class="{'w3-show-block': showModal}"
+         v-on:click="showModal = false">
         <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">
             <header class="w3-container w3-blue-gray">
-                <span class="w3-button w3-display-topright" v-on:click="modalObject = null">&times;</span>
-                <h2>{{modalObject.Name}}</h2>
+                <span class="w3-button w3-display-topright" v-on:click="showModal = false">&times;</span>
+                <h2>{{driver.Name}}</h2>
             </header>
             <div class="w3-container w3-text-white w3-padding-16 height-100 overflow-y-auto bg-gray">
-                <object-editor v-bind:object="modalObject"
+                <object-editor v-bind:object="driver"
                                v-bind:settings="false"
                                v-bind:onsave="save"></object-editor>
             </div>

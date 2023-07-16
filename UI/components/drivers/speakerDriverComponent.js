@@ -71,7 +71,17 @@ $.get(templateUrl, template => {
                 this.setDevice({ 'Queue': this.driver.Queue });
             }
         },
+        mounted: function () {
+            if (this.$route.query.room == this.room.Name && this.$route.query.driver == this.driver.Name)
+                this.showModal = true;
+        },
         watch: {
+            "showModal": function () {
+                if (this.showModal)
+                    this.$router.push({ query: { room: this.room.Name, driver: this.driver.Name } });
+                else
+                    this.$router.push("/");
+            },
             "driver.Volume": function () {
                 if (window.vue.isMobile)
                     this.setDevice({ 'Volume': this.driver.Volume }); // don't debounce for mobile version

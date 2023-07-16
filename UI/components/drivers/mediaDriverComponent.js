@@ -73,6 +73,18 @@ $.get(templateUrl, template => {
             sortByDate: function (value) {
                 setDevice(this.room.Name, this.driver.Name, { "SortByDate": value });
             }
+        },
+        mounted: function () {
+            if (this.$route.query.room == this.room.Name && this.$route.query.driver == this.driver.Name)
+                this.showModal = true;
+        },
+        watch: {
+            "showModal": function () {
+                if (this.showModal)
+                    this.$router.push({ query: { room: this.room.Name, driver: this.driver.Name } });
+                else
+                    this.$router.push("/");
+            }
         }
     });
 });

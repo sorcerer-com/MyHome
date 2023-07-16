@@ -9,7 +9,7 @@ $.get(templateUrl, template => {
                 processing: false,
                 error: null,
                 debounceSetColor: debounce(this.setDevice, 1000), // set only after no changes in 1 sec
-                modalObject: null
+                showModal: false
             }
         },
         computed: {
@@ -55,9 +55,8 @@ $.get(templateUrl, template => {
                     this.processing = true;
                 }
 
-                if (this.modalObject == null &&
-                    this.driver.$type.endsWith("AcIrMqttDriver")) {
-                    this.modalObject = { ...this.driver };
+                if (this.driver.$type.endsWith("AcIrMqttDriver")) {
+                    this.showModal = true
                 }
             },
 
@@ -75,15 +74,25 @@ $.get(templateUrl, template => {
             },
 
             save: function () {
-                let obj = filterObjectBySettings(this.modalObject, false);
-                this.modalObject = null;
+                let obj = filterObjectBySettings(this.driver, false);
+                this.showModal = false;
                 this.processing = true;
                 return setDevice(this.room.Name, this.driver.Name, obj)
                     .done(() => this.processing = false)
                     .fail(() => this.processing = false);
             }
         },
+        mounted: function () {
+            if (this.$route.query.room == this.room.Name && this.$route.query.driver == this.driver.Name)
+                this.showModal = true;
+        },
         watch: {
+            "showModal": function () {
+                if (this.showModal)
+                    this.$router.push({ query: { room: this.room.Name, driver: this.driver.Name } });
+                else
+                    this.$router.push("/");
+            },
             "driver.Color": function () {
                 if (window.vue.isMobile)
                     this.setDevice({ "Color": this.driver.Color }); // don't debounce for mobile version

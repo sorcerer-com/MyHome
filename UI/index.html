@@ -12,7 +12,9 @@
 
     <script src="./external/jquery.min.js"></script>
     <script src="./external/vue.global.prod.js"></script>
-    <!--<script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.js"></script>-->
+    <script src="./external/vue-router.global.prod.js"></script>
+    <!--<script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-router@4.2.4/dist/vue-router.global.js"></script>-->
     <script src="./external/chart.umd.min.js"></script>
     <script src="./external/hammer.min.js"></script>
     <script src="./external/chartjs-plugin-zoom.min.js"></script>
@@ -62,18 +64,18 @@
                 <h3 class="w3-cell-middle w3-padding-small w3-show-inline-block">My Home</h3>
             </div>
             <div class="w3-right w3-padding w3-padding-top-24 w3-animate-right">
-                <a class="material-icons" title="Home"
-                   v-on:click="page = 'main'" v-bind:class="{'w3-text-gray w3-hover-text-white': page != 'main'}">
+                <router-link to="/" class="material-icons" title="Home"
+                             v-bind:class="{'w3-text-gray w3-hover-text-white': $route.path != '/'}">
                     home
-                </a>
-                <a class="material-icons" title="Configure"
-                   v-on:click="page = 'config'" v-bind:class="{'w3-text-gray w3-hover-text-white': page != 'config'}">
+                </router-link>
+                <router-link to="/config" class="material-icons" title="Configure"
+                             v-bind:class="{'w3-text-gray w3-hover-text-white': $route.path != '/config'}">
                     build
-                </a>
-                <a class="material-icons" title="Actions"
-                   v-on:click="page = 'actions'" v-bind:class="{'w3-text-gray w3-hover-text-white': page != 'actions'}">
+                </router-link>
+                <router-link to="/actions" class="material-icons" title="Actions"
+                             v-bind:class="{'w3-text-gray w3-hover-text-white': $route.path != '/actions'}">
                     settings_ethernet
-                </a>
+                </router-link>
                 <a class="material-icons w3-text-gray w3-hover-text-white" title="Settings"
                    v-on:click="showSettingsModal()">
                     settings
@@ -100,9 +102,7 @@
         </div>
 
         <!-- Content -->
-        <main-page v-if="page == 'main'" ref="page"></main-page>
-        <config-page v-if="page == 'config'" ref="page"></config-page>
-        <actions-page v-if="page =='actions'" ref="page"></actions-page>
+        <router-view></router-view>
 
         <!-- Modal -->
         <div class="w3-modal w3-animate-opacity" v-if="modal"

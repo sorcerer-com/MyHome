@@ -6,7 +6,6 @@
             logs: [],
             upgradeAvailable: false,
 
-            page: "main",
             modal: "",
             selectedSettings: ""
         };
@@ -88,6 +87,37 @@
 $(window).on("load", () => {
     // wait all components to be loaded
     setTimeout(() => {
+        let router = VueRouter.createRouter({
+            history: VueRouter.createWebHashHistory(),
+            routes: [
+                { path: "/", component: window.vue._context.components["main-page"] },
+                { path: "/config", component: window.vue._context.components["config-page"] },
+                { path: "/actions", component: window.vue._context.components["actions-page"] },
+                { path: "/:pathMatch(.*)*", redirect: "/" } // not found
+            ],
+            scrollBehavior(to, from, savedPosition) {
+                if (to.hash) {
+                    // wait to populate DOM
+                    setTimeout(() => {
+                        // from "scrollToPosition" function of vue-router.js
+                        const el = document.getElementById(to.hash.slice(1));
+                        if (!el)
+                            return;
+                        const perantRect = el.parentElement.getBoundingClientRect();
+                        const elRect = el.getBoundingClientRect();
+                        const opt = {
+                            behavior: "smooth",
+                            left: elRect.left - perantRect.left,
+                            top: elRect.top - perantRect.top,
+                        };
+                        document.getElementById("scrollable-content").scrollTo(opt);
+                    }, 100);
+                }
+            }
+        });
+
+        window.vue.use(router)
+
         window.vue.mount("#vue-content");
     }, 100);
 });
