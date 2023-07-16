@@ -1,5 +1,5 @@
 ﻿<div class="w3-center w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-blue-gray" style="min-height: 72px; cursor: pointer;"
-     v-bind:class="{'w3-text-red': error, 'w3-disabled': processing, 'w3-text-dark-gray': isOffline}"
+     v-bind:class="{'w3-text-red': error, 'w3-disabled': processing && !showModal, 'animate-fading-5s': processing && !showModal, 'w3-text-dark-gray': isOffline}"
      v-bind:title="error ?? 'Last Online: ' + dateToString(new Date(driver.LastOnline))"
      v-on:click="click()">
 
@@ -50,16 +50,12 @@
                         {{driver.Playing}}
                     </div>
 
-                    <div class="w3-left" style="width: 70px">
-                        <a class="w3-large w3-hover-text-dark-gray w3-cell-middle material-icons" title="Volume down"
-                           v-on:click="setDevice({ 'Volume': driver.Volume - 1 })">
-                            volume_down
-                        </a>
+                    <div class="w3-left w3-dropdown-hover w3-hover-text-dark-gray" style="width: 40px">
+                        <span class="w3-large w3-cell-middle material-icons">volume_up</span>
                         <span class="font-size-normal">{{driver.Volume}}</span>
-                        <a class="w3-large w3-hover-text-dark-gray w3-cell-middle material-icons" title="Volume up"
-                           v-on:click="setDevice({ 'Volume': driver.Volume + 1 })">
-                            volume_up
-                        </a>
+                        <div class="w3-dropdown-content w3-animate-opacity w3-round">
+                            <input type="range" min="0" max="100" step="5" v-model="driver.Volume">
+                        </div>
                     </div>
                     <div class="w3-show-inline-block" style="border-top: 2px solid;"
                          v-bind:style="{'border-image': 'linear-gradient(90deg, #ffffff ' + driver.Position + '%, #7494a4 0%) 1'}">
@@ -76,9 +72,10 @@
                             skip_next
                         </a>
                     </div>
-                    <div class="w3-right w3-right-align" style="width: 70px;">
+                    <div class="w3-right w3-right-align" style="width: 40px;">
                         <a class="w3-large w3-hover-text-dark-gray w3-cell-middle material-icons" title="Shuffle"
                            v-bind:class="{'w3-text-indigo': driver.Shuffle}"
+                           v-bind:style="{'font-weight': driver.Shuffle ? 'bold' : 'normal'}"
                            v-on:click="setDevice({ 'Shuffle': !driver.Shuffle })">
                             shuffle
                         </a>
@@ -120,7 +117,7 @@
 
                         <!-- TODO: delete, rename? -->
                         <a class="w3-hover-text-dark-gray material-icons" title="Enqueue"
-                           v-if="getQueueIndex(song) == -1"
+                           v-if="driver.Playing && driver.Playing != song.Name && getQueueIndex(song) == -1"
                            v-on:click="enqueue(song)">
                             add_to_queue
                         </a>

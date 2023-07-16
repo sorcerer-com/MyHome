@@ -9,7 +9,8 @@ $.get(templateUrl, template => {
                 processing: false,
                 error: null,
                 showModal: false,
-                songUrl: ""
+                songUrl: "",
+                debounceSetVolume: debounce(this.setDevice, 1000), // set only after no changes in 1 sec
             }
         },
         computed: {
@@ -20,6 +21,8 @@ $.get(templateUrl, template => {
                 let songs = [...this.driver.Songs];
                 songs.sort((a, b) => a.Rating - b.Rating);
                 songs.reverse();
+                if (this.songUrl == null) // add dummy item while downloading
+                    songs.unshift({ Name: "Downloading...", Rating: 0, Exists: true })
                 return songs;
             }
         },
@@ -47,8 +50,10 @@ $.get(templateUrl, template => {
             },
 
             addSong: function (event) {
-                this.callDevice('AddSong', this.songUrl);
-                this.songUrl = "";
+                callDevice(this.room.Name, this.driver.Name, 'AddSong', [this.songUrl])
+                    .done(() => this.songUrl = "")
+                    .fail(() => this.songUrl = "");
+                this.songUrl = null;
                 event.target.parentElement.open = false;
             },
             getQueueIndex: function (song) {
@@ -64,6 +69,14 @@ $.get(templateUrl, template => {
                 const index = this.getQueueIndex(song);
                 this.driver.Queue.splice(index, 1);
                 this.setDevice({ 'Queue': this.driver.Queue });
+            }
+        },
+        watch: {
+            "driver.Volume": function () {
+                if (window.vue.isMobile)
+                    this.setDevice({ 'Volume': this.driver.Volume }); // don't debounce for mobile version
+                else
+                    this.debounceSetVolume({ 'Volume': this.driver.Volume });
             }
         }
     });

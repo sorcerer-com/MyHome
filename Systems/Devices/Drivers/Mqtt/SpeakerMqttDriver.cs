@@ -39,6 +39,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                         this.SendState(VOLUME_STATE_NAME, this.Volume.ToString());
                     else // on empty value - stop
                     {
+                        this.Queue.Clear();
                         this.orderedSongs = null;
                         this.alarmType = null;
                     }

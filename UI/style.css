@@ -119,21 +119,21 @@
     }
 }
 
-animate-fading-5s {
+.animate-fading-5s {
     animation: fading 5s infinite;
 }
 
 @keyframes fading {
     0% {
-        opacity: 0;
-    }
-
-    50% {
         opacity: 1;
     }
 
+    50% {
+        opacity: 0.3;
+    }
+
     100% {
-        opacity: 0;
+        opacity: 1;
     }
 }
 

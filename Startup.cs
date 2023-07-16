@@ -60,12 +60,8 @@ namespace MyHome
                 FileProvider = fileProvider,
                 OnPrepareResponse = context =>
                 {
-                    var path = context.Context.Request.Path.Value;
-                    if (path.EndsWith(".html") && path.LastIndexOf("/") == 0) // disable cache for pages only
-                    {
-                        context.Context.Response.Headers.Add("Cache-Control", "no-cache, no-store");
-                        context.Context.Response.Headers.Add("Expires", "-1");
-                    }
+                    // allow cache for 1 day
+                    context.Context.Response.Headers.Add("Cache-Control", "private, max-age=86400, stale-while-revalidate=86400");
                 }
             });
 
@@ -101,7 +97,7 @@ namespace MyHome
 
                 return false;
             }
-            else if (!IsResouce(context.Request.Path) && !context.Request.Path.StartsWithSegments("/api/systems/MediaPlayer/songs") &&
+            else if (!IsResource(context.Request.Path) && !context.Request.Path.StartsWithSegments("/api/systems/MediaPlayer/songs") &&
                 (context.Session.GetString("password") ?? "") != myHome.Config.Password)
             {
                 if (!context.Request.Path.StartsWithSegments("/api")) // pages only
@@ -113,7 +109,7 @@ namespace MyHome
             return true;
         }
 
-        private static bool IsResouce(string path)
+        private static bool IsResource(string path)
         {
             return path.StartsWith("/external/") || path.StartsWith("/images/") ||
                 path == "/scripts.js" || path == "/style.css" || path == "/login.html";
