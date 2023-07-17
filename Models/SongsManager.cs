@@ -27,22 +27,12 @@ public class SongsManager
         public bool Exists => File.Exists(Path.Join(MyHome.Instance.Config.SongsPath, this.Name));
     }
 
-    // TODO: remove once move from MediaPlayer
-    private List<SongInfo> songs;
-    public List<SongInfo> Songs
-    {
-        get
-        {
-            this.songs ??= MyHome.Instance.MediaPlayerSystem.songsList
-                    .Select(s => new SongInfo { Name = s.Name, Url = s.Url, Rating = s.Rating }).ToList();
-            return this.songs;
-        }
-    }
+    public List<SongInfo> Songs { get; }
 
 
     public SongsManager()
     {
-        // TODO: this.Songs = new List<SongInfo>();
+        this.Songs = new List<SongInfo>();
 
         Directory.CreateDirectory(MyHome.Instance.Config.SongsPath);
     }

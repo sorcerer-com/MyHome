@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -81,6 +82,21 @@ namespace MyHome.Controllers
             this.myHome.Stop();
             System.Threading.Tasks.Task.Delay(100).ContinueWith(_ => Environment.Exit(0));
             return this.Ok();
+        }
+
+
+        [HttpGet("songs/{fileName}")]
+        public ActionResult GetSong(string fileName)
+        {
+            var filePath = Path.Join(MyHome.Instance.Config.SongsPath, fileName);
+            if (!System.IO.File.Exists(filePath))
+                filePath = Path.Join(Models.Config.SoundsPath, fileName);
+            if (!System.IO.File.Exists(filePath))
+                return this.NotFound($"Song '{fileName}' not found");
+
+            // match buffer with the one in Tasmota
+            var file = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024);
+            return this.File(file, "audio/mpeg");
         }
 
 

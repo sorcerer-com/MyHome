@@ -25,10 +25,5 @@ namespace MyHome.Models
         {
             return MyHome.Instance.DevicesSystem.Sensors.SelectMany(s => s.Values.Keys).Distinct().OrderBy(s => s).Select(s => (s, s));
         }
-
-        public static IEnumerable<(string, string)> GetSongs()
-        {
-            return MyHome.Instance.MediaPlayerSystem.Songs.OrderByDescending(kvp => kvp.Value).Select(kvp => (kvp.Key, kvp.Key));
-        }
     }
 }

@@ -6,9 +6,6 @@ $.get(templateUrl, template => {
         data: function () {
             return {
                 rooms: [],
-                mediaPlayer: {},
-
-                mediaPlayerHover: false,
 
                 modal: "",
                 modalSelection: "",
@@ -37,17 +34,8 @@ $.get(templateUrl, template => {
                         this.showSecurityModal();
                 });
 
-                getSystem("MediaPlayer").done(mediaPlayer => this.mediaPlayer = mediaPlayer);
-
-                if (!window.ws || window.ws.readyState != WebSocket.OPEN || this.mediaPlayerHover)
+                if (!window.ws || window.ws.readyState != WebSocket.OPEN)
                     setTimeout(this.refreshData, 3000);
-            },
-
-            hoverMediaPlayer: function () {
-                if (!this.mediaPlayerHover) {
-                    this.mediaPlayerHover = true;
-                    this.refreshData();
-                }
             },
 
             showChartsModal: function () {

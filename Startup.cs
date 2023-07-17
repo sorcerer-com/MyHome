@@ -97,7 +97,7 @@ namespace MyHome
 
                 return false;
             }
-            else if (!IsResource(context.Request.Path) && !context.Request.Path.StartsWithSegments("/api/systems/MediaPlayer/songs") &&
+            else if (!IsResource(context.Request.Path) && !context.Request.Path.StartsWithSegments("/api/songs") &&
                 (context.Session.GetString("password") ?? "") != myHome.Config.Password)
             {
                 if (!context.Request.Path.StartsWithSegments("/api")) // pages only

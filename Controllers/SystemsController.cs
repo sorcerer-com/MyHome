@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 
 using Microsoft.AspNetCore.Mvc;
@@ -84,21 +83,6 @@ namespace MyHome.Controllers
                 logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
-        }
-
-
-        [HttpGet("MediaPlayer/songs/{fileName}")]
-        public ActionResult GetSong(string fileName)
-        {
-            var filePath = Path.Join(MyHome.Instance.Config.SongsPath, fileName);
-            if (!System.IO.File.Exists(filePath))
-                filePath = Path.Join(Models.Config.SoundsPath, fileName);
-            if (!System.IO.File.Exists(filePath))
-                return this.NotFound($"Song '{fileName}' not found");
-
-            // match buffer with the one in Tasmota
-            var file = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024);
-            return this.File(file, "audio/mpeg");
         }
 
 

@@ -26,7 +26,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         private const string BUFFER_LEVEL_STATE_NAME = "BufferLevel";
 
 
-        [UiProperty(selector: "GetSongs")]
+        [UiProperty]
         public string Playing
         {
             get => (string)this.States[PLAYING_STATE_NAME];
@@ -260,7 +260,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                         }
                     }
                 });
-                this.States[name] = Uri.UnescapeDataString(((string)newValue).Replace($"{Host}/api/systems/MediaPlayer/songs/", ""));
+                this.States[name] = Uri.UnescapeDataString(((string)newValue).Replace($"{Host}/api/songs/", ""));
             }
             else if (name == POSITION_STATE_NAME || name == BUFFER_LEVEL_STATE_NAME) // do not save state on position or buffer level update
                 return false;
@@ -271,7 +271,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         {
             var value = Uri.EscapeDataString(this.Playing);
             if (!string.IsNullOrEmpty(value) && !value.StartsWith("http"))
-                value = $"{Host}/api/systems/MediaPlayer/songs/{value}";
+                value = $"{Host}/api/songs/{value}";
 
             this.SendState(PLAYING_STATE_NAME, value);
         }

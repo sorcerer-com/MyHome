@@ -64,9 +64,6 @@ namespace MyHome
 
 
         [JsonIgnore]
-        public MediaPlayerSystem MediaPlayerSystem => this.Systems.Values.OfType<MediaPlayerSystem>().FirstOrDefault();
-
-        [JsonIgnore]
         public DevicesSystem DevicesSystem => this.Systems.Values.OfType<DevicesSystem>().FirstOrDefault();
 
         [JsonIgnore]
@@ -85,7 +82,6 @@ namespace MyHome
             //   - security system modal with sensor statuses (muk, motion, etc), etc.
             //   - improve Speaker UI - multiple playlists
             //   - improve power consumption UI (as plugin somehow)
-            //   - add photo-frame functionality - slide show of images of specific folder(s) (as plugin somehow)
             // * drivers to be sensors too - save state change in time
             // * per person presence reporting - Hristo is home, Dida not
             // * External system (rpi2, agent) ping system and notify on problem?

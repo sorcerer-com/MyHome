@@ -14,19 +14,6 @@
 
     <!-- Bottom bar -->
     <div class="w3-padding-large w3-margin-bottom w3-display-bottomright w3-animate-zoom">
-        <!-- Media Player -->
-        <div class="w3-dropdown-hover w3-transparent margin-left-8"
-             @mouseover="hoverMediaPlayer()" @mouseleave="mediaPlayerHover = false">
-            <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
-               title="Media player"
-               v-bind:class="{'w3-text-light-green': mediaPlayer.Playing}">
-                video_library
-            </a>
-            <div class="w3-dropdown-content w3-transparent dropdown-top-right">
-                <media-player v-bind:media-player="mediaPlayer"></media-player>
-            </div>
-        </div>
-
         <!-- Charts -->
         <div class="w3-dropdown-hover w3-transparent margin-left-8">
             <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
