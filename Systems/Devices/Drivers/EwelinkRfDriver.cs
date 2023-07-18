@@ -62,6 +62,8 @@ namespace MyHome.Systems.Devices.Drivers
 
         public EwelinkRfDriver()
         {
+            this.EwelinkDeviceId = "";
+            this.EwelinkRfChannel = 0;
         }
 
         public override void Update()
@@ -81,11 +83,11 @@ namespace MyHome.Systems.Devices.Drivers
                         var dev = Ewelink.GetDevice(this.EwelinkDeviceId).Result;
                         if (dev?.Online == true)
                             lastOnlineCache[this.EwelinkDeviceId] = DateTime.Now;
-                        logger.Trace($"Device '{this.EwelinkDeviceId}' online status: {dev?.Online}");
+                        logger.Trace($"EWeLink device '{this.EwelinkDeviceId}' ({this.Name}, {this.Room.Name}) online status: {dev?.Online}");
                     }
                     catch (Exception e)
                     {
-                        logger.Trace(e, $"Failed to check device '{this.EwelinkDeviceId}' online status");
+                        logger.Trace(e, $"Failed to check eWeLink device '{this.EwelinkDeviceId}' ({this.Name}, {this.Room.Name}) online status");
                     }
                 }
             }
@@ -102,12 +104,12 @@ namespace MyHome.Systems.Devices.Drivers
         {
             try
             {
-                logger.Info($"Transmit to eWeLink RF driver {this.Name} ({this.Room.Name})");
+                logger.Info($"Transmit to channel {this.EwelinkRfChannel} of eWeLink RF driver {this.Name} ({this.Room.Name})");
                 Ewelink.TransmitRfChannel(this.EwelinkDeviceId, this.EwelinkRfChannel).Wait();
             }
             catch (Exception e)
             {
-                logger.Error($"Cannot transmit RF channel '{this.EwelinkRfChannel}' to device: {this.Name} ({this.Room.Name})");
+                logger.Error($"Cannot transmit to RF channel '{this.EwelinkRfChannel}' of device {this.Name} ({this.Room.Name})");
                 logger.Debug(e);
                 throw;
             }

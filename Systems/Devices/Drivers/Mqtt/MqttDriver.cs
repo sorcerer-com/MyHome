@@ -97,12 +97,9 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
             try
             {
-                // update online topic was updated, so update LastOnline time
+                // online topic was updated, so update LastOnline time
                 if (this.onlineMqttTopic == e.ApplicationMessage.Topic)
-                {
                     this.lastOnline = DateTime.Now;
-                    return;
-                }
 
                 var payload = e.ApplicationMessage.ConvertPayloadToString();
                 if (string.IsNullOrEmpty(payload) || !this.AcceptPayload(payload))

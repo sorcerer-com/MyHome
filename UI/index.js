@@ -65,7 +65,7 @@
 
             upgrade().done(() => {
                 $("#vue-content").html("Upgrade was successful! Rebooting...");
-                setTimeout(() => window.location.reload(true), 90000);
+                setTimeout(() => window.location.reload(true), 120000);
             });
         },
         restart: function () {
@@ -74,7 +74,7 @@
 
             restart().done(() => {
                 $("#vue-content").html("Rebooting...");
-                setTimeout(() => window.location.reload(true), 90000);
+                setTimeout(() => window.location.reload(true), 120000);
             });
         }
     },

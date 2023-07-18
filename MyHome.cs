@@ -83,9 +83,8 @@ namespace MyHome
             //   - improve Speaker UI - multiple playlists
             //   - improve power consumption UI (as plugin somehow)
             // * drivers to be sensors too - save state change in time
-            // * per person presence reporting - Hristo is home, Dida not
+            // * per person presence reporting - Hristo is home, Dida not; show presence in security popup and history
             // * External system (rpi2, agent) ping system and notify on problem?
-            // * Support Tuya devices
             // * Devices auto discovery?
             // * Update NuGet packages and UI libraries (charts, vue, etc.)
             // * Improve camera movement capability - move to specific point, saved positions

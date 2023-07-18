@@ -175,7 +175,7 @@ namespace MyHome.Systems.Devices.Sensors
                     if (this.SubNamesMap.ContainsKey(name))
                         name = this.SubNamesMap[name];
 
-                    var value = (item.Value is bool b) ? (b ? 1 : 0) : (double)item.Value;
+                    var value = Convert.ToDouble(item.Value);
                     if (this.Calibration.ContainsKey(name)) // mapped name
                     {
                         MyHome.Instance.ExecuteJint(jint => value = (double)jint.SetValue("x", value).Evaluate(this.Calibration[name]).ToObject(),
@@ -197,8 +197,8 @@ namespace MyHome.Systems.Devices.Sensors
                             this.Data[time][name] = 0;
                         this.LastReadings[name] = value;
                     }
-                    this.Data[time].TrimExcess();
                 }
+                this.Data[time].TrimExcess();
                 MyHome.Instance.Events.Fire(this, GlobalEventTypes.SensorDataAdded, this.Data[time]);
                 this.ArchiveData();
                 this.SaveData();

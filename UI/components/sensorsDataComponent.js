@@ -61,6 +61,8 @@ $.get(templateUrl, template => {
                 let allRequests = [];
                 for (let sensor of this.sensors) {
                     let name = this.valueType != null ? sensor.Name : this.selection;
+                    if (this.room.SensorsMetadata[this.selection]['unit'])
+                        name += ` (${sensor.Units[this.selection]})`;
                     if (!this.stats[name]) {
                         // add empty values to preserve the order
                         this.stats[name] = { "LastDay": { Average: 0, Sum: 0 }, "Older": { Average: 0, Sum: 0 } };

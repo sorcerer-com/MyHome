@@ -3,30 +3,41 @@ using System.Collections.Generic;
 using System.Linq;
 
 using MyHome.Utils;
-
-using Newtonsoft.Json.Linq;
+using MyHome.Utils.Tuya;
 
 using NLog;
 
 namespace MyHome.Systems.Devices.Sensors
 {
-    public class HttpSensor : BaseSensor
+    // DPs from: https://github.com/jasonacox/tinytuya
+    // for device key: https://sites.google.com/view/randyhomeassistant/tuya-local
+    public class TuyaSensor : BaseSensor
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         [UiProperty(true)]
-        public string Address { get; set; }
+        public string TuyaDeviceId { get; set; }
+
+        [UiProperty(true, "Android /data/data/com.tuya.smartlife/shared_prefs/preferences_global_xxxxxxxx.xml")]
+        public string TuyaDeviceKey { get; set; }
+
+        [UiProperty(true)]
+        public string TuyaDeviceIp { get; set; }
 
         [UiProperty(true, "minutes")]
         public int ReadDataInterval { get; set; } // minutes
 
 
+        private TuyaDevice tuyaDevice => new(this.TuyaDeviceIp, this.TuyaDeviceKey, this.TuyaDeviceId);
+
         private DateTime nextDataRead;
 
 
-        public HttpSensor()
+        public TuyaSensor()
         {
-            this.Address = "";
+            this.TuyaDeviceId = "";
+            this.TuyaDeviceKey = "";
+            this.TuyaDeviceIp = "";
             this.ReadDataInterval = 5;
 
             this.nextDataRead = DateTime.Now.AddMinutes(1); // start reading 1 minute after start
@@ -53,16 +64,18 @@ namespace MyHome.Systems.Devices.Sensors
 
         private Dictionary<string, object> ReadData()
         {
-            if (!string.IsNullOrEmpty(this.Address))
+            try
             {
-                var content = Services.GetJsonContent(this.Address);
-                return content?.OfType<JObject>()
-                    .Where(item => item.ContainsKey("name") && item.ContainsKey("value") &&
-                        this.SubNamesMap.ContainsKey((string)item["name"]))
-                    .ToDictionary(item => (string)item["name"], item => (object)(double)item["value"]);
+                var dps = this.tuyaDevice.GetDpsAsync().Result;
+                return dps.Where(kvp => kvp.Value is bool || kvp.Value is long)
+                    .ToDictionary(dp => dp.Key.ToString(), dp => dp.Value);
             }
-            else
-                return new Dictionary<string, object>();
+            catch (Exception e)
+            {
+                logger.Error($"Cannot read Tuya device data {this.Name} ({this.Room.Name})");
+                logger.Debug(e);
+            }
+            return null;
         }
     }
 }
