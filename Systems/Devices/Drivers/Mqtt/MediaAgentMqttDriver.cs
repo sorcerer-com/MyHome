@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using MyHome.Systems.Devices.Drivers.Types;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -11,7 +12,7 @@ using NLog;
 
 namespace MyHome.Systems.Devices.Drivers.Mqtt
 {
-    public class MediaAgentMqttDriver : MqttDriver
+    public class MediaAgentMqttDriver : MqttDriver, IMediaDriver
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 

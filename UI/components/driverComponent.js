@@ -19,6 +19,11 @@ $.get(templateUrl, template => {
         },
         methods: {
             dateToString: dateToString,
+            isSimpleSwitch: function () {
+                return this.driver.$baseTypes.some(t => t.endsWith("ISwitchDriver")) &&
+                    !this.driver.$baseTypes.some(t => t.endsWith('ILightDriver')) &&
+                    !this.driver.$type.endsWith('EwelinkRfDriver');
+            },
             getAcIcon: function () {
                 switch (this.driver.Mode) {
                     case "AcMode.Off":
@@ -55,7 +60,7 @@ $.get(templateUrl, template => {
                     this.processing = true;
                 }
 
-                if (this.driver.$type.endsWith("AcIrMqttDriver")) {
+                if (this.driver.$baseTypes.some(t => t.endsWith("IAcDriver"))) {
                     this.showModal = true
                 }
             },

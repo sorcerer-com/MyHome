@@ -88,9 +88,8 @@ namespace MyHome.Utils
 
                     if (!string.IsNullOrEmpty(uiPropertyAttr.Selector))
                     {
-                        var mi = typeof(Selectors).GetMethod(uiPropertyAttr.Selector);
-                        if (mi == null)
-                            mi = obj.GetType().GetMethod(uiPropertyAttr.Selector);
+                        var mi = typeof(Selectors).GetMethod(uiPropertyAttr.Selector)
+                            ?? obj.GetType().GetMethod(uiPropertyAttr.Selector);
                         if (mi != null)
                         {
                             var values = (IEnumerable<(string, string)>)mi.Invoke(obj, null);
@@ -104,6 +103,9 @@ namespace MyHome.Utils
                 }
                 result.Add("$type", obj.GetType().ToString());
                 result.Add("$subtypes", subtypes);
+                var baseTypes = new List<string> { obj.GetType().BaseType.ToString() };
+                baseTypes.AddRange(obj.GetType().GetInterfaces().Select(i => i.ToString()));
+                result.Add("$baseTypes", baseTypes);
                 return result;
             }
         }

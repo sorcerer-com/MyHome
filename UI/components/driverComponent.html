@@ -4,13 +4,13 @@
    v-on:click="click()">
     <!-- Switch -->
     <div class="w3-xlarge" v-bind:class="{'w3-text-light-green': driver.IsOn}" style="font-weight: bold; margin: 2px"
-         v-if="driver.$type.endsWith('SwitchMqttDriver')">
+         v-if="isSimpleSwitch()">
         {{driver.IsOn ? 'ON' : 'OFF'}}
     </div>
 
     <!-- Light -->
     <span class="material-icons w3-xxlarge" v-bind:class="{'w3-text-yellow': driver.IsOn}"
-          v-if="driver.$type.endsWith('LightMqttDriver')">
+          v-if="driver.$baseTypes.some(t => t.endsWith('ILightDriver'))">
         {{driver.IsOn ? 'lightbulb' : 'lightbulb_outline'}}
 
         <input type="color" style="width: 12px; height: 12px;"
@@ -19,7 +19,7 @@
 
     <!-- AC -->
     <div class="w3-xlarge" style="margin: 2px; white-space: nowrap;"
-         v-if="driver.$type.endsWith('AcIrMqttDriver') && driver.Power">
+         v-if="driver.$baseTypes.some(t => t.endsWith('IAcDriver')) && driver.Power">
         {{Math.round(driver.Temperature, 2)}}
 
         <span class="w3-tiny">°C</span>
@@ -28,7 +28,7 @@
         </span>
     </div>
     <div class="w3-xlarge" style="font-weight: bold; margin: 2px;"
-         v-if="driver.$type.endsWith('AcIrMqttDriver') && !driver.Power">
+         v-if="driver.$baseTypes.some(t => t.endsWith('IAcDriver')) && !driver.Power">
         OFF
     </div>
 
