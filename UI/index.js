@@ -97,12 +97,11 @@ $(window).on("load", () => {
             ],
             scrollBehavior(to, from, savedPosition) {
                 if (to.hash) {
-                    // wait to populate DOM
-                    setTimeout(() => {
+                    retry(() => {
                         // from "scrollToPosition" function of vue-router.js
                         const el = document.getElementById(to.hash.slice(1));
                         if (!el)
-                            return;
+                            return false;
                         const perantRect = el.parentElement.getBoundingClientRect();
                         const elRect = el.getBoundingClientRect();
                         const opt = {
@@ -111,7 +110,7 @@ $(window).on("load", () => {
                             top: elRect.top - perantRect.top,
                         };
                         document.getElementById("scrollable-content").scrollTo(opt);
-                    }, 100);
+                    }, 5);
                 }
             }
         });

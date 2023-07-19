@@ -1,4 +1,20 @@
-﻿function setRoomSecuritySystemEnabled(roomName, isEnabled) {
+﻿const monthNames = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"];
+
+function setComponent(name, component) {
+    let scriptSrc = document.currentScript.src;
+    let templateUrl = scriptSrc.substr(0, scriptSrc.lastIndexOf(".")) + ".html";
+    $.get(templateUrl, template => {
+        component.template = template;
+        retry(() => {
+            if (!window.vue) // if vue is not ready, do a retry
+                return false;
+            window.vue.component(name, component);
+        })
+    });
+}
+
+function setRoomSecuritySystemEnabled(roomName, isEnabled) {
     setRoom(roomName, { IsSecuritySystemEnabled: isEnabled })
         .done(() => getRooms().done(rooms => this.$parent.rooms = rooms));
 }
@@ -8,7 +24,7 @@ function filterObjectBySettings(object, settings) {
         .filter(key => key[0] == "$" || settings == null || object['$subtypes'][key].setting == settings)
         .reduce((cur, key) => {
             let value = object[key] && object[key]['$subtypes'] ? filterObjectBySettings(object[key]) : object[key];
-            return Object.assign(cur, {[key]: value})
+            return Object.assign(cur, { [key]: value })
         }, {});
 }
 
@@ -156,5 +172,18 @@ const debounce = function (func, delay) {
         timer = setTimeout(() => {
             func.apply(context, args)
         }, delay);
+    }
+}
+
+function retry(func, retries = 3, delay = 100) {
+    if (retries <= 0)
+        return;
+
+    try {
+        if (func() == false)
+            throw new Error();
+    } catch (err) {
+        console.debug(`Action retry failed ${err}`)
+        setTimeout(() => retry(func, retries - 1, delay), delay);
     }
 }
