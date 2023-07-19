@@ -1,5 +1,5 @@
 ﻿setComponent("security-list", {
-    props: ["rooms"],
+    props: ["rooms", "security"],
     data: function () {
         return {
         }

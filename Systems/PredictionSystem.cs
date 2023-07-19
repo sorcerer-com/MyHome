@@ -64,7 +64,8 @@ namespace MyHome.Systems
             {
                 this.hourUpdate = now.Hour;
 
-                this.probabilities[ProbabilityType.NoPresence].AddValue($"{(int)now.DayOfWeek}{now.Hour}", MyHome.Instance.SecuritySystem.Presence ? 0 : 1, true);
+                var presence = MyHome.Instance.SecuritySystem.Present.Count > 0;
+                this.probabilities[ProbabilityType.NoPresence].AddValue($"{(int)now.DayOfWeek}{now.Hour}", presence ? 0 : 1, true);
                 // save
                 var json = JsonConvert.SerializeObject(this.probabilities, Formatting.Indented);
                 File.WriteAllText(DataFilePath, json);

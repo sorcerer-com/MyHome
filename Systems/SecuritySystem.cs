@@ -33,8 +33,16 @@ namespace MyHome.Systems
         [UiProperty(true, "minutes")]
         public int PresenceDetectionInterval { get; set; } // minutes
 
-        [UiProperty(true)]
-        public List<string> PresenceDeviceIPs { get; }
+        [UiProperty(true, "person/device IP")]
+        public Dictionary<string, string> PresenceDeviceIPs { get; }
+
+
+        [UiProperty]
+        public Dictionary<string, Dictionary<DateTime, string>> History { get; } // roomName / time / action
+
+        [JsonIgnore]
+        [UiProperty]
+        public List<string> Present { get; private set; } // list of present people
 
 
         [JsonIgnore]
@@ -46,11 +54,6 @@ namespace MyHome.Systems
                     return this.roomsInfo.ToDictionary(r => r.Room, r => r.Activated);
             }
         }
-
-        public Dictionary<string, Dictionary<DateTime, string>> History { get; } // roomName / time / action
-
-        [JsonIgnore]
-        public bool Presence { get; private set; }
 
 
         private sealed class RoomInfo
@@ -80,9 +83,10 @@ namespace MyHome.Systems
             this.SendInterval = 5;
             this.MovementThreshold = 0.02;
             this.PresenceDetectionInterval = 1;
-            this.PresenceDeviceIPs = new List<string>();
+            this.PresenceDeviceIPs = new Dictionary<string, string>();
+
             this.History = new Dictionary<string, Dictionary<DateTime, string>>();
-            this.Presence = false;
+            this.Present = new List<string>();
 
             this.roomsInfo = new List<RoomInfo>();
             this.prevImages = new Dictionary<string, Mat>();
@@ -134,7 +138,7 @@ namespace MyHome.Systems
                         logger.Warn("The alarm is currently activated");
                     this.roomsInfo.Remove(roomInfo);
                 }
-                this.SetHistory(room, enable ? "Enabled" : "Disabled");
+                this.SetHistory(room.Name, enable ? "Enabled" : "Disabled");
                 MyHome.Instance.SystemChanged = true;
             }
         }
@@ -172,7 +176,7 @@ namespace MyHome.Systems
                 });
 
                 logger.Info($"Security alarm activated in '{room.Name}' room");
-                this.SetHistory(room, "Activated");
+                this.SetHistory(room.Name, "Activated");
                 MyHome.Instance.SystemChanged = true;
                 MyHome.Instance.Events.Fire(this, GlobalEventTypes.SecurityAlarmActivated, roomInfo.Room);
             }
@@ -196,7 +200,7 @@ namespace MyHome.Systems
                     if (elapsed > TimeSpan.FromMinutes(this.SendInterval))
                     {
                         roomInfo.Activated = false;
-                        this.SetHistory(roomInfo.Room, "Enabled");
+                        this.SetHistory(roomInfo.Room.Name, "Enabled");
                         if (roomInfo.ImageFiles.Count > 1 || CheckCameras(roomInfo.Room))
                         {
                             bool sent = Alert.Create($"'{roomInfo.Room.Name}' room security alarm activated!")
@@ -223,17 +227,30 @@ namespace MyHome.Systems
                 }
             }
 
+            // presence detection
             if (DateTime.Now - this.presenceDetectionTimer > TimeSpan.FromMinutes(this.PresenceDetectionInterval))
             {
                 this.presenceDetectionTimer = DateTime.Now;
                 Task.Run(() =>
                 {
-                    var newPresence = this.DetectPresence();
-                    if (newPresence != this.Presence)
+                    var newPresence = this.DetectPresence().OrderBy(x => x);
+
+                    if (!newPresence.SequenceEqual(this.Present))
                     {
-                        this.Presence = newPresence;
-                        logger.Info($"{(this.Presence ? "" : "No ")}Presence detected");
-                        MyHome.Instance.Events.Fire(this, GlobalEventTypes.PresenceChanged, this.Presence);
+                        foreach (var name in this.PresenceDeviceIPs.Keys)
+                        {
+                            if (newPresence.Contains(name) && !this.Present.Contains(name)) // new present
+                                this.SetHistory(name, "Present");
+                            else if (!newPresence.Contains(name) && this.Present.Contains(name)) // someone left
+                                this.SetHistory(name, "Left");
+                        }
+
+                        if (newPresence.Any() != this.Present.Any()) // if there is a change in presence at all, not per person 
+                        {
+                            logger.Info(newPresence.Any() ? "Presence detected: " + string.Join(", ", newPresence) : "No presence detected");
+                            MyHome.Instance.Events.Fire(this, GlobalEventTypes.PresenceChanged, newPresence.Any());
+                        }
+                        this.Present = newPresence.ToList();
                     }
                 });
             }
@@ -259,40 +276,45 @@ namespace MyHome.Systems
                 roomInfo.ImageFiles.Add(filepath);
         }
 
-        private bool DetectPresence()
+        private List<string> DetectPresence()
         {
+            var result = new List<string>();
             using var ping = new System.Net.NetworkInformation.Ping();
             // retry 5 times
             for (int i = 0; i < 5; i++)
             {
-                foreach (var ip in this.PresenceDeviceIPs)
+                foreach (var kvp in this.PresenceDeviceIPs)
                 {
+                    if (result.Contains(kvp.Key))
+                        continue;
                     try
                     {
-                        var reply = ping.Send(System.Net.IPAddress.Parse(ip), 1000);
-                        logger.Trace($"Ping: {ip}, {reply.RoundtripTime}, {reply.Status}");
+                        var reply = ping.Send(System.Net.IPAddress.Parse(kvp.Value), 1000);
+                        logger.Trace($"Ping: {kvp.Value}, {reply.RoundtripTime}, {reply.Status}");
                         if (reply.Status == System.Net.NetworkInformation.IPStatus.Success)
-                            return true;
+                            result.Add(kvp.Key);
+                        if (result.Count == this.PresenceDeviceIPs.Count) // all devices are present
+                            return result;
                     }
                     catch (Exception e)
                     {
                         if (i == 0)
                         {
-                            logger.Error($"Failed to detect presence for {ip}");
+                            logger.Error($"Failed to detect presence for {kvp.Key} ({kvp.Value})");
                             logger.Debug(e);
                         }
                     }
                 }
             }
-            return false;
+            return result;
         }
 
-        private void SetHistory(Room room, string action)
+        private void SetHistory(string actor, string action)
         {
-            if (!this.History.ContainsKey(room.Name))
-                this.History.Add(room.Name, new Dictionary<DateTime, string>());
+            if (!this.History.ContainsKey(actor))
+                this.History.Add(actor, new Dictionary<DateTime, string>());
 
-            this.History[room.Name][DateTime.Now] = action;
+            this.History[actor][DateTime.Now] = action;
 
             // remove entries older than one week
             var weekAgo = DateTime.Now.AddDays(-7);

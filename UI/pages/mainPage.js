@@ -2,6 +2,7 @@
     data: function () {
         return {
             rooms: [],
+            security: {},
 
             modal: "",
             modalSelection: "",
@@ -29,6 +30,8 @@
                 if (this.modal == "Security")
                     this.showSecurityModal();
             });
+
+            getSystem("Security").done(security => this.security = security);
 
             if (!window.ws || window.ws.readyState != WebSocket.OPEN)
                 setTimeout(this.refreshData, 3000);
@@ -59,6 +62,26 @@
                     updateChartData(this.charts["chartSecurity"], room.Name, chartData);
 
                     this.stats[room.Name] = {
+                        Average: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) / chartData.length * 100) / 100,
+                        Sum: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
+                    };
+                }
+
+                for (let name of Object.keys(this.security.PresenceDeviceIPs)) {
+                    if (!(name in this.security.History))
+                        continue;
+                    let chartData = Object.keys(this.security.History[name])
+                        .map(k => {
+                            return {
+                                x: new Date(k),
+                                y: this.security.History[name][k] == "Present" ? 1 : 0
+                            }
+                        })
+                        .sort((a, b) => (a.x > b.x) ? 1 : -1);
+
+                    updateChartData(this.charts["chartSecurity"], name, chartData);
+
+                    this.stats[name] = {
                         Average: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) / chartData.length * 100) / 100,
                         Sum: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
                     };

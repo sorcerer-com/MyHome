@@ -16,7 +16,11 @@ function setComponent(name, component) {
 
 function setRoomSecuritySystemEnabled(roomName, isEnabled) {
     setRoom(roomName, { IsSecuritySystemEnabled: isEnabled })
-        .done(() => getRooms().done(rooms => this.$parent.rooms = rooms));
+        .done(() => {
+            let parent = this.$parent;
+            if (parent)
+                getRooms().done(rooms => parent.rooms = rooms)
+        });
 }
 
 function filterObjectBySettings(object, settings) {

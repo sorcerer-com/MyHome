@@ -1,9 +1,20 @@
-﻿<div class="w3-padding-small w3-round-large w3-animate-opacity margin-8 bg-gray"
+﻿<div class="w3-padding-small w3-round-large w3-text-white w3-animate-opacity margin-8 bg-gray"
      style="white-space: nowrap">
+
+    <!-- presence -->
+    <div v-for="name of Object.keys(security.PresenceDeviceIPs || {})"
+         v-bind:class="{'w3-text-blue-gray': !security.Present.includes(name)}"
+         class="margin-left-8">
+        {{name}}
+    </div>
+
+    <hr class="reset-margin"/>
+
     <!-- rooms statuses -->
     <div class="w3-left-align" v-for="room of rooms">
         <a v-on:click="setRoomSecuritySystemEnabled(room.Name, !room.IsSecuritySystemEnabled);"
-           v-bind:title="room.IsSecuritySystemEnabled ? 'Disable' : 'Enable'">
+           v-bind:title="room.IsSecuritySystemEnabled ? 'Disable' : 'Enable'"
+           class="w3-hover-text-blue-gray">
             <span class="w3-cell-middle w3-small material-icons">
                 <span v-show="room.IsSecuritySystemEnabled" class="w3-text-light-green">check_circle</span>
                 <span v-show="!room.IsSecuritySystemEnabled" class="w3-text-red">cancel</span>

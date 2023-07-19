@@ -35,7 +35,8 @@
                 security
             </a>
             <div class="w3-dropdown-content w3-transparent dropdown-top-right">
-                <security-list v-bind:rooms="rooms" v-on:show-modal="showSecurityModal()"></security-list>
+                <security-list v-bind:rooms="rooms" v-bind:security="security" v-on:show-modal="showSecurityModal()">
+                </security-list>
             </div>
         </div>
     </div>
