@@ -44,7 +44,7 @@ namespace MyHome.Systems.Actions
         public string TargetRoomName
         {
             get => this.targetRoom?.Name ?? "";
-            set => this.targetRoom = MyHome.Instance.Rooms.FirstOrDefault(r => r.Name == value);
+            set => this.targetRoom = MyHome.Instance.Rooms.Find(r => r.Name == value);
         }
 
         [UiProperty]

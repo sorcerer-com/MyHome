@@ -127,7 +127,7 @@ namespace MyHome.Utils
 
         public static (string host, int? port) SplitAddress(string address)
         {
-            if (!address.Contains(":"))
+            if (!address.Contains(':'))
                 return (address, null);
 
             var split = address.Split(":");

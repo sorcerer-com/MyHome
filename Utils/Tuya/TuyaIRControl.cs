@@ -109,7 +109,9 @@ public class TuyaIRControl : TuyaDevice
                 var subCmdJson = JsonConvert.SerializeObject(subCmd);
                 await this.SetDpsAsync(new Dictionary<int, object>() { { 201, subCmdJson } }, nullRetries: 0, allowEmptyResponse: true, cancellationToken: cancellationToken);
             }
-            catch { }
+            catch
+            { // no-op 
+            }
         }
     }
 
@@ -140,7 +142,7 @@ public class TuyaIRControl : TuyaDevice
     public static ushort[] Base64ToPulses(string codeBase64)
     {
         var bytes = Convert.FromBase64String(
-            (codeBase64.Length % 4 == 1 && codeBase64.StartsWith("1"))
+            (codeBase64.Length % 4 == 1 && codeBase64.StartsWith('1'))
                 ? codeBase64.Substring(1) // code can be padded with "1" (wtf?)
                 : codeBase64
         );

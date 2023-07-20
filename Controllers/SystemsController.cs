@@ -104,7 +104,7 @@ namespace MyHome.Controllers
             {
                 var body = Newtonsoft.Json.Linq.JToken.Parse(new System.IO.StreamReader(this.Request.Body).ReadToEndAsync().Result);
 
-                var action = this.myHome.ActionsSystem.Actions.FirstOrDefault(action => action.Name == actionName);
+                var action = this.myHome.ActionsSystem.Actions.Find(action => action.Name == actionName);
                 if (action == null)
                 {
                     logger.Info($"Add action: {actionName}");
@@ -135,7 +135,7 @@ namespace MyHome.Controllers
             try
             {
                 logger.Info($"Delete action: {actionName}");
-                var action = this.myHome.ActionsSystem.Actions.FirstOrDefault(action => action.Name == actionName);
+                var action = this.myHome.ActionsSystem.Actions.Find(action => action.Name == actionName);
                 if (action == null)
                     return this.NotFound($"Action '{actionName}' not found");
 
@@ -155,7 +155,7 @@ namespace MyHome.Controllers
         public ActionResult TriggerAction(string actionName)
         {
             logger.Info($"Trigger action: {actionName}");
-            var action = this.myHome.ActionsSystem.Actions.FirstOrDefault(action => action.Name == actionName);
+            var action = this.myHome.ActionsSystem.Actions.Find(action => action.Name == actionName);
             if (action == null)
                 return this.NotFound($"Action '{actionName}' not found");
 

@@ -343,9 +343,9 @@ namespace MyHome.Systems.Devices.Sensors
                 result += ordered[i].Value * duration;
             }
             // add last value multiplied by average duration
-            var totalTime = (ordered.Last().Key - ordered.First().Key).TotalSeconds;
+            var totalTime = (ordered[^1].Key - ordered[0].Key).TotalSeconds;
             var avgTime = totalTime / (ordered.Count - 1);
-            result += ordered.Last().Value * avgTime;
+            result += ordered[^1].Value * avgTime;
 
             return result / (totalTime + avgTime);
         }

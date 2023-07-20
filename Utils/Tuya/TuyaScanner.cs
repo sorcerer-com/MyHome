@@ -13,6 +13,7 @@ namespace MyHome.Utils.Tuya;
 /// <summary>
 /// Scanner to discover devices over local network.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S1450:Private fields only used as local variables in methods should become local variables", Justification = "<Pending>")]
 public class TuyaScanner
 {
     private const ushort UDP_PORT31 = 6666;      // Tuya 3.1 UDP Port

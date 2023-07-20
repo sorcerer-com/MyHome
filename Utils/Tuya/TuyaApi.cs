@@ -26,7 +26,7 @@ public class TuyaApi
     private DateTime tokenTime = new DateTime();
     public string TokenUid => this.token?.Uid;
 
-    private class TuyaToken
+    private sealed class TuyaToken
     {
         [JsonProperty("access_token")]
         public string AccessToken { get; set; }
@@ -118,7 +118,7 @@ public class TuyaApi
     /// <returns>JSON string with response.</returns>
     public async Task<string> RequestAsync(Method method, string uri, string body = null, Dictionary<string, string> headers = null, bool noToken = false, bool forceTokenRefresh = false, CancellationToken cancellationToken = default)
     {
-        while (uri.StartsWith("/")) uri = uri.Substring(1);
+        while (uri.StartsWith('/')) uri = uri.Substring(1);
         var urlHost = RegionToHost(this.region);
         var url = new Uri($"https://{urlHost}/{uri}");
         var now = (DateTime.Now.ToUniversalTime() - new DateTime(1970, 1, 1)).TotalMilliseconds.ToString("0");

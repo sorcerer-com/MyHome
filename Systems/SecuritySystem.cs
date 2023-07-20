@@ -99,7 +99,7 @@ namespace MyHome.Systems
         {
             lock (this.roomsInfo)
             {
-                var roomInfo = this.roomsInfo.FirstOrDefault(r => r.Room == room);
+                var roomInfo = this.roomsInfo.Find(r => r.Room == room);
                 if (enable)
                 {
                     if (roomInfo != null)
@@ -147,7 +147,7 @@ namespace MyHome.Systems
         {
             lock (this.roomsInfo)
             {
-                var roomInfo = this.roomsInfo.FirstOrDefault(r => r.Room == room);
+                var roomInfo = this.roomsInfo.Find(r => r.Room == room);
                 if (roomInfo == null)
                 {
                     logger.Trace($"Try to activate security alarm for '{room.Name}' room, but it's not enabled");
@@ -171,7 +171,7 @@ namespace MyHome.Systems
                 // play security alarm on speakers if no presence detected
                 Task.Delay(TimeSpan.FromMinutes(this.PresenceDetectionInterval * 3)).ContinueWith(t =>
                 {
-                    if (this.roomsInfo.FirstOrDefault(r => r.Room == room)?.Activated == true)
+                    if (this.roomsInfo.Find(r => r.Room == room)?.Activated == true)
                         MyHome.Instance.PlayAlarm(Devices.Drivers.Types.ISpeakerDriver.AlarmType.Security);
                 });
 

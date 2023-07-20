@@ -7,7 +7,7 @@ namespace MyHome.Utils.Tuya;
 /// <summary>
 /// Device info received from local network.
 /// </summary>
-public class TuyaDeviceScanInfo : IEquatable<TuyaDeviceScanInfo>
+public sealed class TuyaDeviceScanInfo : IEquatable<TuyaDeviceScanInfo>
 {
     [JsonProperty("ip")]
     public string IP { get; set; } = null;
@@ -41,5 +41,10 @@ public class TuyaDeviceScanInfo : IEquatable<TuyaDeviceScanInfo>
     public override string ToString()
     {
         return $"IP: {this.IP}, gwId: {this.GwId}, product key: {this.ProductKey}, encryption: {this.Encryption}, version: {this.Version}";
+    }
+
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as TuyaDeviceScanInfo);
     }
 }

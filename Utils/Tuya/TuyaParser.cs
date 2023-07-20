@@ -12,6 +12,7 @@ namespace MyHome.Utils.Tuya;
 /// <summary>
 /// Class to encode and decode data sent over local network.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out", Justification = "<Pending>")]
 internal static class TuyaParser
 {
     private static readonly byte[] PROTOCOL_VERSION_BYTES_31 = Encoding.ASCII.GetBytes("3.1");
@@ -173,7 +174,7 @@ internal static class TuyaParser
             return new TuyaLocalResponse(command, returnCode, null);
 
         var json = Encoding.UTF8.GetString(data);
-        if (!json.StartsWith("{") || !json.EndsWith("}"))
+        if (!json.StartsWith('{') || !json.EndsWith('}'))
             throw new InvalidDataException($"Response is not JSON: {json}");
         return new TuyaLocalResponse(command, returnCode, json);
     }

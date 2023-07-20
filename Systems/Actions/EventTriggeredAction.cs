@@ -23,7 +23,7 @@ namespace MyHome.Systems.Actions
             {
                 var split = value?.Split('.');
                 if (split?.Length == 2)
-                    this.device = MyHome.Instance.Rooms.FirstOrDefault(r => r.Name == split[0])?.Devices.FirstOrDefault(s => s.Name == split[1]);
+                    this.device = MyHome.Instance.Rooms.Find(r => r.Name == split[0])?.Devices.FirstOrDefault(s => s.Name == split[1]);
             }
         }
 

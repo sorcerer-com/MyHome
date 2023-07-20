@@ -47,7 +47,7 @@ namespace MyHome.Controllers
             {
                 var body = Newtonsoft.Json.Linq.JToken.Parse(new System.IO.StreamReader(this.Request.Body).ReadToEndAsync().Result);
 
-                var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+                var room = this.myHome.Rooms.Find(r => r.Name == roomName);
                 if (room == null)
                 {
                     logger.Info($"Add room '{roomName}'");
@@ -72,7 +72,7 @@ namespace MyHome.Controllers
         {
             try
             {
-                var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+                var room = this.myHome.Rooms.Find(r => r.Name == roomName);
                 if (room == null)
                     return this.NotFound($"Room '{roomName}' not found");
 
@@ -95,7 +95,7 @@ namespace MyHome.Controllers
         [HttpPost("{roomName}/devices/create/{deviceType}")]
         public ActionResult CreateDevice(string roomName, string deviceType)
         {
-            var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+            var room = this.myHome.Rooms.Find(r => r.Name == roomName);
             if (room == null)
                 return this.NotFound($"Room '{roomName}' not found");
 
@@ -116,7 +116,7 @@ namespace MyHome.Controllers
             {
                 var body = Newtonsoft.Json.Linq.JToken.Parse(new System.IO.StreamReader(this.Request.Body).ReadToEndAsync().Result);
 
-                var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+                var room = this.myHome.Rooms.Find(r => r.Name == roomName);
                 if (room == null)
                     return this.NotFound($"Room '{roomName}' not found");
 
@@ -151,7 +151,7 @@ namespace MyHome.Controllers
         {
             try
             {
-                var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+                var room = this.myHome.Rooms.Find(r => r.Name == roomName);
                 if (room == null)
                     return this.NotFound($"Room '{roomName}' not found");
 
@@ -175,7 +175,7 @@ namespace MyHome.Controllers
         {
             try
             {
-                var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+                var room = this.myHome.Rooms.Find(r => r.Name == roomName);
                 if (room == null)
                     return this.NotFound($"Room '{roomName}' not found");
 
@@ -200,7 +200,7 @@ namespace MyHome.Controllers
         [HttpGet("{roomName}/sensors/{sensorName}/data/{valueType}")]
         public ActionResult GetSensorData(string roomName, string sensorName, string valueType)
         {
-            var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+            var room = this.myHome.Rooms.Find(r => r.Name == roomName);
             if (room == null)
                 return this.NotFound($"Room '{roomName}' not found");
 
@@ -215,7 +215,7 @@ namespace MyHome.Controllers
         [HttpPost("{roomName}/sensors/{sensorName}/data/{valueType}")]
         public ActionResult SetSensorData(string roomName, string sensorName, string valueType)
         {
-            var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+            var room = this.myHome.Rooms.Find(r => r.Name == roomName);
             if (room == null)
                 return this.NotFound($"Room '{roomName}' not found");
 
@@ -239,7 +239,7 @@ namespace MyHome.Controllers
         [HttpGet("{roomName}/cameras/{cameraName}/image")]
         public void GetCameraImage(string roomName, string cameraName)
         {
-            var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+            var room = this.myHome.Rooms.Find(r => r.Name == roomName);
             if (room == null)
             {
                 this.Response.StatusCode = StatusCodes.Status404NotFound;
@@ -289,7 +289,7 @@ namespace MyHome.Controllers
         {
             try
             {
-                var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+                var room = this.myHome.Rooms.Find(r => r.Name == roomName);
                 if (room == null)
                     return this.NotFound($"Room '{roomName}' not found");
 
@@ -318,7 +318,7 @@ namespace MyHome.Controllers
 
             try
             {
-                var room = this.myHome.Rooms.FirstOrDefault(r => r.Name == roomName);
+                var room = this.myHome.Rooms.Find(r => r.Name == roomName);
                 if (room == null)
                     return this.NotFound($"Room '{roomName}' not found");
 

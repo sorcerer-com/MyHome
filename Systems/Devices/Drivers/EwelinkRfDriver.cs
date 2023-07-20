@@ -57,7 +57,7 @@ namespace MyHome.Systems.Devices.Drivers
         }
 
         // TODO: move to base Ewelink device?
-        private static readonly Dictionary<string, DateTime> lastOnlineCache = new Dictionary<string, DateTime>();
+        private static readonly Dictionary<string, DateTime> lastOnlineCache = new();
 
 
         public EwelinkRfDriver()

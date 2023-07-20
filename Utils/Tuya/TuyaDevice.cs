@@ -16,6 +16,9 @@ namespace MyHome.Utils.Tuya;
 /// Connection with Tuya device.
 /// https://github.com/ClusterM/tuyanet
 /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3881:\"IDisposable\" should be implemented correctly", Justification = "<Pending>")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3928:Parameter names used into ArgumentException constructors should match an existing one ", Justification = "<Pending>")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "<Pending>")]
 public class TuyaDevice : IDisposable
 {
     /// <summary>
@@ -108,7 +111,7 @@ public class TuyaDevice : IDisposable
     private readonly TuyaApi.Region region;
     private readonly string accessId;
     private readonly string apiSecret;
-    private readonly SemaphoreSlim sem = new SemaphoreSlim(1);
+    private readonly SemaphoreSlim sem = new(1);
 
     /// <summary>
     /// Fills JSON string with base fields required by most commands.
@@ -199,12 +202,11 @@ public class TuyaDevice : IDisposable
             {
                 using (await this.sem.WaitDisposableAsync(cancellationToken))
                 {
-                    if (this.client == null)
-                        this.client = new TcpClient();
-                    if (!this.client.ConnectAsync(this.IP, this.Port).Wait(this.ConnectionTimeout))
+                    this.client ??= new TcpClient();
+                    if (!this.client.ConnectAsync(this.IP, this.Port).Wait(this.ConnectionTimeout, cancellationToken))
                         throw new IOException("Connection timeout");
                     var stream = this.client.GetStream();
-                    await stream.WriteAsync(data, 0, data.Length, cancellationToken).ConfigureAwait(false);
+                    await stream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
                     return await this.ReceiveAsync(stream, nullRetries, overrideRecvTimeout, cancellationToken);
                 }
             }
@@ -213,10 +215,6 @@ public class TuyaDevice : IDisposable
                 // sockets sometimes drop the connection unexpectedly, so let's 
                 // retry at least once
                 lastException = ex;
-            }
-            catch (Exception)
-            {
-                throw;
             }
             finally
             {
@@ -250,7 +248,7 @@ public class TuyaDevice : IDisposable
                 if (t == timeoutTask)
                 {
                     if (stream.DataAvailable)
-                        bytes = await stream.ReadAsync(buffer, 0, length, cancellationToken);
+                        bytes = await stream.ReadAsync(buffer.AsMemory(0, length), cancellationToken);
                     else
                         throw new TimeoutException();
                 }
@@ -383,5 +381,6 @@ public class TuyaDevice : IDisposable
         this.client?.Close();
         this.client?.Dispose();
         this.client = null;
+        GC.SuppressFinalize(this);
     }
 }

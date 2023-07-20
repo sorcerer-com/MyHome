@@ -5,7 +5,7 @@
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "S125")]
     internal static class DeviceData
     {
-        public static readonly Dictionary<string, int> DeviceChannelCount = new Dictionary<string, int>()
+        public static readonly Dictionary<string, int> DeviceChannelCount = new()
         {
           {"SOCKET", 1},
           {"SWITCH_CHANGE", 1},
@@ -27,7 +27,7 @@
           {"CUN_YOU_DOOR", 4}
         };
 
-        public static readonly Dictionary<int, string> DeviceTypeUuid = new Dictionary<int, string>()
+        public static readonly Dictionary<int, string> DeviceTypeUuid = new()
             {
           {1, "SOCKET" },
           {2, "SOCKET_2"},

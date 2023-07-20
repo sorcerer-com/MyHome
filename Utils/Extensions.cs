@@ -139,7 +139,7 @@ namespace MyHome.Utils
             var type = obj.GetType();
             foreach (var item in token.OfType<JProperty>())
             {
-                if (item.Name.StartsWith("$"))
+                if (item.Name.StartsWith('$'))
                     continue;
 
                 var prop = type.GetProperty(item.Name);

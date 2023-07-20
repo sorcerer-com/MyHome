@@ -48,7 +48,7 @@ public class SongsManager
         if (name == null)
             return null;
 
-        if (!this.Songs.Any(s => s.Name == name))
+        if (!this.Songs.Exists(s => s.Name == name))
             this.Songs.Add(new SongInfo() { Name = name, Url = url, Rating = this.Songs.Select(s => s.Rating).Max() + 1 });
 
         // cleanup songs if we exceed the usage capacity
@@ -64,7 +64,7 @@ public class SongsManager
         if (string.IsNullOrEmpty(name) || File.Exists(Path.Join(MyHome.Instance.Config.SongsPath, name)))
             return name;
 
-        var song = this.Songs.FirstOrDefault(s => s.Name == name);
+        var song = this.Songs.Find(s => s.Name == name);
         if (song == null)
             return name;
         if (song.Url.Contains("youtube") || song.Url.Contains("youtu.be"))
@@ -74,7 +74,7 @@ public class SongsManager
 
     public void IncreaseSongRating(string name, int rating = 1)
     {
-        var song = this.Songs.FirstOrDefault(s => s.Name == name);
+        var song = this.Songs.Find(s => s.Name == name);
         if (song != null)
             song.Rating += rating;
     }

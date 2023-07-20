@@ -196,7 +196,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         {
             if (this.Queue.Count != 0)
             {
-                var song = this.Songs[this.Queue.First()];
+                var song = this.Songs[this.Queue[0]];
                 this.Queue.RemoveAt(0);
                 this.Playing = song.Name;
                 return;
