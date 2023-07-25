@@ -127,12 +127,15 @@
                                     .map(k => { return { x: new Date(k), y: data[k] } })
                                     .filter(e => e.x < prevDay)
                                     .sort((a, b) => (a.x > b.x) ? 1 : -1);
-                                updateChartData(this.charts["charts"], `${sensor.Name}.${valueType}`, chartData);
+                                if (this.charts["charts"].data.datasets.some(ds => ds.label == `${sensor.Name}.${valueType}`)) // ensure that this call isn't old
+                                    updateChartData(this.charts["charts"], `${sensor.Name}.${valueType}`, chartData);
 
-                                this.stats[`${sensor.Name}.${valueType}`] = {
-                                    Average: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) / chartData.length * 100) / 100,
-                                    Sum: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
-                                };
+                                if (`${sensor.Name}.${valueType}` in this.stats) {
+                                    this.stats[`${sensor.Name}.${valueType}`] = {
+                                        Average: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) / chartData.length * 100) / 100,
+                                        Sum: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
+                                    };
+                                }
                             });
                         }
                     }

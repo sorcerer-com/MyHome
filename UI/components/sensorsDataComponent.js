@@ -71,18 +71,22 @@
                         .map(k => { return { x: new Date(k), y: data[k] } })
                         .filter(e => e.x >= this.selectedPeriod[0] && e.x < this.selectedPeriod[1])
                         .sort((a, b) => (a.x > b.x) ? 1 : -1);
-                    updateChartData(this.charts["chartLastDay"], name, lastDayData);
-                    updateChartData(this.charts["chartOlder"], name, olderData);
+                    if (this.charts["chartLastDay"].data.datasets.some(ds => ds.label == name)) // ensure that this call isn't old
+                        updateChartData(this.charts["chartLastDay"], name, lastDayData);
+                    if (this.charts["chartOlder"].data.datasets.some(ds => ds.label == name)) // ensure that this call isn't old
+                        updateChartData(this.charts["chartOlder"], name, olderData);
 
-                    this.stats[name] = {
-                        "LastDay": {
-                            Average: Math.round(lastDayData.reduce((sum, curr) => sum + curr.y, 0) / lastDayData.length * 100) / 100,
-                            Sum: Math.round(lastDayData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
-                        }, "Older": {
-                            Average: Math.round(olderData.reduce((sum, curr) => sum + curr.y, 0) / olderData.length * 100) / 100,
-                            Sum: Math.round(olderData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
-                        }
-                    };
+                    if (name in this.stats) {
+                        this.stats[name] = {
+                            "LastDay": {
+                                Average: Math.round(lastDayData.reduce((sum, curr) => sum + curr.y, 0) / lastDayData.length * 100) / 100,
+                                Sum: Math.round(lastDayData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
+                            }, "Older": {
+                                Average: Math.round(olderData.reduce((sum, curr) => sum + curr.y, 0) / olderData.length * 100) / 100,
+                                Sum: Math.round(olderData.reduce((sum, curr) => sum + curr.y, 0) * 100) / 100
+                            }
+                        };
+                    }
 
                     this.sensorsData[name] = data;
                 });
