@@ -5,6 +5,7 @@
             settings: {},
             logs: [],
             upgradeAvailable: false,
+            restarting: false,
 
             modal: "",
             selectedSettings: ""
@@ -29,7 +30,7 @@
             }).fail(response => {
                 if (response.status == 401) // unauthorized
                     window.location.replace("./login.html");
-                if (response.status == 0) // no connection
+                if (response.status == 0 && !this.restarting) // no connection
                     window.location.reload();
                 setTimeout(this.refreshData, 1000);
             });
@@ -65,7 +66,8 @@
 
             upgrade().done(() => {
                 $("#vue-content").html("Upgrade was successful! Rebooting...");
-                setTimeout(() => window.location.reload(true), 120000);
+                setTimeout(() => window.location.reload(true), 90000);
+                this.restarting = true;
             });
         },
         restart: function () {
@@ -74,7 +76,8 @@
 
             restart().done(() => {
                 $("#vue-content").html("Rebooting...");
-                setTimeout(() => window.location.reload(true), 120000);
+                setTimeout(() => window.location.reload(true), 90000);
+                this.restarting = true;
             });
         }
     },

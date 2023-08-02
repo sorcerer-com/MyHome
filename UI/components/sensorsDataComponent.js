@@ -54,7 +54,7 @@
             let allRequests = [];
             for (let sensor of this.sensors) {
                 let name = this.valueType != null ? sensor.Name : this.selection;
-                if (this.room.SensorsMetadata[this.selection]['unit'])
+                if (sensor.Units[this.selection])
                     name += ` (${sensor.Units[this.selection]})`;
                 if (!this.stats[name]) {
                     // add empty values to preserve the order

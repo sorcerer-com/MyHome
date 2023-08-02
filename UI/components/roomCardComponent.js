@@ -30,15 +30,18 @@
                 result += `${key}: ${obj[key]}\n`;
             return result.trim();
         },
+        isOffline: function (sensor) {
+            return (new Date() - new Date(sensor.LastOnline)) > 60 * 60 * 1000; // if online before more than 1 hour in millis
+        },
         getGroupedSensors: function () {
             return this.room.Devices.filter(d => d.$type.endsWith("Sensor") && d.Grouped);
         },
         getCameras: function () {
             return this.room.Devices.filter(d => d.$type.endsWith("Camera"));
         },
-        getSensorsBySelectedValueType: function () {
+        getSensorsByValueType: function (valueType) {
             return this.room.Devices.filter(d => (d.$type.endsWith("Sensor") || d.$type.endsWith("Camera")) &&
-                this.selectedValueType in d.Values);
+                valueType in d.Values);
         },
         getSensorByName: function (name) {
             return this.room.Devices.find(d => d.$type.endsWith("Sensor") && d.Name == name);
