@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -12,6 +13,7 @@ using Mictlanix.DotNet.Onvif.Imaging;
 using Mictlanix.DotNet.Onvif.Media;
 using Mictlanix.DotNet.Onvif.Ptz;
 
+using MyHome.Models;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -93,6 +95,7 @@ namespace MyHome.Systems.Devices.Sensors
         private DateTime lastUse;
         private DateTime nextDataRead;
         private DateTime lastImageSaved;
+        private bool stopped;
 
         private readonly Dictionary<Type, object> onvif;
 
@@ -108,6 +111,7 @@ namespace MyHome.Systems.Devices.Sensors
             this.lastUse = DateTime.Now.AddMinutes(-1);
             this.nextDataRead = DateTime.Now.AddMinutes(1); // start reading 1 minute after start
             this.lastImageSaved = DateTime.Now.AddMinutes(1);
+            this.stopped = false;
 
             this.onvif = new Dictionary<Type, object>();
         }
@@ -118,8 +122,20 @@ namespace MyHome.Systems.Devices.Sensors
 
             // prepare capture for opening
             Task.Run(() => { lock (this.capture) this.Capture.IsOpened(); });
+
+            var thread = new Thread(this.RecordLoop)
+            {
+                Name = $"{this.Room.Name} {this.Name} Record",
+                IsBackground = true
+            };
+            thread.Start();
         }
 
+        public override void Stop()
+        {
+            base.Stop();
+            this.stopped = true;
+        }
 
         public override void Update()
         {
@@ -138,17 +154,39 @@ namespace MyHome.Systems.Devices.Sensors
                     this.nextDataRead = DateTime.Now.AddSeconds(this.ReadDataInterval * 4);
             }
 
-            if (this.Record && this.lastImageSaved.Minute != DateTime.Now.Minute)
+            if (this.Record && DateTime.Now - this.lastImageSaved > TimeSpan.FromMinutes(5))
+                Alert.Create($"Camera '{this.Name}' ({this.Room.Name}) is inactive!").Validity(TimeSpan.FromHours(1)).Send();
+        }
+
+        private void RecordLoop()
+        {
+            var path = Path.Combine(MyHome.Instance.Config.CameraRecordsPath, $"{this.Room.Name}_{this.Name}");
+            Directory.CreateDirectory(path);
+
+            Stopwatch sw = Stopwatch.StartNew();
+            while (!this.stopped)
             {
-                this.DropOldFrames();
+                sw.Restart();
+                if (this.Record)
+                {
+                    try
+                    {
+                        this.DropOldFrames();
+                        this.SaveImage(Path.Combine(path, $"{this.Room.Name}_{this.Name}_{DateTime.Now:HH-mm}.jpg"), false);
+                        this.lastImageSaved = DateTime.Now;
 
-                var path = Path.Combine(MyHome.Instance.Config.CameraRecordsPath, $"{this.Room.Name}_{this.Name}");
-                Directory.CreateDirectory(path);
-                this.SaveImage(Path.Combine(path, $"{this.Room.Name}_{this.Name}_{DateTime.Now:HH-mm}.jpg"), false);
-                this.lastImageSaved = DateTime.Now;
-
-                if (DateTime.Now.Hour == 23 && DateTime.Now.Minute == 59) // if we are in the end of a day
-                    Task.Run(() => this.ArchiveRecords());
+                        if (DateTime.Now.Hour == 23 && DateTime.Now.Minute == 59) // if we are in the end of a day
+                            this.ArchiveRecords();
+                    }
+                    catch (Exception e)
+                    {
+                        logger.Error($"Failed to record image from camera '{this.Name}' ({this.Room.Name})");
+                        logger.Debug(e);
+                    }
+                }
+                var elapsed = sw.Elapsed;
+                if (elapsed < TimeSpan.FromMinutes(1))
+                    Thread.Sleep(TimeSpan.FromMinutes(1) - elapsed);
             }
         }
 
@@ -242,7 +280,7 @@ namespace MyHome.Systems.Devices.Sensors
             }
             catch (Exception e)
             {
-                logger.Error("Cannot move camera");
+                logger.Error($"Cannot move camera '{this.Name}' ({this.Room.Name})");
                 logger.Debug(e);
             }
         }
@@ -262,7 +300,7 @@ namespace MyHome.Systems.Devices.Sensors
             }
             catch (Exception e)
             {
-                logger.Error("Cannot restart camera");
+                logger.Error($"Cannot restart camera '{this.Name}' ({this.Room.Name})");
                 logger.Debug(e);
             }
             return false;
@@ -295,7 +333,7 @@ namespace MyHome.Systems.Devices.Sensors
             }
             catch (Exception e)
             {
-                logger.Error("Cannot get stream address");
+                logger.Error($"Cannot get stream address for camera '{this.Name}' ({this.Room.Name})");
                 logger.Debug(e);
             }
             return null;
@@ -310,7 +348,7 @@ namespace MyHome.Systems.Devices.Sensors
             {
                 if (!this.onvif.ContainsKey(typeof(T)))
                 {
-                    logger.Trace($"Creating Onvif {typeof(T).Name}");
+                    logger.Trace($"Creating Onvif {typeof(T).Name} for camera '{this.Name}' ({this.Room.Name})");
                     var address = this.Address.Split('@')[1]; // username:password@ip:port #8899
                     var username = this.Address.Split('@')[0].Split(':')[0];
                     var password = this.Address.Split('@')[0].Split(':')[1];
@@ -371,7 +409,7 @@ namespace MyHome.Systems.Devices.Sensors
             }
             catch (Exception e)
             {
-                logger.Error("Cannot read data from camera");
+                logger.Error($"Cannot read data from camera '{this.Name}' ({this.Room.Name})");
                 logger.Debug(e);
                 return null;
             }
