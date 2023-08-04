@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 using MyHome.Systems.Devices.Drivers.Types;
 using MyHome.Utils;
@@ -41,20 +40,7 @@ namespace MyHome.Systems.Devices.Drivers
         [UiProperty(true)]
         public bool ConfirmationRequired { get; set; }
 
-
-        private static EwelinkV2 ewelink;
-        private static EwelinkV2 Ewelink
-        {
-            get
-            {
-                if (ewelink == null)
-                {
-                    var password = Encoding.UTF8.GetString(Convert.FromBase64String(MyHome.Instance.Config.EwelinkPassword));
-                    ewelink = new EwelinkV2(MyHome.Instance.Config.EwelinkCountryCode, MyHome.Instance.Config.EwelinkEmail, password);
-                }
-                return ewelink;
-            }
-        }
+        private EwelinkV2 Ewelink => MyHome.Instance.DevicesSystem.Ewelink;
 
         // TODO: move to base Ewelink device?
         private static readonly Dictionary<string, DateTime> lastOnlineCache = new();
@@ -80,7 +66,7 @@ namespace MyHome.Systems.Devices.Drivers
                     lastOnlineCache[this.EwelinkDeviceId] -= TimeSpan.FromMinutes(1);
                     try
                     {
-                        var dev = Ewelink.GetDevice(this.EwelinkDeviceId).Result;
+                        var dev = this.Ewelink.GetDevice(this.EwelinkDeviceId).Result;
                         if (dev?.Online == true)
                             lastOnlineCache[this.EwelinkDeviceId] = DateTime.Now;
                         logger.Trace($"EWeLink device '{this.EwelinkDeviceId}' ({this.Name}, {this.Room.Name}) online status: {dev?.Online}");
@@ -105,7 +91,7 @@ namespace MyHome.Systems.Devices.Drivers
             try
             {
                 logger.Info($"Transmit to channel {this.EwelinkRfChannel} of eWeLink RF driver {this.Name} ({this.Room.Name})");
-                Ewelink.TransmitRfChannel(this.EwelinkDeviceId, this.EwelinkRfChannel).Wait();
+                this.Ewelink.TransmitRfChannel(this.EwelinkDeviceId, this.EwelinkRfChannel).Wait();
             }
             catch (Exception e)
             {

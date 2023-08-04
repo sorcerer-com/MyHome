@@ -2,13 +2,14 @@
     data: function () {
         return {
             rooms: [],
-            devices: [],
+            system: null,
 
             edit: {
                 name: null,
                 types: null,
                 object: null,
                 roomName: null,
+                discovered: null,
                 onSave: null,
                 onDelete: null
             }
@@ -22,16 +23,18 @@
             }
 
             getRooms().done(rooms => this.rooms = rooms);
+            getSystem("Devices").done(system => this.system = system);
 
             if (!window.ws || window.ws.readyState != WebSocket.OPEN)
                 setTimeout(this.refreshData, 3000);
         },
 
-        showEdit: function (roomName, object, onSave, onDelete) {
+        showEdit: function (roomName, object, discovered, onSave, onDelete) {
             this.edit.name = object.Name;
             this.edit.types = null;
             this.edit.object = object;
             this.edit.roomName = roomName;
+            this.edit.discovered = discovered;
             this.edit.onSave = onSave;
             this.edit.onDelete = onDelete;
         },
@@ -74,9 +77,14 @@
         saveDevice: function (device) {
             if (device.Name == "")
                 return $.Deferred().reject({ responseText: "Cannot set device without name" });
+            if (this.edit.roomName == null)
+                return $.Deferred().reject({ responseText: "Cannot set device without selected room" });
             let room = this.rooms.find(r => r.Name == this.edit.roomName);
             if (this.edit.name == "Add Device" && room.Devices.some(d => d != device && d.Name == device.Name))
                 return $.Deferred().reject({ responseText: "A device with the same name already exists" });
+
+            if (this.edit.discovered)
+                callSystem("Devices", "RemoveDiscoveredDevice", this.edit.discovered);
 
             let settings = filterObjectBySettings(device, true);
             return setDevice(this.edit.roomName, this.edit.name, settings).done(() => this.edit.name = null);

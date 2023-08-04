@@ -38,13 +38,18 @@ public sealed class TuyaDeviceScanInfo : IEquatable<TuyaDeviceScanInfo>
         return (this.IP == other.IP) && (this.GwId == other.GwId);
     }
 
+    public override bool Equals(object obj)
+    {
+        return this.Equals(obj as TuyaDeviceScanInfo);
+    }
+
     public override string ToString()
     {
         return $"IP: {this.IP}, gwId: {this.GwId}, product key: {this.ProductKey}, encryption: {this.Encryption}, version: {this.Version}";
     }
 
-    public override bool Equals(object obj)
+    public override int GetHashCode()
     {
-        return Equals(obj as TuyaDeviceScanInfo);
+        return this.IP.GetHashCode() + this.GwId.GetHashCode();
     }
 }

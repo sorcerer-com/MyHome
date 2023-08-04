@@ -5,6 +5,10 @@
                      v-bind:to="$route.path + '#' + room.Name" v-for="room of rooms">
             {{room.Name}}
         </router-link>
+        <router-link class="w3-bar-item w3-hover-text-blue-gray" v-bind:to="$route.path + '#discovered'"
+                     v-if="system?.AutoDiscovery">
+            <i>Discovered</i>
+        </router-link>
     </div>
 
     <div class="w3-content w3-padding-16">
@@ -13,7 +17,7 @@
             <h3 class="reset-margin margin-left-8">
                 {{room.Name}}
                 <a class="font-size-normal material-icons" title="Edit room"
-                   v-on:click="showEdit(room.Name, room, saveRoom, deleteRoom)">
+                   v-on:click="showEdit(room.Name, room, null, saveRoom, deleteRoom)">
                     edit
                 </a>
             </h3>
@@ -21,7 +25,7 @@
             <a class="w3-col l2 m3 s11 w3-center w3-padding w3-round-large w3-hover-light-gray margin-8 bg-gray-opacity-88"
                title="Edit device"
                v-for="device of room.Devices"
-               v-on:click="showEdit(room.Name, device, saveDevice, deleteDevice)">
+               v-on:click="showEdit(room.Name, device, null, saveDevice, deleteDevice)">
                 <span class="w3-show-block overflow-wrap-break-word">{{device.Name}}</span>
                 <span class="w3-small">({{device.$type.substr(device.$type.lastIndexOf(".")+1)}})</span>
             </a>
@@ -39,6 +43,22 @@
                 Add Room
             </h3>
         </a>
+
+        <!-- Discovered devices -->
+        <div class="w3-row w3-margin w3-animate-opacity" id="discovered"
+             v-if="system?.AutoDiscovery">
+            <h3 class="reset-margin margin-left-8">
+                <i>Discovered</i>
+            </h3>
+
+            <a class="w3-col l2 m3 s11 w3-center w3-padding w3-round-large w3-hover-light-gray margin-8 bg-gray-opacity-88"
+               title="Edit device"
+               v-for="(device, idx) of system?.DiscoveredDevices"
+               v-on:click="showEdit(null, device, idx, saveDevice, deleteDevice)">
+                <span class="w3-show-block overflow-wrap-break-word">{{device.Name}}</span>
+                <span class="w3-small">({{device.$type.substr(device.$type.lastIndexOf(".")+1)}})</span>
+            </a>
+        </div>
     </div>
 
     <!-- Modal -->
@@ -59,6 +79,13 @@
                     </select>
                 </div>
 
+                <div class="w3-margin-bottom" v-if="edit.discovered != null">
+                    <span class="m5 w3-col w3-right-align" style="padding: 0 8px">Room:</span>
+                    <select class="m3 w3-col margin-left-8" v-model="edit.roomName">
+                        <option v-for="room of rooms" v-bind:value="room.Name">{{room.Name}}</option>
+                    </select>
+                </div>
+
                 <object-editor v-bind:object="edit.object"
                                v-bind:onsave="edit.onSave"
                                v-bind:settings="true">
@@ -66,14 +93,14 @@
 
                 <a class="w3-button w3-round w3-padding-small w3-white w3-hover-blue margin-8"
                    title="Clone"
-                   v-if="!edit.name.startsWith('Add ')"
+                   v-if="!edit.name.startsWith('Add ') && edit.discovered == null"
                    v-on:click="cloneDevice">
                     Clone
                 </a>
 
                 <a class="w3-button w3-right w3-round w3-padding-small w3-white w3-hover-red margin-8"
                    title="Delete"
-                   v-if="!edit.name.startsWith('Add ')"
+                   v-if="!edit.name.startsWith('Add ') && edit.discovered == null"
                    v-on:click="edit.onDelete">
                     Delete
                 </a>

@@ -85,8 +85,9 @@ namespace MyHome
             //   - improve power consumption UI (as plugin somehow)
             // * drivers to be sensors too - save state change in time
             // * External system (rpi2, agent) ping system and notify on problem?
-            // * Devices auto discovery?
+            // * Improve devices auto discovery - speaker, ip camera
             // * Improve camera movement capability - move to specific point, saved positions
+            // * Implement notification manager (show upgrade, offline devices, discovered devices, etc. ), check alerts
 
             logger.Info("Start My Home");
             Instance = this;
