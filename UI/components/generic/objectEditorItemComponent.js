@@ -20,8 +20,8 @@
             get: function () {
                 return this.value.substr(0, 16);
             },
-            set: function (newValue) {
-                this.value = newValue + ":00";
+            set: function (value) {
+                this.$emit("change", value + ":00");
             }
         }
     },

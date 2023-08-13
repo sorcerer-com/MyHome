@@ -61,6 +61,14 @@ namespace MyHome.Controllers
             return this.Ok(memoryTarget.Logs);
         }
 
+        [HttpGet("logFile")]
+        public ActionResult GetLogFile()
+        {
+            var filePath = Path.Join(Models.Config.BinPath, "log.log");
+            var file = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            return this.File(file, "text/plain");
+        }
+
         [HttpGet("upgrade")]
         public ActionResult GetUpgradeAvailable()
         {

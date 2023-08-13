@@ -4,7 +4,8 @@
         return {
             processing: false,
             error: null,
-            showModal: false
+            showModal: false,
+            selectedMedia: ""
         }
     },
     computed: {
@@ -49,8 +50,12 @@
             return tree;
         },
         onMediaChange: function (media) {
-            this.callDriver('Play', media);
-            this.showModal = false;
+            if (this.selectedMedia == media) {
+                this.callDriver('Play', media);
+                this.showModal = false;
+            }
+            else
+                this.selectedMedia = media;
         },
 
         click: function () {
@@ -58,6 +63,7 @@
                 return;
 
             this.showModal = true;
+            this.selectedMedia = "";
         },
 
         callDriver: function (funcName, ...args) {

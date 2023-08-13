@@ -114,6 +114,10 @@
                 </header>
                 <div class="w3-container w3-padding-16 height-100 overflow-y-auto bg-gray">
                     <!-- Logs -->
+                    <a class="font-size-normal material-icons" href="./api/logFile"  target="_blank"
+                       v-if="modal == 'Logs'">
+                        open_in_new
+                    </a>
                     <ul class="w3-ul w3-monospace" v-if="modal == 'Logs'">
                         <li v-for="log of logs" class="w3-hover-opacity overflow-wrap-break-word"
                             v-bind:class="{'w3-red': log.includes('ERROR'), 'w3-purple': log.includes('WARN')}">
