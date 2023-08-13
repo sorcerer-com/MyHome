@@ -27,8 +27,11 @@ namespace MyHome.Utils
             Task.WaitAll(source.Select(i => Task.Run(() => action.Invoke(i))).ToArray());
         }
 
-        public static object ToUiObject(this object obj)
+        public static object ToUiObject(this object obj, bool clearCache = true)
         {
+            if (clearCache)
+                selectorValuesCache.Clear();
+
             if (obj == null)
                 return null;
 
@@ -54,17 +57,25 @@ namespace MyHome.Utils
             else if (type.GetInterface(nameof(IDictionary)) != null)
             {
                 var dict = new Dictionary<object, object>();
-                var value = (IDictionary)obj;
-                foreach (var key in value.Keys)
-                    dict.Add(key, value[key].ToUiObject());
+                // retry to catch if collection get changed
+                Utils.Retry(_ =>
+                {
+                    var value = (IDictionary)obj;
+                    foreach (var key in value.Keys)
+                        dict.Add(key, value[key].ToUiObject(false));
+                }, 3);
                 return dict;
             }
             else if (type.GetInterface(nameof(IEnumerable)) != null)
             {
                 var list = new List<object>();
-                var value = (IEnumerable)obj;
-                foreach (var item in value)
-                    list.Add(item.ToUiObject());
+                // retry to catch if collection get changed
+                Utils.Retry(_ =>
+                {
+                    var value = (IEnumerable)obj;
+                    foreach (var item in value)
+                        list.Add(item.ToUiObject(false));
+                }, 3);
                 return list;
             }
             else
@@ -79,7 +90,7 @@ namespace MyHome.Utils
                     if (uiPropertyAttr == null)
                         continue;
 
-                    result[pi.Name] = pi.GetValue(obj).ToUiObject();
+                    result[pi.Name] = pi.GetValue(obj).ToUiObject(false);
                     subtypes[pi.Name] = pi.PropertyType.ToUiType();
                     subtypes[pi.Name]["setting"] = uiPropertyAttr.Setting;
                     subtypes[pi.Name]["hint"] = uiPropertyAttr.Hint;
@@ -88,13 +99,11 @@ namespace MyHome.Utils
 
                     if (!string.IsNullOrEmpty(uiPropertyAttr.Selector))
                     {
-                        var mi = typeof(Selectors).GetMethod(uiPropertyAttr.Selector)
-                            ?? obj.GetType().GetMethod(uiPropertyAttr.Selector);
-                        if (mi != null)
+                        var values = GetSelectorValues(obj, uiPropertyAttr.Selector);
+                        if (values != null)
                         {
-                            var values = (IEnumerable<(string, string)>)mi.Invoke(obj, null);
                             subtypes[pi.Name]["type"] = "select";
-                            subtypes[pi.Name]["select"] = values.ToDictionary(v => v.Item1, v => v.Item2);
+                            subtypes[pi.Name]["select"] = values;
                         }
                     }
 
@@ -110,28 +119,51 @@ namespace MyHome.Utils
             }
         }
 
+        private static readonly Dictionary<Type, Dictionary<string, object>> uiTypeCache = new();
         private static Dictionary<string, object> ToUiType(this Type type)
         {
-            var result = new Dictionary<string, object>();
-
-            var name = type.Name
-                .Replace("`1", "")
-                .Replace("`2", "")
-                .Replace("IEnumerable", "List")
-                .Replace("ObservableCollection", "List");
-            result["type"] = name;
-
-            if (type.IsGenericType)
+            if (!uiTypeCache.ContainsKey(type))
             {
-                var genericTypes = type.GenericTypeArguments.Select(t => t.ToUiType());
-                result["genericTypes"] = genericTypes.ToList();
+                var result = new Dictionary<string, object>();
+
+                var name = type.Name
+                    .Replace("`1", "")
+                    .Replace("`2", "")
+                    .Replace("IEnumerable", "List")
+                    .Replace("ObservableCollection", "List");
+                result["type"] = name;
+
+                if (type.IsGenericType)
+                {
+                    var genericTypes = type.GenericTypeArguments.Select(t => t.ToUiType());
+                    result["genericTypes"] = genericTypes.ToList();
+                }
+                else if (type.IsEnum)
+                {
+                    var values = type.GetFields().Where(f => f.IsLiteral).Select(f => f.Name);
+                    result["enums"] = values.ToList();
+                }
+                uiTypeCache.Add(type, result);
             }
-            else if (type.IsEnum)
+            return uiTypeCache[type].ToDictionary(i => i.Key, i => i.Value); // make a copy
+        }
+
+        private static readonly Dictionary<string, Dictionary<string, string>> selectorValuesCache = new();
+        private static Dictionary<string, string> GetSelectorValues(object obj, string selector)
+        {
+            if (!selectorValuesCache.ContainsKey(selector))
             {
-                var values = type.GetFields().Where(f => f.IsLiteral).Select(f => f.Name);
-                result["enums"] = values.ToList();
+                var mi = typeof(Selectors).GetMethod(selector)
+                    ?? obj.GetType().GetMethod(selector);
+                if (mi != null)
+                {
+                    var values = (IEnumerable<(string, string)>)mi.Invoke(obj, null);
+                    selectorValuesCache.Add(selector, values.ToDictionary(v => v.Item1, v => v.Item2));
+                }
+                else
+                    selectorValuesCache.Add(selector, null);
             }
-            return result;
+            return selectorValuesCache[selector];
         }
 
         public static void SetObject(this JToken token, object obj)
