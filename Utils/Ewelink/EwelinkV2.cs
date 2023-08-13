@@ -22,15 +22,23 @@ public class EwelinkV2
     //https://coolkit-technologies.github.io/eWeLink-API/#/en/APICenterV2?id=get-device-or-group-status
 
     // can be created in https://dev.ewelink.cc/#/ if this stop working
-    private const string AppId = "YzfeftUVcZ6twZw1OoVKPRFYTrGEg01Q";
+    // from https://github.com/AlexxIT/SonoffLAN/blob/c317407a09e5c5e9aaf2a95e044e5afb5a367dec/custom_components/sonoff/core/ewelink/cloud.py#L43
+    private static readonly Dictionary<string, string> Apps = new()
+    {
+        { "YzfeftUVcZ6twZw1OoVKPRFYTrGEg01Q", "4G91qSoboqYO4Y0XJ0LPPKIsq8reHdfa" },
+        { "oeVkj2lYFGnJu5XUtWisfW4utiN4u9Mq", "6Nz4n0xA8s8qdxQf2GqurZj2Fs55FUvM" },
+        { "R8Oq3y0eSZSYdKccHlrQzT1ACCOUT9Gv", "1ve5Qk9GXfUhKAn1svnKwpAlxXkMarru" }
+    };
 
-    private const string AppSecret = "4G91qSoboqYO4Y0XJ0LPPKIsq8reHdfa";
+    private string AppId = "YzfeftUVcZ6twZw1OoVKPRFYTrGEg01Q";
+
+    private string AppSecret = "4G91qSoboqYO4Y0XJ0LPPKIsq8reHdfa";
 
     private readonly HttpClient HttpClient = new();
 
     private readonly Dictionary<string, EwelinkDevice> devicesCache = new();
 
-    private string region = "us";
+    private string region = "eu";
 
     private readonly string countryCode;
 
@@ -232,9 +240,9 @@ public class EwelinkV2
 
         var uri = new Uri($"{this.ApiUri}/user/login");
         var httpMessage = new HttpRequestMessage(HttpMethod.Post, uri);
-        httpMessage.Headers.Add("X-CK-Appid", AppId);
+        httpMessage.Headers.Add("X-CK-Appid", this.AppId);
         httpMessage.Headers.Add("X-CK-Nonce", Utilities.NonceV2);
-        httpMessage.Headers.Add("Authorization", $"Sign {MakeAuthorizationSign(body)}");
+        httpMessage.Headers.Add("Authorization", $"Sign {MakeAuthorizationSign(body, this.AppSecret)}");
         httpMessage.Content = new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json");
 
         var response = await this.HttpClient.SendAsync(httpMessage);
@@ -249,6 +257,7 @@ public class EwelinkV2
         if (errorValue.HasValue && new[] { 400, 401, 404 }.Contains(errorValue.Value))
             throw new HttpRequestException(NiceError.Errors[406]);
 
+        // different region
         if (errorValue == 10004 && region != null)
         {
             if (this.region != region)
@@ -259,6 +268,21 @@ public class EwelinkV2
 
             throw new ArgumentOutOfRangeException(nameof(this.region), "Region does not exist");
         }
+
+        // try different app id
+        if (errorValue == 407)
+        {
+            var appIds = Apps.Keys.ToList();
+            if (appIds.IndexOf(this.AppId) < appIds.Count - 1)
+            {
+                this.AppId = appIds[appIds.IndexOf(this.AppId) + 1];
+                this.AppSecret = Apps[this.AppId];
+                return await this.GetCredentials();
+            }
+        }
+
+        if (errorValue.HasValue && errorValue != 0)
+            throw new HttpRequestException(jsonString);
 
         JToken token = json.data;
         var credentials = token.ToObject<Credentials>();
@@ -342,10 +366,10 @@ public class EwelinkV2
         return string.Join("&", properties.ToArray());
     }
 
-    private static string MakeAuthorizationSign(PayLoad body)
+    private static string MakeAuthorizationSign(PayLoad body, string appSecret)
     {
         var crypto = HMAC.Create("HmacSHA256");
-        crypto.Key = Encoding.UTF8.GetBytes(AppSecret);
+        crypto.Key = Encoding.UTF8.GetBytes(appSecret);
         var hash = crypto.ComputeHash(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(body)));
         return Convert.ToBase64String(hash);
     }

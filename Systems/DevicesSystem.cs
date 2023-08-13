@@ -109,6 +109,8 @@ namespace MyHome.Systems
 
             foreach (var device in this.Devices)
                 device.Setup();
+
+            _ = this.Ewelink.GetCredentials();
         }
 
         public override void Stop()
