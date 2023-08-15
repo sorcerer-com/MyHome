@@ -56,6 +56,7 @@ namespace MyHome.Systems
                 if (value)
                 {
                     MyHome.Instance.MqttClient.Subscribe("tele/#");
+                    MyHome.Instance.MqttClient.Subscribe("zigbee2mqtt/#");
                     MyHome.Instance.MqttClient.ApplicationMessageReceived += this.MqttClient_ApplicationMessageReceived;
 
                     this.tuyaScanner.Start();
@@ -64,6 +65,7 @@ namespace MyHome.Systems
                 else
                 {
                     MyHome.Instance.MqttClient.ApplicationMessageReceived -= this.MqttClient_ApplicationMessageReceived;
+                    MyHome.Instance.MqttClient.Unsubscribe("zigbee2mqtt/#");
                     MyHome.Instance.MqttClient.Unsubscribe("tele/#");
 
                     this.tuyaScanner.OnNewDeviceInfoReceived -= this.TuyaScanner_OnNewDeviceInfoReceived;
@@ -175,7 +177,7 @@ namespace MyHome.Systems
         private DateTime GetNextSensorCheckTime()
         {
             var now = DateTime.Now;
-            var time = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0, 0);
+            var time = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0, 0, DateTimeKind.Local);
             while (time < now)
                 time += TimeSpan.FromMinutes(this.SensorsCheckInterval);
             return time;
@@ -190,108 +192,17 @@ namespace MyHome.Systems
 
         private void MqttClient_ApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs e)
         {
+            var knownDevices = this.Devices.Union(this.DiscoveredDevices);
+
             try
             {
-                var topic = e.ApplicationMessage.Topic;
-                var knownDevices = this.Devices.Union(this.DiscoveredDevices);
-                if (knownDevices.OfType<MqttSensor>().Any(s => s.MqttTopics.Any(t => t.topic == topic)) ||
-                    knownDevices.OfType<MqttDriver>().Any(d => d.OnlineMqttTopic == topic))
-                {
-                    // there is already such device
-                    return;
-                }
+                List<Device> devices = null;
+                if (e.ApplicationMessage.Topic.StartsWith("tele")) // "Tasmota compatible" devices
+                    devices = ProcessTeleTopic(e.ApplicationMessage, knownDevices);
+                else if (e.ApplicationMessage.Topic.StartsWith("zigbee2mqtt")) // Zigbee2MQTT devices
+                    devices = ProcessZigbeeTopic(e.ApplicationMessage, knownDevices);
 
-                var payload = e.ApplicationMessage.ConvertPayloadToString();
-                var json = JToken.Parse(payload);
-
-                List<Device> devices = new();
-                // all topics currently starts with "tele/"
-                if (topic.EndsWith("SENSOR"))
-                {
-                    var name = topic.Replace("tele/", "").Replace("/SENSOR", "");
-                    var props = this.GetValueProperties(json).Where(p => p.Name != "Time");
-                    // sensor
-                    if (props.Any() && !name.StartsWith("tracker"))
-                    {
-                        var mqttSensor = new MqttSensor();
-                        foreach (var prop in props)
-                        {
-                            mqttSensor.MqttTopics.Add((topic, prop.Path));
-                            mqttSensor.SubNamesMap.Add(prop.Path, prop.Name);
-                        }
-                        mqttSensor.Name = name;
-                        devices.Add(mqttSensor);
-                    }
-                    // tracker
-                    if (name.StartsWith("tracker"))
-                    {
-                        devices.Add(new WifiTrackerSensor()
-                        {
-                            Name = name,
-                            BaseMqttTopic = $"tele/{name}"
-                        });
-                    }
-                    // switch driver
-                    if (props.Any(p => p.Name == "Switch1"))
-                    {
-                        devices.Add(new SwitchMqttDriver
-                        {
-                            Name = name,
-                            OnlineMqttTopic = topic,
-                            IsOnGetMqttTopic = ($"stat/{name}/RESULT", "POWER"),
-                            IsOnSetMqttTopic = ($"cmnd/{name}/power", ""),
-                            ConfirmationRequired = true
-                        });
-                    }
-                }
-                else if (topic.EndsWith("STATE"))
-                {
-                    var name = topic.Replace("tele/", "").Replace("/STATE", "");
-                    // light driver
-                    if (json.SelectToken("Color") is JValue)
-                    {
-                        devices.Add(new LightMqttDriver
-                        {
-                            Name = name,
-                            OnlineMqttTopic = topic,
-                            ColorGetMqttTopic = ($"stat/{name}/RESULT", "Color"),
-                            ColorSetMqttTopic = ($"cmnd/{name}/Color", ""),
-                            IsOnGetMqttTopic = ($"stat/{name}/RESULT", "POWER"),
-                            IsOnSetMqttTopic = ($"cmnd/{name}/power", "")
-                        });
-                    }
-                }
-                else if (topic.EndsWith("RESULT"))
-                {
-                    var name = topic.Replace("tele/", "").Replace("/RESULT", "");
-                    // IR AC receiver
-                    if (json.SelectToken("IrReceived.IRHVAC") != null)
-                    {
-                        devices.Add(new AcIrMqttDriver()
-                        {
-                            Name = name,
-                            OnlineMqttTopic = $"tele/{name}/STATE",
-                            Vendor = (string)json.SelectToken("IrReceived.IRHVAC.Vendor"),
-                            StateGetMqttTopic = (topic, "IrReceived.IRHVAC"),
-                            StateSetMqttTopic = ($"cmnd/{name}/IRhvac", "")
-                        });
-                    }
-                }
-                // media agent
-                else if (topic.EndsWith("MEDIA_LIST"))
-                {
-                    var name = topic.Replace("tele/", "").Replace("/MEDIA_LIST", "");
-                    if (knownDevices.OfType<MediaAgentMqttDriver>().Any(d => d.OnlineMqttTopic == $"tele/{name}/SENSOR"))
-                        return;
-                    devices.Add(new MediaAgentMqttDriver
-                    {
-                        Name = name,
-                        OnlineMqttTopic = $"tele/{name}/SENSOR",
-                        AgentHostName = name
-                    });
-                }
-
-                if (devices.Count > 0)
+                if (devices != null && devices.Count > 0)
                 {
                     this.DiscoveredDevices.AddRange(devices);
                     this.DiscoveredDevices.Sort((a, b) => a.Name.CompareTo(b.Name));
@@ -304,7 +215,140 @@ namespace MyHome.Systems
             }
         }
 
-        private IEnumerable<JProperty> GetValueProperties(JToken jToken)
+        private static List<Device> ProcessTeleTopic(MqttApplicationMessage message, IEnumerable<Device> knownDevices)
+        {
+            List<Device> devices = new();
+
+            var topic = message.Topic;
+            if (knownDevices.OfType<MqttSensor>().Any(s => s.MqttTopics.Any(t => t.topic == topic)) ||
+                knownDevices.OfType<MqttDriver>().Any(d => d.OnlineMqttTopic == topic))
+            {
+                // there is already such device
+                return devices;
+            }
+
+            var payload = message.ConvertPayloadToString();
+            var json = JToken.Parse(payload);
+
+            if (topic.EndsWith("SENSOR"))
+            {
+                var name = topic.Replace("tele/", "").Replace("/SENSOR", "");
+                var props = GetValueProperties(json).Where(p => p.Name != "Time");
+                // sensor
+                if (props.Any() && !name.StartsWith("tracker"))
+                {
+                    var mqttSensor = new MqttSensor();
+                    foreach (var prop in props)
+                    {
+                        mqttSensor.MqttTopics.Add((topic, prop.Path));
+                        mqttSensor.SubNamesMap.Add(prop.Path, prop.Name);
+                    }
+                    mqttSensor.Name = name;
+                    devices.Add(mqttSensor);
+                }
+                // tracker
+                if (name.StartsWith("tracker"))
+                {
+                    devices.Add(new WifiTrackerSensor()
+                    {
+                        Name = name,
+                        BaseMqttTopic = $"tele/{name}"
+                    });
+                }
+                // switch driver
+                if (props.Any(p => p.Name == "Switch1"))
+                {
+                    devices.Add(new SwitchMqttDriver
+                    {
+                        Name = name,
+                        OnlineMqttTopic = topic,
+                        IsOnGetMqttTopic = ($"stat/{name}/RESULT", "POWER"),
+                        IsOnSetMqttTopic = ($"cmnd/{name}/power", ""),
+                        ConfirmationRequired = true
+                    });
+                }
+            }
+            else if (topic.EndsWith("STATE"))
+            {
+                var name = topic.Replace("tele/", "").Replace("/STATE", "");
+                // light driver
+                if (json.SelectToken("Color") is JValue)
+                {
+                    devices.Add(new LightMqttDriver
+                    {
+                        Name = name,
+                        OnlineMqttTopic = topic,
+                        ColorGetMqttTopic = ($"stat/{name}/RESULT", "Color"),
+                        ColorSetMqttTopic = ($"cmnd/{name}/Color", ""),
+                        IsOnGetMqttTopic = ($"stat/{name}/RESULT", "POWER"),
+                        IsOnSetMqttTopic = ($"cmnd/{name}/power", "")
+                    });
+                }
+            }
+            else if (topic.EndsWith("RESULT"))
+            {
+                var name = topic.Replace("tele/", "").Replace("/RESULT", "");
+                // IR AC receiver
+                if (json.SelectToken("IrReceived.IRHVAC") != null)
+                {
+                    devices.Add(new AcIrMqttDriver()
+                    {
+                        Name = name,
+                        OnlineMqttTopic = $"tele/{name}/STATE",
+                        Vendor = (string)json.SelectToken("IrReceived.IRHVAC.Vendor"),
+                        StateGetMqttTopic = (topic, "IrReceived.IRHVAC"),
+                        StateSetMqttTopic = ($"cmnd/{name}/IRhvac", "")
+                    });
+                }
+            }
+            // media agent
+            else if (topic.EndsWith("MEDIA_LIST"))
+            {
+                var name = topic.Replace("tele/", "").Replace("/MEDIA_LIST", "");
+                if (knownDevices.OfType<MediaAgentMqttDriver>().Any(d => d.OnlineMqttTopic == $"tele/{name}/SENSOR"))
+                    return devices;
+                devices.Add(new MediaAgentMqttDriver
+                {
+                    Name = name,
+                    OnlineMqttTopic = $"tele/{name}/SENSOR",
+                    AgentHostName = name
+                });
+            }
+
+            return devices;
+        }
+
+        private static List<Device> ProcessZigbeeTopic(MqttApplicationMessage message, IEnumerable<Device> knownDevices)
+        {
+            var topic = message.Topic;
+            var payload = message.ConvertPayloadToString();
+            var json = JToken.Parse(payload);
+
+            List<Device> devices = new();
+            if (topic == "zigbee2mqtt/bridge/devices")
+            {
+                foreach (var item in json)
+                {
+                    var deviceTopic = $"zigbee2mqtt/{item["friendly_name"]}";
+
+                    if ((string)item["type"] != "EndDevice" ||
+                        knownDevices.OfType<MqttSensor>().Any(s => s.MqttTopics.Any(t => t.topic == deviceTopic)))
+                        continue;
+
+                    var mqttSensor = new MqttSensor();
+                    foreach (var prop in item["definition"]["exposes"])
+                    {
+                        mqttSensor.MqttTopics.Add((deviceTopic, (string)prop["property"]));
+                        mqttSensor.SubNamesMap.Add((string)prop["property"], (string)prop["name"]);
+                    }
+                    mqttSensor.Name = (string)item["friendly_name"];
+                    devices.Add(mqttSensor);
+                }
+            }
+            return devices;
+        }
+
+        private static IEnumerable<JProperty> GetValueProperties(JToken jToken)
         {
             var list = new List<JProperty>();
             if (jToken is JObject jObj)
@@ -314,13 +358,13 @@ namespace MyHome.Systems
                     if (prop.Value is JValue)
                         list.Add(prop);
                     else
-                        list.AddRange(this.GetValueProperties(prop.Value));
+                        list.AddRange(GetValueProperties(prop.Value));
                 }
             }
             else if (jToken is JArray jArray)
             {
                 foreach (var item in jArray)
-                    list.AddRange(this.GetValueProperties(item));
+                    list.AddRange(GetValueProperties(item));
             }
             return list;
         }
