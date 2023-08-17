@@ -41,7 +41,7 @@
         },
         getSensorsByValueType: function (valueType) {
             return this.room.Devices.filter(d => (d.$type.endsWith("Sensor") || d.$type.endsWith("Camera")) &&
-                valueType in d.Values);
+                valueType in d.Values && !d.Grouped);
         },
         getSensorByName: function (name) {
             return this.room.Devices.find(d => d.$type.endsWith("Sensor") && d.Name == name);

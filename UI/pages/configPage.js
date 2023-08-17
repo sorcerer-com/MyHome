@@ -17,11 +17,6 @@
     },
     methods: {
         refreshData: function () {
-            if (this._isDestroyed) {
-                window.ws?.removeRefreshHandlers(this.refreshData);
-                return;
-            }
-
             getRooms().done(rooms => this.rooms = rooms);
             getSystem("Devices").done(system => this.system = system);
 
@@ -112,5 +107,8 @@
     mounted: function () {
         this.refreshData();
         window.ws?.addRefreshHandlers(this.refreshData);
+    },
+    unmounted: function () {
+        window.ws?.removeRefreshHandlers(this.refreshData);
     }
 });

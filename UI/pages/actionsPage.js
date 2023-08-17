@@ -13,11 +13,6 @@
     },
     methods: {
         refreshData: function () {
-            if (this._isDestroyed) {
-                window.ws?.removeRefreshHandlers(this.refreshData);
-                return;
-            }
-
             getSystem("Actions").done(actions => this.actions = actions);
 
             if (!window.ws || window.ws.readyState != WebSocket.OPEN)
@@ -105,6 +100,9 @@
     mounted: function () {
         this.refreshData();
         window.ws?.addRefreshHandlers(this.refreshData);
+    },
+    unmounted: function () {
+        window.ws?.removeRefreshHandlers(this.refreshData);
     },
     watch: {
         message: function () {

@@ -38,11 +38,6 @@
     },
     methods: {
         refreshData: function (autorefresh = true) {
-            if (this._isDestroyed) {
-                window.ws?.removeRefreshHandlers(this.refreshData);
-                return;
-            }
-
             this.charts = this.charts || {}; // not part of 'data' as it cause stack overflow
             this.charts["chartLastDay"] = this.charts["chartLastDay"] || createLineChart("chartLastDay", {}, false);
             this.charts["chartOlder"] = this.charts["chartOlder"] || createLineChart("chartOlder", {}, !window.vue.isMobile);
@@ -124,6 +119,9 @@
         this.selection = this.valueTypes[0];
 
         window.ws?.addRefreshHandlers(this.refreshData);
+    },
+    unmounted: function () {
+        window.ws?.removeRefreshHandlers(this.refreshData);
     },
     watch: {
         selection: function () {
