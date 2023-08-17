@@ -103,8 +103,12 @@ function getLogs() {
     return $.get("./api/logs");
 }
 
-function getUpgradeAvailable() {
-    return $.get("./api/upgrade");
+function getNotifications() {
+    return $.get("./api/notifications");
+}
+
+function removeNotification(type) {
+    return $.post(`./api/notifications/${type}/delete`);
 }
 
 function upgrade() {

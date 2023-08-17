@@ -72,6 +72,7 @@ namespace MyHome.Systems
                     this.tuyaScanner.Stop();
 
                     this.DiscoveredDevices.Clear();
+                    MyHome.Instance.RemoveNotification(Notification.DiscoveredDeviceType);
                 }
             }
         }
@@ -164,7 +165,10 @@ namespace MyHome.Systems
             });
 
             if (!string.IsNullOrEmpty(alertMsg))
+            {
                 Alert.Create($"{alertMsg.Trim()} alarm activated!").Send();
+                MyHome.Instance.AddNotification(Notification.OfflineDeviceType, "Offline device/s");
+            }
 
             // discover devices
             if (this.autoDiscovery)
@@ -206,6 +210,8 @@ namespace MyHome.Systems
                 {
                     this.DiscoveredDevices.AddRange(devices);
                     this.DiscoveredDevices.Sort((a, b) => a.Name.CompareTo(b.Name));
+
+                    MyHome.Instance.AddNotification(Notification.DiscoveredDeviceType, "Discovered device/s");
                 }
             }
             catch (Exception ex)
@@ -375,6 +381,7 @@ namespace MyHome.Systems
             {
                 var knownDevices = this.Devices.Union(this.DiscoveredDevices);
 
+                bool newDevice = false;
                 var devices = this.Ewelink.GetDevices().Result;
                 foreach (var device in devices)
                 {
@@ -384,6 +391,7 @@ namespace MyHome.Systems
                     // RF bridge
                     if (device.ProductModel == "RFBridge433" || device.ProductModel == "RF_Bridge")
                     {
+                        newDevice = true;
                         foreach (var rfObj in device.Paramaters.RfList.OfType<JObject>())
                         {
                             var chl = (int)rfObj.SelectToken("rfChl");
@@ -396,7 +404,12 @@ namespace MyHome.Systems
                         }
                     }
                 }
-                this.DiscoveredDevices.Sort((a, b) => a.Name.CompareTo(b.Name));
+
+                if (newDevice)
+                {
+                    this.DiscoveredDevices.Sort((a, b) => a.Name.CompareTo(b.Name));
+                    MyHome.Instance.AddNotification(Notification.DiscoveredDeviceType, "Discovered device/s");
+                }
             }
             catch (Exception ex)
             {
@@ -420,6 +433,7 @@ namespace MyHome.Systems
                     TuyaDeviceIp = e.IP,
                     TuyaSwitchIdx = 1
                 });
+                MyHome.Instance.AddNotification(Notification.DiscoveredDeviceType, "Discovered device/s");
             }
             catch (Exception ex)
             {

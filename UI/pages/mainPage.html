@@ -13,30 +13,60 @@
     </div>
 
     <!-- Bottom bar -->
-    <div class="w3-padding-large w3-margin-bottom w3-display-bottomright w3-animate-zoom">
+    <div class="w3-padding-large w3-display-bottomright w3-animate-zoom margin-bottom-8">
         <!-- Charts -->
-        <div class="w3-dropdown-hover w3-transparent margin-left-8">
+        <div class="w3-dropdown-hover w3-transparent padding-4">
             <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
                title="Charts" v-on:click="showChartsModal()">
                 show_chart
             </a>
             <div class="w3-dropdown-content w3-transparent dropdown-top-right">
-                <div class="w3-padding-small w3-round-medium w3-animate-opacity margin-8 bg-gray">
+                <div class="w3-padding-small w3-round-medium w3-center w3-text-white w3-animate-opacity margin-8 bg-gray">
                     Show Charts
                 </div>
             </div>
         </div>
 
         <!-- Security -->
-        <div class="w3-dropdown-hover w3-transparent margin-left-8">
+        <div class="w3-dropdown-hover w3-transparent padding-4">
             <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
                title="Security"
                v-bind:class="{'w3-text-lime': someRoomSecuritySystemEnabled, 'w3-text-green': allRoomsSecuritySystemEnabled}">
                 security
             </a>
+            <span class="w3-tiny w3-round-xlarge w3-display-bottomright w3-purple circle-15">
+                {{security?.Present?.length || 0}}
+            </span>
             <div class="w3-dropdown-content w3-transparent dropdown-top-right">
                 <security-list v-bind:rooms="rooms" v-bind:security="security" v-on:show-modal="showSecurityModal()">
                 </security-list>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="w3-dropdown-hover w3-transparent padding-4">
+            <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
+               title="Notifications">
+                notifications
+            </a>
+            <span class="w3-tiny w3-round-xlarge w3-display-bottomright w3-red circle-15"
+                  v-if="notifications?.length > 0">
+                {{notifications?.length}}
+            </span>
+            <div class="w3-dropdown-content w3-transparent dropdown-top-right">
+                <div class="w3-padding-small w3-round-medium w3-text-white w3-animate-opacity margin-8 bg-gray"
+                     style="width: 250px;">
+                    <div v-for="notification, idx of notifications.reverse()"
+                         v-bind:class="{'w3-border-bottom': idx < notifications.length - 1}">
+                        <h6 class="reset-margin">{{notification.message}}</h6>
+                        <span class="w3-small w3-text-dark-gray">{{dateToString(notification.time)}}</span>
+                        <a class="w3-small w3-right w3-hover-text-blue-gray"
+                           v-on:click="notificationClick(notification)">
+                            {{notificationAction(notification)}}
+                        </a>
+                    </div>
+                    <div v-if="notifications.length == 0" class="w3-center">No Notifications</div>
+                </div>
             </div>
         </div>
     </div>

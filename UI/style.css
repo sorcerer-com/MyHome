@@ -38,12 +38,12 @@
 }
 
 .dropdown-top-right {
-    bottom: 30px;
-    right: -10px;
+    bottom: 35px;
+    right: -5px;
 }
 @media (max-width:600px) { /* Mobile */
     .dropdown-top-right {
-        bottom: 42px;
+        bottom: 55px;
         right: 0px;
         position: fixed;
     }
@@ -77,6 +77,12 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+}
+
+.circle-15 {
+    width: 15px;
+    height: 15px;
+    text-align: center;
 }
 
 .grid-content {

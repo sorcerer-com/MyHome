@@ -60,7 +60,7 @@ namespace MyHome
         public bool SystemChanged { get; set; }
 
         [JsonIgnore]
-        public bool? UpgradeAvailable { get; private set; }
+        public List<Notification> Notifications { get; }
 
 
         [JsonIgnore]
@@ -87,7 +87,6 @@ namespace MyHome
             // * External system (rpi2, agent) ping system and notify on problem?
             // * Improve devices auto discovery - speaker, ip camera
             // * Improve camera movement capability - move to specific point, saved positions
-            // * Implement notification manager (show upgrade, offline devices, discovered devices, etc. ), check alerts
 
             logger.Info("Start My Home");
             Instance = this;
@@ -118,7 +117,7 @@ namespace MyHome
             this.lastBackupTime = DateTime.Now;
             this.mqttDisconnectedTime = DateTime.Now;
             this.SystemChanged = false;
-            this.UpgradeAvailable = false;
+            this.Notifications = new List<Notification>();
 
             this.Load();
 
@@ -306,7 +305,8 @@ namespace MyHome
             {
                 using var repo = new Repository(".");
                 Commands.Fetch(repo, repo.Head.RemoteName, Array.Empty<string>(), null, "");
-                this.UpgradeAvailable |= repo.Head.TrackingDetails.BehindBy.GetValueOrDefault() > 0;
+                if (repo.Head.TrackingDetails.BehindBy.GetValueOrDefault() > 0)
+                    this.AddNotification(Notification.UpgradeType, "System upgrade available");
             }
             catch (Exception e)
             {
@@ -319,6 +319,25 @@ namespace MyHome
         public Alert Alert(string message)
         {
             return Models.Alert.Create($"My Home: {message}");
+        }
+
+        public void AddNotification(string type, string message, TimeSpan? duration = null, bool ifNotExist = true)
+        {
+            this.Notifications.RemoveAll(n => n.Expired);
+
+            if (ifNotExist && this.Notifications.Exists(n => n.Type == type))
+                return;
+
+            if (!string.IsNullOrEmpty(type) && !string.IsNullOrEmpty(message))
+            {
+                var notification = new Notification(type, message, duration);
+                this.Notifications.Add(notification);
+            }
+        }
+
+        public void RemoveNotification(string type)
+        {
+            this.Notifications.RemoveAll(n => n.Type == type);
         }
 
         public void PlayAlarm(ISpeakerDriver.AlarmType alarmType)
@@ -341,7 +360,8 @@ namespace MyHome
             {
                 logger.Error("Cannot update the system");
                 logger.Debug(e);
-                this.UpgradeAvailable = null;
+                this.RemoveNotification(Notification.UpgradeType);
+                this.AddNotification(Notification.UpgradeType, "System upgrade failed");
                 return false;
             }
         }

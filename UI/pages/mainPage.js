@@ -10,14 +10,26 @@
         }
     },
     computed: {
+        notifications: function () {
+            return this.$root.notifications.filter(n => !n.expired);
+        },
         allRoomsSecuritySystemEnabled: function () {
             return this.rooms.length > 0 && this.rooms.every(r => r.IsSecuritySystemEnabled)
         },
         someRoomSecuritySystemEnabled: function () {
             return this.rooms.some(r => r.IsSecuritySystemEnabled) && !this.rooms.every(r => r.IsSecuritySystemEnabled)
-        },
+        }
     },
     methods: {
+        dateToString: dateToString,
+        notificationAction: function (notification) {
+            switch (notification.type) {
+                case "upgrade": return "Upgrade";
+                case "discovered_device": return "See";
+                default: return "Dismiss";
+            }
+        },
+
         refreshData: function () {
             if (this._isDestroyed) {
                 window.ws?.removeRefreshHandlers(this.refreshData);
@@ -37,11 +49,22 @@
                 setTimeout(this.refreshData, 3000);
         },
 
+        notificationClick: function (notification) {
+            if (notification.type == "upgrade")
+                this.$root.upgrade();
+            else if (notification.type == "discovered_device")
+                this.$router.push("/config#discovered");
+            else
+                removeNotification(notification.type).done(() => {
+                    let idx = this.$root.notifications.indexOf(notification);
+                    this.$root.notifications.splice(idx, 1);
+                });
+        },
+
         showChartsModal: function () {
             this.modal = "Charts";
             this.modalSelection = this.rooms[0].Name;
         },
-
         showSecurityModal: function () {
             this.modal = "Security";
             // wait canvas to show

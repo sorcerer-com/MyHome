@@ -69,10 +69,17 @@ namespace MyHome.Controllers
             return this.File(file, "text/plain");
         }
 
-        [HttpGet("upgrade")]
-        public ActionResult GetUpgradeAvailable()
+        [HttpGet("notifications")]
+        public ActionResult GetNotifications()
         {
-            return this.Ok(this.myHome.UpgradeAvailable);
+            return this.Ok(this.myHome.Notifications);
+        }
+
+        [HttpPost("notifications/{type}/delete")]
+        public ActionResult RemoveNotification(string type)
+        {
+            this.myHome.RemoveNotification(type);
+            return this.Ok();
         }
 
         [HttpPost("upgrade")]

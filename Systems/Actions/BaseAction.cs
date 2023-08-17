@@ -89,9 +89,9 @@ namespace MyHome.Systems.Actions
 
             if (!result)
             {
-                Alert.Create("Action execution failed")
+                Alert.Create($"Action '{this.Name}' execution failed")
                     .Level(Alert.AlertLevel.Low)
-                    .Validity(TimeSpan.FromDays(1))
+                    .Validity(TimeSpan.FromHours(1))
                     .Send();
             }
             return result;

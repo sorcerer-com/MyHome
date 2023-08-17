@@ -246,10 +246,9 @@ namespace MyHome.Systems
                         }
 
                         if (newPresence.Any() != this.Present.Any()) // if there is a change in presence at all, not per person 
-                        {
-                            logger.Info(newPresence.Any() ? "Presence detected: " + string.Join(", ", newPresence) : "No presence detected");
                             MyHome.Instance.Events.Fire(this, GlobalEventTypes.PresenceChanged, newPresence.Any());
-                        }
+
+                        logger.Info(newPresence.Any() ? "Presence change detected: " + string.Join(", ", newPresence) : "No presence");
                         this.Present = newPresence.ToList();
                     }
                 });

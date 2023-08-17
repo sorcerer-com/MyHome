@@ -4,7 +4,7 @@
         return {
             settings: {},
             logs: [],
-            upgradeAvailable: false,
+            notifications: [],
             restarting: false,
 
             modal: "",
@@ -24,8 +24,8 @@
                 return;
             }
 
-            getUpgradeAvailable().done(value => {
-                this.upgradeAvailable = value;
+            getNotifications().done(notifications => {
+                this.notifications = notifications;
                 setTimeout(this.refreshData, 3000);
             }).fail(response => {
                 if (response.status == 401) // unauthorized

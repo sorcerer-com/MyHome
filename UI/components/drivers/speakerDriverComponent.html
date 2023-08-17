@@ -1,6 +1,6 @@
 ﻿<div class="w3-center w3-padding w3-round-large margin-8 bg-gray-opacity-88 w3-hover-blue-gray" style="min-height: 72px; cursor: pointer;"
      v-bind:class="{'w3-text-red': error, 'w3-disabled': processing && !showModal, 'animate-fading-5s': processing && !showModal, 'w3-text-dark-gray': isOffline}"
-     v-bind:title="error ?? 'Last Online: ' + dateToString(new Date(driver.LastOnline))"
+     v-bind:title="error ?? 'Last Online: ' + dateToString(driver.LastOnline)"
      v-on:click="click()">
 
     <!-- not playing -->
