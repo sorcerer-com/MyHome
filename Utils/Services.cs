@@ -224,5 +224,63 @@ namespace MyHome.Utils
                 return false;
             }
         }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S112")]
+        public static bool NormalizeAudioVolume(string filePath)
+        {
+            if (!File.Exists(filePath))
+                return false;
+
+            logger.Debug($"Normalizing audio file '{filePath}'");
+            try
+            {
+                var ffmpegProcess = new System.Diagnostics.Process();
+                ffmpegProcess.StartInfo.UseShellExecute = false;
+                ffmpegProcess.StartInfo.RedirectStandardInput = true;
+                ffmpegProcess.StartInfo.RedirectStandardOutput = true;
+                ffmpegProcess.StartInfo.RedirectStandardError = true;
+                ffmpegProcess.StartInfo.CreateNoWindow = true;
+                ffmpegProcess.StartInfo.FileName = "ffmpeg";
+                ffmpegProcess.StartInfo.Arguments = $" -i \"{filePath}\" -pass 1 -filter:a loudnorm=print_format=json -f null /dev/null";
+                ffmpegProcess.Start();
+
+                var stdErr = new StringBuilder();
+                while (!ffmpegProcess.HasExited) // we need to start reading the output ffmpeg to start processing
+                    stdErr.Append(ffmpegProcess.StandardError.ReadToEnd());
+                if (ffmpegProcess.ExitCode != 0)
+                    throw new Exception(stdErr.ToString());
+
+                var json = stdErr.ToString();
+                json = json[json.LastIndexOf("{")..(json.LastIndexOf("}") + 1)];
+                var jObj = JObject.Parse(json);
+
+                var outputFilePath = Path.Join(Path.GetDirectoryName(filePath),
+                    Path.GetFileNameWithoutExtension(filePath) + "-normalized" + Path.GetExtension(filePath));
+                ffmpegProcess.StartInfo.Arguments = $" -i \"{filePath}\" -pass 2 -filter:a loudnorm=linear=true:I=-15:print_format=json:" +
+                    $"measured_I={jObj["input_i"]}:measured_tp={jObj["input_tp"]}:measured_LRA={jObj["input_lra"]}:measured_thresh={jObj["input_thresh"]}" +
+                    $" -y \"{outputFilePath}\"";
+                ffmpegProcess.Start();
+
+                stdErr.Clear();
+                while (!ffmpegProcess.HasExited) // we need to start reading the output ffmpeg to start processing
+                    stdErr.Append(ffmpegProcess.StandardError.ReadToEnd());
+                if (ffmpegProcess.ExitCode != 0)
+                    throw new Exception(stdErr.ToString());
+                
+                json = stdErr.ToString();
+                json = json[json.LastIndexOf("{")..(json.LastIndexOf("}") + 1)];
+                jObj = JObject.Parse(json);
+                logger.Debug($"Normalization info of audio file '{filePath}': {jObj}");
+
+                File.Move(outputFilePath, filePath, true);
+                return true;
+            }
+            catch (Exception e)
+            {
+                logger.Error($"Failed to normalize audio file '{filePath}'");
+                logger.Debug(e);
+            }
+            return false;
+        }
     }
 }

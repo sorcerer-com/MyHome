@@ -42,7 +42,11 @@ public class SongsManager
         logger.Debug($"Add song: {url}");
         string name = url;
         if (url.Contains("youtube") || url.Contains("youtu.be"))
+        {
             name = Services.DownloadYouTubeAudioAsync(url, MyHome.Instance.Config.SongsPath).Result;
+            if (name != null)
+                Services.NormalizeAudioVolume(Path.Join(MyHome.Instance.Config.SongsPath, name));
+        }
         else if (!name.StartsWith("http"))
             return null;
         if (name == null)
@@ -68,7 +72,10 @@ public class SongsManager
         if (song == null)
             return name;
         if (song.Url.Contains("youtube") || song.Url.Contains("youtu.be"))
+        {
             song.Name = Services.DownloadYouTubeAudioAsync(song.Url, MyHome.Instance.Config.SongsPath).Result ?? song.Name;
+            Services.NormalizeAudioVolume(Path.Join(MyHome.Instance.Config.SongsPath, song.Name));
+        }
         return song.Name;
     }
 

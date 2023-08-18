@@ -26,6 +26,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         private const string BUFFER_LEVEL_STATE_NAME = "BufferLevel";
 
 
+        [JsonIgnore]
         [UiProperty]
         public string Playing
         {

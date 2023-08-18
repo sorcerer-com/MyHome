@@ -18,7 +18,7 @@
             songs.sort((a, b) => a.Rating - b.Rating);
             songs.reverse();
             if (this.songUrl == null) // add dummy item while downloading
-                songs.unshift({ Name: "Downloading...", Rating: 0, Exists: true })
+                songs.unshift({ Name: "Downloading...", Rating: 0, Exists: false })
             return songs;
         }
     },
