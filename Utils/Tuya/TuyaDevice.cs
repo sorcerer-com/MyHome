@@ -255,6 +255,8 @@ public class TuyaDevice : IDisposable
                 else if (t == readTask)
                 {
                     bytes = await readTask;
+                    if (bytes == 0)
+                        break;
                 }
                 ms.Write(buffer, 0, bytes);
             }

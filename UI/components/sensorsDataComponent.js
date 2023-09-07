@@ -107,6 +107,8 @@
             let allRequests = [];
             for (let sensor of this.sensors) {
                 let name = this.valueType != null ? sensor.Name : this.selection;
+                if (sensor.Units[this.selection])
+                    name += ` (${sensor.Units[this.selection]})`;
                 allRequests.push(setSensorData(this.room.Name, sensor.Name, this.selection, data[name]));
             }
             $.when(...allRequests).done(() => this.editorData = null)

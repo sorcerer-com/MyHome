@@ -87,9 +87,17 @@
     },
 });
 
-$(window).on("load", () => {
+$(window).on("load", () => init());
+
+function init() {
     // wait all components to be loaded
     setTimeout(() => {
+        // if 'main-page' is not loaded yet
+        if (!window.vue._context.components["main-page"]) {
+            init();
+            return;
+        }
+
         let router = VueRouter.createRouter({
             history: VueRouter.createWebHashHistory(),
             routes: [
@@ -122,4 +130,4 @@ $(window).on("load", () => {
 
         window.vue.mount("#vue-content");
     }, 100);
-});
+}

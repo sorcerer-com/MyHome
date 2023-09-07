@@ -176,7 +176,7 @@ namespace MyHome.Systems.Devices.Sensors
                         this.lastImageSaved = DateTime.Now;
 
                         if (DateTime.Now.Hour == 23 && DateTime.Now.Minute == 59) // if we are in the end of a day
-                            this.ArchiveRecords();
+                            Task.Run(() => this.ArchiveRecords()); // use task to prevent inactive alarm trigger
                     }
                     catch (Exception e)
                     {

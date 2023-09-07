@@ -68,7 +68,8 @@ namespace MyHome.Systems.Devices.Sensors
             this.SubNamesMap["lat"] = "Latitude";
             this.SubNamesMap["long"] = "Longitude";
             this.SubNamesMap["acc"] = "Accuracy";
-            this.NotTimeseries.Add("Vcc");
+            if (!this.NotTimeseries.Contains("Vcc"))
+                this.NotTimeseries.Add("Vcc");
             this.Grouped = true;
 
             this.nextCall = DateTime.Now + TimeSpan.FromMinutes(1);
