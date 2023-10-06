@@ -104,6 +104,7 @@ function init() {
                 { path: "/", component: window.vue._context.components["main-page"] },
                 { path: "/config", component: window.vue._context.components["config-page"] },
                 { path: "/actions", component: window.vue._context.components["actions-page"] },
+                { path: "/assistant", component: window.vue._context.components["assistant-page"] },
                 { path: "/:pathMatch(.*)*", redirect: "/" } // not found
             ],
             scrollBehavior(to, from, savedPosition) {

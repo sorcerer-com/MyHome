@@ -51,6 +51,7 @@
     <script src="./pages/mainPage.js"></script>
     <script src="./pages/configPage.js"></script>
     <script src="./pages/actionsPage.js"></script>
+    <script src="./pages/assistantPage.js"></script>
 
     <script src="./index.js"></script>
 </head>
@@ -74,6 +75,10 @@
                 <router-link to="/actions" class="material-icons" title="Actions"
                              v-bind:class="{'w3-text-gray w3-hover-text-white': $route.path != '/actions'}">
                     settings_ethernet
+                </router-link>
+                <router-link to="/assistant" class="material-icons" title="Assistant"
+                             v-bind:class="{'w3-text-gray w3-hover-text-white': $route.path != '/assistant'}">
+                    psychology
                 </router-link>
                 <a class="material-icons w3-text-gray w3-hover-text-white" title="Settings"
                    v-on:click="showSettingsModal()">

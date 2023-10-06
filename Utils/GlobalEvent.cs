@@ -23,7 +23,9 @@ namespace MyHome.Utils
         PresenceChanged,
 
         SensorDataAdded,
-        DriverStateChanged
+        DriverStateChanged,
+
+        AssistantResponse
     }
 
     public class GlobalEventArgs : EventArgs

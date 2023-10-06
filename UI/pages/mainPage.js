@@ -3,6 +3,10 @@
         return {
             rooms: [],
             security: {},
+            assistant: {},
+
+            assistantRequest: '',
+            assistantChatShown: false,
 
             modal: "",
             modalSelection: "",
@@ -18,6 +22,9 @@
         },
         someRoomSecuritySystemEnabled: function () {
             return this.rooms.some(r => r.IsSecuritySystemEnabled) && !this.rooms.every(r => r.IsSecuritySystemEnabled)
+        },
+        chatHistory: function () {
+            return this.assistant.History?.reverse();
         }
     },
     methods: {
@@ -39,6 +46,11 @@
             });
 
             getSystem("Security").done(security => this.security = security);
+            getSystem("Assistant").done(assistant => {
+                this.assistant = assistant;
+                if (this.assistantChatShown)
+                    this.assistant.UnreadHistoryItems = 0;
+            });
 
             if (!window.ws || window.ws.readyState != WebSocket.OPEN)
                 setTimeout(this.refreshData, 3000);
@@ -105,6 +117,24 @@
                     };
                 }
             }, 10);
+        },
+
+        mouseOverAssistantChat: function () {
+            if (this.assistant.UnreadHistoryItems > 0) {
+                this.assistant.UnreadHistoryItems = 0;
+                setSystem("AssistantSystem", { "UnreadHistoryItems": this.assistant.UnreadHistoryItems });
+            }
+            this.assistantChatShown = true;
+        },
+        sendAssistantRequest: function () {
+            if (this.assistantRequest == '')
+                return;
+
+            this.assistant.History?.splice(0, 0, { "Message": this.assistantRequest, "Time": new Date(), "Response": false });
+            callSystem("Assistant", "ProcessRequest", this.assistantRequest)
+                .done(() => this.assistant.History?.push({ "Message": "...", "Response": true }))
+                .fail(response => this.assistant.History?.push({ "Message": "Error: " + response, "Response": true }));
+            this.assistantRequest = '';
         }
     },
     mounted: function () {

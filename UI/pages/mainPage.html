@@ -1,7 +1,7 @@
 ﻿<div id="scrollable-content">
     <!-- SideBar -->
     <div class="w3-sidebar w3-bar-block w3-transparent w3-animate-left" style="margin-top: 32px; width: revert;">
-        <router-link class="w3-bar-item w3-hover-text-blue-gray" 
+        <router-link class="w3-bar-item w3-hover-text-blue-gray"
                      v-bind:to="$route.path + '#' + room.Name" v-for="room of rooms">
             {{room.Name}}
         </router-link>
@@ -14,6 +14,43 @@
 
     <!-- Bottom bar -->
     <div class="w3-padding-large w3-display-bottomright w3-animate-zoom margin-bottom-8">
+        <!-- Chat -->
+        <div class="w3-dropdown-hover w3-transparent padding-4" 
+             v-on:mouseover="mouseOverAssistantChat" v-on:mouseleave="assistantChatShown = false">
+            <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
+               title="Assitant">
+                chat
+            </a>
+            <span class="w3-tiny w3-round-xlarge w3-display-bottomright w3-purple circle-15"
+                  v-if="assistant?.UnreadHistoryItems > 0">
+                {{assistant?.UnreadHistoryItems}}
+            </span>
+            <div class="w3-dropdown-content w3-transparent dropdown-top-right">
+                <div class="w3-padding-small w3-round-medium w3-text-white w3-animate-opacity margin-8 bg-gray">
+                    <div class="w3-small" style="height: 250px; overflow-y: auto; display: flex; flex-direction: column-reverse;">
+                        <div v-for="item of chatHistory" class="margin-8"
+                             v-bind:class="{'w3-right-align': !item.Response}">
+                            <span class="w3-padding w3-round-large w3-show-inline-block w3-left-align"
+                                  v-bind:class="{'w3-light-blue': item.Response, 'w3-light-green': !item.Response}"
+                                  style="max-width: 150px">
+                                {{item.Message}}
+                            </span>
+                            <span class="w3-tiny w3-text-dark-gray w3-show-block" v-if="item.Time">{{dateToString(item.Time)}}</span>
+                        </div>
+                    </div>
+                    <div style="white-space: nowrap;">
+                        <input v-model="assistantRequest" v-bind:title="assistantRequest" type="text"
+                               v-on:keyup.enter="sendAssistantRequest" />
+                        <a class="w3-round-large w3-center w3-hover-text-black font-size-normal margin-left-8 bg-gray-opacity-88 material-icons"
+                           title="Send"
+                           v-on:click="sendAssistantRequest()">
+                            send
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Charts -->
         <div class="w3-dropdown-hover w3-transparent padding-4">
             <a class="w3-button w3-round-xxlarge w3-white w3-hover-blue-grey padding-4 material-icons"
