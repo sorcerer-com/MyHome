@@ -95,6 +95,7 @@ namespace MyHome.Systems.Devices.Sensors
             {
                 var json = File.ReadAllText(this.dataFilePath);
                 JsonConvert.PopulateObject(json, this.Data);
+                // TODO: remove data older than 365 days, replace save with append, file format without opening and closing json brackets
             }
         }
 

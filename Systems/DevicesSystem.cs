@@ -154,7 +154,7 @@ namespace MyHome.Systems
                 // TODO: maybe move to sensor update
                 if (device is BaseSensor sensor)
                 {
-                    sensor.GenerateTimeseries();
+                    sensor.GenerateTimeseries(); // TODO: remove, but add property to skip offline alerting
 
                     // aggregate one value per SensorsCheckInterval
                     var now = DateTime.Now;

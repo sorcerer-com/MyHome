@@ -68,8 +68,6 @@ namespace MyHome.Systems.Devices.Sensors
             this.SubNamesMap["lat"] = "Latitude";
             this.SubNamesMap["long"] = "Longitude";
             this.SubNamesMap["acc"] = "Accuracy";
-            if (!this.NotTimeseries.Contains("Vcc"))
-                this.NotTimeseries.Add("Vcc");
             this.Grouped = true;
 
             this.nextCall = DateTime.Now + TimeSpan.FromMinutes(1);
@@ -82,6 +80,9 @@ namespace MyHome.Systems.Devices.Sensors
         public override void Setup()
         {
             base.Setup();
+
+            if (!this.NotTimeseries.Contains("Vcc"))
+                this.NotTimeseries.Add("Vcc");
 
             // subscribe for the topics
             MyHome.Instance.MqttClient.Subscribe(this.BaseMqttTopic + "/" + STATE_TOPIC);

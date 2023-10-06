@@ -83,6 +83,7 @@ namespace MyHome
             //   - security system modal with sensor statuses (muk, motion, etc), etc.
             //   - improve Speaker UI - multiple playlists
             //   - improve power consumption UI (as plugin somehow)
+            //   - revise inline styles
             // * drivers to be sensors too - save state change in time
             // * External system (rpi2, agent) ping system and notify on problem?
             // * Improve devices auto discovery - speaker, ip camera
@@ -383,7 +384,7 @@ namespace MyHome
                 }
                 catch (Exception e)
                 {
-                    logger.Error($"Failed to {failMessage}");
+                    logger.Error($"Failed to {failMessage}: {e.Message}");
                     logger.Debug($"{e}\n {new StackTrace()}");
                     return false;
                 }
