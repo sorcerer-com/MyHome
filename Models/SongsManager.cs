@@ -40,15 +40,23 @@ public class SongsManager
     public string AddSong(string url)
     {
         logger.Debug($"Add song: {url}");
+        if (!url.StartsWith("http"))
+            return null;
+
         string name = url;
-        if (url.Contains("youtube") || url.Contains("youtu.be"))
+        if (url.Contains("youtube") || url.Contains("youtu.be")) // youtube
         {
             name = Services.DownloadYouTubeAudioAsync(url, MyHome.Instance.Config.SongsPath).Result;
             if (name != null)
                 Services.NormalizeAudioVolume(Path.Join(MyHome.Instance.Config.SongsPath, name));
         }
-        else if (!name.StartsWith("http"))
+        else if (url.EndsWith(".m3u")) // m3u playlist
+        {
+            var content = Services.GetContent(url);
+            foreach (var item in content.Split(new string[] { "\r\n", "\r", "\n" }, System.StringSplitOptions.RemoveEmptyEntries))
+                this.AddSong(item);
             return null;
+        }
         if (name == null)
             return null;
 

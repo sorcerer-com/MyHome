@@ -110,19 +110,16 @@ namespace MyHome.Utils
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "S1168")]
-        public static JToken GetJsonContent(string url)
+        public static string GetContent(string url)
         {
             try
             {
-                logger.Trace($"Get json content from '{url}'");
+                logger.Trace($"Get content from '{url}'");
                 using var client = new HttpClient
                 {
                     Timeout = TimeSpan.FromSeconds(5)
                 };
-                var json = client.GetStringAsync(url).Result;
-
-                return JToken.Parse(json);
+                return client.GetStringAsync(url).Result;
             }
             catch (Exception e)
             {
@@ -266,7 +263,7 @@ namespace MyHome.Utils
                     stdErr.Append(ffmpegProcess.StandardError.ReadToEnd());
                 if (ffmpegProcess.ExitCode != 0)
                     throw new Exception(stdErr.ToString());
-                
+
                 json = stdErr.ToString();
                 json = json[json.LastIndexOf("{")..(json.LastIndexOf("}") + 1)];
                 jObj = JObject.Parse(json);

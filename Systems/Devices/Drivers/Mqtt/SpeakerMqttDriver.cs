@@ -270,9 +270,9 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         private void SendPlayingState()
         {
-            var value = Uri.EscapeDataString(this.Playing);
+            var value = this.Playing;
             if (!string.IsNullOrEmpty(value) && !value.StartsWith("http"))
-                value = $"{Host}/api/songs/{value}";
+                value = $"{Host}/api/songs/{Uri.EscapeDataString(value)}";
 
             this.SendState(PLAYING_STATE_NAME, value);
         }
