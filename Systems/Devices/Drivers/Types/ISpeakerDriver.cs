@@ -8,7 +8,7 @@ public interface ISpeakerDriver
         Security
     }
 
-    string Playing { get; set; }
+    string Playing { get; }
     int Volume { get; set; }
     bool Paused { get; set; }
     int Position { get; }
@@ -18,7 +18,8 @@ public interface ISpeakerDriver
     int AlarmDuration { get; set; }
 
 
-    void AddSong(string value);
+    void PlaySong(string name);
     void NextSong(string currentSong);
+
     void PlayAlarm(AlarmType alarmType);
 }

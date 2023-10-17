@@ -25,7 +25,7 @@
                 {{driver.Paused ? 'play_arrow' : 'pause'}}
             </span>
             <span class="w3-xlarge w3-hover-text-dark-gray material-icons" title="Stop" v-on:click.stop=""
-                  v-on:click="setDevice({ 'Playing': '' })">
+                  v-on:click="callDevice('PlaySong', '')">
                 stop
             </span>
             <span class="w3-xlarge w3-hover-text-dark-gray material-icons" title="Next" v-on:click.stop=""
@@ -64,7 +64,7 @@
                             {{driver.Paused ? 'play_arrow' : 'pause'}}
                         </a>
                         <a class="w3-xxlarge w3-hover-text-dark-gray material-icons" title="Stop"
-                           v-on:click="setDevice({'Playing': ''})">
+                           v-on:click="callDevice('PlaySong', '')">
                             stop
                         </a>
                         <a class="w3-xxlarge w3-hover-text-dark-gray material-icons" title="Next"
@@ -82,19 +82,37 @@
                     </div>
                 </div>
 
-                <hr class="reset-margin margin-bottom-8" />
-                <!-- add new song-->
-                <details class="w3-left-align margin-bottom-8">
-                    <summary class="w3-show-inline-block w3-cell-top w3-hover-text-dark-gray margin-right-8 material-icons"
-                             title="Add Song">
-                        add_circle
-                    </summary>
-                    <input type="text" placeholder="URL" v-model="songUrl" v-on:keyup.enter="addSong" />
-                    <a class="w3-cell-top w3-hover-text-dark-gray material-icons" title="Download"
-                       v-on:click="addSong">
-                        download
+                <hr class="reset-margin margin-bottom-8" v-if="driver.Playing" />
+                <div class="w3-left-align">
+                    <!-- add new song-->
+                    <details class="w3-show-inline-block margin-bottom-8">
+                        <summary class="w3-show-inline-block w3-cell-top w3-hover-text-dark-gray margin-right-8 material-icons"
+                                 title="Add Song">
+                            add_circle
+                        </summary>
+                        <input type="text" placeholder="URL" v-model="songUrl" v-on:keyup.enter="addSong" />
+                        <a class="w3-cell-top w3-hover-text-dark-gray material-icons" title="Download"
+                           v-on:click="addSong">
+                            download
+                        </a>
+
+                        <!-- radio stream urls -->
+                        <a class="w3-large w3-hover-text-dark-gray margin-left-8 material-icons"
+                           title="Radio Stream Urls" href="https://streamurl.link/" target="_blank">
+                            radio
+                        </a>
+                    </details>
+                    <!-- edit -->
+                    <a class="w3-right w3-hover-text-white material-icons"
+                       v-bind:class="{'w3-text-dark-gray': !rename}"
+                       v-on:click="rename = rename ? null : {}"
+                       v-if="!driver.Playing">
+                        edit_square
                     </a>
-                </details>
+                    <!-- filter -->
+                    <input type="text" class="w3-small w3-margin-right w3-right" placeholder="Filter"
+                           v-model="filter" v-on:keyup.escape="filter = ''" />
+                </div>
 
                 <!-- songs list -->
                 <div class="w3-row" style="padding: 0 4px"
@@ -102,20 +120,26 @@
                      v-for="song of songs">
 
                     <span class="w3-col m10 s9 w3-left-align overflow-wrap-break-word" style="user-select: none;"
-                          v-bind:class="{'w3-text-gray': !song.Exists}"
+                          v-bind:class="{'w3-text-gray': song.Local && !song.Exists}"
                           v-bind:title="song.Name + ' (Rating: ' + song.Rating + ')'"
-                          v-on:dblclick="setDevice({ 'Playing': song.Name })">
+                          v-if="rename?.Url != song.Url"
+                          v-on:dblclick="callDevice('PlaySong', song.Name)">
                         {{song.Name}}
                     </span>
+                    <!-- rename -->
+                    <input type="text" class="w3-col m9 s9 w3-left-align" v-model="rename.Name"
+                           v-if="rename?.Url == song.Url" v-on:keyup.enter="renameSong" />
+                    <a class="w3-hover-text-green w3-left margin-left-8 material-icons" v-if="rename?.Url == song.Url" v-on:click="renameSong()">done</a>
+                    <a class="w3-hover-text-dark-gray w3-left margin-left-8 material-icons" v-if="rename?.Url == song.Url" v-on:click="rename = {}">close</a>
 
-                    <span class="w3-col m2 s3 w3-right-align" style="line-height: 1">
+                    <span class="w3-col m2 s3 w3-right-align" style="line-height: 1"
+                          v-if="!rename">
                         <a class="w3-hover-text-dark-gray material-icons margin-right-8" title="Play"
                            v-if="driver.Playing != song.Name"
-                           v-on:click="setDevice({ 'Playing': song.Name })">
+                           v-on:click="callDevice('PlaySong', song.Name)">
                             play_circle
                         </a>
 
-                        <!-- TODO: delete, rename? -->
                         <a class="w3-hover-text-dark-gray material-icons" title="Enqueue"
                            v-if="driver.Playing && driver.Playing != song.Name && getQueueIndex(song) == -1"
                            v-on:click="enqueue(song)">
@@ -126,6 +150,23 @@
                            v-if="getQueueIndex(song) != -1"
                            v-on:click="dequeue(song)">
                             {{getQueueIndex(song) + 1}}
+                        </a>
+                    </span>
+
+                    <!-- edit buttons -->
+                    <span class="w3-col m2 s3 w3-right-align" style="line-height: 1"
+                          v-if="rename && rename.Url != song.Url">
+                        <a class="w3-hover-text-dark-gray font-size-normal margin-right-8 material-icons" title="Rename"
+                           v-on:click="rename = {...song}">
+                            edit
+                        </a>
+                        <a class="w3-hover-text-red font-size-normal margin-right-8 material-icons" title="Delete"
+                           v-on:click="deleteSong(song, false)">
+                            delete
+                        </a>
+                        <a class="w3-hover-text-red font-size-normal margin-right-8 material-icons" title="Remove File"
+                           v-on:click="deleteSong(song, true)">
+                            remove
                         </a>
                     </span>
                 </div>

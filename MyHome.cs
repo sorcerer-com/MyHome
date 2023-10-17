@@ -79,7 +79,7 @@ namespace MyHome
             // * Update NuGet packages and UI libraries (charts, vue, etc.)
             // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
             // * UI - mobile / landscape (https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg)
-            //   - new sensor UI - add limits (like unhealty, alerts, etc.)
+            //   - new sensor UI - add limits (like unhealthy, alerts, etc.)
             //   - security system modal with sensor statuses (muk, motion, etc), etc.
             //   - improve Speaker UI - multiple playlists
             //   - improve power consumption UI (as plugin somehow)

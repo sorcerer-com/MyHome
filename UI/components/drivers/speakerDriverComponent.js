@@ -5,7 +5,9 @@
             processing: false,
             error: null,
             showModal: false,
+            filter: "",
             songUrl: "",
+            rename: null,
             debounceSetVolume: debounce(this.setDevice, 1000), // set only after no changes in 1 sec
         }
     },
@@ -18,8 +20,8 @@
             songs.sort((a, b) => a.Rating - b.Rating);
             songs.reverse();
             if (this.songUrl == null) // add dummy item while downloading
-                songs.unshift({ Name: "Downloading...", Rating: 0, Exists: false })
-            return songs;
+                songs.unshift({ Name: "Downloading...", Url: "Downloading...", Rating: 0, Exists: false })
+            return songs.filter(s => s.Name.toLowerCase().includes(this.filter.toLowerCase()));
         }
     },
     methods: {
@@ -52,6 +54,22 @@
             this.songUrl = null;
             event.target.parentElement.open = false;
         },
+        renameSong: function () {
+            let song = this.driver.Songs.find(s => s.Url == this.rename.Url);
+            if (song) {
+                callDevice(this.room.Name, this.driver.Name, "RenameSong", song.Name, this.rename.Name);
+                this.rename = null;
+            }
+        },
+        deleteSong: function (song, keepEntry) {
+            if (!keepEntry && !confirm("Are you sure you want to delete the song?"))
+                return;
+
+            callDevice(this.room.Name, this.driver.Name, "DeleteSong", song.Name, keepEntry);
+            if (!keepEntry)
+                this.rename = null;
+        },
+
         getQueueIndex: function (song) {
             let songIdx = this.driver.Songs.indexOf(song);
             return this.driver.Queue.indexOf(songIdx);
@@ -65,11 +83,12 @@
             const index = this.getQueueIndex(song);
             this.driver.Queue.splice(index, 1);
             this.setDevice({ 'Queue': this.driver.Queue });
-        }
+        },
     },
     mounted: function () {
         if (this.$route.query.room == this.room.Name && this.$route.query.driver == this.driver.Name)
             this.showModal = true;
+        this.filter = "";
     },
     watch: {
         "showModal": function () {

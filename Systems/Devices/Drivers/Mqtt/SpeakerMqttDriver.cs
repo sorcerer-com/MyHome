@@ -28,26 +28,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         [JsonIgnore]
         [UiProperty]
-        public string Playing
-        {
-            get => (string)this.States[PLAYING_STATE_NAME];
-            set
-            {
-                value = MyHome.Instance.SongsManager.EnsureSong(value); // ensure song is downloaded
-                if (this.SetState(PLAYING_STATE_NAME, value))
-                {
-                    if (!string.IsNullOrEmpty(value)) // set volume on start playing
-                        this.SendState(VOLUME_STATE_NAME, this.Volume.ToString());
-                    else // on empty value - stop
-                    {
-                        this.Queue.Clear();
-                        this.orderedSongs = null;
-                        this.alarmType = null;
-                    }
-                    this.SendPlayingState();
-                }
-            }
-        }
+        public string Playing => (string)this.States[PLAYING_STATE_NAME];
 
         [UiProperty]
         public int Volume
@@ -183,6 +164,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             this.alarmType = null;
         }
 
+
         public void AddSong(string value)
         {
             if (string.IsNullOrEmpty(value))
@@ -193,13 +175,51 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             MyHome.Instance.SystemChanged = true;
         }
 
+        public void RenameSong(string oldName, string newName)
+        {
+            if (MyHome.Instance.SongsManager.RenameSong(oldName, newName))
+                MyHome.Instance.SystemChanged = true;
+        }
+
+        public void DeleteSong(string name, bool keepEntry = false)
+        {
+            if (MyHome.Instance.SongsManager.DeleteSong(name, keepEntry))
+                MyHome.Instance.SystemChanged = true;
+        }
+
+
+        public void PlaySong(string name)
+        {
+            name = MyHome.Instance.SongsManager.EnsureSong(name); // ensure song is downloaded
+            if (this.SetState(PLAYING_STATE_NAME, name))
+            {
+                if (!string.IsNullOrEmpty(name)) // set volume on start playing
+                    this.SendState(VOLUME_STATE_NAME, this.Volume.ToString());
+                else // on empty value - stop
+                {
+                    this.Queue.Clear();
+                    this.orderedSongs = null;
+                    this.alarmType = null;
+                }
+
+                var song = this.Songs.Find(s => s.Name == name);
+                if (song?.Local == true)
+                    this.SendState(PLAYING_STATE_NAME, $"{Host}/api/songs/{Uri.EscapeDataString(name)}");
+                else if (song?.Local == false)
+                    this.SendState(PLAYING_STATE_NAME, song.Url);
+                else
+                    this.SendState(PLAYING_STATE_NAME, name);
+            }
+        }
+
         public void NextSong(string currentSong)
         {
             if (this.Queue.Count != 0)
             {
                 var song = this.Songs[this.Queue[0]];
                 this.Queue.RemoveAt(0);
-                this.Playing = song.Name;
+                this.PlaySong(song.Name);
+                this.orderedSongs = null; // regenerate order when queue get empty
                 return;
             }
 
@@ -217,15 +237,16 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                         .OrderByDescending(s => s.Rating).Select(s => s.Name).ToList();
                 }
             }
-            this.Playing = this.orderedSongs[(this.orderedSongs.IndexOf(currentSong) + 1) % this.orderedSongs.Count];
+            this.PlaySong(this.orderedSongs[(this.orderedSongs.IndexOf(currentSong) + 1) % this.orderedSongs.Count]);
         }
+
 
         public void PlayAlarm(AlarmType alarmType)
         {
             if (this.alarmType == null)
             {
                 this.alarmType = alarmType;
-                this.Playing = $"{alarmType}Alarm.mp3";
+                this.PlaySong($"{alarmType}Alarm.mp3");
                 this.Volume = this.AlarmVolume;
 
                 // stop alarm after AlarmDuration minutes
@@ -233,7 +254,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 {
                     if (this.alarmType != null)
                     {
-                        this.Playing = "";
+                        this.PlaySong("");
                         this.Volume = 10;
                     }
                 });
@@ -253,7 +274,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                     if (string.IsNullOrEmpty((string)newValue) && !string.IsNullOrEmpty((string)oldValue))
                     {
                         if (this.alarmType != null) // if alarm was playing repeat it
-                            this.Playing = (string)oldValue;
+                            this.PlaySong((string)oldValue);
                         else
                         {
                             MyHome.Instance.SongsManager.IncreaseSongRating((string)oldValue);
@@ -266,15 +287,6 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             else if (name == POSITION_STATE_NAME || name == BUFFER_LEVEL_STATE_NAME) // do not save state on position or buffer level update
                 return false;
             return true;
-        }
-
-        private void SendPlayingState()
-        {
-            var value = this.Playing;
-            if (!string.IsNullOrEmpty(value) && !value.StartsWith("http"))
-                value = $"{Host}/api/songs/{Uri.EscapeDataString(value)}";
-
-            this.SendState(PLAYING_STATE_NAME, value);
         }
     }
 }

@@ -20,7 +20,7 @@
     <PackageReference Include="OpenCvSharp3-AnyCPU" Version="3.2.0.20171112" />
     <PackageReference Include="ScrapySharp" Version="3.0.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
-    <PackageReference Include="YoutubeExplode" Version="6.3.5" />
+    <PackageReference Include="YoutubeExplode" Version="6.3.6" />
   </ItemGroup>
 
   <ItemGroup>
