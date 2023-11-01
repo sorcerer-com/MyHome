@@ -76,7 +76,7 @@ namespace MyHome
         public MyHome()
         {
             // TODO list
-            // * Update NuGet packages and UI libraries (charts, vue, etc.)
+            // * Update .Net version(LTS), NuGet packages and UI libraries (charts, vue, etc.)
             // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
             // * UI - mobile / landscape (https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg)
             //   - new sensor UI - add limits (like unhealthy, alerts, etc.)

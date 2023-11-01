@@ -74,7 +74,7 @@ namespace MyHome.Systems.Devices.Sensors
                         this.capture.Open(this.GetStreamAddress());
                     if (this.capture.IsOpened())
                     {
-                        this.capture.Set(CaptureProperty.BufferSize, 1);
+                        this.capture.Set(VideoCaptureProperties.BufferSize, 1);
                         this.capture.Read(new Mat()); // dump one image to prepare the capture
                     }
                     this.lastUse = DateTime.Now;
@@ -155,7 +155,7 @@ namespace MyHome.Systems.Devices.Sensors
             }
 
             if (this.Record && DateTime.Now - this.lastImageSaved > TimeSpan.FromMinutes(5))
-                Alert.Create($"Camera '{this.Name}' ({this.Room.Name}) is inactive!").Validity(TimeSpan.FromHours(1)).Send();
+                Alert.Create($"Camera '{this.Name}' ({this.Room.Name}) is inactive!").Validity(TimeSpan.FromDays(1)).Send();
         }
 
         private void RecordLoop()

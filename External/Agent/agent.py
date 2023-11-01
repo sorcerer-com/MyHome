@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import socket
+import time
 from datetime import datetime, timedelta
 
 import paho.mqtt.client
@@ -208,11 +209,14 @@ class Agent:
                 if self._cec is not None:
                     self._cec.set_active_source()
                     self._cec.transmit(self._cec.CECDEVICE_BROADCAST, self._cec.CEC_OPCODE_ACTIVE_SOURCE, bytes.fromhex(self._config["MEDIA"]["cec_source"]))
-
+                    
+                self._media_player.set_fullscreen(False)
                 self._media_player.set_mrl(
                     payload["play"], ":subsdec-encoding=Windows-1251")  # set default encoding to Cyrillic
-                self._media_player.set_fullscreen(True)
                 self._media_player.play()
+                while self._media_player.get_time() == 0:
+                    time.sleep(0.1)
+                self._media_player.set_fullscreen(True)
             elif key == "stop" and payload["stop"]:
                 self._media_player.set_time(
                     self._media_player.get_length() - 100)  # stop and send update

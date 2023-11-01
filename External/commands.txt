@@ -45,8 +45,9 @@ sudo mount -t cifs -o username=username,password=password "//192.168.0.101/My Vi
 sudo apt install libqtgui4
 sudo apt install libqt4-test
 
-# network monitor
+# network, IO monitor
 sudo apt install iftop
+sudo apt install iotop
 
 #vlc youtube video play
 #copy https://raw.githubusercontent.com/videolan/vlc/master/share/lua/playlist/youtube.lua to /usr/lib/arm-linux-gnueabihf/vlc/lua/playlist/
