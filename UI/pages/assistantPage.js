@@ -2,6 +2,7 @@
     data: function () {
         return {
             assistant: {},
+            argumentMapping: null,
             requestMapping: null,
 
             edit: {
@@ -18,6 +19,15 @@
             getSystem("Assistant").done(assistant => {
                 this.assistant = assistant;
                 // add only once
+                if (!this.argumentMapping) {
+                    this.argumentMapping = [];
+                    Object.keys(this.assistant.ArgumentMapping).forEach(argument =>
+                        this.argumentMapping.push({
+                            "argument": argument,
+                            "value": this.assistant.ArgumentMapping[argument]
+                        })
+                    );
+                }
                 if (!this.requestMapping) {
                     this.requestMapping = [];
                     Object.keys(this.assistant.RequestMapping).forEach(request =>
@@ -86,6 +96,21 @@
             delete this.assistant.Operations[this.edit.name];
             return setSystem("AssistantSystem", { "Operations": this.assistant.Operations })
                 .done(() => this.edit.name = null)
+                .fail(response => this.message = "Error: " + response.responseText);
+        },
+
+        addArgumentMapping: function () {
+            if (!this.argumentMapping.some(rm => rm.argument == ""))
+                this.argumentMapping.push({ "argument": "", "value": "" });
+        },
+        saveArgumentMapping: function () {
+            this.assistant.ArgumentMapping = this.argumentMapping
+                .filter(rm => rm.argument != "")
+                .reduce((obj, item) => Object.assign(obj, { [item.argument]: item.value }), {});
+
+            this.argumentMapping = null;
+            return setSystem("AssistantSystem", { "ArgumentMapping": this.assistant.ArgumentMapping })
+                .done(() => this.message = "Saved!")
                 .fail(response => this.message = "Error: " + response.responseText);
         },
 

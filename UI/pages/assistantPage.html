@@ -1,8 +1,8 @@
 ﻿<div id="scrollable-content">
     <div class="w3-content w3-padding-16">
         <!-- Operations -->
-        <div class="w3-row w3-margin w3-animate-opacity">
-            <h3 class="reset-margin margin-left-8">Operations</h3>
+        <details class="w3-row w3-margin w3-animate-opacity">
+            <summary><h3 class="reset-margin margin-left-8">Operations</h3></summary>
 
             <a class="w3-col l3 m3 s11 w3-center w3-padding w3-round-large w3-hover-light-gray margin-8 bg-gray-opacity-88"
                title="Edit operation"
@@ -18,11 +18,39 @@
                v-on:click="showAddOperation(room)">
                 add
             </a>
-        </div>
+        </details>
+
+        <!-- Argument Mapping -->
+        <details class="w3-row w3-margin w3-animate-opacity">
+            <summary><h3 class="reset-margin margin-left-8">Argument Mapping</h3></summary>
+
+            <div class="w3-row margin-8" v-for="item, idx of argumentMapping">
+                <input v-model="item.argument" v-bind:title="item.argument" type="text" class="w3-col m2 w3-mobile margin-right-8" />
+                <input v-model="item.value" v-bind:title="item.value" type="text" class="w3-col m2 w3-mobile margin-right-8" />
+
+                <a class="w3-hover-text-red margin-left-8 material-icons" title="Remove"
+                   v-on:click="argumentMapping.splice(idx, 1)">
+                    remove
+                </a>
+            </div>
+
+            <div class="w3-row">
+                <a class="w3-col l1 m1 s2 w3-round-large w3-center w3-hover-light-gray margin-8 padding-4 bg-gray-opacity-88 material-icons"
+                   title="Add argument mapping"
+                   v-on:click="addArgumentMapping()">
+                    add
+                </a>
+                <a class="w3-col l1 m2 s3 w3-round-large w3-center w3-hover-light-gray margin-8 padding-4 bg-gray-opacity-88" style="height:32px"
+                   title="Save argument mapping"
+                   v-on:click="saveArgumentMapping()">
+                    Save
+                </a>
+            </div>
+        </details>
 
         <!-- Request Mapping -->
-        <div class="w3-row w3-margin w3-animate-opacity">
-            <h3 class="reset-margin margin-left-8">Request Mapping</h3>
+        <details class="w3-row w3-margin w3-animate-opacity" open>
+            <summary><h3 class="reset-margin margin-left-8">Request Mapping</h3></summary>
 
             <div class="w3-row margin-8" v-for="item, idx of requestMapping">
                 <input v-model="item.request" v-bind:title="item.request" type="text" class="w3-col m5 w3-mobile margin-right-8" />
@@ -49,11 +77,11 @@
                     Save
                 </a>
             </div>
+        </details>
 
-            <div class="w3-text-green margin-8" v-if="message"
-                 v-bind:class="{'w3-text-red': message.startsWith('Error')}">
-                {{message}}
-            </div>
+        <div class="w3-text-green margin-8" v-if="message"
+             v-bind:class="{'w3-text-red': message.startsWith('Error')}">
+            {{message}}
         </div>
     </div>
 

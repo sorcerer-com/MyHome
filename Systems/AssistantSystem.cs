@@ -29,6 +29,9 @@ public class AssistantSystem : BaseSystem
     public Dictionary<string, string> Operations { get; }  // name / script
 
     [UiProperty]
+    public Dictionary<string, string> ArgumentMapping { get; } // argument / new value
+
+    [UiProperty]
     public Dictionary<string, string> RequestMapping { get; } // request regex / operation name
 
     [JsonIgnore]
@@ -50,6 +53,7 @@ public class AssistantSystem : BaseSystem
     public AssistantSystem()
     {
         this.Operations = new Dictionary<string, string>();
+        this.ArgumentMapping = new Dictionary<string, string>();
         this.RequestMapping = new Dictionary<string, string>();
         this.History = new List<HistoryItem>();
         this.UnreadHistoryItems = 0;
@@ -81,7 +85,8 @@ public class AssistantSystem : BaseSystem
             }
 
             var args = match.Groups.Values.Where(g => g.Index != 0).ToDictionary(g => g.Name, g => g.Value);
-            result = this.ExecuteOperation(op.Value, args);
+            args = args.ToDictionary(kvp => kvp.Key, kvp => this.ArgumentMapping.ContainsKey(kvp.Value) ? this.ArgumentMapping[kvp.Value] : kvp.Value);
+            result = this.ExecuteOperation(op.Value, args) ?? "Има проблем с изпълнението на операцията.";
             break;
         }
         if (string.IsNullOrEmpty(result))
