@@ -103,6 +103,15 @@ namespace MyHome.Models
             MyHome.Instance.SecuritySystem.SetEnable(this, enable, level);
         }
 
+        public Device GetDevice(string type)
+        {
+            return this.Devices.FirstOrDefault(
+                d => d.GetType().Name == type ||
+                d.GetType().BaseType.Name == type ||
+                d.GetType().GetInterface(type) != null);
+        }
+
+
         private Dictionary<string, double> GetSensorsValues()
         {
             return this.Sensors.Where(s => !s.Grouped)

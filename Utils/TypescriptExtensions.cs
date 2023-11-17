@@ -26,10 +26,15 @@ namespace MyHome.Utils
                 result.Append("  ").Append(string.Join(",\n  ", type.GetFields().Where(f => f.IsLiteral).Select(f => f.Name))).Append('\n');
                 result.Append('}');
             }
+            else if (type.IsInterface) // workaround for interfaces just to be added as strings
+            {
+                result.Append($"let {type.Name}; // interface");
+            }
             else
             {
                 var baseType = type.BaseType != null && type.BaseType != typeof(object) ? $"extends {type.BaseType.Name} " : "";
-                result.Append($"class {type.Name} {baseType}{{\n");
+                var dataType = type.IsInterface ? "interface" : "class";
+                result.Append($"{dataType} {type.Name} {baseType}{{\n");
                 // properties
                 foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
                     result.Append("  ").Append($"{prop.Name}: {GetTypescriptType(prop.PropertyType)};\n");
@@ -58,8 +63,8 @@ namespace MyHome.Utils
         private static bool IsValidType(Type type)
         {
             return type.Namespace?.Contains(type.Assembly.GetName().Name) == true &&
-                    !type.IsNestedPrivate && !(type.IsAbstract && type.IsSealed) && !type.IsInterface && // not anonymous, static or interface
-                    (IsValidType(type.BaseType) || type.BaseType == typeof(object) || type.IsEnum);
+                    !type.IsNestedPrivate && !(type.IsAbstract && type.IsSealed) && // not anonymous or static
+                    (type.BaseType == typeof(object) || type.IsEnum || type.IsInterface || IsValidType(type.BaseType));
         }
 
         private static string GetTypescriptType(Type type)
@@ -79,7 +84,8 @@ namespace MyHome.Utils
         {
             var args = string.Join(", ", func.GetParameters().Select(p => p.Name.Replace("function", "_function") + ": " + GetTypescriptType(p.ParameterType)));
             var returnType = func?.ReturnType != typeof(void) ? GetTypescriptType(func.ReturnType) : "void";
-            return $"{func.Name}({args}): {returnType} {{ }}\n";
+            var body = func.IsAbstract ? ";" : " { }";
+            return $"{func.Name}({args}): {returnType}{body}\n";
         }
 
         private static bool IsNumericType(this Type type)

@@ -108,7 +108,8 @@ public class AssistantSystem : BaseSystem
         if (!this.Operations.ContainsKey(operation))
             return null;
 
-        var script = this.Operations[operation];
+        var script = Regex.Replace(this.Operations[operation], @" as \w*", ""); // remove " as <Type>" casts
+        logger.Trace($"Execute script: {script}");
         string result = null;
         MyHome.Instance.ExecuteJint(jint => result = jint.SetValue("args", args).Evaluate($"{{ {script} }}").ToString());
         return result;
