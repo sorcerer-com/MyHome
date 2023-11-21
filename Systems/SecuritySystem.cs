@@ -136,6 +136,8 @@ namespace MyHome.Systems
                     logger.Info($"Disable({level}) security alarm for '{room.Name}' room");
                     if (roomInfo.Activated)
                         logger.Warn("The alarm is currently activated");
+                    else
+                        roomInfo.ImageFiles.ForEach(File.Delete);
                     this.roomsInfo.Remove(roomInfo);
                 }
                 this.SetHistory(room.Name, enable ? "Enabled" : "Disabled");
@@ -208,11 +210,15 @@ namespace MyHome.Systems
                                 .Filenames(roomInfo.ImageFiles)
                                 .Send();
                             if (sent)
+                            {
+                                roomInfo.ImageFiles.ForEach(File.Delete);
                                 roomInfo.ImageFiles.Clear();
+                            }
                         }
                         else
                         {
                             logger.Info($"Skip alert sending for '{roomInfo.Room.Name}' room");
+                            roomInfo.ImageFiles.ForEach(File.Delete);
                             roomInfo.ImageFiles.Clear();
                         }
 

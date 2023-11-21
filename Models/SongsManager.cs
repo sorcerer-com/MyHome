@@ -106,7 +106,8 @@ public class SongsManager
 
     public string EnsureSong(string name)
     {
-        if (string.IsNullOrEmpty(name) || File.Exists(Path.Join(MyHome.Instance.Config.SongsPath, name)))
+        if (string.IsNullOrEmpty(name) || File.Exists(Path.Join(MyHome.Instance.Config.SongsPath, name)) ||
+            File.Exists(Path.Join(Config.SoundsPath, name)))
             return name;
 
         var song = this.Songs.Find(s => s.Name == name);

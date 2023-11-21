@@ -203,7 +203,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 }
 
                 var song = this.Songs.Find(s => s.Name == name);
-                if (song?.Local == true)
+                if (song?.Local == true || this.alarmType != null)
                     this.SendState(PLAYING_STATE_NAME, $"{Host}/api/songs/{Uri.EscapeDataString(name)}");
                 else if (song?.Local == false)
                     this.SendState(PLAYING_STATE_NAME, song.Url);
