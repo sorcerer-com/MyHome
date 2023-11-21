@@ -263,7 +263,7 @@ namespace MyHome.Controllers
                 while (true)
                 {
                     stopwatch.Restart();
-                    var imageBytes = camera.GetImage().ToBytes(".jpg");
+                    var imageBytes = camera.GetImage()?.ToBytes(".jpg") ?? new byte[0];
 
                     var header = $"--frame\r\nContent-Type: image/jpeg\r\nContent-Length: {imageBytes.Length}\r\n\r\n";
                     var headerData = System.Text.Encoding.UTF8.GetBytes(header);

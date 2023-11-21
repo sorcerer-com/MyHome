@@ -161,8 +161,8 @@ namespace MyHome.Models
             foreach (var camera in MyHome.Instance.DevicesSystem.Cameras)
             {
                 var filename = Path.Combine(Config.BinPath, $"{camera.Room.Name}_{camera.Name}.jpg");
-                camera.SaveImage(filename);
-                images.Add(filename);
+                if (camera.SaveImage(filename))
+                    images.Add(filename);
             }
             return images;
         }

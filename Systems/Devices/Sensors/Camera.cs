@@ -74,7 +74,8 @@ namespace MyHome.Systems.Devices.Sensors
                         this.capture.Open(this.GetStreamAddress());
                     if (this.capture.IsOpened())
                     {
-                        this.capture.Set(VideoCaptureProperties.BufferSize, 1);
+                        this.capture.BufferSize = 1;
+                        this.capture.XI_Timeout = 1000;
                         this.capture.Read(new Mat()); // dump one image to prepare the capture
                     }
                     this.lastUse = DateTime.Now;
@@ -123,12 +124,12 @@ namespace MyHome.Systems.Devices.Sensors
             // prepare capture for opening
             Task.Run(() => { lock (this.capture) this.Capture.IsOpened(); });
 
-            var thread = new Thread(this.RecordLoop)
+            var recordThread = new Thread(this.RecordLoop)
             {
                 Name = $"{this.Room.Name} {this.Name} Record",
                 IsBackground = true
             };
-            thread.Start();
+            recordThread.Start();
         }
 
         public override void Stop()
@@ -193,37 +194,45 @@ namespace MyHome.Systems.Devices.Sensors
 
         public Mat GetImage(bool initIfEmpty = true, Size? size = null, bool timestamp = true)
         {
-            lock (this.capture)
+            if (Monitor.TryEnter(this.capture, TimeSpan.FromSeconds(5)))
             {
-                var image = new Mat();
-                this.Capture.Read(image);
-                if (image.Empty())
+                try
                 {
-                    // release the camera if it is open and try to open it again next time
-                    if (this.Capture.IsOpened())
-                        this.Capture.Release();
-                    this.lastUse = DateTime.Now.AddMinutes(-1);
+                    var image = new Mat();
+                    this.Capture.Read(image);
+                    if (image.Empty())
+                    {
+                        // release the camera if it is open and try to open it again next time
+                        if (this.Capture.IsOpened())
+                            this.Capture.Release();
+                        this.lastUse = DateTime.Now.AddMinutes(-1);
 
-                    if (!initIfEmpty)
-                        return null;
-                    image = new Mat(480, 640, MatType.CV_8UC3, 0);
-                    image.Line(0, 0, 640, 480, Scalar.Red, 2, LineTypes.AntiAlias);
-                    image.Line(640, 0, 0, 480, Scalar.Red, 2, LineTypes.AntiAlias);
+                        if (!initIfEmpty)
+                            return null;
+                        image = new Mat(480, 640, MatType.CV_8UC3, 0);
+                        image.Line(0, 0, 640, 480, Scalar.Red, 2, LineTypes.AntiAlias);
+                        image.Line(640, 0, 0, 480, Scalar.Red, 2, LineTypes.AntiAlias);
+                    }
+                    else
+                        this.lastOnline = DateTime.Now;
+                    if (size.HasValue)
+                        image.Resize(size.Value);
+                    if (timestamp)
+                    {
+                        var scale = image.Size(0) / 800.0;
+                        var text = $"{DateTime.Now:dd/MM/yyyy HH:mm:ss}";
+                        var textSize = Cv2.GetTextSize(text, HersheyFonts.HersheySimplex, scale, (int)Math.Round(scale * 3), out int _);
+                        image.PutText(text, new Point(5, 5 + textSize.Height), HersheyFonts.HersheySimplex, scale,
+                            Scalar.White, (int)Math.Round(scale * 3), LineTypes.AntiAlias);
+                    }
+                    return image;
                 }
-                else
-                    this.lastOnline = DateTime.Now;
-                if (size.HasValue)
-                    image.Resize(size.Value);
-                if (timestamp)
+                finally
                 {
-                    var scale = image.Size(0) / 800.0;
-                    var text = $"{DateTime.Now:dd/MM/yyyy HH:mm:ss}";
-                    var textSize = Cv2.GetTextSize(text, HersheyFonts.HersheySimplex, scale, (int)Math.Round(scale * 3), out int _);
-                    image.PutText(text, new Point(5, 5 + textSize.Height), HersheyFonts.HersheySimplex, scale,
-                        Scalar.White, (int)Math.Round(scale * 3), LineTypes.AntiAlias);
+                    Monitor.Exit(this.capture);
                 }
-                return image;
             }
+            return null;
         }
 
         public bool SaveImage(string filepath, bool initIfEmpty = true, Size? size = null, bool timestamp = true)
