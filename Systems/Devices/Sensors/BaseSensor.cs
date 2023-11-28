@@ -93,9 +93,21 @@ namespace MyHome.Systems.Devices.Sensors
 
             if (File.Exists(this.dataFilePath))
             {
-                var json = File.ReadAllText(this.dataFilePath);
-                JsonConvert.PopulateObject(json, this.Data);
-                // TODO: remove data older than 365 days, replace save with append, file format without opening and closing json brackets
+                try
+                {
+                    var json = File.ReadAllText(this.dataFilePath);
+                    JsonConvert.PopulateObject(json, this.Data);
+                    // TODO: remove data older than 365 days, replace save with append, file format without opening and closing json brackets
+                }
+                catch (Exception e)
+                {
+                    logger.Error($"Cannot load sensor data '{this.Name}' ({this.Room.Name})");
+                    logger.Debug(e);
+                    Alert.Create("Cannot load sensor data")
+                        .Details($"'{this.Name}' ({this.Room.Name})")
+                        .Validity(TimeSpan.FromHours(1))
+                        .Send();
+                }
             }
         }
 

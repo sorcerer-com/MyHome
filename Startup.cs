@@ -27,7 +27,7 @@ namespace MyHome
             services.AddDistributedMemoryCache();
             services.AddSession(options =>
             {
-                options.IdleTimeout = TimeSpan.FromMinutes(15);
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
@@ -80,8 +80,7 @@ namespace MyHome
         {
             if (context.Request.Path == "/login" && context.Request.Method == "POST")
             {
-                using var shar256 = SHA256.Create();
-                var hash = shar256.ComputeHash(Encoding.UTF8.GetBytes(context.Request.Form["password"]));
+                var hash = SHA256.HashData(Encoding.UTF8.GetBytes(context.Request.Form["password"]));
                 var hashStr = BitConverter.ToString(hash).Replace("-", string.Empty);
                 if (myHome.Config.Password == hashStr)
                 {

@@ -214,12 +214,14 @@ class Agent:
                 self._media_player.set_mrl(
                     payload["play"], ":subsdec-encoding=Windows-1251")  # set default encoding to Cyrillic
                 self._media_player.play()
+                # set fullscreen after media start
                 while self._media_player.get_time() == 0:
                     time.sleep(0.1)
                 self._media_player.set_fullscreen(True)
             elif key == "stop" and payload["stop"]:
+                self._media_player.set_pause(False)
                 self._media_player.set_time(
-                    self._media_player.get_length() - 100)  # stop and send update
+                    self._media_player.get_length() - 100)  # stop by forward to the end (to send update)
                 # self._media_player.stop()
             elif key == "pause":
                 self._media_player.set_pause(bool(payload["pause"]))

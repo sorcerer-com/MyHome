@@ -200,6 +200,14 @@ namespace MyHome
             {
                 serializer.Populate(data.CreateReader(), this);
             }
+            catch (Exception e)
+            {
+                logger.Error("Cannot load system");
+                logger.Debug(e);
+                Models.Alert.Create("Cannot load system")
+                    .Validity(TimeSpan.FromHours(1))
+                    .Send();
+            }
             finally
             {
                 // logger.Trace(traceWriter);
