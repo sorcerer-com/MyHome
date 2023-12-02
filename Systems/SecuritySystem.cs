@@ -12,8 +12,6 @@ using Newtonsoft.Json;
 
 using NLog;
 
-using OpenCvSharp;
-
 namespace MyHome.Systems
 {
     public class SecuritySystem : BaseSystem
@@ -72,7 +70,7 @@ namespace MyHome.Systems
         [JsonProperty]
         private readonly List<RoomInfo> roomsInfo;
 
-        private readonly Dictionary<string, Mat> prevImages;
+        private readonly Dictionary<string, byte[]> prevImages;
 
         private DateTime presenceDetectionTimer;
 
@@ -89,7 +87,7 @@ namespace MyHome.Systems
             this.Present = new List<string>();
 
             this.roomsInfo = new List<RoomInfo>();
-            this.prevImages = new Dictionary<string, Mat>();
+            this.prevImages = new Dictionary<string, byte[]>();
             this.presenceDetectionTimer = DateTime.Now - TimeSpan.FromMinutes(this.PresenceDetectionInterval);
 
             Directory.CreateDirectory(MyHome.Instance.Config.CameraRecordsPath);
@@ -225,11 +223,15 @@ namespace MyHome.Systems
                         MyHome.Instance.SystemChanged = true;
                     }
 
-                    foreach (var camera in roomInfo.Room.Cameras)
+                    // use task since Camera getImage can block
+                    Task.Run(() =>
                     {
-                        if (camera.IsOpened) // try to open the camera and if succeed
-                            this.SaveImage(camera, roomInfo);
-                    }
+                        foreach (var camera in roomInfo.Room.Cameras)
+                        {
+                            if (camera.IsOpened()) // try to open the camera and if succeed
+                                this.SaveImage(camera, roomInfo);
+                        }
+                    });
                 }
             }
 
@@ -270,15 +272,21 @@ namespace MyHome.Systems
             if (this.prevImages.ContainsKey(camera.Room.Name + "." + camera.Name))
             {
                 // if no movement between current and previous image - skip saving
-                if (!FindMovement(this.prevImages[camera.Room.Name + "." + camera.Name], image, this.MovementThreshold))
+                var diffPercent = camera.DiffImages(this.prevImages[camera.Room.Name + "." + camera.Name], image);
+                if (diffPercent < this.MovementThreshold)
                     return;
             }
-            this.prevImages[camera.Room.Name + "." + camera.Name] = image.Resize(new Size(640, 480));
+            this.prevImages[camera.Room.Name + "." + camera.Name] = image;
 
             var filename = $"{camera.Room.Name}_{camera.Name}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.jpg";
             var filepath = Path.Combine(MyHome.Instance.Config.CameraRecordsPath, filename);
-            if (Cv2.ImWrite(filepath, image))
+
+            try
+            {
+                File.WriteAllBytes(filepath, image);
                 roomInfo.ImageFiles.Add(filepath);
+            }
+            catch { /* nothing to do */ }
         }
 
         private List<string> DetectPresence()
@@ -337,25 +345,7 @@ namespace MyHome.Systems
         private static bool CheckCameras(Room room)
         {
             // it there is no cameras or there is offline camera
-            return !room.Cameras.Any() || room.Cameras.Any(camera => !camera.IsOpened);
-        }
-
-        private static bool FindMovement(Mat image1, Mat image2, double threshold)
-        {
-            var gray1 = image1
-                .Resize(new Size(640, 480))
-                .CvtColor(ColorConversionCodes.BGR2GRAY)
-                .GaussianBlur(new Size(21, 21), 0);
-            var gray2 = image2
-                .Resize(new Size(640, 480))
-                .CvtColor(ColorConversionCodes.BGR2GRAY)
-                .GaussianBlur(new Size(21, 21), 0);
-
-            Mat diff = new Mat();
-            Cv2.Absdiff(gray1, gray2, diff);
-            diff = diff.Threshold(25, 255, ThresholdTypes.Binary);
-            var diffPecent = (double)diff.CountNonZero() / (640 * 480);
-            return diffPecent > threshold;
+            return !room.Cameras.Any() || room.Cameras.Any(camera => !camera.IsOpened());
         }
     }
 }

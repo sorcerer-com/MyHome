@@ -22,8 +22,6 @@ using NLog;
 
 using OnvifEvents;
 
-using OpenCvSharp;
-
 namespace MyHome.Systems.Devices.Sensors
 {
     public class Camera : BaseSensor
@@ -55,34 +53,15 @@ namespace MyHome.Systems.Devices.Sensors
         [UiProperty(true)]
         public bool Record { get; set; }
 
-        [JsonIgnore]
-        public bool IsOpened => this.Capture.IsOpened();
 
-
-        private readonly VideoCapture capture;
-        private VideoCapture Capture
+        private readonly object captureLock = new();
+        private readonly Process capture;
+        private Process Capture
         {
             get
             {
-                // if capture isn't opened try again but only if the previous try was at least 1 minute ago
-                if (!this.capture.IsOpened() && DateTime.Now - this.lastUse > TimeSpan.FromMinutes(1))
-                {
-                    logger.Debug($"Opening camera: {this.Name} ({this.Room.Name})");
-                    if (int.TryParse(this.Address, out int device))
-                        this.capture.Open(device);
-                    else
-                        this.capture.Open(this.GetStreamAddress());
-                    if (this.capture.IsOpened())
-                    {
-                        this.capture.BufferSize = 1;
-                        this.capture.XI_Timeout = 1000;
-                        this.capture.Read(new Mat()); // dump one image to prepare the capture
-                    }
-                    this.lastUse = DateTime.Now;
-                }
-                if (this.capture.IsOpened())
-                    this.lastUse = DateTime.Now;
-
+                if (this.capture.HasExited)
+                    this.capture.Start();
                 return this.capture;
             }
         }
@@ -93,7 +72,6 @@ namespace MyHome.Systems.Devices.Sensors
         [UiProperty]
         public override DateTime LastOnline => this.lastOnline > base.LastOnline ? this.lastOnline : base.LastOnline; // take the soonest image capture or sensor data received
 
-        private DateTime lastUse;
         private DateTime nextDataRead;
         private DateTime lastImageSaved;
         private bool stopped;
@@ -107,9 +85,31 @@ namespace MyHome.Systems.Devices.Sensors
             this.ReadDataInterval = 15;
             this.Record = true;
 
-            this.capture = new VideoCapture();
+            // start capture process
+            this.capture = Process.Start(new ProcessStartInfo
+            {
+                FileName = "python3",
+                Arguments = " External/cameraCapture.py",
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                RedirectStandardInput = true,
+                CreateNoWindow = true
+            });
+            // kill process on error, debounce if multiple errors
+            var debouncer = Utils.Utils.Debouncer();
+            this.capture.ErrorDataReceived += (s, e) =>
+            {
+                logger.Error(e.Data);
+                debouncer(() =>
+                {
+                    if (!this.capture.HasExited)
+                        this.capture.Kill();
+                });
+            };
+            this.capture.BeginErrorReadLine();
+
             this.lastOnline = DateTime.Now;
-            this.lastUse = DateTime.Now.AddMinutes(-1);
             this.nextDataRead = DateTime.Now.AddMinutes(1); // start reading 1 minute after start
             this.lastImageSaved = DateTime.Now.AddMinutes(1);
             this.stopped = false;
@@ -122,7 +122,7 @@ namespace MyHome.Systems.Devices.Sensors
             base.Setup();
 
             // prepare capture for opening
-            Task.Run(() => { lock (this.capture) this.Capture.IsOpened(); });
+            Task.Run(() => { lock (this.captureLock) this.IsOpened(); });
 
             var recordThread = new Thread(this.RecordLoop)
             {
@@ -136,6 +136,8 @@ namespace MyHome.Systems.Devices.Sensors
         {
             base.Stop();
             this.stopped = true;
+            if (!this.capture.HasExited)
+                this.capture.StandardInput.WriteLine("exit"); // stop camera capture process
         }
 
         public override void Update()
@@ -156,7 +158,10 @@ namespace MyHome.Systems.Devices.Sensors
             }
 
             if (this.Record && DateTime.Now - this.lastImageSaved > TimeSpan.FromMinutes(5))
+            {
                 Alert.Create($"Camera '{this.Name}' ({this.Room.Name}) is inactive!").Validity(TimeSpan.FromDays(1)).Send();
+                this.capture.Kill();
+            }
         }
 
         private void RecordLoop()
@@ -192,50 +197,51 @@ namespace MyHome.Systems.Devices.Sensors
         }
 
 
-        public Mat GetImage(bool initIfEmpty = true, Size? size = null, bool timestamp = true)
+        // use only in Task, can block
+        public bool IsOpened()
         {
-            if (Monitor.TryEnter(this.capture, TimeSpan.FromSeconds(5)))
+            var address = int.TryParse(this.Address, out int device) ? device.ToString() : this.GetStreamAddress();
+            this.Capture.StandardInput.WriteLine($"isOpened {address}");
+            return this.Capture.StandardOutput.ReadLine() == "True";
+        }
+
+        // use only in Task, can block
+        public byte[] GetImage(bool initIfEmpty = true, (int width, int height)? size = null, bool timestamp = true)
+        {
+            if (Monitor.TryEnter(this.captureLock, TimeSpan.FromSeconds(5)))
             {
                 try
                 {
-                    var image = new Mat();
-                    this.Capture.Read(image);
-                    if (image.Empty())
+                    var address = int.TryParse(this.Address, out int device) ? device.ToString() : this.GetStreamAddress();
+                    var _size = size.HasValue ? $"{size.Value.width},{size.Value.height}" : "None";
+                    this.Capture.StandardInput.WriteLine($"getImage {address} {initIfEmpty} {_size} {timestamp}");
+                    var res = this.Capture.StandardOutput.ReadLine();
+                    if (res == null)
                     {
-                        // release the camera if it is open and try to open it again next time
-                        if (this.Capture.IsOpened())
-                            this.Capture.Release();
-                        this.lastUse = DateTime.Now.AddMinutes(-1);
+                        this.capture.Kill();
+                        return null;
+                    }
+                    var img = this.Capture.StandardOutput.ReadLine();
+                    if (string.IsNullOrEmpty(img))
+                    {
+                        this.capture.Kill();
+                        return null;
+                    }
 
-                        if (!initIfEmpty)
-                            return null;
-                        image = new Mat(480, 640, MatType.CV_8UC3, 0);
-                        image.Line(0, 0, 640, 480, Scalar.Red, 2, LineTypes.AntiAlias);
-                        image.Line(640, 0, 0, 480, Scalar.Red, 2, LineTypes.AntiAlias);
-                    }
-                    else
+                    if (res == "True")
                         this.lastOnline = DateTime.Now;
-                    if (size.HasValue)
-                        image.Resize(size.Value);
-                    if (timestamp)
-                    {
-                        var scale = image.Size(0) / 800.0;
-                        var text = $"{DateTime.Now:dd/MM/yyyy HH:mm:ss}";
-                        var textSize = Cv2.GetTextSize(text, HersheyFonts.HersheySimplex, scale, (int)Math.Round(scale * 3), out int _);
-                        image.PutText(text, new Point(5, 5 + textSize.Height), HersheyFonts.HersheySimplex, scale,
-                            Scalar.White, (int)Math.Round(scale * 3), LineTypes.AntiAlias);
-                    }
-                    return image;
+                    return Convert.FromBase64String(img[2..(img.Length - 1)]);
                 }
                 finally
                 {
-                    Monitor.Exit(this.capture);
+                    Monitor.Exit(this.captureLock);
                 }
             }
             return null;
         }
 
-        public bool SaveImage(string filepath, bool initIfEmpty = true, Size? size = null, bool timestamp = true)
+        // use only in Task, can block
+        public bool SaveImage(string filepath, bool initIfEmpty = true, (int width, int height)? size = null, bool timestamp = true)
         {
             logger.Trace($"Camera '{this.Name}' ({this.Room.Name}) save image: {filepath}");
 
@@ -245,7 +251,23 @@ namespace MyHome.Systems.Devices.Sensors
                 logger.Debug($"Camera '{this.Name}' ({this.Room.Name}) failed to save image: {filepath}");
                 return false;
             }
-            return Cv2.ImWrite(filepath, image);
+            try
+            {
+                File.WriteAllBytes(filepath, image);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public double DiffImages(byte[] image1, byte[] image2)
+        {
+            this.Capture.StandardInput.WriteLine("diffImages");
+            this.Capture.StandardInput.WriteLine(Convert.ToBase64String(image1));
+            this.Capture.StandardInput.WriteLine(Convert.ToBase64String(image2));
+            return double.Parse(this.Capture.StandardOutput.ReadLine());
         }
 
         public void Move(Movement movement)
@@ -450,22 +472,11 @@ namespace MyHome.Systems.Devices.Sensors
 
         private void DropOldFrames()
         {
-            lock (this.capture)
+            lock (this.captureLock)
             {
-                // if capture is not open or we use it less than 1 seconds ago
-                if (!this.capture.IsOpened() || DateTime.Now - this.lastUse < TimeSpan.FromSeconds(1))
-                    return;
-
-                Stopwatch stopwatch = Stopwatch.StartNew();
-                // drop frames until it took less than 100 ms for a frame (not buffered) or timeout - 3 sec
-                var start = DateTime.Now;
-                var image = new Mat();
-                while (stopwatch.Elapsed.Milliseconds < 100 && DateTime.Now - start < TimeSpan.FromSeconds(3))
-                {
-                    stopwatch.Restart();
-                    if (!this.capture.Read(image))
-                        break;
-                }
+                var address = int.TryParse(this.Address, out int device) ? device.ToString() : this.GetStreamAddress();
+                this.Capture.StandardInput.WriteLine($"dropOldFrames {address}");
+                logger.Trace("Dropped old frames: " + this.Capture.StandardOutput.ReadLine());
             }
         }
     }
