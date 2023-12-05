@@ -1,5 +1,7 @@
 using System;
+using System.Data;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -27,7 +29,7 @@ namespace MyHome
             services.AddDistributedMemoryCache();
             services.AddSession(options =>
             {
-                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.IdleTimeout = TimeSpan.FromHours(2);
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
@@ -97,14 +99,16 @@ namespace MyHome
                 return false;
             }
             else if (!IsResource(context.Request.Path) && !context.Request.Path.StartsWithSegments("/api/songs") &&
-                (context.Session.GetString("password") ?? "") != myHome.Config.Password)
+                ((context.Session.GetString("password") ?? "") != myHome.Config.Password || IsSessionExpired(context, myHome)))
             {
                 if (!context.Request.Path.StartsWithSegments("/api")) // pages only
                     context.Response.Redirect("./login.html");
                 else
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Session.Clear();
                 return false;
             }
+            context.Session.SetString("time", DateTime.Now.ToString());
             return true;
         }
 
@@ -112,6 +116,18 @@ namespace MyHome
         {
             return path.StartsWith("/external/") || path.StartsWith("/images/") ||
                 path == "/scripts.js" || path == "/style.css" || path == "/login.html";
+        }
+
+        private static bool IsSessionExpired(HttpContext context, MyHome myHome)
+        {
+            if (!context.Session.Keys.Contains("time"))
+                return false;
+            var time = DateTime.Parse(context.Session.GetString("time"));
+            var duration = TimeSpan.FromMinutes(15);
+            var ip = context.Connection.RemoteIpAddress.MapToIPv4();
+            if (myHome.SecuritySystem.PresenceDeviceIPs.ContainsValue(ip.ToString()))
+                duration = TimeSpan.FromMinutes(120);
+            return DateTime.Now - time > duration;
         }
     }
 }
