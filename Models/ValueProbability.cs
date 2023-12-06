@@ -10,7 +10,7 @@ namespace MyHome.Models
 {
     public class ValueProbability
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         private readonly int minSamples;
         private readonly double cleanupThreshold;

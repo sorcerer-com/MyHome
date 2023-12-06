@@ -12,7 +12,7 @@ namespace MyHome.Models;
 
 public class SongsManager
 {
-    private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
     public sealed class SongInfo
     {
@@ -72,7 +72,7 @@ public class SongsManager
         // cleanup songs if we exceed the usage capacity
         Utils.Utils.CleanupFilesByCapacity(this.Songs.OrderBy(s => s.Rating)
             .Select(s => Path.Join(MyHome.Instance.Config.SongsPath, s.Name))
-                .Where(p => File.Exists(p)).Select(p => new FileInfo(p)),
+                .Where(File.Exists).Select(p => new FileInfo(p)),
             MyHome.Instance.Config.SongsDiskUsage, logger);
         return name;
     }

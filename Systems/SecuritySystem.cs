@@ -16,7 +16,7 @@ namespace MyHome.Systems
 {
     public class SecuritySystem : BaseSystem
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 
         [UiProperty(true, "minutes")]

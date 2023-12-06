@@ -14,7 +14,7 @@ namespace MyHome.Models
 {
     public class Room
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         [UiProperty(true)]
         public string Name { get; set; }
@@ -71,9 +71,7 @@ namespace MyHome.Models
         [JsonIgnore]
         [UiProperty]
         public Dictionary<DateTime, string> SecurityHistory =>
-            MyHome.Instance.SecuritySystem.History.ContainsKey(this.Name)
-                    ? MyHome.Instance.SecuritySystem.History[this.Name]
-                    : new Dictionary<DateTime, string>();
+            MyHome.Instance.SecuritySystem.History.TryGetValue(this.Name, out var value) ? value : [];
 
         [JsonIgnore]
         [UiProperty]

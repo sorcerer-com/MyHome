@@ -49,7 +49,7 @@ namespace MyHome.Systems.Actions
         private void Events_Handler(object sender, GlobalEventArgs e)
         {
             if (this.IsTriggered(sender, e))
-                Task.Run(() => this.Trigger());
+                Task.Run(this.Trigger);
         }
 
         protected virtual bool IsTriggered(object sender, GlobalEventArgs e)

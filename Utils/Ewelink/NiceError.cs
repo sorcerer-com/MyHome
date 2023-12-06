@@ -1,7 +1,7 @@
-﻿namespace MyHome.Utils.Ewelink
-{
-    using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
+namespace MyHome.Utils.Ewelink
+{
     internal static class NiceError
     {
         public static IReadOnlyDictionary<int, string> Errors { get; } = new Dictionary<int, string>

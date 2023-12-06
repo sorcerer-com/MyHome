@@ -229,7 +229,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 {
                     var max = MyHome.Instance.SongsManager.Songs.Max(s => s.Rating);
                     this.orderedSongs = MyHome.Instance.SongsManager.Songs.Where(s => s.Exists)
-                        .OrderByDescending(s => random.NextDouble() + (double)s.Rating / max).Select(s => s.Name).ToList();
+                        .OrderByDescending(s => random.NextDouble() + ((double)s.Rating / max)).Select(s => s.Name).ToList();
                 }
                 else
                 {
@@ -284,7 +284,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 });
                 this.States[name] = Uri.UnescapeDataString(((string)newValue).Replace($"{Host}/api/songs/", ""));
             }
-            else if (name == POSITION_STATE_NAME || name == BUFFER_LEVEL_STATE_NAME) // do not save state on position or buffer level update
+            else if (name is POSITION_STATE_NAME or BUFFER_LEVEL_STATE_NAME) // do not save state on position or buffer level update
                 return false;
             return true;
         }

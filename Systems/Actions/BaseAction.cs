@@ -12,7 +12,7 @@ namespace MyHome.Systems.Actions
 {
     public abstract class BaseAction
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         [UiProperty(true)]
         public string Name { get; set; }

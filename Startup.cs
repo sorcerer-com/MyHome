@@ -18,7 +18,7 @@ namespace MyHome
 {
     public class Startup
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
@@ -63,7 +63,7 @@ namespace MyHome
                 OnPrepareResponse = context =>
                 {
                     // allow cache for 1 day
-                    context.Context.Response.Headers.Add("Cache-Control", "private, max-age=86400, stale-while-revalidate=86400");
+                    context.Context.Response.Headers.CacheControl = "private, max-age=86400, stale-while-revalidate=86400";
                 }
             });
 
@@ -75,7 +75,7 @@ namespace MyHome
                 endpoints.MapControllers();
             });
 
-            applicationLifetime.ApplicationStopping.Register(() => myHome.Stop());
+            applicationLifetime.ApplicationStopping.Register(myHome.Stop);
         }
 
         private static bool Login(HttpContext context, MyHome myHome)

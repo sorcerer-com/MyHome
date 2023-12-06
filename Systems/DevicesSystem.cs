@@ -26,7 +26,7 @@ namespace MyHome.Systems
 {
     public class DevicesSystem : BaseSystem
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         [UiProperty(true, "minutes")]
         public int SensorsCheckInterval { get; set; } // minutes
@@ -172,7 +172,7 @@ namespace MyHome.Systems
 
             // discover devices
             if (this.autoDiscovery)
-                Task.Run(() => this.DiscoverEwelinkDevices());
+                Task.Run(this.DiscoverEwelinkDevices);
 
             this.nextSensorCheckTime += TimeSpan.FromMinutes(this.SensorsCheckInterval);
             MyHome.Instance.SystemChanged = true;
@@ -389,7 +389,7 @@ namespace MyHome.Systems
                         continue;
 
                     // RF bridge
-                    if (device.ProductModel == "RFBridge433" || device.ProductModel == "RF_Bridge")
+                    if (device.ProductModel is "RFBridge433" or "RF_Bridge")
                     {
                         newDevice = true;
                         foreach (var rfObj in device.Paramaters.RfList.OfType<JObject>())

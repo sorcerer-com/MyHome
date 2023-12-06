@@ -17,7 +17,7 @@ namespace MyHome.Systems.Devices.Sensors
 {
     public class MqttSensor : BaseSensor
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         [UiProperty(true, "(topic, json path)")]
         public ObservableCollection<(string topic, string jsonPath)> MqttTopics { get; }

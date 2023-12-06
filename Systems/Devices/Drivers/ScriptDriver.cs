@@ -8,7 +8,7 @@ namespace MyHome.Systems.Devices.Drivers
 {
     public class ScriptDriver : BaseDriver
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         [UiProperty]
         public bool IsOn

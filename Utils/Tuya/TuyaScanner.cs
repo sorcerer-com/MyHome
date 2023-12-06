@@ -105,7 +105,7 @@ public class TuyaScanner
     {
         var deviceInfo = JsonConvert.DeserializeObject<TuyaDeviceScanInfo>(json);
         OnDeviceInfoReceived?.Invoke(this, deviceInfo);
-        if ((OnNewDeviceInfoReceived) != null && !this.devices.Contains(deviceInfo))
+        if (OnNewDeviceInfoReceived != null && !this.devices.Contains(deviceInfo))
         {
             this.devices.Add(deviceInfo);
             OnNewDeviceInfoReceived?.Invoke(this, deviceInfo);

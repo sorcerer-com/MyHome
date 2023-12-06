@@ -182,7 +182,7 @@ namespace MyHome.Systems.Devices.Sensors
                         this.lastImageSaved = DateTime.Now;
 
                         if (DateTime.Now.Hour == 23 && DateTime.Now.Minute == 59) // if we are in the end of a day
-                            Task.Run(() => this.ArchiveRecords()); // use task to prevent inactive alarm trigger
+                            Task.Run(this.ArchiveRecords); // use task to prevent inactive alarm trigger
                     }
                     catch (Exception e)
                     {
@@ -456,7 +456,7 @@ namespace MyHome.Systems.Devices.Sensors
             if (images.Count > ArchiveImagesCount)
             {
                 // leave only every Nth element if images are too many
-                var step = images.Count / ArchiveImagesCount + 1;
+                var step = (images.Count / ArchiveImagesCount) + 1;
                 images = images.Where((x, i) => i % step == 0).ToList();
             }
 

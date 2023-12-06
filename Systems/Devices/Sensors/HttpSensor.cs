@@ -12,7 +12,7 @@ namespace MyHome.Systems.Devices.Sensors
 {
     public class HttpSensor : BaseSensor
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         [UiProperty(true)]
         public string Address { get; set; }

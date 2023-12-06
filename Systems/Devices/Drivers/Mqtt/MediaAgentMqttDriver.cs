@@ -14,7 +14,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 {
     public class MediaAgentMqttDriver : MqttDriver, IMediaDriver
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         private const string MEDIA_LIST_STATE_NAME = "MediaList";
         private const string PLAYING_STATE_NAME = "Playing";

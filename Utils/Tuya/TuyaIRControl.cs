@@ -143,12 +143,12 @@ public class TuyaIRControl : TuyaDevice
     {
         var bytes = Convert.FromBase64String(
             (codeBase64.Length % 4 == 1 && codeBase64.StartsWith('1'))
-                ? codeBase64.Substring(1) // code can be padded with "1" (wtf?)
+                ? codeBase64[1..] // code can be padded with "1" (wtf?)
                 : codeBase64
         );
         var pulses = Enumerable.Range(0, bytes.Length)
             .Where(x => x % 2 == 0)
-            .Select(x => (ushort)(bytes[x] | bytes[x + 1] << 8))
+            .Select(x => (ushort)(bytes[x] | (bytes[x + 1] << 8)))
             .ToArray();
         return pulses;
     }
@@ -186,7 +186,7 @@ public class TuyaIRControl : TuyaDevice
     public static string PulsesToHex(ushort[] pulses)
     {
         var words = Enumerable.Range(0, pulses.Length)
-            .Select(x => $"{(pulses[x] & 0xFF):x02}{((pulses[x] >> 8) & 0xFF):x02}").ToArray();
+            .Select(x => $"{pulses[x] & 0xFF:x02}{(pulses[x] >> 8) & 0xFF:x02}").ToArray();
         var hex = string.Concat(words);
         return hex;
     }

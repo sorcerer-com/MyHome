@@ -14,7 +14,7 @@ namespace MyHome.Models
 {
     public class Alert
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public enum AlertLevel
         {
@@ -31,7 +31,7 @@ namespace MyHome.Models
         private bool camerasImages;
         private bool sensorsData;
 
-        private static readonly Dictionary<string, DateTime> validities = new();
+        private static readonly Dictionary<string, DateTime> validities = [];
 
         private Alert(string message)
         {
@@ -113,7 +113,7 @@ namespace MyHome.Models
                     result = false;
                 }
 
-                foreach (var file in images.Where(file => File.Exists(file)))
+                foreach (var file in images.Where(File.Exists))
                     File.Delete(file);
 
                 var smsPassword = Encoding.UTF8.GetString(Convert.FromBase64String(MyHome.Instance.Config.MyTelenorPassword));
@@ -137,10 +137,10 @@ namespace MyHome.Models
         private bool IsValid()
         {
             var result = false;
-            if (!validities.ContainsKey(this.message) || DateTime.Now > validities[this.message])
+            if (!validities.TryGetValue(this.message, out var value) || DateTime.Now > value)
                 result = true;
             else
-                logger.Trace($"Don't send new alert since there is valid alert until: {validities[this.message]}");
+                logger.Trace($"Don't send new alert since there is valid alert until: {value}");
 
             if (result)
             {
@@ -182,7 +182,7 @@ namespace MyHome.Models
 
             var currHour = DateTime.Now.Hour;
             if ((quietHours.start > quietHours.end && (currHour > quietHours.start || currHour < quietHours.end)) ||
-                (quietHours.start < quietHours.end && (currHour > quietHours.start && currHour < quietHours.end)))
+                (quietHours.start < quietHours.end && currHour > quietHours.start && currHour < quietHours.end))
             {
                 logger.Debug($"Skip sending SMS since quiet hours: {quietHours.start} - {quietHours.end}");
                 return false;

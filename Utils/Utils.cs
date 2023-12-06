@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -97,12 +98,12 @@ namespace MyHome.Utils
                 return d;
             }
             else if ((type == null || type == typeof(DateTime)) &&
-                DateTime.TryParse(value, out DateTime dt))
+                DateTime.TryParse(value, CultureInfo.CurrentCulture, out DateTime dt))
             {
                 return dt;
             }
             else if ((type == null || type == typeof(TimeSpan)) &&
-                TimeSpan.TryParse(value, out TimeSpan ts))
+                TimeSpan.TryParse(value, CultureInfo.CurrentCulture, out TimeSpan ts))
             {
                 return ts;
             }
@@ -111,7 +112,7 @@ namespace MyHome.Utils
             {
                 return e;
             }
-            else if ((type != null && type.IsEnum) &&
+            else if (type != null && type.IsEnum &&
                 Enum.TryParse(type, value, out object e2)) // Enum
             {
                 return e2;

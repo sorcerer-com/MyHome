@@ -306,12 +306,12 @@ namespace MyHome.Systems.Devices.Sensors
                 double ratio1 = (double)rssi1 / (rssi1 + rssi2);
                 double ratio2 = (double)rssi2 / (rssi1 + rssi2);
 
-                data["lat"] = info1.Value["results"][0]["locationData"].Average(c => (double)c["latitude"]) * ratio1 +
-                    info2.Value["results"][0]["locationData"].Average(c => (double)c["latitude"]) * ratio2;
-                data["long"] = info1.Value["results"][0]["locationData"].Average(c => (double)c["longitude"]) * ratio1 +
-                    info2.Value["results"][0]["locationData"].Average(c => (double)c["longitude"]) * ratio2;
-                data["acc"] = info1.Value["results"][0]["locationData"].Average(c => (double)c["accuracy"]) * ratio1 +
-                    info2.Value["results"][0]["locationData"].Average(c => (double)c["accuracy"]) * ratio2;
+                data["lat"] = (info1.Value["results"][0]["locationData"].Average(c => (double)c["latitude"]) * ratio1) +
+                    (info2.Value["results"][0]["locationData"].Average(c => (double)c["latitude"]) * ratio2);
+                data["long"] = (info1.Value["results"][0]["locationData"].Average(c => (double)c["longitude"]) * ratio1) +
+                    (info2.Value["results"][0]["locationData"].Average(c => (double)c["longitude"]) * ratio2);
+                data["acc"] = (info1.Value["results"][0]["locationData"].Average(c => (double)c["accuracy"]) * ratio1) +
+                    (info2.Value["results"][0]["locationData"].Average(c => (double)c["accuracy"]) * ratio2);
             }
             logger.Trace($"Sensor '{this.Name}' ({this.Room.Name}) add location {time} lat:{data["lat"]} long:{data["long"]} acc:{data["acc"]}");
             this.AddData(time, data);

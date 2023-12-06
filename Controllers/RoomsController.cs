@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 
 using Microsoft.AspNetCore.Http;
@@ -17,7 +18,7 @@ namespace MyHome.Controllers
     [ApiController]
     public class RoomsController : ControllerBase
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         private readonly MyHome myHome;
 
@@ -226,9 +227,9 @@ namespace MyHome.Controllers
             var body = Newtonsoft.Json.Linq.JToken.Parse(new System.IO.StreamReader(this.Request.Body).ReadToEndAsync().Result);
             foreach (var item in body.OfType<Newtonsoft.Json.Linq.JProperty>())
             {
-                var key = DateTime.Parse(item.Name);
-                if (sensor.Data.ContainsKey(key) && sensor.Data[key].ContainsKey(valueType))
-                    sensor.Data[key][valueType] = (double)item;
+                var key = DateTime.Parse(item.Name, CultureInfo.CurrentCulture);
+                if (sensor.Data.TryGetValue(key, out var value) && value.ContainsKey(valueType))
+                    value[valueType] = (double)item;
             }
             sensor.SaveData();
 

@@ -13,7 +13,7 @@ namespace MyHome.Utils
 {
     public class MqttClientWrapper
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         private readonly IMqttClient MqttClient;
         private readonly Dictionary<string, int> Subscriptions;

@@ -13,7 +13,7 @@ namespace MyHome.Systems.Devices.Drivers
 {
     public class TuyaSwitchDriver : BaseDriver, ISwitchDriver
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public override DateTime LastOnline => lastOnlineCache.ContainsKey(this.TuyaDeviceId) ? lastOnlineCache[this.TuyaDeviceId] : DateTime.Now;
 

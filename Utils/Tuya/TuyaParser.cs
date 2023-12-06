@@ -71,7 +71,7 @@ internal static class TuyaParser
             // Encrypt
             payload = Encrypt(payload, key);
             // Add protocol 3.3 header
-            if ((command != TuyaCommand.DP_QUERY) && (command != TuyaCommand.UPDATE_DPS))
+            if (command is not TuyaCommand.DP_QUERY and not TuyaCommand.UPDATE_DPS)
                 payload = Enumerable.Concat(PROTOCOL_33_HEADER, payload).ToArray();
         }
         else if (command == TuyaCommand.CONTROL)

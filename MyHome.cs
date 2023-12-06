@@ -25,7 +25,7 @@ namespace MyHome
 {
     public sealed class MyHome : IDisposable
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         private int updateInterval = 1; // seconds
         private readonly int upgradeCheckInterval = 5; // minutes

@@ -16,7 +16,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 {
     public abstract class MqttDriver : BaseDriver
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 
         private string onlineMqttTopic;

@@ -25,7 +25,7 @@ namespace MyHome.Utils
 {
     public static class Services
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public static bool SendEMail(string server, string sender, string password,
             string recipient, string subject, string content, List<string> fileNames = null)
@@ -45,7 +45,7 @@ namespace MyHome.Utils
 
                 var (host, port) = Utils.SplitAddress(server);
                 using var smtp = new SmtpClient { Timeout = 30 * 1000 };
-                smtp.Connect(host, port ?? 465, port == null || port == 465 || port == 587);
+                smtp.Connect(host, port ?? 465, port is null or 465 or 587);
                 smtp.Authenticate(sender, password);
                 smtp.Send(mail);
                 smtp.Disconnect(true);

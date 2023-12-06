@@ -13,7 +13,7 @@ namespace MyHome.Systems;
 
 public class AssistantSystem : BaseSystem
 {
-    private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
     public class HistoryItem
     {

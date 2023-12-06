@@ -17,7 +17,6 @@ namespace MyHome.Utils.Ewelink
 #pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "S3928")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "S112")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "S1481")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "S1117")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "S3260")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "S3218")]
@@ -68,11 +67,11 @@ namespace MyHome.Utils.Ewelink
             this.HttpClient.Timeout = TimeSpan.FromSeconds(30);
         }
 
-        public Uri ApiUri => new Uri($"https://{this.region}-api.coolkit.cc:8080/api");
+        public Uri ApiUri => new($"https://{this.region}-api.coolkit.cc:8080/api");
 
-        public Uri OtaUri => new Uri($"https://{this.region}-ota.coolkit.cc:8080/otaother");
+        public Uri OtaUri => new($"https://{this.region}-ota.coolkit.cc:8080/otaother");
 
-        public Uri ApiWebSocketUri => new Uri($"wss://{this.region}-pconnect3.coolkit.cc:8080/api/ws");
+        public Uri ApiWebSocketUri => new($"wss://{this.region}-pconnect3.coolkit.cc:8080/api/ws");
 
         public async Task<SensorData?> GetDeviceCurrentSensorData(string deviceId)
         {
@@ -235,7 +234,7 @@ namespace MyHome.Utils.Ewelink
             var wssLoginPayload = JsonConvert.SerializeObject(new
             {
                 action = "userOnline",
-                at = this.at,
+                this.at,
                 apikey = this.apiKey,
                 appid = AppId,
                 nonce = Utilities.Nonce,
@@ -321,10 +320,9 @@ namespace MyHome.Utils.Ewelink
             dynamic response = await this.MakeRequest(
                                    "/app",
                                    this.OtaUri,
-                                   new { deviceInfoList = deviceInfoList },
+                                   new { deviceInfoList },
                                    method: HttpMethod.Post);
-
-            int returnCode = response.rtnCode;
+            _ = response.rtnCode;
             JToken token = response.upgradeInfoList;
             return token.ToObject<List<UpgradeInfo>>();
         }

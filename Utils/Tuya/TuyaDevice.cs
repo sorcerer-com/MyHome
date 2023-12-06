@@ -130,7 +130,7 @@ public class TuyaDevice : IDisposable
         if ((addGwId || addDevId || addUid) && string.IsNullOrWhiteSpace(this.DeviceId))
             throw new ArgumentNullException("deviceId", "Device ID can't be null.");
         if (addTime && !root.ContainsKey("t"))
-            root.AddFirst(new JProperty("t", (DateTime.Now - new DateTime(1970, 1, 1)).TotalSeconds.ToString("0")));
+            root.AddFirst(new JProperty("t", (DateTime.Now - DateTime.UnixEpoch).TotalSeconds.ToString("0")));
         if (addUid && !root.ContainsKey("uid"))
             root.AddFirst(new JProperty("uid", this.DeviceId));
         if (addDevId && !root.ContainsKey("devId"))

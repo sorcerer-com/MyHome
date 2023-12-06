@@ -73,7 +73,7 @@ public class EwelinkV2
         this.HttpClient.Timeout = TimeSpan.FromSeconds(30);
     }
 
-    public Uri ApiUri => new Uri($"https://{this.region}-apia.coolkit.cc/v2");
+    public Uri ApiUri => new($"https://{this.region}-apia.coolkit.cc/v2");
 
     public async Task<SensorData> GetDeviceCurrentSensorData(string deviceId)
     {
@@ -351,7 +351,7 @@ public class EwelinkV2
         if (email != null && phoneNumber != null)
             return false;
 
-        if (email != null && password != null || countryCode != null && phoneNumber != null && password != null || at != null)
+        if ((email != null && password != null) || (countryCode != null && phoneNumber != null && password != null) || at != null)
             return true;
 
         return false;

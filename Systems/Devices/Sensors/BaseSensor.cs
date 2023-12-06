@@ -14,7 +14,7 @@ namespace MyHome.Systems.Devices.Sensors
 {
     public abstract class BaseSensor : Device
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public class SensorValue : Dictionary<string, double> { }; // subName / value
 

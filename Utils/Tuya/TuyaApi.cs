@@ -23,7 +23,7 @@ public class TuyaApi
     private readonly string apiSecret;
     private readonly HttpClient httpClient;
     private TuyaToken token = null;
-    private DateTime tokenTime = new DateTime();
+    private DateTime tokenTime = new();
     public string TokenUid => this.token?.Uid;
 
     private sealed class TuyaToken
@@ -118,10 +118,10 @@ public class TuyaApi
     /// <returns>JSON string with response.</returns>
     public async Task<string> RequestAsync(Method method, string uri, string body = null, Dictionary<string, string> headers = null, bool noToken = false, bool forceTokenRefresh = false, CancellationToken cancellationToken = default)
     {
-        while (uri.StartsWith('/')) uri = uri.Substring(1);
+        while (uri.StartsWith('/')) uri = uri[1..];
         var urlHost = RegionToHost(this.region);
         var url = new Uri($"https://{urlHost}/{uri}");
-        var now = (DateTime.Now.ToUniversalTime() - new DateTime(1970, 1, 1)).TotalMilliseconds.ToString("0");
+        var now = (DateTime.Now.ToUniversalTime() - DateTime.UnixEpoch).TotalMilliseconds.ToString("0");
         string headersStr = "";
         if (headers == null)
         {
@@ -183,15 +183,13 @@ public class TuyaApi
         if (body != null)
             httpRequestMessage.Content = new StringContent(body, Encoding.UTF8, "application/json");
 
-        using (var response = await this.httpClient.SendAsync(httpRequestMessage, cancellationToken).ConfigureAwait(false))
-        {
-            var responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var root = JObject.Parse(responseString);
-            var success = root.GetValue("success").Value<bool>();
-            if (!success) throw new InvalidDataException(root.ContainsKey("msg") ? root.GetValue("msg").Value<string>() : null);
-            var result = root.GetValue("result").ToString();
-            return result;
-        }
+        using var response = await this.httpClient.SendAsync(httpRequestMessage, cancellationToken).ConfigureAwait(false);
+        var responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var root = JObject.Parse(responseString);
+        var success = root.GetValue("success").Value<bool>();
+        if (!success) throw new InvalidDataException(root.ContainsKey("msg") ? root.GetValue("msg").Value<string>() : null);
+        var result = root.GetValue("result").ToString();
+        return result;
     }
 
     /// <summary>

@@ -13,7 +13,7 @@ namespace MyHome.Systems.Devices.Drivers
 {
     public class EwelinkRfDriver : BaseDriver, ISwitchDriver
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public override DateTime LastOnline => !string.IsNullOrEmpty(this.EwelinkDeviceId) && lastOnlineCache.ContainsKey(this.EwelinkDeviceId)
             ? lastOnlineCache[this.EwelinkDeviceId] : DateTime.Now;

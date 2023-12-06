@@ -1,7 +1,7 @@
-﻿namespace MyHome.Utils.Ewelink
-{
-    using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
+namespace MyHome.Utils.Ewelink
+{
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "S125")]
     internal static class DeviceData
     {

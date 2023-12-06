@@ -1,10 +1,10 @@
-﻿namespace MyHome.Utils.Ewelink
+﻿using System;
+using System.Collections.Generic;
+
+using Newtonsoft.Json;
+
+namespace MyHome.Utils.Ewelink
 {
-    using System;
-    using System.Collections.Generic;
-
-    using Newtonsoft.Json;
-
     public class User
     {
 

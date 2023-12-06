@@ -1,7 +1,7 @@
-﻿namespace MyHome.Utils.Ewelink
-{
-    using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
+namespace MyHome.Utils.Ewelink
+{
     public class ExtendedExtra
     {
 

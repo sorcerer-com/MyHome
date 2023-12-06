@@ -15,7 +15,7 @@ namespace MyHome.Controllers
     [ApiController]
     public class SystemsController : ControllerBase
     {
-        private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         private readonly MyHome myHome;
 

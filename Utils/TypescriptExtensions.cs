@@ -11,7 +11,7 @@ namespace MyHome.Utils
         public static string ToTypescript(this Assembly assembly)
         {
             var result = new StringBuilder();
-            foreach (var type in assembly.GetTypes().Where(type => IsValidType(type)))
+            foreach (var type in assembly.GetTypes().Where(IsValidType))
                 result.Append(type.ToTypescript() + "\n\n");
 
             return result.ToString();
@@ -72,7 +72,7 @@ namespace MyHome.Utils
             if (type.IsNumericType())
                 return "number";
             else if (type.GetInterface(nameof(IDictionary)) != null)
-                return "{} /* " + string.Join(", ", type.GenericTypeArguments.Select(t => GetTypescriptType(t))).Replace("*/", "") + " */";
+                return "{} /* " + string.Join(", ", type.GenericTypeArguments.Select(GetTypescriptType)).Replace("*/", "") + " */";
             else if (type.GetInterface(nameof(IEnumerable)) != null && type.GenericTypeArguments.Length > 0)
                 return GetTypescriptType(type.GenericTypeArguments[0]) + "[]";
             if (type.Name.Contains('`'))
@@ -92,23 +92,11 @@ namespace MyHome.Utils
         {
             if (type.IsEnum)
                 return false;
-            switch (Type.GetTypeCode(type))
+            return Type.GetTypeCode(type) switch
             {
-                case TypeCode.Byte:
-                case TypeCode.SByte:
-                case TypeCode.UInt16:
-                case TypeCode.UInt32:
-                case TypeCode.UInt64:
-                case TypeCode.Int16:
-                case TypeCode.Int32:
-                case TypeCode.Int64:
-                case TypeCode.Decimal:
-                case TypeCode.Double:
-                case TypeCode.Single:
-                    return true;
-                default:
-                    return false;
-            }
+                TypeCode.Byte or TypeCode.SByte or TypeCode.UInt16 or TypeCode.UInt32 or TypeCode.UInt64 or TypeCode.Int16 or TypeCode.Int32 or TypeCode.Int64 or TypeCode.Decimal or TypeCode.Double or TypeCode.Single => true,
+                _ => false,
+            };
         }
     }
 }

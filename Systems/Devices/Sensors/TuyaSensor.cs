@@ -67,7 +67,7 @@ namespace MyHome.Systems.Devices.Sensors
             try
             {
                 var dps = this.tuyaDevice.GetDpsAsync().Result;
-                return dps.Where(kvp => kvp.Value is bool || kvp.Value is long)
+                return dps.Where(kvp => kvp.Value is bool or long)
                     .ToDictionary(dp => dp.Key.ToString(), dp => dp.Value);
             }
             catch (Exception e)

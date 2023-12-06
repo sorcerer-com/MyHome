@@ -1,9 +1,9 @@
-﻿namespace MyHome.Utils.Ewelink
+﻿using System;
+
+using Newtonsoft.Json;
+
+namespace MyHome.Utils.Ewelink
 {
-    using System;
-
-    using Newtonsoft.Json;
-
     public class Extra
     {
 
