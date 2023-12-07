@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -122,7 +123,7 @@ namespace MyHome
         {
             if (!context.Session.Keys.Contains("time"))
                 return false;
-            var time = DateTime.Parse(context.Session.GetString("time"));
+            var time = DateTime.Parse(context.Session.GetString("time"), CultureInfo.CurrentCulture);
             var duration = TimeSpan.FromMinutes(15);
             var ip = context.Connection.RemoteIpAddress.MapToIPv4();
             if (myHome.SecuritySystem.PresenceDeviceIPs.ContainsValue(ip.ToString()))

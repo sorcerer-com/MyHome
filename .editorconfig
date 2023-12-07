@@ -146,3 +146,15 @@ dotnet_diagnostic.IDE0007.severity = none
 
 # IDE0042: Deconstruct variable declaration
 dotnet_diagnostic.IDE0042.severity = none
+
+# S6561: Avoid using "DateTime.Now" for benchmarking or timing operations
+dotnet_diagnostic.S6561.severity = none
+
+# S6562: Always set the "DateTimeKind" when creating new "DateTime" instances
+dotnet_diagnostic.S6562.severity = none
+
+# S1168: Empty arrays and collections should be returned instead of null
+dotnet_diagnostic.S1168.severity = none
+
+# S3220: Method calls should not resolve ambiguously to overloads with "params"
+dotnet_diagnostic.S3220.severity = none

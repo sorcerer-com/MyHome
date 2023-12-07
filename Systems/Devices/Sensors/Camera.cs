@@ -359,7 +359,7 @@ namespace MyHome.Systems.Devices.Sensors
                 var response = media.GetStreamUriAsync(streamSetup, token).Result.Uri;
                 // replace internal IP address with the real one
                 var responseIp = response[7..response.IndexOf(":", 7)];
-                var ip = this.Address.Split(new char[] { ':', '@' })[2];
+                var ip = this.Address.Split(':', '@')[2];
                 return response.Replace(responseIp, ip);
             }
             catch (Exception e)
@@ -417,7 +417,6 @@ namespace MyHome.Systems.Devices.Sensors
             return (T)this.onvif[typeof(T)];
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S1168:Empty arrays and collections should be returned instead of null")]
         private Dictionary<string, object> ReadData()
         {
             var result = new Dictionary<string, object>();

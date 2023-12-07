@@ -50,7 +50,7 @@ namespace MyHome.Utils.Ewelink
             string? at = null,
             string? apiKey = null)
         {
-            var check = this.CheckLoginParameters(email, phoneNumber, password, at);
+            var check = CheckLoginParameters(email, phoneNumber, password, at);
 
             if (!check)
             {
@@ -120,7 +120,7 @@ namespace MyHome.Utils.Ewelink
 
         public int GetDeviceChannelCountByUuid(int uuid)
         {
-            var deviceType = this.GetDeviceTypeByUiid(uuid);
+            var deviceType = GetDeviceTypeByUiid(uuid);
             return DeviceData.DeviceChannelCount[deviceType];
         }
 
@@ -282,12 +282,7 @@ namespace MyHome.Utils.Ewelink
                                        getTags = 1,
                                    });
 
-            JToken jtoken = response.devicelist;
-            if (jtoken == null)
-            {
-                throw new HttpRequestException(NiceError.Custom[CustomErrors.NoDevices]);
-            }
-
+            JToken jtoken = response.devicelist ?? throw new HttpRequestException(NiceError.Custom[CustomErrors.NoDevices]);
             var devicelist = jtoken.ToObject<List<EwelinkDevice>>();
             foreach (var device in devicelist)
             {
@@ -315,7 +310,7 @@ namespace MyHome.Utils.Ewelink
 
         public async Task<List<UpgradeInfo>> CheckDeviceUpdates(IEnumerable<EwelinkDevice> devices)
         {
-            var deviceInfoList = this.GetFirmwareUpdateInfo(devices);
+            var deviceInfoList = GetFirmwareUpdateInfo(devices);
 
             dynamic response = await this.MakeRequest(
                                    "/app",
@@ -345,11 +340,11 @@ namespace MyHome.Utils.Ewelink
 
         public async Task<Credentials> GetCredentials()
         {
-            var body = this.CredentialsPayload(email: this.email, phoneNumber: this.phoneNumber, password: this.password);
+            var body = CredentialsPayload(email: this.email, phoneNumber: this.phoneNumber, password: this.password);
 
             var uri = new Uri($"{this.ApiUri}/user/login");
             var httpMessage = new HttpRequestMessage(HttpMethod.Post, uri);
-            httpMessage.Headers.Add("Authorization", $"Sign {this.MakeAuthorizationSign(body)}");
+            httpMessage.Headers.Add("Authorization", $"Sign {MakeAuthorizationSign(body)}");
             httpMessage.Content = new StringContent(JsonConvert.SerializeObject(body));
 
             var response = await this.HttpClient.SendAsync(httpMessage);
@@ -403,7 +398,7 @@ namespace MyHome.Utils.Ewelink
 
             var uriBuilder = new UriBuilder($"{baseUri}{path}")
             {
-                Query = query != null ? this.ToQueryString(query) : string.Empty,
+                Query = query != null ? ToQueryString(query) : string.Empty,
             };
 
             var uri = uriBuilder.Uri;
@@ -465,7 +460,7 @@ namespace MyHome.Utils.Ewelink
             return device;
         }
 
-        private bool CheckLoginParameters(
+        private static bool CheckLoginParameters(
             string? email,
             string? phoneNumber,
             string? password,
@@ -484,7 +479,7 @@ namespace MyHome.Utils.Ewelink
             return false;
         }
 
-        private string ToQueryString(object? qs)
+        private static string ToQueryString(object? qs)
         {
             var properties = from p in qs.GetType().GetProperties()
                              where p.GetValue(qs, null) != null
@@ -493,15 +488,14 @@ namespace MyHome.Utils.Ewelink
             return string.Join("&", properties.ToArray());
         }
 
-        private string MakeAuthorizationSign(PayLoad? body)
+        private static string MakeAuthorizationSign(PayLoad? body)
         {
-            var crypto = HMACSHA256.Create("HmacSHA256");
-            crypto.Key = Encoding.UTF8.GetBytes(AppSecret);
+            var crypto = new HMACSHA256 { Key = Encoding.UTF8.GetBytes(AppSecret) };
             var hash = crypto.ComputeHash(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(body)));
             return Convert.ToBase64String(hash);
         }
 
-        private PayLoad CredentialsPayload(string? email, string? phoneNumber, string? password)
+        private static PayLoad CredentialsPayload(string? email, string? phoneNumber, string? password)
         {
             return new PayLoad(
                 AppId,
@@ -513,7 +507,7 @@ namespace MyHome.Utils.Ewelink
                 Utilities.Nonce);
         }
 
-        private string GetDeviceTypeByUiid(int uiid)
+        private static string GetDeviceTypeByUiid(int uiid)
         {
             if (DeviceData.DeviceTypeUuid.TryGetValue(uiid, out var type))
             {
@@ -523,7 +517,7 @@ namespace MyHome.Utils.Ewelink
             return string.Empty;
         }
 
-        private List<FirmwareUpdateInfo> GetFirmwareUpdateInfo(IEnumerable<EwelinkDevice> devices)
+        private static List<FirmwareUpdateInfo> GetFirmwareUpdateInfo(IEnumerable<EwelinkDevice> devices)
         {
             return devices.Select(d => new FirmwareUpdateInfo
             {

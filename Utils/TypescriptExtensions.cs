@@ -75,6 +75,8 @@ namespace MyHome.Utils
                 return "{} /* " + string.Join(", ", type.GenericTypeArguments.Select(GetTypescriptType)).Replace("*/", "") + " */";
             else if (type.GetInterface(nameof(IEnumerable)) != null && type.GenericTypeArguments.Length > 0)
                 return GetTypescriptType(type.GenericTypeArguments[0]) + "[]";
+            else if (type == typeof(void))
+                return "void";
             if (type.Name.Contains('`'))
                 return "any";
             return type.Name;
@@ -83,7 +85,7 @@ namespace MyHome.Utils
         private static string GetTypescriptFunction(MethodInfo func)
         {
             var args = string.Join(", ", func.GetParameters().Select(p => p.Name.Replace("function", "_function") + ": " + GetTypescriptType(p.ParameterType)));
-            var returnType = func?.ReturnType != typeof(void) ? GetTypescriptType(func.ReturnType) : "void";
+            var returnType = GetTypescriptType(func.ReturnType);
             var body = func.IsAbstract ? ";" : " { }";
             return $"{func.Name}({args}): {returnType}{body}\n";
         }

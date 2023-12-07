@@ -368,8 +368,7 @@ public class EwelinkV2
 
     private static string MakeAuthorizationSign(PayLoad body, string appSecret)
     {
-        var crypto = HMAC.Create("HmacSHA256");
-        crypto.Key = Encoding.UTF8.GetBytes(appSecret);
+        var crypto = new HMACSHA256 { Key = Encoding.UTF8.GetBytes(appSecret) };
         var hash = crypto.ComputeHash(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(body)));
         return Convert.ToBase64String(hash);
     }
