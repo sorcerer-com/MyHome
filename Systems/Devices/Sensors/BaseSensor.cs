@@ -95,8 +95,18 @@ namespace MyHome.Systems.Devices.Sensors
             {
                 try
                 {
-                    var json = File.ReadAllText(this.dataFilePath);
-                    JsonConvert.PopulateObject(json, this.Data);
+                    try
+                    {
+                        var json = File.ReadAllText(this.dataFilePath);
+                        JsonConvert.PopulateObject(json, this.Data);
+                    }
+                    catch
+                    {
+                        // retry with the copy file
+                        logger.Warn($"Cannot load sensor data '{this.Name}' ({this.Room.Name}), retry with the copy");
+                        var json2 = File.ReadAllText(this.dataFilePath + "1");
+                        JsonConvert.PopulateObject(json2, this.Data);
+                    }
                     // TODO: remove data older than 365 days, replace save with append, file format without opening and closing json brackets
                 }
                 catch (Exception e)
@@ -158,6 +168,7 @@ namespace MyHome.Systems.Devices.Sensors
                         var formatting = MyHome.Instance.Config.SavePrettyJson ? Formatting.Indented : Formatting.None;
                         var json = JsonConvert.SerializeObject(this.Data, formatting);
                         File.WriteAllText(this.dataFilePath, json);
+                        File.WriteAllText(this.dataFilePath + "1", json); // save a copy if the first one is broken
                     }, 3, logger, $"save sensor '{this.Name}' ({this.Room.Name}) data");
                 }
             }
