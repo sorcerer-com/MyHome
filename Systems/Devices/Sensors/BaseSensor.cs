@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-
+using System.Threading.Tasks;
 using MyHome.Models;
 using MyHome.Utils;
 
@@ -100,10 +100,11 @@ namespace MyHome.Systems.Devices.Sensors
                         var json = File.ReadAllText(this.dataFilePath);
                         JsonConvert.PopulateObject(json, this.Data);
                     }
-                    catch
+                    catch (Exception e)
                     {
                         // retry with the copy file
                         logger.Warn($"Cannot load sensor data '{this.Name}' ({this.Room.Name}), retry with the copy");
+                        logger.Debug(e);
                         var json2 = File.ReadAllText(this.dataFilePath + "1");
                         JsonConvert.PopulateObject(json2, this.Data);
                     }
@@ -117,6 +118,7 @@ namespace MyHome.Systems.Devices.Sensors
                         .Details($"'{this.Name}' ({this.Room.Name})")
                         .Validity(TimeSpan.FromHours(1))
                         .Send();
+                    MyHome.Instance.AddNotification(Notification.ProblemType, $"Cannot load sensor data '{this.Name}' ({this.Room.Name})", ifNotExist: false);
                 }
             }
         }
@@ -149,6 +151,8 @@ namespace MyHome.Systems.Devices.Sensors
                     {
                         if (File.Exists(this.dataFilePath))
                             File.Move(this.dataFilePath, fileName);
+                        if (File.Exists(this.dataFilePath + "1"))
+                            File.Move(this.dataFilePath + "1", fileName + "1");
                         this.dataFilePath = fileName;
                     }
                 }
@@ -168,7 +172,8 @@ namespace MyHome.Systems.Devices.Sensors
                         var formatting = MyHome.Instance.Config.SavePrettyJson ? Formatting.Indented : Formatting.None;
                         var json = JsonConvert.SerializeObject(this.Data, formatting);
                         File.WriteAllText(this.dataFilePath, json);
-                        File.WriteAllText(this.dataFilePath + "1", json); // save a copy if the first one is broken
+                        // save a copy if the first one is broken
+                        Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(_ => File.WriteAllText(this.dataFilePath + "1", json));
                     }, 3, logger, $"save sensor '{this.Name}' ({this.Room.Name}) data");
                 }
             }

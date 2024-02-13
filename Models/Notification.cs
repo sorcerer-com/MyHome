@@ -4,6 +4,7 @@ namespace MyHome.Models;
 
 public class Notification
 {
+    public const string ProblemType = "problem";
     public const string UpgradeType = "upgrade";
     public const string DiscoveredDeviceType = "discovered_device";
     public const string OfflineDeviceType = "offline_device";

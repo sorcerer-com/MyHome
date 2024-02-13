@@ -207,6 +207,7 @@ namespace MyHome
                 Models.Alert.Create("Cannot load system")
                     .Validity(TimeSpan.FromHours(1))
                     .Send();
+                this.AddNotification(Notification.ProblemType, "Cannot load system", ifNotExist: false);
             }
             finally
             {

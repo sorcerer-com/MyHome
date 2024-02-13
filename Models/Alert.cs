@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-
+using System.Threading.Tasks;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -110,6 +110,9 @@ namespace MyHome.Models
                 if (!Services.SendEMail(MyHome.Instance.Config.SmtpServerAddress, MyHome.Instance.Config.Email, emailPassword,
                     MyHome.Instance.Config.Email, "My Home", emailMsg, this.filenames))
                 {
+                    // retry after 10 minutes
+                    Task.Delay(TimeSpan.FromMinutes(10)).ContinueWith(_ => this.Send());
+
                     result = false;
                 }
 

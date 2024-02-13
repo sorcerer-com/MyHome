@@ -114,7 +114,7 @@ namespace MyHome.Systems
                         Room = room,
                         EnableLevel = level,
                         Activated = false,
-                        StartTime = DateTime.Now + TimeSpan.FromMinutes(this.ActivationDelay),
+                        StartTime = DateTime.Now + TimeSpan.FromMinutes(level == 0 ? this.ActivationDelay : 0), // add delay only if enabled by the user
                         ImageFiles = new List<string>()
                     });
                 }
