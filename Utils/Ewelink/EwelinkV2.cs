@@ -25,14 +25,15 @@ public class EwelinkV2
     // from https://github.com/AlexxIT/SonoffLAN/blob/c317407a09e5c5e9aaf2a95e044e5afb5a367dec/custom_components/sonoff/core/ewelink/cloud.py#L43
     private static readonly Dictionary<string, string> Apps = new()
     {
+        { "4s1FXKC9FaGfoqXhmXSJneb3qcm1gOak", "oKvCM06gvwkRbfetd6qWRrbC3rFrbIpV" },
         { "YzfeftUVcZ6twZw1OoVKPRFYTrGEg01Q", "4G91qSoboqYO4Y0XJ0LPPKIsq8reHdfa" },
         { "oeVkj2lYFGnJu5XUtWisfW4utiN4u9Mq", "6Nz4n0xA8s8qdxQf2GqurZj2Fs55FUvM" },
         { "R8Oq3y0eSZSYdKccHlrQzT1ACCOUT9Gv", "1ve5Qk9GXfUhKAn1svnKwpAlxXkMarru" }
     };
 
-    private string AppId = "YzfeftUVcZ6twZw1OoVKPRFYTrGEg01Q";
+    private string AppId = "4s1FXKC9FaGfoqXhmXSJneb3qcm1gOak";
 
-    private string AppSecret = "4G91qSoboqYO4Y0XJ0LPPKIsq8reHdfa";
+    private string AppSecret = "oKvCM06gvwkRbfetd6qWRrbC3rFrbIpV";
 
     private readonly HttpClient HttpClient = new();
 
@@ -55,7 +56,7 @@ public class EwelinkV2
         string email = null,
         string password = null,
         string phoneNumber = null,
-        string region = "us",
+        string region = "eu",
         string at = null)
     {
         var check = CheckLoginParameters(countryCode, email, phoneNumber, password, at);
