@@ -146,7 +146,8 @@ namespace MyHome.Utils
                 {
                     var video = await youtube.Videos.GetAsync(url);
                     // escape invalid symbols
-                    var filename = new string(video.Title.Select(c => Path.GetInvalidFileNameChars().Contains(c) || c == '\"' || c == '?' ? '_' : c).ToArray());
+                    var filename = new string(video.Title
+                        .Select(c => Path.GetInvalidFileNameChars().Contains(c) || c == '\"' || c == '?' || c == '|' ? '_' : c).ToArray());
                     path = Path.Join(path, $"{filename}.{streamInfo.Container}");
                 }
 

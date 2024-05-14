@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -51,6 +53,8 @@ public class EwelinkV2
 
     private string at;
 
+    private string apiKey;
+
     public EwelinkV2(
         string countryCode = null,
         string email = null,
@@ -70,11 +74,13 @@ public class EwelinkV2
         this.email = email;
         this.password = password;
         this.at = at;
+        this.apiKey = null;
 
         this.HttpClient.Timeout = TimeSpan.FromSeconds(30);
     }
 
     public Uri ApiUri => new($"https://{this.region}-apia.coolkit.cc/v2");
+    public Uri ApiWebSocketUri => new($"wss://{this.region}-pconnect3.coolkit.cc:8080/api/ws");
 
     public async Task<SensorData> GetDeviceCurrentSensorData(string deviceId)
     {
@@ -201,6 +207,72 @@ public class EwelinkV2
             throw new Exception(NiceError.Errors[responseError.Value]);
     }
 
+    public async Task TransmitRfChannelByWebSocket(string deviceId, int channel = 0, CancellationToken? cancellationToken = null)
+    {
+        var device = await this.GetDevice(deviceId);
+
+        var payload = new
+        {
+            action = "update",
+            apikey = device.ApiKey,
+            selfApikey = this.apiKey,
+            deviceid = deviceId,
+            @params = new
+            {
+                cmd = "transmit",
+                rfChl = channel
+            },
+            userAgent = "app",
+            sequence = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond,
+        };
+        await MakeWebSocketRequest(payload, cancellationToken);
+    }
+
+    public Task<ClientWebSocket> OpenWebSocket()
+    {
+        return this.OpenWebSocket(CancellationToken.None);
+    }
+
+    public async Task<ClientWebSocket> OpenWebSocket(CancellationToken cancellationToken)
+    {
+        var wssLoginPayload = JsonConvert.SerializeObject(new
+        {
+            action = "userOnline",
+            this.at,
+            apikey = this.apiKey,
+            appid = AppId,
+            nonce = Utilities.Nonce,
+            ts = Utilities.Timestamp,
+            userAgent = "ewelink-api",
+            sequence = 1,
+            version = 8,
+        });
+
+        var wsp = new ClientWebSocket();
+        wsp.Options.KeepAliveInterval = TimeSpan.FromMilliseconds(120000);
+
+        await wsp.ConnectAsync(this.ApiWebSocketUri, CancellationToken.None);
+
+        var data = new ArraySegment<byte>(Encoding.UTF8.GetBytes(wssLoginPayload));
+        await wsp.SendAsync(data, WebSocketMessageType.Text, true, cancellationToken);
+
+        var buffer = new ArraySegment<byte>(new byte[8192]);
+        var result = await wsp.ReceiveAsync(buffer, cancellationToken);
+
+        if (result.MessageType == WebSocketMessageType.Text)
+        {
+            var text = Encoding.UTF8.GetString(buffer.Array, 0, result.Count);
+            var json = JsonConvert.DeserializeObject<dynamic>(text);
+            int? error = json.error;
+            if (error > 0)
+            {
+                throw new Exception($"Error: {error}");
+            }
+        }
+
+        return wsp;
+    }
+
     public async Task<List<EwelinkDevice>> GetDevices()
     {
         dynamic response = await this.MakeRequest(
@@ -287,11 +359,12 @@ public class EwelinkV2
 
         JToken token = json.data;
         var credentials = token.ToObject<Credentials>();
+        this.apiKey = credentials.User.Apikey;
         this.at = credentials.At;
         return credentials;
     }
 
-    private async Task<dynamic> MakeRequest(string path, Uri baseUri = null, object body = null, object query = null, HttpMethod method = null)
+    private async Task<dynamic> MakeRequest(string path, Uri baseUri = null, object body = null, object query = null, HttpMethod method = null, bool retry = false)
     {
         if (method == null)
             method = HttpMethod.Get;
@@ -326,9 +399,37 @@ public class EwelinkV2
         int? error = json.error;
 
         if (error > 0)
-            throw new HttpRequestException(NiceError.Errors[error.Value]);
+        {
+            if (error.Value == 401 && !retry) // retry with get credentials
+            {
+                this.at = null;
+                return await this.MakeRequest(path, baseUri, body, query, method, true);
+            }
+            else
+                throw new HttpRequestException(NiceError.Errors[error.Value]);
+        }
 
         return json.data;
+    }
+
+    private async Task MakeWebSocketRequest(object payload, CancellationToken? cancellationToken)
+    {
+        var data = JsonConvert.SerializeObject(payload);
+        var encoded = Encoding.UTF8.GetBytes(data);
+        var buffer = new ArraySegment<byte>(encoded, 0, encoded.Length);
+
+        var ws = await this.OpenWebSocket(cancellationToken ?? CancellationToken.None);
+        await ws.SendAsync(buffer, WebSocketMessageType.Text, true, cancellationToken ?? CancellationToken.None);
+
+        var jsonString = await ReadFromWebSocket(ws);
+        dynamic json = JsonConvert.DeserializeObject(jsonString);
+
+        int? error = json.error;
+
+        if (error > 0)
+            throw new HttpRequestException(NiceError.Errors[error.Value]);
+
+        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, cancellationToken ?? CancellationToken.None);
     }
 
     private async Task<EwelinkDevice> GetDevice(string deviceId, bool noCacheLoad)
@@ -413,5 +514,24 @@ public class EwelinkV2
 
         [JsonProperty("password")]
         public string Password { get; }
+    }
+
+    private static async Task<string> ReadFromWebSocket(ClientWebSocket ws)
+    {
+        ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[8192]);
+        using var ms = new MemoryStream();
+
+        WebSocketReceiveResult result = null;
+        do
+        {
+            result = await ws.ReceiveAsync(buffer, CancellationToken.None);
+            ms.Write(buffer.Array, buffer.Offset, result.Count);
+        }
+        while (!result.EndOfMessage);
+
+        ms.Seek(0, SeekOrigin.Begin);
+
+        using var reader = new StreamReader(ms, Encoding.UTF8);
+        return reader.ReadToEnd();
     }
 }

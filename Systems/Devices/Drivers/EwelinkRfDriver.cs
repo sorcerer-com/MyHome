@@ -91,7 +91,7 @@ namespace MyHome.Systems.Devices.Drivers
             try
             {
                 logger.Info($"Transmit to channel {this.EwelinkRfChannel} of eWeLink RF driver {this.Name} ({this.Room.Name})");
-                this.Ewelink.TransmitRfChannel(this.EwelinkDeviceId, this.EwelinkRfChannel).Wait();
+                this.Ewelink.TransmitRfChannelByWebSocket(this.EwelinkDeviceId, this.EwelinkRfChannel).Wait();
             }
             catch (Exception e)
             {
