@@ -247,6 +247,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             {
                 this.alarmType = alarmType;
                 this.PlaySong($"{alarmType}Alarm.mp3");
+                int notAlarmVolume = this.Volume;
                 this.Volume = this.AlarmVolume;
 
                 // stop alarm after AlarmDuration minutes
@@ -255,7 +256,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                     if (this.alarmType != null)
                     {
                         this.PlaySong("");
-                        this.Volume = 10;
+                        this.Volume = notAlarmVolume;
                     }
                 });
             }
