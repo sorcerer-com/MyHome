@@ -1,4 +1,5 @@
-﻿using MyHome.Systems.Devices.Drivers.Types;
+﻿using System.Xml.Linq;
+using MyHome.Systems.Devices.Drivers.Types;
 using MyHome.Utils;
 
 namespace MyHome.Systems.Devices.Drivers.Mqtt
@@ -11,7 +12,11 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         public bool IsOn
         {
             get => (bool)this.States[SWITCH_STATE_NAME];
-            set => this.SetStateAndSend(SWITCH_STATE_NAME, value);
+            set
+            {
+                if (base.SetState(SWITCH_STATE_NAME, value))
+                    this.SendState(SWITCH_STATE_NAME, value ? "ON" : "OFF");
+            }
         }
 
         [UiProperty(true, "(topic, json path)")]

@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace MyHome.Utils
@@ -184,6 +184,19 @@ namespace MyHome.Utils
                 sb.Replace(c, replacer);
             }
             return sb.ToString();
+        }
+
+        public static bool TryParseJson(string json, out JToken result)
+        {
+            try
+            {
+                result = JToken.Parse(json);
+                return true;
+            } catch
+            {
+                result = null;
+                return false;
+            }
         }
     }
 }

@@ -57,6 +57,7 @@ namespace MyHome.Systems
                 {
                     MyHome.Instance.MqttClient.Subscribe("tele/#");
                     MyHome.Instance.MqttClient.Subscribe("zigbee2mqtt/#");
+                    MyHome.Instance.MqttClient.Subscribe("esphome/#");
                     MyHome.Instance.MqttClient.ApplicationMessageReceived += this.MqttClient_ApplicationMessageReceived;
 
                     this.tuyaScanner.Start();
@@ -65,6 +66,7 @@ namespace MyHome.Systems
                 else
                 {
                     MyHome.Instance.MqttClient.ApplicationMessageReceived -= this.MqttClient_ApplicationMessageReceived;
+                    MyHome.Instance.MqttClient.Unsubscribe("esphome/#");
                     MyHome.Instance.MqttClient.Unsubscribe("zigbee2mqtt/#");
                     MyHome.Instance.MqttClient.Unsubscribe("tele/#");
 
@@ -205,6 +207,8 @@ namespace MyHome.Systems
                     devices = ProcessTeleTopic(e.ApplicationMessage, knownDevices);
                 else if (e.ApplicationMessage.Topic.StartsWith("zigbee2mqtt")) // Zigbee2MQTT devices
                     devices = ProcessZigbeeTopic(e.ApplicationMessage, knownDevices);
+                else if (e.ApplicationMessage.Topic.StartsWith("esphome")) // ESPHome devices
+                    devices = ProcessEspHomeTopic(e.ApplicationMessage, knownDevices);
 
                 if (devices != null && devices.Count > 0)
                 {
@@ -326,11 +330,11 @@ namespace MyHome.Systems
 
         private static List<Device> ProcessZigbeeTopic(MqttApplicationMessage message, IEnumerable<Device> knownDevices)
         {
+            List<Device> devices = new();
             var topic = message.Topic;
             var payload = message.ConvertPayloadToString();
             var json = JToken.Parse(payload);
 
-            List<Device> devices = new();
             if (topic == "zigbee2mqtt/bridge/devices")
             {
                 foreach (var item in json)
@@ -354,7 +358,45 @@ namespace MyHome.Systems
             return devices;
         }
 
-        private static IEnumerable<JProperty> GetValueProperties(JToken jToken)
+        private static List<Device> ProcessEspHomeTopic(MqttApplicationMessage message, IEnumerable<Device> knownDevices)
+        {
+            List<Device> devices = new();
+            var topic = message.Topic;
+
+            var name = topic.Replace("esphome/", "");
+            name = name[..name.IndexOf('/')];
+            // sensor
+            if (topic.Contains("sensor/"))
+            {
+                var mqttSensor = knownDevices.OfType<MqttSensor>().FirstOrDefault(s => s.Name == name);
+                if (mqttSensor == null)
+                {
+                    mqttSensor = new MqttSensor();
+                    devices.Add(mqttSensor);
+                }
+
+                mqttSensor.Name = name;
+                if (!mqttSensor.MqttTopics.Any(t => t.topic == topic))
+                    mqttSensor.MqttTopics.Add((topic, ""));
+            }
+
+            // switch driver
+            if (topic.Contains("switch/") && !knownDevices.OfType<SwitchMqttDriver>().Any(s => s.Name == name))
+            {
+                devices.Add(new SwitchMqttDriver
+                {
+                    Name = name,
+                    OnlineMqttTopic = $"esphome/{name}/debug",
+                    IsOnGetMqttTopic = (topic, ""),
+                    IsOnSetMqttTopic = (topic.Replace("/state", "/command"), ""),
+                    ConfirmationRequired = true
+                });
+            }
+
+            return devices;
+        }
+
+        private static List<JProperty> GetValueProperties(JToken jToken)
         {
             var list = new List<JProperty>();
             if (jToken is JObject jObj)

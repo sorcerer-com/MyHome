@@ -87,26 +87,25 @@ namespace MyHome.Systems.Devices.Sensors
             try
             {
                 var payload = e.ApplicationMessage.ConvertPayloadToString();
-                var json = JToken.Parse(payload);
+                if (!Utils.Utils.TryParseJson(payload, out var json)) // if fail to parse the payload, parse it as string
+                    json = JToken.Parse("'" + payload + "'"); 
 
                 var data = new Dictionary<string, object>();
-                foreach (var (_, jsonPath) in this.MqttTopics.Where(kvp => kvp.topic == e.ApplicationMessage.Topic))
+                foreach (var (topic, jsonPath) in this.MqttTopics.Where(kvp => kvp.topic == e.ApplicationMessage.Topic))
                 {
-                    var token = json.SelectToken(jsonPath);
-                    if (token == null)
+                    var value = json.SelectToken(jsonPath);
+                    if (value == null)
                         continue;
 
-                    var property = token.Parent as JProperty;
-                    var value = property.Value;
                     if (value.Type == JTokenType.String && ((string)value == "ON" || (string)value == "OFF"))
                         value = (string)value == "ON";
-                    data.Add(jsonPath, (double)value);
+                    data.Add(!string.IsNullOrEmpty(jsonPath) ? jsonPath : topic, (double)value);
                 }
                 this.AddData(DateTime.Now, data);
             }
             catch (Exception ex)
             {
-                logger.Error("Failed to process MQTT message");
+                logger.Error("Failed to process MQTT message: " + e.ApplicationMessage.ConvertPayloadToString());
                 logger.Debug(ex);
             }
         }
