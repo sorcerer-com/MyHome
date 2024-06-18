@@ -49,7 +49,7 @@ def get_image(address, initIfEmpty=True, size=None, timestamp=True):
         textSize, _ = cv2.getTextSize(
             text, cv2.FONT_HERSHEY_SIMPLEX, scale, round(scale * 3))
         cv2.putText(img, text, (5, 5 + textSize[1]), cv2.FONT_HERSHEY_SIMPLEX,
-                    scale, (255, 255, 255), round(scale * 3), cv2.LINE_AA)
+                    scale, (255, 255, 255), round(scale * 3), cv2.FILLED)
     return result, img
 
 

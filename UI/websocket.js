@@ -55,7 +55,7 @@ function createWebSocket() {
 
 if (window.WebSocket) {
     let retry = 0;
-    // ping every 1 seconds
+    // ping every 3 seconds
     setInterval(() => {
         // if the page is not visible close the websocket
         if (document.hidden) {
@@ -63,7 +63,7 @@ if (window.WebSocket) {
             return;
         }
 
-        // retry 10 times every second, after that once per 10 seconds
+        // retry 10 times every 3 seconds, after that once per 30 seconds
         if (retry > 10 && retry % 10 != 0) {
             retry += 1;
             return;
@@ -81,7 +81,7 @@ if (window.WebSocket) {
                 window.ws.close();
             }
         }
-    }, 1000);
+    }, 3000);
 
     createWebSocket();
 }

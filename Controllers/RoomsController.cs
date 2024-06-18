@@ -261,17 +261,22 @@ namespace MyHome.Controllers
                 this.Response.ContentType = "multipart/x-mixed-replace;boundary=frame";
 
                 Stopwatch stopwatch = new Stopwatch();
+                var task = System.Threading.Tasks.Task.CompletedTask;
                 while (true)
                 {
                     stopwatch.Restart();
-                    var imageBytes = camera.GetImage() ?? Array.Empty<byte>();
+
+                    // fetch images while waiting to send the pervious one
+                    byte[] imageBytes = null;
+                    while (!task.IsCompleted || imageBytes == null) // get at least one image
+                        imageBytes = camera.GetImage() ?? [];
 
                     var header = $"--frame\r\nContent-Type: image/jpeg\r\nContent-Length: {imageBytes.Length}\r\n\r\n";
                     var headerData = System.Text.Encoding.UTF8.GetBytes(header);
                     var newLine = System.Text.Encoding.UTF8.GetBytes("\r\n");
                     this.Response.Body.WriteAsync(headerData, 0, headerData.Length, this.HttpContext.RequestAborted);
                     this.Response.Body.WriteAsync(imageBytes, 0, imageBytes.Length, this.HttpContext.RequestAborted);
-                    this.Response.Body.WriteAsync(newLine, 0, newLine.Length, this.HttpContext.RequestAborted);
+                    task = this.Response.Body.WriteAsync(newLine, 0, newLine.Length, this.HttpContext.RequestAborted);
 
                     if (this.HttpContext.RequestAborted.IsCancellationRequested)
                         break;
