@@ -29,6 +29,12 @@ namespace MyHome.Controllers
         }
 
 
+        [HttpGet("status")]
+        public ActionResult GetStatus()
+        {
+            return this.Ok();
+        }
+
         [HttpGet("config")]
         public ActionResult GetConfig()
         {

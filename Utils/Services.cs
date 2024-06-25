@@ -35,8 +35,8 @@ namespace MyHome.Utils
                 logger.Debug($"Send email to '{recipient}' subject: '{subject}' ({fileNames?.Count} files)");
 
                 var mail = new MimeMessage();
-                mail.From.Add(MailboxAddress.Parse("sorcerer_com@abv.bg"));
-                mail.To.Add(MailboxAddress.Parse("sorcerer_com@abv.bg"));
+                mail.From.Add(MailboxAddress.Parse(sender));
+                mail.To.Add(MailboxAddress.Parse(sender));
                 mail.Subject = subject;
 
                 var builder = new BodyBuilder { TextBody = content };

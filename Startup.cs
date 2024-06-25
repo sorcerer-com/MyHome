@@ -99,7 +99,7 @@ namespace MyHome
 
                 return false;
             }
-            else if (!IsResource(context.Request.Path) && !context.Request.Path.StartsWithSegments("/api/songs") &&
+            else if (!ShouldSkipAuthentication(context.Request.Path) && 
                 ((context.Session.GetString("password") ?? "") != myHome.Config.Password || IsSessionExpired(context, myHome)))
             {
                 if (!context.Request.Path.StartsWithSegments("/api")) // pages only
@@ -113,10 +113,11 @@ namespace MyHome
             return true;
         }
 
-        private static bool IsResource(string path)
+        private static bool ShouldSkipAuthentication(PathString path)
         {
-            return path.StartsWith("/external/") || path.StartsWith("/images/") ||
+            var isResource = path.StartsWithSegments("/external") || path.StartsWithSegments("/images") ||
                 path == "/scripts.js" || path == "/style.css" || path == "/login.html";
+            return isResource || path.StartsWithSegments("/api/status") || path.StartsWithSegments("/api/songs");
         }
 
         private static bool IsSessionExpired(HttpContext context, MyHome myHome)

@@ -242,23 +242,22 @@ namespace MyHome.Systems
                 Task.Run(() =>
                 {
                     var newPresence = this.DetectPresence().OrderBy(x => x);
+                    if (newPresence.SequenceEqual(this.Present))
+                        return;
 
-                    if (!newPresence.SequenceEqual(this.Present))
+                    foreach (var name in this.PresenceDeviceIPs.Keys)
                     {
-                        foreach (var name in this.PresenceDeviceIPs.Keys)
-                        {
-                            if (newPresence.Contains(name) && !this.Present.Contains(name)) // new present
-                                this.SetHistory(name, "Present");
-                            else if (!newPresence.Contains(name) && this.Present.Contains(name)) // someone left
-                                this.SetHistory(name, "Left");
-                        }
-
-                        if (newPresence.Any() != this.Present.Any()) // if there is a change in presence at all, not per person 
-                            MyHome.Instance.Events.Fire(this, GlobalEventTypes.PresenceChanged, newPresence.Any());
-
-                        logger.Info(newPresence.Any() ? "Presence change detected: " + string.Join(", ", newPresence) : "No presence");
-                        this.Present = newPresence.ToList();
+                        if (newPresence.Contains(name) && !this.Present.Contains(name)) // new present
+                            this.SetHistory(name, "Present");
+                        else if (!newPresence.Contains(name) && this.Present.Contains(name)) // someone left
+                            this.SetHistory(name, "Left");
                     }
+
+                    if (newPresence.Any() != this.Present.Any()) // if there is a change in presence at all, not per person 
+                        MyHome.Instance.Events.Fire(this, GlobalEventTypes.PresenceChanged, newPresence.Any());
+
+                    logger.Info(newPresence.Any() ? "Presence change detected: " + string.Join(", ", newPresence) : "No presence");
+                    this.Present = newPresence.ToList();
                 });
             }
         }

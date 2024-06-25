@@ -38,6 +38,7 @@ namespace MyHome.Utils
 
         public void Connect(string clientId, string server, int? port, string username, string password, bool autoreconnect = true)
         {
+            clientId = $"{clientId}-{Environment.MachineName}-{Environment.ProcessId}"; // add additional info since cannot connect two clients with same id
             logger.Debug($"Connect MQTT client '{clientId}' to {server}:{port}");
 
             this.MqttClient.ConnectedAsync += e =>
@@ -75,7 +76,7 @@ namespace MyHome.Utils
             };
 
             var options = new MqttClientOptionsBuilder()
-                .WithClientId(clientId + AppDomain.CurrentDomain.BaseDirectory.GetHashCode()) // add "random" hash since cannot connect two clients with same id
+                .WithClientId(clientId)
                 .WithTcpServer(server, port)
                 .WithCredentials(username, password)
                 .WithTimeout(TimeSpan.FromSeconds(10))

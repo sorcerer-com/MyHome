@@ -131,6 +131,9 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         public void StopMedia()
         {
+            if (MyHome.Instance.BackupMode)
+                return;
+
             logger.Debug($"Stop media: {this.Playing}");
             this.States[PLAYING_STATE_NAME] = "";
             MyHome.Instance.MqttClient.Publish($"cmnd/{this.AgentHostName}/media", "{\"stop\": true}");
@@ -139,6 +142,9 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         public void Pause()
         {
+            if (MyHome.Instance.BackupMode)
+                return;
+
             logger.Debug($"Pause media: {this.Playing}");
             MyHome.Instance.MqttClient.Publish($"cmnd/{this.AgentHostName}/media", $"{{\"pause\": {(this.Paused ? "false" : "true")}}}");
             MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaPaused);
@@ -188,12 +194,18 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         public void RefreshMediaList()
         {
+            if (MyHome.Instance.BackupMode)
+                return;
+
             logger.Debug("Refresh media list");
             MyHome.Instance.MqttClient.Publish($"cmnd/{this.AgentHostName}/media", "{\"refresh\": true}");
         }
 
         public void PowerOffTV()
         {
+            if (MyHome.Instance.BackupMode)
+                return;
+
             logger.Debug("Power off TV");
             var json = new JObject
             {

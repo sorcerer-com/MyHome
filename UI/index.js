@@ -14,6 +14,9 @@
     computed: {
         isMobile: function () {
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        },
+        backupMode: function () {
+            return this.notifications.some(n => n.type == "backup_mode");
         }
     },
     methods: {
@@ -66,9 +69,9 @@
 
             upgrade().done(() => {
                 $("#vue-content").html("Upgrade was successful! Rebooting...");
-                setTimeout(() => window.location.reload(true), 90000);
+                setTimeout(() => window.location.reload(true), 120000);
                 this.restarting = true;
-            });
+            }).fail(() => alert("System upgrade failed"));
         },
         restart: function () {
             if (!confirm("Are you sure you want to restart the system?"))
@@ -76,7 +79,7 @@
 
             restart().done(() => {
                 $("#vue-content").html("Rebooting...");
-                setTimeout(() => window.location.reload(true), 90000);
+                setTimeout(() => window.location.reload(true), 120000);
                 this.restarting = true;
             });
         }

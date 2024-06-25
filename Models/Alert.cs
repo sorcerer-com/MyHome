@@ -85,8 +85,14 @@ namespace MyHome.Models
             return this;
         }
 
-        public bool Send()
+        public bool Send(bool forceSend = false)
         {
+            if (MyHome.Instance.BackupMode && !forceSend)
+            {
+                logger.Debug("Skip sending alert as working in backup mode");
+                return true;
+            }
+
             try
             {
                 var msg = $"{this.message} {this.details}";
