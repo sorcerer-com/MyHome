@@ -9,6 +9,10 @@ import sys
 import time
 from datetime import datetime, timedelta
 
+# fix issue in robobrowser
+import werkzeug
+werkzeug.cached_property = werkzeug.utils.cached_property
+
 import robobrowser
 
 logging_stdout_handler = logging.StreamHandler()

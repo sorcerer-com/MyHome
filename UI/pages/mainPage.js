@@ -32,6 +32,7 @@
         notificationAction: function (notification) {
             switch (notification.type) {
                 case "upgrade": return "Upgrade";
+                case "backup_mode": return "";
                 case "discovered_device": return "See";
                 default: return "Dismiss";
             }
@@ -61,7 +62,7 @@
                 this.$root.upgrade();
             else if (notification.type == "discovered_device")
                 this.$router.push("/config#discovered");
-            else
+            else if (notification.type != "backup_mode")
                 removeNotification(notification.type).done(() => {
                     let idx = this.$root.notifications.indexOf(notification);
                     this.$root.notifications.splice(idx, 1);

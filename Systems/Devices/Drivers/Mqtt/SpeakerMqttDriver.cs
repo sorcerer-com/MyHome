@@ -15,7 +15,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 {
     public class SpeakerMqttDriver : MqttDriver, ISpeakerDriver
     {
-        private static readonly string Host = "http://192.168.0.100:5000";
+        private static readonly string Host = $"http://{Environment.MachineName}.local:5000";
 
         private static readonly Random random = new();
 

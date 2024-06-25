@@ -88,6 +88,9 @@ namespace MyHome.Systems.Devices.Drivers
 
         private void TransmitRfDriver()
         {
+            if (MyHome.Instance.BackupMode)
+                return;
+
             try
             {
                 logger.Info($"Transmit to channel {this.EwelinkRfChannel} of eWeLink RF driver {this.Name} ({this.Room.Name})");

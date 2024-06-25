@@ -177,7 +177,8 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         protected void SendState(string name, string value)
         {
-            if (!MyHome.Instance.MqttClient.IsConnected)
+            if (!MyHome.Instance.MqttClient.IsConnected ||
+                MyHome.Instance.BackupMode)
                 return;
 
             if (!string.IsNullOrEmpty(this.MqttSetTopics[name].jsonPath))

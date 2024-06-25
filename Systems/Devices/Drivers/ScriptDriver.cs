@@ -36,6 +36,9 @@ namespace MyHome.Systems.Devices.Drivers
 
         public void Execute()
         {
+            if (MyHome.Instance.BackupMode)
+                return;
+
             var script = Regex.Replace(this.Script, @" as \w*", ""); // remove " as <Type>" casts
             logger.Trace($"Execute script: {script}");
             MyHome.Instance.ExecuteJint(jint => jint.Evaluate($"{{ {script} }}"),

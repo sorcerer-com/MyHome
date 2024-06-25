@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 
@@ -20,6 +21,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using NLog;
+using NLog.LayoutRenderers;
 
 namespace MyHome
 {
@@ -30,9 +32,11 @@ namespace MyHome
         private int updateInterval = 1; // seconds
         private readonly int upgradeCheckInterval = 5; // minutes
         private readonly int mqttDisconnectedAlert = 1; // minutes
+        private readonly int mainServerDisconnectedAlert = 1; // minutes
         [JsonProperty]
         private DateTime lastBackupTime;
         private DateTime mqttDisconnectedTime;
+        private DateTime mainServerDisconnectedTime;
 
 
         public static MyHome Instance { get; private set; }
@@ -50,6 +54,9 @@ namespace MyHome
 
         [JsonIgnore]
         private Engine JintEngine { get; }
+
+        [JsonIgnore]
+        public bool BackupMode { get; private set; }
 
 
         public List<Room> Rooms { get; }
@@ -117,6 +124,7 @@ namespace MyHome
 
             this.lastBackupTime = DateTime.Now;
             this.mqttDisconnectedTime = DateTime.Now;
+            this.mainServerDisconnectedTime = DateTime.Now;
             this.SystemChanged = false;
             this.Notifications = new List<Notification>();
 
@@ -136,6 +144,12 @@ namespace MyHome
         public void Setup()
         {
             logger.Info("Setup My Home");
+
+            if (!string.IsNullOrEmpty(this.Config.MainServer))
+            {
+                this.BackupMode = true;
+                this.AddNotification(Notification.BackupModeType, "Backup Mode", ifNotExist: false);
+            }
 
             if (!string.IsNullOrEmpty(this.Config.MqttServerAddress))
             {
@@ -263,6 +277,8 @@ namespace MyHome
                 stopwatch.Restart();
 
                 this.CheckMqttStatus();
+                this.CheckMainServerStatus();
+                this.AutoUpgradeBackupServer();
 
                 var now = DateTime.Now;
                 if (now.Minute % this.upgradeCheckInterval == 0 && now.Second < this.updateInterval)
@@ -272,13 +288,9 @@ namespace MyHome
                     this.Save();
 
                 if (stopwatch.Elapsed > TimeSpan.FromSeconds(this.updateInterval))
-                {
                     logger.Trace($"Update time: {stopwatch.Elapsed}");
-                }
                 else
-                {
                     Thread.Sleep(TimeSpan.FromSeconds(this.updateInterval) - stopwatch.Elapsed);
-                }
             }
         }
 
@@ -304,6 +316,78 @@ namespace MyHome
                     .Details($"from {this.MqttClient.LastMessageReceived:dd/MM/yyyy HH:mm:ss}!")
                     .Validity(TimeSpan.FromHours(1))
                     .Send();
+            }
+        }
+
+        private void CheckMainServerStatus()
+        {
+            if (string.IsNullOrEmpty(this.Config.MainServer))
+                return;
+
+            var result = true;
+            try
+            {
+                using var client = new HttpClient
+                {
+                    Timeout = TimeSpan.FromSeconds(5)
+                };
+                result = client.GetAsync($"{this.Config.MainServer}/api/status").Result.IsSuccessStatusCode;
+            }
+            catch
+            {
+                result = false;
+            }
+
+            var now = DateTime.Now;
+            if (result)
+            {
+                if (!this.BackupMode)
+                {
+                    logger.Warn("Main server instance is back online. Return to Backup mode.");
+                    this.AddNotification(Notification.BackupModeType, "Backup Mode", ifNotExist: false);
+                }
+                this.mainServerDisconnectedTime = now;
+                this.BackupMode = true;
+            }
+            else
+            {
+                // exit backup mode if no response from main server for 10 seconds
+                if (now - this.mainServerDisconnectedTime > TimeSpan.FromSeconds(10) &&
+                    this.BackupMode)
+                {
+                    logger.Warn("Main server instance is down. Exit Backup mode.");
+                    this.BackupMode = false;
+                    this.RemoveNotification(Notification.BackupModeType);
+                }
+
+                if (now - this.mainServerDisconnectedTime > TimeSpan.FromMinutes(this.mainServerDisconnectedAlert))
+                {
+                    Models.Alert.Create("Main MyHome server is down")
+                        .Details($"from {this.mainServerDisconnectedTime:dd/MM/yyyy HH:mm:ss}!")
+                        .Validity(TimeSpan.FromHours(1))
+                        .Send(true);
+                }
+            }
+
+        }
+
+        private void AutoUpgradeBackupServer()
+        {
+            // try to upgrade the system if it is backup instance
+            if (!string.IsNullOrEmpty(this.Config.MainServer) &&
+                this.Notifications.Exists(n => n.Type == Notification.UpgradeType && !n.Message.Contains("failed")))
+            {
+                if (this.Upgrade())
+                {
+                    this.Stop();
+                    System.Threading.Tasks.Task.Delay(100).ContinueWith(_ => Environment.Exit(0));
+                }
+                else
+                {
+                    Models.Alert.Create("Cannot upgrade backup server")
+                        .Validity(TimeSpan.FromDays(1))
+                        .Send(true);
+                }
             }
         }
 
@@ -363,6 +447,7 @@ namespace MyHome
             {
                 using var repo = new Repository(".");
                 Commands.Fetch(repo, repo.Head.RemoteName, Array.Empty<string>(), null, "");
+                repo.Reset(ResetMode.Hard, repo.Head.TrackingDetails.CommonAncestor); // reset local changes if any
                 var signature = repo.Config.BuildSignature(DateTimeOffset.Now);
                 return Commands.Pull(repo, signature, null).Status != MergeStatus.Conflicts;
             }

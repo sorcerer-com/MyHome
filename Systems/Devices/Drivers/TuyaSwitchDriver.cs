@@ -94,7 +94,8 @@ namespace MyHome.Systems.Devices.Drivers
 
         private void SetIsOn(bool value)
         {
-            if (this.isOn == value)
+            if (MyHome.Instance.BackupMode || 
+                this.isOn == value)
                 return;
 
             var dp = Math.Max(1, Math.Min(4, this.TuyaSwitchIdx));
