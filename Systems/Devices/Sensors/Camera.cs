@@ -122,7 +122,7 @@ namespace MyHome.Systems.Devices.Sensors
             base.Setup();
 
             // prepare capture for opening
-            Task.Run(() => { lock (this.captureLock) this.IsOpened(); });
+            Task.Delay(TimeSpan.FromMinutes(1)).ContinueWith(_ => { lock (this.captureLock) this.IsOpened(); });
 
             var recordThread = new Thread(this.RecordLoop)
             {
@@ -201,6 +201,8 @@ namespace MyHome.Systems.Devices.Sensors
         public bool IsOpened()
         {
             var address = int.TryParse(this.Address, out int device) ? device.ToString() : this.GetStreamAddress();
+            if (string.IsNullOrEmpty(address))
+                return false;
             this.Capture.StandardInput.WriteLine($"isOpened {address}");
             return this.Capture.StandardOutput.ReadLine() == "True";
         }
@@ -213,6 +215,8 @@ namespace MyHome.Systems.Devices.Sensors
                 try
                 {
                     var address = int.TryParse(this.Address, out int device) ? device.ToString() : this.GetStreamAddress();
+                    if (string.IsNullOrEmpty(address)) 
+                        return null;
                     var _size = size.HasValue ? $"{size.Value.width},{size.Value.height}" : "None";
                     this.Capture.StandardInput.WriteLine($"getImage {address} {initIfEmpty} {_size} {timestamp}");
                     var res = this.Capture.StandardOutput.ReadLine();
@@ -385,32 +389,32 @@ namespace MyHome.Systems.Devices.Sensors
                     var password = this.Address.Split('@')[0].Split(':')[1];
                     if (typeof(T) == typeof(DeviceClient))
                     {
-                        this.onvif.Add(typeof(T), OnvifClientFactory.CreateDeviceClientAsync(address, username, password).Result);
+                        this.onvif.Add(typeof(T), OnvifClientFactory.CreateDeviceClientAsync(address, username, password).WaitAsync(TimeSpan.FromSeconds(3)).Result);
                     }
                     else if (typeof(T) == typeof(ImagingClient))
                     {
-                        this.onvif.Add(typeof(T), OnvifClientFactory.CreateImagingClientAsync(address, username, password).Result);
+                        this.onvif.Add(typeof(T), OnvifClientFactory.CreateImagingClientAsync(address, username, password).WaitAsync(TimeSpan.FromSeconds(3)).Result);
                     }
                     else if (typeof(T) == typeof(MediaClient))
                     {
-                        this.onvif.Add(typeof(T), OnvifClientFactory.CreateMediaClientAsync(address, username, password).Result);
+                        this.onvif.Add(typeof(T), OnvifClientFactory.CreateMediaClientAsync(address, username, password).WaitAsync(TimeSpan.FromSeconds(3)).Result);
                     }
                     else if (typeof(T) == typeof(PTZClient))
                     {
-                        this.onvif.Add(typeof(T), OnvifClientFactory.CreatePTZClientAsync(address, username, password).Result);
+                        this.onvif.Add(typeof(T), OnvifClientFactory.CreatePTZClientAsync(address, username, password).WaitAsync(TimeSpan.FromSeconds(3)).Result);
                     }
                     else if (typeof(T) == typeof(Mictlanix.DotNet.Onvif.Common.Profile))
                     {
-                        this.onvif.Add(typeof(T), this.GetOnvif<MediaClient>().GetProfilesAsync().Result.Profiles[0]);
+                        this.onvif.Add(typeof(T), this.GetOnvif<MediaClient>().GetProfilesAsync().WaitAsync(TimeSpan.FromSeconds(3)).Result.Profiles[0]);
                     }
                     else if (typeof(T) == typeof(Mictlanix.DotNet.Onvif.Common.PTZConfigurationOptions))
                     {
                         var token = this.GetOnvif<Mictlanix.DotNet.Onvif.Common.Profile>().token;
-                        this.onvif.Add(typeof(T), this.GetOnvif<PTZClient>().GetConfigurationOptionsAsync(token).Result);
+                        this.onvif.Add(typeof(T), this.GetOnvif<PTZClient>().GetConfigurationOptionsAsync(token).WaitAsync(TimeSpan.FromSeconds(3)).Result);
                     }
                     else if (typeof(T) == typeof(PullPointSubscriptionClient))
                     {
-                        this.onvif.Add(typeof(T), OnvifEventsHelper.CreateEventsAsync(this.GetOnvif<DeviceClient>(), username, password).Result);
+                        this.onvif.Add(typeof(T), OnvifEventsHelper.CreateEventsAsync(this.GetOnvif<DeviceClient>(), username, password).WaitAsync(TimeSpan.FromSeconds(3)).Result);
                     }
                 }
             }
@@ -474,6 +478,8 @@ namespace MyHome.Systems.Devices.Sensors
             lock (this.captureLock)
             {
                 var address = int.TryParse(this.Address, out int device) ? device.ToString() : this.GetStreamAddress();
+                if (string.IsNullOrEmpty(address))
+                    return;
                 this.Capture.StandardInput.WriteLine($"dropOldFrames {address}");
                 logger.Trace("Dropped old frames: " + this.Capture.StandardOutput.ReadLine());
             }
