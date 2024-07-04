@@ -67,7 +67,7 @@ public class SongsManager
             return null;
 
         if (!this.Songs.Exists(s => s.Name == name))
-            this.Songs.Add(new SongInfo() { Name = name, Url = url, Rating = this.Songs.Select(s => s.Rating).Max() + 1, Local = local });
+            this.Songs.Add(new SongInfo() { Name = name, Url = url, Rating = this.Songs.Select(s => s.Rating).Max(), Local = local });
 
         // cleanup songs if we exceed the usage capacity
         Utils.Utils.CleanupFilesByCapacity(this.Songs.OrderBy(s => s.Rating)

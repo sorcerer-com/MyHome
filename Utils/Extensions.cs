@@ -122,30 +122,34 @@ namespace MyHome.Utils
         private static readonly Dictionary<Type, Dictionary<string, object>> uiTypeCache = new();
         private static Dictionary<string, object> ToUiType(this Type type)
         {
-            if (!uiTypeCache.ContainsKey(type))
+            lock (uiTypeCache)
             {
-                var result = new Dictionary<string, object>();
-
-                var name = type.Name
-                    .Replace("`1", "")
-                    .Replace("`2", "")
-                    .Replace("IEnumerable", "List")
-                    .Replace("ObservableCollection", "List");
-                result["type"] = name;
-
-                if (type.IsGenericType)
+                if (!uiTypeCache.TryGetValue(type, out var uiType))
                 {
-                    var genericTypes = type.GenericTypeArguments.Select(t => t.ToUiType());
-                    result["genericTypes"] = genericTypes.ToList();
+                    uiType = new Dictionary<string, object>();
+
+                    var name = type.Name
+                        .Replace("`1", "")
+                        .Replace("`2", "")
+                        .Replace("IEnumerable", "List")
+                        .Replace("ObservableCollection", "List");
+                    uiType["type"] = name;
+
+                    if (type.IsGenericType)
+                    {
+                        var genericTypes = type.GenericTypeArguments.Select(t => t.ToUiType());
+                        uiType["genericTypes"] = genericTypes.ToList();
+                    }
+                    else if (type.IsEnum)
+                    {
+                        var values = type.GetFields().Where(f => f.IsLiteral).Select(f => f.Name);
+                        uiType["enums"] = values.ToList();
+                    }
+
+                    uiTypeCache.Add(type, uiType);
                 }
-                else if (type.IsEnum)
-                {
-                    var values = type.GetFields().Where(f => f.IsLiteral).Select(f => f.Name);
-                    result["enums"] = values.ToList();
-                }
-                uiTypeCache.Add(type, result);
+                return uiType.ToDictionary(i => i.Key, i => i.Value); // make a copy
             }
-            return uiTypeCache[type].ToDictionary(i => i.Key, i => i.Value); // make a copy
         }
 
         private static readonly Dictionary<string, Dictionary<string, string>> selectorValuesCache = new();

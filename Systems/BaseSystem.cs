@@ -66,14 +66,11 @@ namespace MyHome.Systems
                     logger.Debug(e);
                 }
 
-                if (stopwatch.Elapsed >= TimeSpan.FromSeconds(this.updateInterval))
-                {
+                var delta = TimeSpan.FromSeconds(this.updateInterval) - stopwatch.Elapsed;
+                if (delta.TotalMilliseconds <= 0) // update take longer than set interval
                     logger.Trace($"{this.Name} system update time: {stopwatch.Elapsed}");
-                }
                 else
-                {
-                    Thread.Sleep(TimeSpan.FromSeconds(this.updateInterval) - stopwatch.Elapsed);
-                }
+                    Thread.Sleep(Math.Max(0, (int)delta.TotalMilliseconds));
             }
         }
     }
