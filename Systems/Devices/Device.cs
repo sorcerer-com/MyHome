@@ -32,6 +32,9 @@ namespace MyHome.Systems.Devices
             }
         }
 
+        [UiProperty]
+        public Position Location { get; set; } = new Position(); // location in UI map
+
         [JsonIgnore]
         [UiProperty]
         public virtual DateTime LastOnline => DateTime.Now;

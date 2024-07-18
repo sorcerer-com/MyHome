@@ -14,6 +14,9 @@
         }
     },
     computed: {
+        showMap: function () {
+            return this.$route.path == "/map";
+        },
         notifications: function () {
             return this.$root.notifications.filter(n => !n.expired);
         },

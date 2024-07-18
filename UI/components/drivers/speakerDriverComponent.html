@@ -4,11 +4,12 @@
      v-on:click="click()">
 
     <!-- not playing -->
-    <span class="material-icons w3-xxlarge" v-if="!driver.Playing">
+    <span class="material-icons w3-xxlarge" v-if="!driver.Playing"
+          v-bind:style="{'vertical-align': hideName ? 'middle' : 'inherit'}">
         speaker
     </span>
 
-    <div class="w3-tiny" v-if="!driver.Playing">{{driver.Name}}</div>
+    <div class="w3-tiny" v-if="!driver.Playing && !hideName">{{driver.Name}}</div>
 
     <!-- playing -->
     <div v-if="driver.Playing" style="overflow: hidden; line-height: 1; border-bottom: 2px solid;"
@@ -42,7 +43,10 @@
         <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">
             <header class="w3-container w3-blue-gray">
                 <span class="w3-button w3-display-topright" v-on:click="showModal = false">&times;</span>
-                <h2>{{driver.Name}}</h2>
+                <h2>
+                    {{driver.Name}}
+                    <span class="w3-large">({{room.Name}})</span>
+                </h2>
             </header>
             <div class="w3-container w3-text-white w3-padding-16 height-100 overflow-y-auto bg-gray">
                 <div v-if="driver.Playing">

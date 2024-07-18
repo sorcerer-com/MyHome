@@ -105,6 +105,7 @@ function init() {
             history: VueRouter.createWebHashHistory(),
             routes: [
                 { path: "/", component: window.vue._context.components["main-page"] },
+                { path: "/map", component: window.vue._context.components["main-page"] },
                 { path: "/config", component: window.vue._context.components["config-page"] },
                 { path: "/actions", component: window.vue._context.components["actions-page"] },
                 { path: "/assistant", component: window.vue._context.components["assistant-page"] },

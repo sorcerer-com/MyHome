@@ -1,8 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net.Mime;
 using System.Reflection;
-
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using MyHome.Utils;
@@ -72,7 +73,25 @@ namespace MyHome.Controllers
         {
             var filePath = Path.Join(Models.Config.BinPath, "log.log");
             var file = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            return this.File(file, "text/plain");
+            return this.File(file, MediaTypeNames.Text.Plain);
+        }
+
+        [HttpGet("map")]
+        public ActionResult GetMap()
+        {
+            var filePath = Path.Join(Models.Config.BinPath, "map.png");
+            if (!System.IO.File.Exists(filePath))
+                return this.NotFound();
+            var file = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            return this.File(file, MediaTypeNames.Image.Jpeg);
+        }
+
+        [HttpPost("map")]
+        public ActionResult SetMap([FromForm] IFormFile file)
+        {
+            using var stream = System.IO.File.Create(Path.Join(Models.Config.BinPath, "map.png"));
+            file.CopyTo(stream);
+            return this.Ok(file);
         }
 
         [HttpGet("notifications")]

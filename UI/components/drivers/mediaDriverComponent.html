@@ -5,11 +5,12 @@
      v-on:click="click()">
 
     <!-- not playing -->
-    <span class="material-icons w3-xxlarge" v-if="!driver.Playing">
+    <span class="material-icons w3-xxlarge" v-if="!driver.Playing"
+          v-bind:style="{'vertical-align': hideName ? 'middle' : 'inherit'}">
         {{'play_circle'}}
     </span>
 
-    <div class="w3-tiny" v-if="!driver.Playing">{{driver.Name}}</div>
+    <div class="w3-tiny" v-if="!driver.Playing && !hideName">{{driver.Name}}</div>
 
     <!-- playing -->
     <div v-if="driver.Playing" style="white-space: nowrap; overflow: hidden; line-height: 1;">

@@ -70,7 +70,7 @@
                 // stop loading the motion image (cameras' images)
                 $("img[id^='camera'][id$='Image']").attr("src", "");
 
-                this.$router.push("/");
+                this.$router.push({ query: {} });
             }
             else
                 this.$router.push({ query: { room: this.room.Name, selectedValueType: this.selectedValueType } });

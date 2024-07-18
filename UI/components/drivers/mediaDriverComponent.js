@@ -1,5 +1,5 @@
 ﻿setComponent("media-driver", {
-    props: ["room", "driver"],
+    props: ["room", "driver", "hideName"],
     data: function () {
         return {
             processing: false,
@@ -85,7 +85,7 @@
             if (this.showModal)
                 this.$router.push({ query: { room: this.room.Name, driver: this.driver.Name } });
             else
-                this.$router.push("/");
+                this.$router.push({ query: {} });
         }
     }
 });

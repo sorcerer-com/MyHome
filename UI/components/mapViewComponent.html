@@ -1,0 +1,104 @@
+﻿<div class="w3-display-container height-100" style="overflow: hidden; width: 100%; user-select: none" draggable="false"
+     v-bind:class="{'w3-round-xlarge bg-gray-opacity-88': dragMapFile}"
+     v-on:dragover="dragOverMapFile" v-on:dragleave="dragMapFile = false" v-on:drop="uploadMapFile"
+     v-on:mousemove="move" v-on:wheel="scaleMap" v-on:dblclick="resetMap"
+     v-on:touchstart="touch" v-on:touchmove="touch">
+
+    <div class="w3-display-topright" style="z-index: 1">
+        <a class="material-icons w3-text-gray w3-hover-text-white"
+           v-if="!mapMissing" v-on:click="resetMap">
+            zoom_out_map
+        </a>
+        <a class="material-icons w3-hover-text-white"
+           v-if="!mapMissing" v-bind:class="{'w3-text-gray': !edit}" v-on:click="editMap">
+            app_registration
+        </a>
+    </div>
+
+    <div class="w3-display-middle" v-if="mapMissing">Upload map image by dropping it here</div>
+
+    <img id="mapImage" src="./api/map" draggable="false"
+         v-if="!mapMissing" v-on:error="mapMissing = true" v-on:load="resetMap"
+         v-bind:style="{'filter': 'opacity(' + (edit ? '70' : '100') + '%)'}" />
+
+    <template v-if="!mapMissing">
+        <template v-for="room of rooms">
+            <div v-for="device of room.Devices"
+                 v-bind:id="room.Name.replaceAll(' ', '_') + '-' + device.Name.replaceAll(' ', '_')"
+                 v-bind:title="room.Name + '.' + device.Name + '\nLast Online: ' + dateToString(device.LastOnline)"
+                 v-bind:class="{'w3-grey w3-round-large': edit}">
+
+                <!-- sensor -->
+                <a class="w3-block w3-round-large w3-hover-blue-gray bg-gray-opacity-88" style="padding: 3px"
+                   v-if="device.$baseTypes.some(t => t.endsWith('Sensor')) && ! device.Grouped"
+                   v-on:click="click(room, device)">
+                    <template v-for="(value, name) of device.Values">
+                        <span class="w3-show-block w3-small"
+                              style="white-space: nowrap; font-weight: bold; text-align: center;"
+                              v-bind:title="name">
+                            {{ Math.round(value, 2) }}{{device.Units[name] || '*'}}
+                        </span>
+                    </template>
+                </a>
+
+                <!-- other -->
+                <a class="w3-round-large w3-hover-blue-gray bg-gray-opacity-88 material-icons"
+                   style="vertical-align: middle; padding: 2px"
+                   v-if="deviceIcon(device)" v-on:click="click(room, device)">
+                    {{deviceIcon(device)}}
+                </a>
+
+                <!-- speaker -->
+                <speaker-driver style="margin: 0 !important; padding: 2px !important; min-height: 0;"
+                                v-if="device.$baseTypes.some(t => t.endsWith('ISpeakerDriver'))"
+                                v-bind:key="device.Name"
+                                v-bind:room="room"
+                                v-bind:driver="device"
+                                v-bind:hideName="true"
+                                v-on:click.capture="stopPropagate">
+                </speaker-driver>
+
+                <!-- media player -->
+                <media-driver style="margin: 0 !important; padding: 2px !important; min-height: 0;"
+                              v-if="device.$baseTypes.some(t => t.endsWith('IMediaDriver'))"
+                              v-bind:key="device.Name"
+                              v-bind:room="room"
+                              v-bind:driver="device"
+                              v-bind:hideName="true"
+                              v-on:click.capture="stopPropagate">
+                </media-driver>
+            </div>
+        </template>
+    </template>
+
+    <!-- Sensors Data / Cameras Modal -->
+    <div class="w3-modal w3-animate-opacity" v-if="showDevice"
+         v-bind:class="{'w3-show-block': showDevice}"
+         v-on:click="showDevice = null">
+        <div class="w3-modal-content w3-card-4 w3-transparent" v-on:click.stop="">
+            <header class="w3-container w3-blue-gray">
+                <span class="w3-button w3-display-topright" v-on:click="showDevice = null">&times;</span>
+                <h2>
+                    {{showDevice.device.Name}}
+                    <span class="w3-large">({{showDevice.room.Name}})</span>
+                </h2>
+            </header>
+            <div class="w3-container w3-padding-16 height-100 overflow-y-auto bg-gray">
+                <!-- Cameras -->
+                <cameras v-if="showDevice.device.$type.endsWith('Camera')"
+                         v-bind:room="showDevice.room"
+                         v-bind:cameras="[showDevice.device]"></cameras>
+                <!-- Sensors -->
+                <sensors-data v-if="showDevice.device.$baseTypes.some(t => t.endsWith('Sensor'))"
+                              v-bind:room="showDevice.room"
+                              v-bind:sensors="[showDevice.device]"
+                              v-bind:value-type="null"></sensors-data>
+
+                <object-editor v-if="!showDevice.device.$type.endsWith('Camera') && !showDevice.device.$baseTypes.some(t => t.endsWith('Sensor'))"
+                               v-bind:object="showDevice.device"
+                               v-bind:settings="false"
+                               v-bind:onsave="save"></object-editor>
+            </div>
+        </div>
+    </div>
+</div>

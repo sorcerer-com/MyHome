@@ -92,7 +92,7 @@
             if (this.showModal)
                 this.$router.push({ query: { room: this.room.Name, driver: this.driver.Name } });
             else
-                this.$router.push("/");
+                this.$router.push({ query: {} });
         },
         "driver.Color": function () {
             if (window.vue.isMobile)

@@ -23,6 +23,14 @@ namespace MyHome.Utils
         GreaterOrEqual
     }
 
+    public class Position
+    {
+        [UiProperty]
+        public int X { get; set; }
+        [UiProperty]
+        public int Y { get; set; }
+    }
+
     public static class Utils
     {
         public static void Retry(Action<int> action, int times, ILogger logger = null, string operation = null)

@@ -218,7 +218,7 @@ namespace MyHome.Utils
                     else // object
                     {
                         var obj2 = prop.GetValue(obj);
-                        item.SetObject(obj2);
+                        item.Value.SetObject(obj2);
                     }
                 }
                 else if (prop.CanWrite)

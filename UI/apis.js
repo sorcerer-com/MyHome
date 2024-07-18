@@ -103,6 +103,17 @@ function getLogs() {
     return $.get("./api/logs");
 }
 
+function setMap(data) {
+    return $.ajax({
+        url: "./api/map",
+        type: 'POST',
+        processData: false, // important
+        contentType: false, // important
+        dataType: 'json',
+        data: data
+    });
+}
+
 function getNotifications() {
     return $.get("./api/notifications");
 }
