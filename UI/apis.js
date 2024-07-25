@@ -7,6 +7,17 @@ $.postJsonBody = function(url, data) {
     });
 }
 
+$.postFormData = function (url, formData) {
+    return $.ajax({
+        url: url,
+        type: 'POST',
+        processData: false, // important
+        contentType: false, // important
+        data: formData
+    });
+}
+
+
 function getRooms() {
     return $.get(`./api/rooms`);
 }
@@ -104,14 +115,11 @@ function getLogs() {
 }
 
 function setMap(data) {
-    return $.ajax({
-        url: "./api/map",
-        type: 'POST',
-        processData: false, // important
-        contentType: false, // important
-        dataType: 'json',
-        data: data
-    });
+    return $.postFormData("./api/map", data);
+}
+
+function sendRecord(data) {
+    return $.postFormData("./api/systems/Assistant/processRecord", data);
 }
 
 function getNotifications() {

@@ -55,7 +55,7 @@ namespace MyHome.Systems.Devices.Sensors
 
 
         private readonly object captureLock = new();
-        private readonly Process capture;
+        private Process capture;
         private Process Capture
         {
             get
@@ -85,30 +85,6 @@ namespace MyHome.Systems.Devices.Sensors
             this.ReadDataInterval = 15;
             this.Record = true;
 
-            // start capture process
-            this.capture = Process.Start(new ProcessStartInfo
-            {
-                FileName = "python3",
-                Arguments = " External/cameraCapture.py",
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                RedirectStandardInput = true,
-                CreateNoWindow = true
-            });
-            // kill process on error, debounce if multiple errors
-            var debouncer = Utils.Utils.Debouncer();
-            this.capture.ErrorDataReceived += (s, e) =>
-            {
-                logger.Error(e.Data);
-                debouncer(() =>
-                {
-                    if (!this.capture.HasExited)
-                        this.capture.Kill();
-                });
-            };
-            this.capture.BeginErrorReadLine();
-
             this.lastOnline = DateTime.Now;
             this.nextDataRead = DateTime.Now.AddMinutes(1); // start reading 1 minute after start
             this.lastImageSaved = DateTime.Now.AddMinutes(1);
@@ -121,7 +97,8 @@ namespace MyHome.Systems.Devices.Sensors
         {
             base.Setup();
 
-            // prepare capture for opening
+            this.capture = Utils.Utils.StartProcess("python3", "External/cameraCapture.py", logger: logger);
+            // prepare capture by opening
             Task.Delay(TimeSpan.FromMinutes(1)).ContinueWith(_ => { lock (this.captureLock) this.IsOpened(); });
 
             var recordThread = new Thread(this.RecordLoop)
@@ -137,7 +114,11 @@ namespace MyHome.Systems.Devices.Sensors
             base.Stop();
             this.stopped = true;
             if (!this.capture.HasExited)
+            {
                 this.capture.StandardInput.WriteLine("exit"); // stop camera capture process
+                if (!this.capture.HasExited)
+                    this.capture.Kill();
+            }
         }
 
         public override void Update()
@@ -215,7 +196,7 @@ namespace MyHome.Systems.Devices.Sensors
                 try
                 {
                     var address = int.TryParse(this.Address, out int device) ? device.ToString() : this.GetStreamAddress();
-                    if (string.IsNullOrEmpty(address)) 
+                    if (string.IsNullOrEmpty(address))
                         return null;
                     var _size = size.HasValue ? $"{size.Value.width},{size.Value.height}" : "None";
                     this.Capture.StandardInput.WriteLine($"getImage {address} {initIfEmpty} {_size} {timestamp}");
@@ -234,7 +215,7 @@ namespace MyHome.Systems.Devices.Sensors
 
                     if (res == "True")
                         this.lastOnline = DateTime.Now;
-                    return Convert.FromBase64String(img[2..(img.Length - 1)]);
+                    return Convert.FromBase64String(img[2..(img.Length - 1)]); // remove b' '
                 }
                 finally
                 {

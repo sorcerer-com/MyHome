@@ -7,6 +7,7 @@
 
             assistantRequest: '',
             assistantChatShown: false,
+            assistantRecord: null,
 
             modal: "",
             modalSelection: "",
@@ -27,7 +28,7 @@
             return this.rooms.some(r => r.IsSecuritySystemEnabled) && !this.rooms.every(r => r.IsSecuritySystemEnabled)
         },
         chatHistory: function () {
-            return this.assistant.History?.reverse();
+            return this.assistant.History ? [...this.assistant.History].reverse() : [];
         }
     },
     methods: {
@@ -134,11 +135,42 @@
             if (this.assistantRequest == '')
                 return;
 
-            this.assistant.History?.splice(0, 0, { "Message": this.assistantRequest, "Time": new Date(), "Response": false });
+            this.assistant.History?.push({ "Message": this.assistantRequest, "Time": new Date(), "Response": false });
+            this.assistant.History?.push({ "Message": "...", "Response": true });
             callSystem("Assistant", "ProcessRequest", this.assistantRequest)
-                .done(() => this.assistant.History?.push({ "Message": "...", "Response": true }))
-                .fail(response => this.assistant.History?.push({ "Message": "Error: " + response, "Response": true }));
+                .fail(response => this.assistant.History?.splice(0, 0, { "Message": "Error: " + response, "Response": true }));
             this.assistantRequest = '';
+        },
+        startAssistantRequestRecording: function () {
+            let self = this;
+            navigator.getUserMedia({ audio: true }, function (stream) {
+                self.assistantRecord = RecordRTC(stream, {
+                    type: 'audio',
+                    mimeType: 'audio/wav',
+                    sampleRate: 44100,
+                    desiredSampRate: 16000,
+                    recorderType: StereoAudioRecorder,
+                    numberOfAudioChannels: 1,
+                    timeSlice: 5000
+                });
+                self.assistantRecord.startRecording();
+            }, function (error) {
+                console.error(JSON.stringify(error));
+            });
+        },
+        stopAssistantRequestRecording: function () {
+            let self = this;
+            // stop audio recorder
+            this.assistantRecord.stopRecording(function () {
+                let blob = self.assistantRecord.getBlob();
+                self.assistantRecord.reset();
+                let formData = new FormData();
+                formData.append("data", blob);
+                self.assistant.History?.push({ "Message": "...", "Response": false });
+                self.assistant.History?.push({ "Message": "...", "Response": true });
+                sendRecord(formData)
+                    .fail(response => self.assistant.History?.push({ "Message": "Error: " + response, "Response": true }));;
+            });
         }
     },
     mounted: function () {

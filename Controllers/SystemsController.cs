@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-
 using Microsoft.AspNetCore.Mvc;
-
+using MyHome.Systems;
 using MyHome.Systems.Actions;
 using MyHome.Utils;
 
@@ -164,6 +163,19 @@ namespace MyHome.Controllers
                 return this.BadRequest("Trigger failed");
 
             return this.Ok($"Execution time: {stopwatch.Elapsed}");
+        }
+
+
+        [HttpPost("Assistant/processRecord")]
+        public ActionResult ProcessRecord()
+        {
+            using var stream = this.Request.Form.Files[0].OpenReadStream();
+            var data = new byte[stream.Length];
+            stream.Read(data, 0, data.Length);
+
+            var assistant = this.myHome.Systems[nameof(AssistantSystem)] as AssistantSystem;
+            assistant.ProcessRecord(data);
+            return this.Ok();
         }
     }
 }

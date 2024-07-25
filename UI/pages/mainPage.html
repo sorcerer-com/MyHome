@@ -51,10 +51,13 @@
                     <div style="white-space: nowrap;">
                         <input v-model="assistantRequest" v-bind:title="assistantRequest" type="text"
                                v-on:keyup.enter="sendAssistantRequest" />
-                        <a class="w3-round-large w3-center w3-hover-text-black font-size-normal margin-left-8 bg-gray-opacity-88 material-icons"
-                           title="Send"
+                        <a title="Send" class="w3-hover-text-black font-size-normal margin-left-8 material-icons"
                            v-on:click="sendAssistantRequest()">
                             send
+                        </a>
+                        <a title="Hold to Record" class="w3-hover-text-black font-size-normal margin-left-8 material-icons"
+                           v-on:mousedown="startAssistantRequestRecording" v-on:mouseup="stopAssistantRequestRecording">
+                            mic
                         </a>
                     </div>
                 </div>

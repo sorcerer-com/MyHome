@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -200,11 +201,50 @@ namespace MyHome.Utils
             {
                 result = JToken.Parse(json);
                 return true;
-            } catch
+            }
+            catch
             {
                 result = null;
                 return false;
             }
+        }
+
+        public static Process StartProcess(string fileName, string arguments, string workingDirectory = null, 
+            bool killOnError = true, ILogger logger = null)
+        {
+            // start capture process
+            var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = fileName,
+                Arguments = arguments,
+                WorkingDirectory = workingDirectory,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                RedirectStandardInput = true,
+                CreateNoWindow = true,
+            });
+
+            if (killOnError || logger != null)
+            {
+                var debouncer = Debouncer();
+                process.ErrorDataReceived += (s, e) =>
+                {
+                    logger?.Error(e.Data);
+
+                    // kill process on error, debounce if multiple errors
+                    if (killOnError)
+                    {
+                        debouncer(() =>
+                        {
+                            if (!process.HasExited)
+                                process.Kill();
+                        });
+                    }
+                };
+                process.BeginErrorReadLine();
+            }
+            return process;
         }
     }
 }
