@@ -112,7 +112,7 @@ public class SongsManager
 
         var song = this.Songs.Find(s => s.Name == name);
         if (song == null)
-            return null;
+            return name;
         if (IsYoutubeUrl(song.Url))
         {
             var oldName = Services.DownloadYouTubeAudioAsync(song.Url, MyHome.Instance.Config.SongsPath).Result ?? song.Name;

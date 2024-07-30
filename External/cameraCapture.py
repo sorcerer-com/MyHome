@@ -70,7 +70,7 @@ def drop_old_frames(address):
         i += 1
         if not res:
             break
-    print(i)
+    return i
 
 
 def diff_images(img1, img2):
@@ -107,7 +107,8 @@ if __name__ == "__main__":
 
                 if line.startswith("dropOldFrames"):
                     args = line.split()  # dropOldFrames <address>
-                    drop_old_frames(args[1])
+                    res = drop_old_frames(args[1])
+                    print(res)
 
                 if line.strip() == "diffImages": # diffImages \n <img1> \n <img2>
                     img1 = base64.b64decode(sys.stdin.readline())

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using MyHome.Systems.Devices.Drivers.Types;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -50,9 +51,17 @@ public class AssistantSystem : BaseSystem
     [UiProperty(true)]
     public string DontUnderstandResponse { get; set; }
 
+    [UiProperty(true)]
+    public bool Speak { get; set; }
+
+
+    [JsonIgnore]
+    public Dictionary<string, (DateTime time, byte[] data)> SpeakResponses { get; }
+
 
     private readonly object helperLock = new();
     private Process helper;
+    private DateTime minuteUpdateTime = DateTime.Now;
 
 
     // TODO: "compress" request regex by storing words in list and refer only by index
@@ -68,6 +77,9 @@ public class AssistantSystem : BaseSystem
         this.UnreadHistoryItems = 0;
         this.UnknownRequestResponse = "Не знам как да отговоря на това. Може да го добавите в Request Mapping на Assistant страницата.";
         this.DontUnderstandResponse = "Съжалявам, но не ви разбрах. Моля повторете!";
+        this.Speak = true;
+
+        this.SpeakResponses = new Dictionary<string, (DateTime time, byte[] data)>();
     }
 
     public override void Setup()
@@ -87,6 +99,20 @@ public class AssistantSystem : BaseSystem
         }
     }
 
+    protected override void Update()
+    {
+        base.Update();
+
+        if (DateTime.Now - this.minuteUpdateTime < TimeSpan.FromMinutes(1))
+            return;
+        this.minuteUpdateTime = DateTime.Now;
+
+        // delete speak responses older than 1 minute
+        var toDelete = this.SpeakResponses.Where(kvp => kvp.Value.time + TimeSpan.FromMinutes(1) < DateTime.Now).Select(kvp => kvp.Key);
+        foreach (var key in toDelete)
+            this.SpeakResponses.Remove(key);
+    }
+
     // TODO: actions on event (e.g. security alarm activated)
 
     public void ProcessRequest(string request)
@@ -98,6 +124,7 @@ public class AssistantSystem : BaseSystem
 
         Regex regex;
         string result = null;
+        string roomName = null;
         foreach (var op in this.RequestMapping)
         {
             regex = new Regex(op.Key);
@@ -114,10 +141,14 @@ public class AssistantSystem : BaseSystem
             var args = match.Groups.Values.Where(g => g.Index != 0).ToDictionary(g => g.Name, g => g.Value);
             args = args.ToDictionary(kvp => kvp.Key, kvp => this.ArgumentMapping.TryGetValue(kvp.Value, out var value) ? value : kvp.Value);
             result = this.ExecuteOperation(op.Value, args) ?? "Има проблем с изпълнението на операцията.";
+            roomName = args.TryGetValue("room", out var value) ? value : null;
             break;
         }
         if (string.IsNullOrEmpty(result))
             result = this.UnknownRequestResponse;
+
+        if (this.Speak)
+            this.SpeakResponse(result, roomName);
 
         this.AddToHistory(result, true);
         MyHome.Instance.Events.Fire(this, GlobalEventTypes.AssistantResponse, result);
@@ -196,5 +227,45 @@ public class AssistantSystem : BaseSystem
         }
         this.helper.Kill();
         return null;
+    }
+
+    private void SpeakResponse(string response, string roomName)
+    {
+        var room = MyHome.Instance.Rooms.Find(r => r.Name.Replace(" ", "") == roomName);
+        var speaker = room?.Devices.OfType<ISpeakerDriver>().FirstOrDefault();
+        if (speaker == null)
+        {
+            logger.Warn($"Cannot speak the response in room '{roomName}'");
+            return;
+        }
+
+        if (Monitor.TryEnter(this.helperLock, TimeSpan.FromSeconds(10)))
+        {
+            try
+            {
+                if (this.helper.HasExited)
+                    this.helper.Start();
+
+                this.helper.StandardInput.WriteLine("synthesize");
+                this.helper.StandardInput.WriteLine(Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(response)));
+                var result = this.helper.StandardOutput.ReadLine();
+                if (result == null)
+                {
+                    this.helper.Kill();
+                    return;
+                }
+
+                var bytes = Convert.FromBase64String(result[2..(result.Length - 1)]); // remove b' '
+                this.SpeakResponses[response.GetHashCode().ToString() + ".wav"] = (DateTime.Now, bytes);
+
+                speaker.PlaySong(response.GetHashCode().ToString() + ".wav");
+            }
+            finally
+            {
+                Monitor.Exit(this.helperLock);
+            }
+        }
+        else
+            this.helper.Kill();
     }
 }

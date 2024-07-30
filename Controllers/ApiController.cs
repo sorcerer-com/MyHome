@@ -5,7 +5,7 @@ using System.Net.Mime;
 using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-
+using MyHome.Systems;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -131,8 +131,17 @@ namespace MyHome.Controllers
             var filePath = Path.Join(MyHome.Instance.Config.SongsPath, fileName);
             if (!System.IO.File.Exists(filePath))
                 filePath = Path.Join(Models.Config.SoundsPath, fileName);
+
             if (!System.IO.File.Exists(filePath))
+            {
+                var assistant = this.myHome.Systems[nameof(AssistantSystem)] as AssistantSystem;
+                if (assistant.SpeakResponses.TryGetValue(fileName, out var response))
+                {
+                    var stream = new MemoryStream(response.data);
+                    return this.File(stream, "audio/wav");
+                }
                 return this.NotFound($"Song '{fileName}' not found");
+            }
 
             // match buffer with the one in Tasmota
             var file = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024);

@@ -194,21 +194,22 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             if (this.SetState(PLAYING_STATE_NAME, name))
             {
                 if (!string.IsNullOrEmpty(name)) // set volume on start playing
+                {
                     this.SendState(VOLUME_STATE_NAME, this.Volume.ToString());
+
+                    var song = this.Songs.Find(s => s.Name == name);
+                    if (song?.Local == false)
+                        this.SendState(PLAYING_STATE_NAME, song.Url);
+                    else
+                        this.SendState(PLAYING_STATE_NAME, $"{Host}/api/songs/{Uri.EscapeDataString(name)}");
+                }
                 else // on empty value - stop
                 {
                     this.Queue.Clear();
                     this.orderedSongs = null;
                     this.alarmType = null;
+                    this.SendState(PLAYING_STATE_NAME, "");
                 }
-
-                var song = this.Songs.Find(s => s.Name == name);
-                if (song?.Local == true || this.alarmType != null)
-                    this.SendState(PLAYING_STATE_NAME, $"{Host}/api/songs/{Uri.EscapeDataString(name)}");
-                else if (song?.Local == false)
-                    this.SendState(PLAYING_STATE_NAME, song.Url);
-                else
-                    this.SendState(PLAYING_STATE_NAME, name);
             }
         }
 
@@ -276,7 +277,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                     {
                         if (this.alarmType != null) // if alarm was playing repeat it
                             this.PlaySong((string)oldValue);
-                        else
+                        else if (this.Songs.Any(s => s.Name == (string)oldValue)) // if previous value was a song
                         {
                             MyHome.Instance.SongsManager.IncreaseSongRating((string)oldValue);
                             this.NextSong((string)oldValue);
