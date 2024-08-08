@@ -187,6 +187,9 @@ namespace MyHome.Systems
         {
             base.Update();
 
+            if (this.roomsInfo.Any(ri => ri.Activated)) // if no rooms with activated security
+                System.Threading.Thread.Sleep(100);
+
             lock (this.roomsInfo)
             {
                 foreach (var roomInfo in this.roomsInfo)

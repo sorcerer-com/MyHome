@@ -70,6 +70,8 @@ namespace MyHome.Systems
                 var json = JsonConvert.SerializeObject(this.probabilities, Formatting.Indented);
                 File.WriteAllText(DataFilePath, json);
             }
+            else
+                System.Threading.Thread.Sleep(1000);
         }
     }
 }

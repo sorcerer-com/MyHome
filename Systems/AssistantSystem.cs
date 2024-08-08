@@ -104,7 +104,10 @@ public class AssistantSystem : BaseSystem
         base.Update();
 
         if (DateTime.Now - this.minuteUpdateTime < TimeSpan.FromMinutes(1))
+        {
+            Thread.Sleep(100);
             return;
+        }
         this.minuteUpdateTime = DateTime.Now;
 
         // delete speak responses older than 1 minute
