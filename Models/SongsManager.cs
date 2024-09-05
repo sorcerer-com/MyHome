@@ -41,7 +41,7 @@ public class SongsManager
 
     public string AddSong(string url)
     {
-        logger.Debug($"Add song: {url}");
+        logger.Info($"Add song: {url}");
         if (!url.StartsWith("http"))
             return null;
 

@@ -119,7 +119,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         public void Play(string path)
         {
-            logger.Debug($"Play media: {path}");
+            logger.Info($"Play media: {path}");
             if (string.IsNullOrEmpty(path))
                 return;
 

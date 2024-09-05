@@ -6,11 +6,13 @@ using MyHome.Models;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
+using NLog;
 
 namespace MyHome.Systems
 {
     public class PredictionSystem : BaseSystem
     {
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         public static readonly string DataFilePath = Path.Join(Config.BinPath, "probabilities.json");
 
         public enum ProbabilityType
@@ -36,8 +38,16 @@ namespace MyHome.Systems
             base.Setup();
             if (File.Exists(DataFilePath))
             {
-                var json = File.ReadAllText(DataFilePath);
-                JsonConvert.PopulateObject(json, this.probabilities);
+                try
+                {
+                    var json = File.ReadAllText(DataFilePath);
+                    JsonConvert.PopulateObject(json, this.probabilities);
+                }
+                catch (Exception e)
+                {
+                    logger.Error("Failed to load prediction data file");
+                    logger.Debug(e);
+                }
             }
 
             MyHome.Instance.Events.Handler += this.Events_Handler;

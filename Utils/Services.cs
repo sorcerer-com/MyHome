@@ -204,7 +204,8 @@ namespace MyHome.Utils
                 ffmpegProcess.StartInfo.RedirectStandardError = true;
                 ffmpegProcess.StartInfo.CreateNoWindow = true;
                 ffmpegProcess.StartInfo.FileName = "ffmpeg";
-                ffmpegProcess.StartInfo.Arguments = $" -f concat -safe 0 -i \"{inputFilePath}\" -y \"{outputFilePath}\"";
+                // "-c:v h264_v4l2m2m -pix_fmt yuv420p" to use Raspberry Pi hardware acceleration
+                ffmpegProcess.StartInfo.Arguments = $" -f concat -safe 0 -i \"{inputFilePath}\" -c:v h264_v4l2m2m -pix_fmt yuv420p -y \"{outputFilePath}\"";
                 ffmpegProcess.Start();
 
                 var stdErr = new StringBuilder();
