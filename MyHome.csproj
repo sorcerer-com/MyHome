@@ -18,7 +18,7 @@
     <PackageReference Include="OnvifClient.Core" Version="1.0.2" />
     <PackageReference Include="ScrapySharp" Version="3.0.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
-    <PackageReference Include="YoutubeExplode" Version="6.3.16" />
+    <PackageReference Include="YoutubeExplode" Version="6.4.3" />
   </ItemGroup>
 
   <ItemGroup>
