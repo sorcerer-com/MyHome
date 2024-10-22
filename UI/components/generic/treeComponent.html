@@ -5,7 +5,7 @@
            v-bind:class="{'w3-text-dark-gray': item.marked}"
            v-bind:title="root + item.path"
            v-on:click="selectItem">
-            {{key}}
+            {{item.display || key}}
         </a>
     </template>
     <template v-for="(item, key) of tree">

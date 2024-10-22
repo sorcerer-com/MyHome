@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 using MyHome.Systems.Devices.Drivers.Types;
@@ -30,7 +31,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         [JsonIgnore]
         [UiProperty]
-        public string Playing => ((string)this.States[PLAYING_STATE_NAME]).Replace("file:///", "");
+        public string Playing => ((string)this.States[PLAYING_STATE_NAME]).Replace("file://", "");
 
         [UiProperty]
         public int Volume
@@ -60,7 +61,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         public bool SortByDate { get; set; }
 
         [UiProperty]
-        public List<string> Watched { get; }
+        public Dictionary<string, string> Watched { get; } // media path / stop time
 
 
         private string agentHostName;
@@ -107,7 +108,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             this.MqttSetTopics.Add(VOLUME_STATE_NAME, ("", ""));
             this.MqttSetTopics.Add(TIME_STATE_NAME, ("", ""));
 
-            this.Watched = new List<string>();
+            this.Watched = new Dictionary<string, string>();
         }
 
         public override void Stop()
@@ -123,9 +124,10 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             if (string.IsNullOrEmpty(path))
                 return;
 
+            this.States[PLAYING_STATE_NAME] = path;
             this.SendState(PLAYING_STATE_NAME, path);
             this.SendState(VOLUME_STATE_NAME, this.Volume.ToString());
-            this.MarkWatched(path);
+            this.MarkWatched(System.Web.HttpUtility.UrlEncode(path));
             MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaPlayed, path);
         }
 
@@ -135,6 +137,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 return;
 
             logger.Debug($"Stop media: {this.Playing}");
+            this.MarkWatched(this.Playing); // set stop time
             this.States[PLAYING_STATE_NAME] = "";
             MyHome.Instance.MqttClient.Publish($"cmnd/{this.AgentHostName}/media", "{\"stop\": true}");
             MyHome.Instance.Events.Fire(this, GlobalEventTypes.MediaStopped);
@@ -238,16 +241,23 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             return result;
         }
 
-        private void MarkWatched(string path)
+        public void MarkWatched(string path)
         {
+            // agent (VLC MediaPlayer) encode the path and replace '\\' with '/'
+            path = System.Web.HttpUtility.UrlDecode(path);
+            if (this.Watched.ContainsKey(path.Replace("/", "\\")))
+                path = path.Replace("/", "\\");
             logger.Debug($"Mark as watched: {path}");
 
-            if (!this.Watched.Contains(path))
-                this.Watched.Add(path);
+            int hour = (int)(this.Time / 3.6e6);
+            int min = (int)((this.Time % 3.6e6) / 6e4);
+            this.Watched[path] = $"{hour:D2}:{min:D2}";
 
             // cleanup watched list from nonexistent files
-            var list = this.MediaList.SelectMany(kvp => kvp.Value.Select(v => System.IO.Path.Join(kvp.Key, v)));
-            this.Watched.RemoveAll(w => !list.Contains(w));
+            var list = this.MediaList.SelectMany(kvp => kvp.Value.Select(v => Path.Join(kvp.Key, v)));
+            foreach (var key in this.Watched.Keys.ToArray())
+                if (!list.Contains(key))
+                    this.Watched.Remove(key);
             MyHome.Instance.SystemChanged = true;
         }
     }

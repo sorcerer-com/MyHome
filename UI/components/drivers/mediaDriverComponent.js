@@ -44,7 +44,9 @@
                         currItem = currItem[s];
                     }
                     currItem["path"] = path;
-                    currItem["marked"] = this.driver.Watched.includes(media + path);
+                    currItem["marked"] = (media + path) in this.driver.Watched;
+                    if (currItem["marked"]) // if watched add stop time to name
+                        currItem["display"] = `${split.slice(-1)} (${this.driver.Watched[media + path]})`;
                 }
             }
             return tree;
