@@ -11,7 +11,7 @@ namespace MyHome.Systems.Devices.Drivers.Types
         bool SortByDate { get; set; }
         long Time { get; set; }
         int Volume { get; set; }
-        List<string> Watched { get; }
+        Dictionary<string, string> Watched { get; }
 
         void Pause();
         void Play(string path);
