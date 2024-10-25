@@ -20,6 +20,8 @@
         }
     },
     methods: {
+        dateToString: dateToString,
+
         refreshData: function () {
             // if the page is not visible don't refresh
             if (document.hidden) {
@@ -51,6 +53,7 @@
             getConfig().done(config => this.settings["Config"] = config);
             getSystems(true).done(systems =>
                 Object.keys(systems).forEach(key => this.settings[key] = systems[key]));
+            getAlerts().done(alerts => this.settings["Alerts"] = alerts);
         },
         showLogsModal: function () {
             this.modal = "Logs";
@@ -82,6 +85,10 @@
                 setTimeout(() => window.location.reload(true), 180000);
                 this.restarting = true;
             });
+        },
+        snoozeAlert: function (message, interval) {
+            snoozeAlert(message, interval).done(() =>
+                getAlerts().done(alerts => this.settings["Alerts"] = alerts));
         }
     },
     mounted: function () {

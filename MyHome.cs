@@ -21,7 +21,6 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using NLog;
-using NLog.LayoutRenderers;
 
 namespace MyHome
 {

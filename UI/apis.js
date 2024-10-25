@@ -110,6 +110,15 @@ function setConfig(data) {
     return $.postJsonBody("./api/config", data);
 }
 
+function getAlerts() {
+    return $.get("./api/alerts");
+}
+
+function snoozeAlert(message, interval) {
+    return $.post(`./api/alerts?message=${encodeURIComponent(message)}&interval=${interval}`);
+}
+
+
 function getLogs() {
     return $.get("./api/logs");
 }

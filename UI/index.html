@@ -136,7 +136,8 @@
                             {{name}}
                         </a>
                     </div>
-                    <object-editor v-if="modal == 'Settings'"
+                    <!--- Settings + config --->
+                    <object-editor v-if="modal == 'Settings' && selectedSettings != 'Alerts'"
                                    v-bind:object="settings[selectedSettings]"
                                    v-bind:settings="true"
                                    v-bind:onsave="saveSettings"></object-editor>
@@ -146,6 +147,32 @@
                        v-on:click="restart()">
                         Restart
                     </a>
+                    <!--- Alerts --->
+                    <template v-if="modal == 'Settings' && selectedSettings == 'Alerts'">
+                        <div class="w3-row w3-border-bottom margin-8" 
+                             v-for="(time, msg) of settings['Alerts']">
+                            <span class="w3-col m7">{{msg}}</span>
+                            <span class="w3-col m3 w3-small">{{dateToString(time)}}</span>
+
+                            <div class="w3-dropdown-hover w3-small w3-right">
+                                <a class="w3-round w3-padding-small w3-white w3-hover-blue-grey">
+                                    Snooze
+                                </a>
+                                <div class="w3-dropdown-content w3-round dropdown-left"
+                                     style="min-width: 100px">
+                                    <a class="w3-button w3-block w3-transparent w3-round"
+                                       v-on:click="snoozeAlert(msg, 1)">1h</a>
+                                    <a class="w3-button w3-block w3-transparent w3-round"
+                                       v-on:click="snoozeAlert(msg, 3)">3h</a>
+                                    <a class="w3-button w3-block w3-transparent w3-round"
+                                       v-on:click="snoozeAlert(msg, 12)">12h</a>
+                                    <a class="w3-button w3-block w3-transparent w3-round"
+                                       v-on:click="snoozeAlert(msg, 24)">1d</a>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="margin-8" v-if="Object.keys(settings['Alerts']).length === 0">None</span>
+                    </template>
                 </div>
             </div>
         </div>

@@ -49,6 +49,11 @@
     }
 }
 
+.dropdown-left {
+    top: 20px;
+    right: 0;
+}
+
 .bg-gray {
     background-color: #888888 !important;
 }

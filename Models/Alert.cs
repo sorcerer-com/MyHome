@@ -31,8 +31,9 @@ namespace MyHome.Models
         private bool camerasImages;
         private bool sensorsData;
 
-        private static readonly Dictionary<string, DateTime> validities = [];
+        private static readonly Dictionary<string, DateTime> activeAlerts = [];
 
+        // TODO: merge with notifications
         private Alert(string message)
         {
             this.message = message;
@@ -143,10 +144,23 @@ namespace MyHome.Models
         }
 
 
+        public static Dictionary<string, DateTime> GetActiveAlerts()
+        {
+            return activeAlerts.Where(kvp => kvp.Value > DateTime.Now).ToDictionary();
+        }
+
+        public static void SnoozeAlert(string message, TimeSpan duration)
+        {
+            if (!activeAlerts.ContainsKey(message))
+                return;
+            activeAlerts[message] = DateTime.Now + duration;
+        }
+
+
         private bool IsValid()
         {
             var result = false;
-            if (!validities.TryGetValue(this.message, out var value) || DateTime.Now > value)
+            if (!activeAlerts.TryGetValue(this.message, out var value) || DateTime.Now > value)
                 result = true;
             else
                 logger.Trace($"Don't send new alert since there is valid alert until: {value}");
@@ -154,9 +168,9 @@ namespace MyHome.Models
             if (result)
             {
                 if (this.validity != TimeSpan.Zero)
-                    validities[this.message] = DateTime.Now + this.validity;
+                    activeAlerts[this.message] = DateTime.Now + this.validity;
                 else
-                    validities.Remove(this.message);
+                    activeAlerts.Remove(this.message);
             }
             return result;
         }

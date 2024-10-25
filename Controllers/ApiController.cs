@@ -5,6 +5,7 @@ using System.Net.Mime;
 using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using MyHome.Models;
 using MyHome.Systems;
 using MyHome.Utils;
 
@@ -47,7 +48,7 @@ namespace MyHome.Controllers
         {
             try
             {
-                var body = Newtonsoft.Json.Linq.JToken.Parse(new System.IO.StreamReader(this.Request.Body).ReadToEndAsync().Result);
+                var body = Newtonsoft.Json.Linq.JToken.Parse(new StreamReader(this.Request.Body).ReadToEndAsync().Result);
                 body.SetObject(this.myHome.Config);
                 this.myHome.SystemChanged = true;
                 return this.Ok();
@@ -58,6 +59,19 @@ namespace MyHome.Controllers
                 logger.Debug(e);
                 return this.BadRequest(e.Message);
             }
+        }
+
+        [HttpGet("alerts")]
+        public ActionResult GetAlerts()
+        {
+            return this.Ok(Alert.GetActiveAlerts());
+        }
+
+        [HttpPost("alerts")]
+        public ActionResult SnoozeAlert(string message, int interval)
+        {
+            Alert.SnoozeAlert(message, TimeSpan.FromHours(interval));
+            return this.Ok();
         }
 
 
