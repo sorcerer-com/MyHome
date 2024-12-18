@@ -5,6 +5,7 @@
     <UserSecretsId>bf45b65d-abd3-4028-8fde-f538e6154783</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
+    <EnableNETAnalysers>True</EnableNETAnalysers>
   </PropertyGroup>
 
   <ItemGroup>
