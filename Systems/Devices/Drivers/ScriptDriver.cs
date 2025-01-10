@@ -30,7 +30,7 @@ namespace MyHome.Systems.Devices.Drivers
 
         public ScriptDriver()
         {
-            // TODO: whole driver just for one button?
+            // TODO: whole driver just for one button? - run action instead of direct script, add map for multiple buttons
         }
 
 

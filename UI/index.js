@@ -16,7 +16,7 @@
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         },
         backupMode: function () {
-            return this.notifications.some(n => n.type == "backup_mode");
+            return this.notifications.some(n => n.message == "Backup Mode");
         }
     },
     methods: {

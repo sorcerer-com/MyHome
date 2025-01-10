@@ -90,9 +90,9 @@ namespace MyHome.Models
         }
 
 
-        public Alert Alert(string message)
+        public Notification AddNotification(string message)
         {
-            return Models.Alert.Create($"'{this.Name}' room alert: {message}");
+            return MyHome.Instance.AddNotification($"'{this.Name}' room: {message}");
         }
 
         // allow enable/disable Security System with specific level

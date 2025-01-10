@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using MyHome.Models;
 using MyHome.Utils;
 
@@ -115,11 +114,10 @@ namespace MyHome.Systems.Devices.Sensors
                 {
                     logger.Error($"Cannot load sensor data '{this.Name}' ({this.Room.Name})");
                     logger.Debug(e);
-                    Alert.Create("Cannot load sensor data")
+                    MyHome.Instance.AddNotification("Cannot load sensor's data")
                         .Details($"'{this.Name}' ({this.Room.Name})")
                         .Validity(TimeSpan.FromHours(1))
-                        .Send();
-                    MyHome.Instance.AddNotification(Notification.ProblemType, $"Cannot load sensor data '{this.Name}' ({this.Room.Name})", ifNotExist: false);
+                        .SendAlert();
                 }
             }
         }

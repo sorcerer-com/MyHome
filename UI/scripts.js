@@ -163,8 +163,12 @@ function splitTypes(list) {
 function dateToString(date) {
     if (typeof date == "string")
         date = new Date(date);
-    return `${date.getDate()}/`.padStart(3, '0') + `${date.getMonth() + 1}/`.padStart(3, '0') + `${date.getFullYear()} ` +
-        `${date.getHours()}:`.padStart(3, '0') + `${date.getMinutes()}:`.padStart(3, '0') + `${date.getSeconds()}`.padStart(2, '0');
+
+    let time = `${date.getHours()}:`.padStart(3, '0') + `${date.getMinutes()}:`.padStart(3, '0') + `${date.getSeconds()}`.padStart(2, '0');
+    if (date.toDateString() == new Date().toDateString()) // it's today return only time
+        return time;
+
+    return `${date.getDate()}/`.padStart(3, '0') + `${date.getMonth() + 1}/`.padStart(3, '0') + `${date.getFullYear()} ` + time;
 }
 
 

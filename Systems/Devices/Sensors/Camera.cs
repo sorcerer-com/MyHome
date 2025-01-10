@@ -12,8 +12,6 @@ using Mictlanix.DotNet.Onvif.Device;
 using Mictlanix.DotNet.Onvif.Imaging;
 using Mictlanix.DotNet.Onvif.Media;
 using Mictlanix.DotNet.Onvif.Ptz;
-
-using MyHome.Models;
 using MyHome.Utils;
 
 using Newtonsoft.Json;
@@ -140,7 +138,10 @@ namespace MyHome.Systems.Devices.Sensors
 
             if (this.Record && DateTime.Now - this.lastImageSaved > TimeSpan.FromMinutes(5))
             {
-                Alert.Create($"Camera '{this.Name}' ({this.Room.Name}) is inactive!").Validity(TimeSpan.FromDays(1)).Send();
+                MyHome.Instance.AddNotification("Camera is inactive")
+                    .Details($"'{this.Name}' ({this.Room.Name})")
+                    .Validity(TimeSpan.FromDays(1))
+                    .SendAlert();
                 this.capture.Kill();
             }
         }

@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using MQTTnet;
 using MQTTnet.Client;
 
-using MyHome.Models;
 using MyHome.Systems.Devices;
 using MyHome.Systems.Devices.Drivers;
 using MyHome.Systems.Devices.Drivers.Mqtt;
@@ -27,6 +26,8 @@ namespace MyHome.Systems
     public class DevicesSystem : BaseSystem
     {
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private const string OfflineDevicesNotification = "Offline device/s";
+        private const string DiscoveredDevicesNotification = "Discovered device/s";
 
         [UiProperty(true, "minutes")]
         public int SensorsCheckInterval { get; set; } // minutes
@@ -74,7 +75,7 @@ namespace MyHome.Systems
                     this.tuyaScanner.Stop();
 
                     this.DiscoveredDevices.Clear();
-                    MyHome.Instance.RemoveNotification(Notification.DiscoveredDeviceType);
+                    MyHome.Instance.RemoveNotification(DiscoveredDevicesNotification);
                 }
             }
         }
@@ -148,9 +149,8 @@ namespace MyHome.Systems
                 if (device.LastOnline <= this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 4) &&
                     device.LastOnline > this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 5))
                 {
-                    var type = device is BaseSensor ? "Sensor" : "Driver";
-                    logger.Warn($"{type} {device.Name} ({device.Room.Name}) is not active from {device.LastOnline}");
-                    alertMsg += $"{device.Name} ({device.Room.Name}) inactive ";
+                    logger.Warn($"Device {device.Name} ({device.Room.Name}) is not active from {device.LastOnline}");
+                    alertMsg += $"{device.Name} ({device.Room.Name}) ";
                 }
 
                 // TODO: maybe move to sensor update
@@ -168,9 +168,12 @@ namespace MyHome.Systems
 
             if (!string.IsNullOrEmpty(alertMsg))
             {
-                Alert.Create($"{alertMsg.Trim()} alarm activated!").Send();
-                MyHome.Instance.AddNotification(Notification.OfflineDeviceType, "Offline device/s");
-            }
+                MyHome.Instance.AddNotification(OfflineDevicesNotification)
+                    .Details(alertMsg.Trim())
+                    .SendAlert();
+            } 
+            else
+                MyHome.Instance.RemoveNotification(OfflineDevicesNotification);
 
             // discover devices
             if (this.autoDiscovery)
@@ -215,7 +218,7 @@ namespace MyHome.Systems
                     this.DiscoveredDevices.AddRange(devices);
                     this.DiscoveredDevices.Sort((a, b) => a.Name.CompareTo(b.Name));
 
-                    MyHome.Instance.AddNotification(Notification.DiscoveredDeviceType, "Discovered device/s");
+                    MyHome.Instance.AddNotification(DiscoveredDevicesNotification);
                 }
             }
             catch (Exception ex)
@@ -450,7 +453,7 @@ namespace MyHome.Systems
                 if (newDevice)
                 {
                     this.DiscoveredDevices.Sort((a, b) => a.Name.CompareTo(b.Name));
-                    MyHome.Instance.AddNotification(Notification.DiscoveredDeviceType, "Discovered device/s");
+                    MyHome.Instance.AddNotification(DiscoveredDevicesNotification);
                 }
             }
             catch (Exception ex)
@@ -475,7 +478,7 @@ namespace MyHome.Systems
                     TuyaDeviceIp = e.IP,
                     TuyaSwitchIdx = 1
                 });
-                MyHome.Instance.AddNotification(Notification.DiscoveredDeviceType, "Discovered device/s");
+                MyHome.Instance.AddNotification(DiscoveredDevicesNotification);
             }
             catch (Exception ex)
             {

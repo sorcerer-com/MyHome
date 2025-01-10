@@ -21,13 +21,14 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using NLog;
-using NLog.LayoutRenderers;
 
 namespace MyHome
 {
     public sealed class MyHome : IDisposable
     {
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private const string UpgradeNotification = "System upgrade";
+        private const string BackupModeNotification = "Backup Mode";
 
         private int updateInterval = 1; // seconds
         private readonly int upgradeCheckInterval = 5; // minutes
@@ -96,6 +97,8 @@ namespace MyHome
             // * Improve devices auto discovery - speaker, ip camera
             // * Improve camera movement capability - move to specific point, saved positions
 
+            // TODO: .NET 9, +MapStaticAssets -UseStaticFiles, AddOpenApi/MapOpenApi, HybridCache?, 
+
             logger.Info("Start My Home");
             Instance = this;
             using (var repo = new Repository("."))
@@ -148,7 +151,7 @@ namespace MyHome
             if (!string.IsNullOrEmpty(this.Config.MainServer))
             {
                 this.BackupMode = true;
-                this.AddNotification(Notification.BackupModeType, "Backup Mode", ifNotExist: false);
+                this.AddNotification(BackupModeNotification);
             }
 
             if (!string.IsNullOrEmpty(this.Config.MqttServerAddress))
@@ -218,10 +221,11 @@ namespace MyHome
             {
                 logger.Error("Cannot load system");
                 logger.Debug(e);
-                Models.Alert.Create("Cannot load system")
+
+                this.AddNotification("Cannot load system")
+                    .Level(Notification.NotificationLevel.Critical)
                     .Validity(TimeSpan.FromHours(1))
-                    .Send();
-                this.AddNotification(Notification.ProblemType, "Cannot load system", ifNotExist: false);
+                    .SendAlert();
             }
             finally
             {
@@ -304,18 +308,18 @@ namespace MyHome
                 this.mqttDisconnectedTime = now;
             else if (now - this.mqttDisconnectedTime > TimeSpan.FromMinutes(this.mqttDisconnectedAlert))
             {
-                Models.Alert.Create("MQTT broker is down")
+                this.AddNotification("MQTT broker is down")
                     .Details($"from {this.mqttDisconnectedTime:dd/MM/yyyy HH:mm:ss}!")
                     .Validity(TimeSpan.FromHours(1))
-                    .Send();
+                    .SendAlert();
             }
 
             if (now - this.MqttClient.LastMessageReceived > TimeSpan.FromMinutes(this.DevicesSystem.SensorsCheckInterval))
             {
-                Models.Alert.Create("No MQTT messages")
+                this.AddNotification("No MQTT messages")
                     .Details($"from {this.MqttClient.LastMessageReceived:dd/MM/yyyy HH:mm:ss}!")
                     .Validity(TimeSpan.FromHours(1))
-                    .Send();
+                    .SendAlert();
             }
         }
 
@@ -344,7 +348,11 @@ namespace MyHome
                 if (!this.BackupMode)
                 {
                     logger.Warn("Main server instance is back online. Return to Backup mode.");
-                    this.AddNotification(Notification.BackupModeType, "Backup Mode", ifNotExist: false);
+                    this.AddNotification(BackupModeNotification)
+                        .Level(Notification.NotificationLevel.Low)
+                        .Validity(TimeSpan.FromHours(1))
+                        .SendAlert(forceSend: true);
+                    this.RemoveNotification("Main MyHome server is down");
                 }
                 this.mainServerDisconnectedTime = now;
                 this.BackupMode = true;
@@ -357,15 +365,15 @@ namespace MyHome
                 {
                     logger.Warn("Main server instance is down. Exit Backup mode.");
                     this.BackupMode = false;
-                    this.RemoveNotification(Notification.BackupModeType);
+                    this.RemoveNotification(BackupModeNotification);
                 }
 
                 if (now - this.mainServerDisconnectedTime > TimeSpan.FromMinutes(this.mainServerDisconnectedAlert))
                 {
-                    Models.Alert.Create("Main MyHome server is down")
+                    this.AddNotification("Main MyHome server is down")
                         .Details($"from {this.mainServerDisconnectedTime:dd/MM/yyyy HH:mm:ss}!")
                         .Validity(TimeSpan.FromHours(1))
-                        .Send(true);
+                        .SendAlert(forceSend: true);
                 }
             }
 
@@ -375,7 +383,7 @@ namespace MyHome
         {
             // try to upgrade the system if it is backup instance
             if (!string.IsNullOrEmpty(this.Config.MainServer) &&
-                this.Notifications.Exists(n => n.Type == Notification.UpgradeType && !n.Message.Contains("failed")))
+                this.Notifications.Exists(n => n.Message() == UpgradeNotification && n.Details() == "available"))
             {
                 if (this.Upgrade())
                 {
@@ -384,9 +392,9 @@ namespace MyHome
                 }
                 else
                 {
-                    Models.Alert.Create("Cannot upgrade backup server")
+                    this.AddNotification("Cannot upgrade backup server")
                         .Validity(TimeSpan.FromDays(1))
-                        .Send(true);
+                        .SendAlert(forceSend: true);
                 }
             }
         }
@@ -399,8 +407,12 @@ namespace MyHome
             {
                 using var repo = new Repository(".");
                 Commands.Fetch(repo, repo.Head.RemoteName, Array.Empty<string>(), null, "");
-                if (repo.Head.TrackingDetails.BehindBy.GetValueOrDefault() > 0)
-                    this.AddNotification(Notification.UpgradeType, "System upgrade available");
+                if (repo.Head.TrackingDetails.BehindBy.GetValueOrDefault() > 0 &&
+                    !this.Notifications.Exists(n => n.Message() == UpgradeNotification))
+                {
+                    // add upgrade available notification only if there is no upgrade notification already
+                    this.AddNotification(UpgradeNotification).Details("available");
+                }
             }
             catch (Exception e)
             {
@@ -410,28 +422,21 @@ namespace MyHome
         }
 
 
-        public Alert Alert(string message)
+        public Notification AddNotification(string message)
         {
-            return Models.Alert.Create($"My Home: {message}");
-        }
-
-        public void AddNotification(string type, string message, TimeSpan? duration = null, bool ifNotExist = true)
-        {
-            this.Notifications.RemoveAll(n => n.Expired);
-
-            if (ifNotExist && this.Notifications.Exists(n => n.Type == type))
-                return;
-
-            if (!string.IsNullOrEmpty(type) && !string.IsNullOrEmpty(message))
+            logger.Debug($"Add notification: {message}");
+            var notification = this.Notifications.FirstOrDefault(n => n.Message() == message);
+            if (notification == null)
             {
-                var notification = new Notification(type, message, duration);
+                notification = new Notification(message);
                 this.Notifications.Add(notification);
             }
+            return notification;
         }
 
-        public void RemoveNotification(string type)
+        public void RemoveNotification(string message)
         {
-            this.Notifications.RemoveAll(n => n.Type == type);
+            this.Notifications.RemoveAll(n => n.Message() == message);
         }
 
         public void PlayAlarm(ISpeakerDriver.AlarmType alarmType)
@@ -455,8 +460,7 @@ namespace MyHome
             {
                 logger.Error("Cannot update the system");
                 logger.Debug(e);
-                this.RemoveNotification(Notification.UpgradeType);
-                this.AddNotification(Notification.UpgradeType, "System upgrade failed");
+                this.AddNotification(UpgradeNotification).Details("failed");
                 return false;
             }
         }
