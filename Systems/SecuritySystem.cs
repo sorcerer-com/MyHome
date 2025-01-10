@@ -206,10 +206,9 @@ namespace MyHome.Systems
                         this.SetHistory(roomInfo.Room.Name, "Enabled");
                         if (roomInfo.ImageFiles.Count > 1 || CheckCameras(roomInfo.Room))
                         {
-                            bool sent = Alert.Create($"'{roomInfo.Room.Name}' room security alarm activated!")
-                                .Level(Alert.AlertLevel.Critical)
-                                .Filenames(roomInfo.ImageFiles)
-                                .Send();
+                            bool sent = MyHome.Instance.AddNotification($"'{roomInfo.Room.Name}' room security alarm activated!")
+                                .Level(Notification.NotificationLevel.Critical)
+                                .SendAlert(filenames: roomInfo.ImageFiles);
                             if (sent)
                             {
                                 roomInfo.ImageFiles.ForEach(File.Delete);

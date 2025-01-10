@@ -47,7 +47,7 @@ namespace MyHome.Controllers
         {
             try
             {
-                var body = Newtonsoft.Json.Linq.JToken.Parse(new System.IO.StreamReader(this.Request.Body).ReadToEndAsync().Result);
+                var body = Newtonsoft.Json.Linq.JToken.Parse(new StreamReader(this.Request.Body).ReadToEndAsync().Result);
                 body.SetObject(this.myHome.Config);
                 this.myHome.SystemChanged = true;
                 return this.Ok();
@@ -97,13 +97,23 @@ namespace MyHome.Controllers
         [HttpGet("notifications")]
         public ActionResult GetNotifications()
         {
-            return this.Ok(this.myHome.Notifications);
+            return this.Ok(this.myHome.Notifications.Select(n => n.ToUiObject()));
         }
 
-        [HttpPost("notifications/{type}/delete")]
-        public ActionResult RemoveNotification(string type)
+        [HttpPost("notifications/{message}/delete")]
+        public ActionResult RemoveNotification(string message)
         {
-            this.myHome.RemoveNotification(type);
+            this.myHome.RemoveNotification(message);
+            return this.Ok();
+        }
+
+        [HttpPost("notifications/{message}/snooze")]
+        public ActionResult SnoozeAlert(string message, int interval)
+        {
+            var notification = this.myHome.Notifications.FirstOrDefault(n => n.Message() == message);
+            if (notification == null)
+                return this.NotFound();
+            notification.Snooze(TimeSpan.FromHours(interval));
             return this.Ok();
         }
 

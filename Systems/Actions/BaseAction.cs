@@ -89,10 +89,10 @@ namespace MyHome.Systems.Actions
 
             if (!result)
             {
-                Alert.Create($"Action '{this.Name}' execution failed")
-                    .Level(Alert.AlertLevel.Low)
+                MyHome.Instance.AddNotification($"Action '{this.Name}' execution failed")
+                    .Level(Notification.NotificationLevel.Low)
                     .Validity(TimeSpan.FromHours(1))
-                    .Send();
+                    .SendAlert();
             }
             return result;
         }

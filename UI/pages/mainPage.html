@@ -105,15 +105,28 @@
             </span>
             <div class="w3-dropdown-content w3-transparent dropdown-top-right">
                 <div class="w3-padding-small w3-round-medium w3-text-white w3-animate-opacity margin-8 bg-gray"
-                     style="width: 250px;">
-                    <div v-for="notification, idx of notifications.reverse()"
+                     style="width: 250px; max-height: 70vh; overflow-y: auto">
+                    <div v-for="notification, idx of notifications"
                          v-bind:class="{'w3-border-bottom': idx < notifications.length - 1}">
                         <h6 class="reset-margin">{{notification.message}}</h6>
+                        <span class="w3-small w3-show-block">{{notification.details}}</span>
                         <span class="w3-small w3-text-dark-gray">{{dateToString(notification.time)}}</span>
                         <a class="w3-small w3-right w3-hover-text-blue-gray"
                            v-on:click="notificationClick(notification)">
                             {{notificationAction(notification)}}
                         </a>
+                        <div class="w3-tiny w3-text-dark-gray" style="padding-bottom: 4px" 
+                             v-if="notification.validity != '00:00:00'">
+                            Validity: {{notification.validity}}
+
+                            <select class="w3-right" v-bind:name="notification.message" v-on:change="snoozeAlert">
+                                <option value="" disabled selected hidden>Snooze</option>
+                                <option value="1">1h</option>
+                                <option value="3">3h</option>
+                                <option value="12">12h</option>
+                                <option value="24">24h</option>
+                            </select>
+                        </div>
                     </div>
                     <div v-if="notifications.length == 0" class="w3-center">No Notifications</div>
                 </div>

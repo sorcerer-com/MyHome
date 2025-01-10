@@ -19,7 +19,7 @@
             return this.$route.path == "/map";
         },
         notifications: function () {
-            return this.$root.notifications.filter(n => !n.expired);
+            return this.$root.notifications.filter(n => n.isValid);
         },
         allRoomsSecuritySystemEnabled: function () {
             return this.rooms.length > 0 && this.rooms.every(r => r.IsSecuritySystemEnabled)
@@ -34,10 +34,10 @@
     methods: {
         dateToString: dateToString,
         notificationAction: function (notification) {
-            switch (notification.type) {
-                case "upgrade": return "Upgrade";
-                case "backup_mode": return "";
-                case "discovered_device": return "See";
+            switch (notification.message) {
+                case "System upgrade": return "Upgrade";
+                case "Backup Mode": return "";
+                case "Discovered device/s": return "See";
                 default: return "Dismiss";
             }
         },
@@ -62,15 +62,19 @@
         },
 
         notificationClick: function (notification) {
-            if (notification.type == "upgrade")
+            if (notification.message == "System upgrade")
                 this.$root.upgrade();
-            else if (notification.type == "discovered_device")
+            else if (notification.message == "Discovered device/s")
                 this.$router.push("/config#discovered");
-            else if (notification.type != "backup_mode")
-                removeNotification(notification.type).done(() => {
+            else if (notification.message != "Backup Mode")
+                removeNotification(notification.message).done(() => {
                     let idx = this.$root.notifications.indexOf(notification);
                     this.$root.notifications.splice(idx, 1);
                 });
+        },
+        snoozeAlert: function (event) {
+            snoozeAlert(event.target.name, event.target.value);
+            event.target.value = "";
         },
 
         showChartsModal: function () {

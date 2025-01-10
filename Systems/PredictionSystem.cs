@@ -81,7 +81,7 @@ namespace MyHome.Systems
                 File.WriteAllText(DataFilePath, json);
             }
             else
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(100);
         }
     }
 }

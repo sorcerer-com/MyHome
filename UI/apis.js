@@ -126,8 +126,12 @@ function getNotifications() {
     return $.get("./api/notifications");
 }
 
-function removeNotification(type) {
-    return $.post(`./api/notifications/${type}/delete`);
+function removeNotification(message) {
+    return $.post(`./api/notifications/${message}/delete`);
+}
+
+function snoozeAlert(message, interval) {
+    return $.post(`./api/notifications/${message}/snooze?interval=${interval}`);
 }
 
 function upgrade() {
