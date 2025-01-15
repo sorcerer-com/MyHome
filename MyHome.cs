@@ -97,8 +97,6 @@ namespace MyHome
             // * Improve devices auto discovery - speaker, ip camera
             // * Improve camera movement capability - move to specific point, saved positions
 
-            // TODO: .NET 9, +MapStaticAssets -UseStaticFiles, AddOpenApi/MapOpenApi, HybridCache?, 
-
             logger.Info("Start My Home");
             Instance = this;
             using (var repo = new Repository("."))
