@@ -5,7 +5,6 @@ using System.Collections.Specialized;
 using System.Linq;
 
 using MQTTnet;
-using MQTTnet.Client;
 
 using MyHome.Utils;
 

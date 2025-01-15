@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 using MQTTnet;
-using MQTTnet.Client;
 
 using MyHome.Systems.Devices;
 using MyHome.Systems.Devices.Drivers;
