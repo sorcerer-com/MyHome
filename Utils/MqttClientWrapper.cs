@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using MQTTnet;
-using MQTTnet.Client;
 using MQTTnet.Protocol;
 
 using NLog;
@@ -28,7 +27,7 @@ namespace MyHome.Utils
 
         public MqttClientWrapper()
         {
-            var factory = new MqttFactory();
+            var factory = new MqttClientFactory();
             this.MqttClient = factory.CreateMqttClient();
             this.Subscriptions = new Dictionary<string, int>();
 

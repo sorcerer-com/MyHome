@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 using MQTTnet;
-using MQTTnet.Client;
 
 using MyHome.Utils;
 

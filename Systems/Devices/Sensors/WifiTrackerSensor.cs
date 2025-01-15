@@ -7,7 +7,6 @@ using System.Net.Http.Headers;
 using System.Text;
 
 using MQTTnet;
-using MQTTnet.Client;
 
 using MyHome.Models;
 using MyHome.Utils;
@@ -41,11 +40,14 @@ namespace MyHome.Systems.Devices.Sensors
             {
                 if (this.baseMqttTopic == value) return;
 
-                MyHome.Instance.MqttClient.Unsubscribe(this.BaseMqttTopic + "/" + STATE_TOPIC);
-                MyHome.Instance.MqttClient.Unsubscribe(this.BaseMqttTopic + "/" + SENSOR_TOPIC);
+                if (MyHome.Instance.MqttClient.IsConnected)
+                {
+                    MyHome.Instance.MqttClient.Unsubscribe(this.BaseMqttTopic + "/" + STATE_TOPIC);
+                    MyHome.Instance.MqttClient.Unsubscribe(this.BaseMqttTopic + "/" + SENSOR_TOPIC);
+                    MyHome.Instance.MqttClient.Subscribe(value + "/" + STATE_TOPIC);
+                    MyHome.Instance.MqttClient.Subscribe(value + "/" + SENSOR_TOPIC);
+                }
                 this.baseMqttTopic = value;
-                MyHome.Instance.MqttClient.Subscribe(this.BaseMqttTopic + "/" + STATE_TOPIC);
-                MyHome.Instance.MqttClient.Subscribe(this.BaseMqttTopic + "/" + SENSOR_TOPIC);
             }
         }
 
