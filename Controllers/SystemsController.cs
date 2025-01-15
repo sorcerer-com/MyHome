@@ -171,7 +171,7 @@ namespace MyHome.Controllers
         {
             using var stream = this.Request.Form.Files[0].OpenReadStream();
             var data = new byte[stream.Length];
-            stream.Read(data, 0, data.Length);
+            stream.ReadExactly(data);
 
             var assistant = this.myHome.Systems[nameof(AssistantSystem)] as AssistantSystem;
             assistant.ProcessRecord(data);
