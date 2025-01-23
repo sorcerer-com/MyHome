@@ -4,6 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+
+using JWT.Algorithms;
+using JWT.Builder;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -11,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
 using NLog;
 using NLog.Web;
 
@@ -25,7 +30,7 @@ namespace MyHome
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             try
             {
-                logger.Debug("Init main"); 
+                logger.Debug("Init main");
                 var builder = WebApplication.CreateBuilder(args);
 
                 // setup logging
@@ -107,28 +112,14 @@ namespace MyHome
             app.Lifetime.ApplicationStopping.Register(myHome.Stop);
         }
 
+
         private static bool Login(HttpContext context, MyHome myHome)
         {
             if (context.Request.Path == "/login" && context.Request.Method == "POST")
             {
-                var hash = SHA256.HashData(Encoding.UTF8.GetBytes(context.Request.Form["password"]));
-                var hashStr = Convert.ToHexString(hash);
-                if (myHome.Config.Password == hashStr)
-                {
-                    logger.Info("LogIn: Correct password");
-                    context.Session.SetString("password", hashStr);
-                    context.Response.Redirect("./");
-                }
-                else
-                {
-                    logger.Warn("LogIn: Incorrect password");
-                    context.Response.Redirect("./login.html?invalid");
-                }
-
-                return false;
+                return Authenticate(context, myHome);
             }
-            else if (!ShouldSkipAuthentication(context.Request.Path) &&
-                ((context.Session.GetString("password") ?? "") != myHome.Config.Password || IsSessionExpired(context, myHome)))
+            else if (!ShouldSkipAuthentication(context.Request.Path) && !Authenticated(context, myHome))
             {
                 if (!context.Request.Path.StartsWithSegments("/api")) // pages only
                     context.Response.Redirect("./login.html");
@@ -141,6 +132,40 @@ namespace MyHome
             return true;
         }
 
+        private static bool Authenticate(HttpContext context, MyHome myHome)
+        {
+            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(context.Request.Form["password"]));
+            var hashStr = Convert.ToHexString(hash);
+            if (myHome.Config.Password == hashStr)
+            {
+                if (context.Request.Form.ContainsKey("token")) // generate JWT token
+                {
+                    var expiration = DateTimeOffset.UtcNow.Add(GetExpirationTime(context, myHome));
+                    var token = JwtBuilder.Create()
+                              .WithAlgorithm(new HMACSHA256Algorithm())
+                              .WithSecret(myHome.Config.Password)
+                              .AddClaim("exp", expiration.ToUnixTimeSeconds())
+                              .Encode();
+                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(token));
+                }
+                else
+                {
+                    logger.Info("LogIn: Correct password");
+                    context.Session.SetString("password", hashStr);
+                    context.Response.Redirect("./");
+                }
+            }
+            else
+            {
+                logger.Warn("LogIn: Incorrect password");
+                context.Response.Redirect("./login.html?invalid");
+            }
+
+            return false;
+        }
+
+
         private static bool ShouldSkipAuthentication(PathString path)
         {
             var isResource = path.StartsWithSegments("/external") || path.StartsWithSegments("/images") ||
@@ -148,16 +173,44 @@ namespace MyHome
             return isResource || path.StartsWithSegments("/api/status") || path.StartsWithSegments("/api/songs");
         }
 
+        private static bool Authenticated(HttpContext context, MyHome myHome)
+        {
+            // JWT token authentication
+            if (!string.IsNullOrEmpty(context.Request.Headers.Authorization))
+            {
+                try
+                {
+                    string token = JwtBuilder.Create()
+                        .WithAlgorithm(new HMACSHA256Algorithm())
+                        .WithSecret(myHome.Config.Password)
+                        .MustVerifySignature()
+                        .Decode(context.Request.Headers.Authorization);
+                    return !string.IsNullOrEmpty(token);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
+            // session authentication
+            return (context.Session.GetString("password") ?? "") == myHome.Config.Password && !IsSessionExpired(context, myHome);
+        }
+
         private static bool IsSessionExpired(HttpContext context, MyHome myHome)
         {
             if (!context.Session.Keys.Contains("time"))
                 return false;
             var time = DateTime.Parse(context.Session.GetString("time"), CultureInfo.CurrentCulture);
-            var duration = TimeSpan.FromMinutes(15);
-            var ip = context.Connection.RemoteIpAddress.MapToIPv4();
-            if (myHome.SecuritySystem.PresenceDeviceIPs.ContainsValue(ip.ToString()))
-                duration = TimeSpan.FromMinutes(120);
+            var duration = GetExpirationTime(context, myHome);
             return DateTime.Now - time > duration;
+        }
+
+        private static TimeSpan GetExpirationTime(HttpContext context, MyHome myHome)
+        {
+            var ip = context.Connection.RemoteIpAddress.MapToIPv4();
+            var knownIp = myHome.SecuritySystem.PresenceDeviceIPs.ContainsValue(ip.ToString());
+            return knownIp ? TimeSpan.FromMinutes(120) : TimeSpan.FromMinutes(15);// if known device set session duration to 2h
         }
     }
 }
