@@ -18,9 +18,6 @@ namespace MyHome.Models
         [UiProperty(true, "sha256 hash")]
         public string Password { get; set; } = "";
 
-        [UiProperty(true, "Address of the main MyHome instance. If set the current execution will work as backup server.")]
-        public string MainServer { get; set; } = "";
-
         [UiProperty(true, "start - end")]
         public (int start, int end) QuietHours { get; set; } = (0, 0);
 

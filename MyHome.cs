@@ -27,23 +27,22 @@ namespace MyHome
     public sealed class MyHome : IDisposable
     {
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-        private const string UpgradeNotification = "System upgrade";
-        private const string BackupModeNotification = "Backup Mode";
+        public const string UpgradeNotification = "System upgrade";
 
         private int updateInterval = 1; // seconds
         private readonly int upgradeCheckInterval = 5; // minutes
         private readonly int mqttDisconnectedAlert = 1; // minutes
-        private readonly int mainServerDisconnectedAlert = 1; // minutes
         [JsonProperty]
         private DateTime lastBackupTime;
         private DateTime mqttDisconnectedTime;
-        private DateTime mainServerDisconnectedTime;
 
 
         public static MyHome Instance { get; private set; }
 
 
         public Config Config { get; }
+
+        public BackupMode BackupMode { get; }
 
         public SongsManager SongsManager { get; }
 
@@ -55,9 +54,6 @@ namespace MyHome
 
         [JsonIgnore]
         private Engine JintEngine { get; }
-
-        [JsonIgnore]
-        public bool BackupMode { get; private set; }
 
 
         public List<Room> Rooms { get; }
@@ -84,7 +80,7 @@ namespace MyHome
         public MyHome()
         {
             // TODO list
-            // * Update .Net version(LTS), NuGet packages and UI libraries (charts, vue, etc.)
+            // * Update .Net version(LTS, update dotnet SDK), NuGet packages and UI libraries (charts, vue, etc.)
             // * SecuritySystem - define zones - group of rooms, default zone - all; integrate with actions
             // * UI - mobile / landscape (https://miro.medium.com/max/2400/1*MqXRDCodJPM2vIEjygK36A.jpeg)
             //   - new sensor UI - add limits (like unhealthy, alerts, etc.)
@@ -93,7 +89,6 @@ namespace MyHome
             //   - improve power consumption UI (as plugin somehow)
             //   - revise inline styles
             // * drivers to be sensors too - save state change in time
-            // * External system (rpi2, agent) ping system and notify on problem?
             // * Improve devices auto discovery - speaker, ip camera
             // * Improve camera movement capability - move to specific point, saved positions
 
@@ -106,6 +101,7 @@ namespace MyHome
             }
 
             this.Config = new Config();
+            this.BackupMode = new BackupMode();
             this.SongsManager = new SongsManager();
             this.Events = new GlobalEvent();
             this.MqttClient = new MqttClientWrapper();
@@ -125,7 +121,6 @@ namespace MyHome
 
             this.lastBackupTime = DateTime.Now;
             this.mqttDisconnectedTime = DateTime.Now;
-            this.mainServerDisconnectedTime = DateTime.Now;
             this.SystemChanged = false;
             this.Notifications = new List<Notification>();
 
@@ -146,11 +141,7 @@ namespace MyHome
         {
             logger.Info("Setup My Home");
 
-            if (!string.IsNullOrEmpty(this.Config.MainServer))
-            {
-                this.BackupMode = true;
-                this.AddNotification(BackupModeNotification);
-            }
+            this.BackupMode.Setup();
 
             if (!string.IsNullOrEmpty(this.Config.MqttServerAddress))
             {
@@ -279,8 +270,7 @@ namespace MyHome
                 stopwatch.Restart();
 
                 this.CheckMqttStatus();
-                this.CheckMainServerStatus();
-                this.AutoUpgradeBackupServer();
+                this.BackupMode.Check();
 
                 var now = DateTime.Now;
                 if (now.Minute % this.upgradeCheckInterval == 0 && now.Second < this.updateInterval)
@@ -318,82 +308,6 @@ namespace MyHome
                     .Details($"from {this.MqttClient.LastMessageReceived:dd/MM/yyyy HH:mm:ss}!")
                     .Validity(TimeSpan.FromHours(1))
                     .SendAlert();
-            }
-        }
-
-        private void CheckMainServerStatus()
-        {
-            if (string.IsNullOrEmpty(this.Config.MainServer))
-                return;
-
-            var result = true;
-            try
-            {
-                using var client = new HttpClient
-                {
-                    Timeout = TimeSpan.FromSeconds(5)
-                };
-                result = client.GetAsync($"{this.Config.MainServer}/api/status").Result.IsSuccessStatusCode;
-            }
-            catch
-            {
-                result = false;
-            }
-
-            var now = DateTime.Now;
-            if (result)
-            {
-                if (!this.BackupMode)
-                {
-                    logger.Warn("Main server instance is back online. Return to Backup mode.");
-                    this.AddNotification(BackupModeNotification)
-                        .Level(Notification.NotificationLevel.Low)
-                        .Validity(TimeSpan.FromHours(1))
-                        .SendAlert(forceSend: true);
-                    this.RemoveNotification("Main MyHome server is down");
-                }
-                this.mainServerDisconnectedTime = now;
-                this.BackupMode = true;
-            }
-            else
-            {
-                // exit backup mode if no response from main server for 10 seconds
-                if (now - this.mainServerDisconnectedTime > TimeSpan.FromSeconds(10) &&
-                    this.BackupMode)
-                {
-                    logger.Warn("Main server instance is down. Exit Backup mode.");
-                    this.BackupMode = false;
-                    this.RemoveNotification(BackupModeNotification);
-                }
-
-                if (now - this.mainServerDisconnectedTime > TimeSpan.FromMinutes(this.mainServerDisconnectedAlert))
-                {
-                    this.AddNotification("Main MyHome server is down")
-                        .Details($"from {this.mainServerDisconnectedTime:dd/MM/yyyy HH:mm:ss}!")
-                        .Validity(TimeSpan.FromHours(1))
-                        .SendAlert(forceSend: true);
-                }
-            }
-
-        }
-
-        private void AutoUpgradeBackupServer()
-        {
-            // try to upgrade the system if it is backup instance
-            if (!string.IsNullOrEmpty(this.Config.MainServer) &&
-                this.Notifications.Exists(n => n.Message() == UpgradeNotification && n.Details() == "available"))
-            {
-                if (this.Upgrade())
-                {
-                    this.Stop();
-                    System.Threading.Tasks.Task.Delay(100).ContinueWith(_ => Environment.Exit(0));
-                }
-                else
-                {
-                    this.AddNotification("Cannot upgrade backup server")
-                        .Validity(TimeSpan.FromDays(1))
-                        .SendAlert(forceSend: true);
-                }
             }
         }
 

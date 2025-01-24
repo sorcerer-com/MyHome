@@ -60,6 +60,30 @@ namespace MyHome.Controllers
             }
         }
 
+        [HttpGet("backup-mode")]
+        public ActionResult GetBackupMode()
+        {
+            return this.Ok(this.myHome.BackupMode.ToUiObject());
+        }
+
+        [HttpPost("backup-mode")]
+        public ActionResult SetBackupMode()
+        {
+            try
+            {
+                var body = Newtonsoft.Json.Linq.JToken.Parse(new StreamReader(this.Request.Body).ReadToEndAsync().Result);
+                body.SetObject(this.myHome.BackupMode);
+                this.myHome.SystemChanged = true;
+                return this.Ok();
+            }
+            catch (Exception e)
+            {
+                logger.Error("Failed to set config");
+                logger.Debug(e);
+                return this.BadRequest(e.Message);
+            }
+        }
+
 
         [HttpGet("logs")]
         public ActionResult GetLogs()

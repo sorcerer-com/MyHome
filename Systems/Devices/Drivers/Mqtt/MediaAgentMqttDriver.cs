@@ -133,7 +133,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         public void StopMedia()
         {
-            if (MyHome.Instance.BackupMode)
+            if (MyHome.Instance.BackupMode.Enabled)
                 return;
 
             logger.Debug($"Stop media: {this.Playing}");
@@ -145,7 +145,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         public void Pause()
         {
-            if (MyHome.Instance.BackupMode)
+            if (MyHome.Instance.BackupMode.Enabled)
                 return;
 
             logger.Debug($"Pause media: {this.Playing}");
@@ -197,7 +197,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         public void RefreshMediaList()
         {
-            if (MyHome.Instance.BackupMode)
+            if (MyHome.Instance.BackupMode.Enabled)
                 return;
 
             logger.Debug("Refresh media list");
@@ -206,7 +206,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         public void PowerOffTV()
         {
-            if (MyHome.Instance.BackupMode)
+            if (MyHome.Instance.BackupMode.Enabled)
                 return;
 
             logger.Debug("Power off TV");

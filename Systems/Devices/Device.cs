@@ -24,10 +24,11 @@ namespace MyHome.Systems.Devices
             get => MyHome.Instance.DevicesSystem.Devices.IndexOf(this);
             set
             {
-                if (value >= 0 && MyHome.Instance.DevicesSystem.Devices.IndexOf(this) != value)
+                var devices = MyHome.Instance.DevicesSystem.Devices;
+                if (value >= 0 && devices.IndexOf(this) != value)
                 {
-                    MyHome.Instance.DevicesSystem.Devices.Remove(this);
-                    MyHome.Instance.DevicesSystem.Devices.Insert(value, this);
+                    devices.Remove(this);
+                    devices.Insert(Math.Min(value, devices.Count), this);
                 }
             }
         }

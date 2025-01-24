@@ -36,7 +36,7 @@ namespace MyHome.Systems.Devices.Drivers
 
         public void Execute()
         {
-            if (MyHome.Instance.BackupMode)
+            if (MyHome.Instance.BackupMode.Enabled)
                 return;
 
             var script = Regex.Replace(this.Script, @" as \w*", ""); // remove " as <Type>" casts

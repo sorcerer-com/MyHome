@@ -89,7 +89,7 @@ namespace MyHome.Models
 
         public bool SendAlert(List<string> filenames = null, bool camerasImages = true, bool sensorsData = true, bool forceSend = false)
         {
-            if (MyHome.Instance.BackupMode && !forceSend)
+            if (MyHome.Instance.BackupMode.Enabled && !forceSend)
             {
                 logger.Debug("Skip sending alert as working in backup mode");
                 return true;

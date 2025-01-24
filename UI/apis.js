@@ -110,6 +110,14 @@ function setConfig(data) {
     return $.postJsonBody("./api/config", data);
 }
 
+function getBackupMode() {
+    return $.get("./api/backup-mode");
+}
+
+function setBackupMode(data) {
+    return $.postJsonBody("./api/backup-mode", data);
+}
+
 function getLogs() {
     return $.get("./api/logs");
 }
