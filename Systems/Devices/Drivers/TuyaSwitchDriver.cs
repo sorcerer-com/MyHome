@@ -94,7 +94,7 @@ namespace MyHome.Systems.Devices.Drivers
 
         private void SetIsOn(bool value)
         {
-            if (MyHome.Instance.BackupMode || 
+            if (MyHome.Instance.BackupMode.Enabled || 
                 this.isOn == value)
                 return;
 

@@ -88,7 +88,7 @@ namespace MyHome.Systems.Devices.Drivers
 
         private void TransmitRfDriver()
         {
-            if (MyHome.Instance.BackupMode)
+            if (MyHome.Instance.BackupMode.Enabled)
                 return;
 
             try

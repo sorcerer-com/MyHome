@@ -49,6 +49,7 @@
             this.selectedSettings = "Config";
 
             getConfig().done(config => this.settings["Config"] = config);
+            getBackupMode().done(backup => this.settings["BackupMode"] = backup);
             getSystems(true).done(systems =>
                 Object.keys(systems).forEach(key => this.settings[key] = systems[key]));
         },
@@ -60,6 +61,8 @@
         saveSettings: function (settings) {
             if (this.selectedSettings == "Config")
                 return setConfig(settings).done(() => this.modal = "");
+            if (this.selectedSettings == "BackupMode")
+                return setBackupMode(settings).done(() => this.modal = "");
 
             return setSystem(this.selectedSettings, settings).done(() => this.modal = "");
         },
