@@ -16,8 +16,8 @@
          v-bind:style="{'border-image': 'linear-gradient(90deg, #ffffff ' + driver.Position + '%, #7494a4 0%) 1'}"
          v-bind:title="'Volume: ' + driver.Volume + '\nBufferLevel: ' + driver.BufferLevel + '%'">
         <!-- title -->
-        <span class="w3-tiny w3-show-inline-block scroll-text no-mobile" v-bind:title="driver.Playing + ' (' + driver.Position + '%)'">
-            {{driver.Playing}}
+        <span class="w3-tiny w3-show-inline-block scroll-text no-mobile" v-bind:title="driver.Title + ' (' + driver.Position + '%)'">
+            {{driver.Title}}
         </span>
 
         <div>
@@ -30,7 +30,7 @@
                 stop
             </span>
             <span class="w3-xlarge w3-hover-text-dark-gray material-icons" title="Next" v-on:click.stop=""
-                  v-on:click="callDevice('NextSong', driver.Playing)">
+                  v-on:click="callDevice('NextSong', driver.Title)">
                 skip_next
             </span>
         </div>
@@ -50,8 +50,8 @@
             </header>
             <div class="w3-container w3-text-white w3-padding-16 height-100 overflow-y-auto bg-gray">
                 <div v-if="driver.Playing">
-                    <div class="font-size-normal" v-bind:title="driver.Playing + ' (' + driver.Position + '%)'">
-                        {{driver.Playing}}
+                    <div class="font-size-normal" v-bind:title="driver.Title + ' (' + driver.Position + '%)'">
+                        {{driver.Title}}
                     </div>
 
                     <div class="w3-left w3-dropdown-hover w3-hover-text-dark-gray" style="width: 40px">
@@ -72,7 +72,7 @@
                             stop
                         </a>
                         <a class="w3-xxlarge w3-hover-text-dark-gray material-icons" title="Next"
-                           v-on:click="callDevice('NextSong', driver.Playing)">
+                           v-on:click="callDevice('NextSong', driver.Title)">
                             skip_next
                         </a>
                     </div>
@@ -120,7 +120,7 @@
 
                 <!-- songs list -->
                 <div class="w3-row" style="padding: 0 4px"
-                     v-bind:class="{'w3-blue-gray': driver.Playing == song.Name}"
+                     v-bind:class="{'w3-blue-gray': driver.Title == song.Name}"
                      v-for="song of songs">
 
                     <span class="w3-col m10 s9 w3-left-align overflow-wrap-break-word" style="user-select: none;"
@@ -139,13 +139,13 @@
                     <span class="w3-col m2 s3 w3-right-align" style="line-height: 1"
                           v-if="!rename">
                         <a class="w3-hover-text-dark-gray material-icons margin-right-8" title="Play"
-                           v-if="driver.Playing != song.Name"
+                           v-if="driver.Title != song.Name"
                            v-on:click="callDevice('PlaySong', song.Name)">
                             play_circle
                         </a>
 
                         <a class="w3-hover-text-dark-gray material-icons" title="Enqueue"
-                           v-if="driver.Playing && driver.Playing != song.Name && getQueueIndex(song) == -1"
+                           v-if="driver.Title && driver.Title != song.Name && getQueueIndex(song) == -1"
                            v-on:click="enqueue(song)">
                             add_to_queue
                         </a>
