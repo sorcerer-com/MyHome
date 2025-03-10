@@ -20,6 +20,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         private static readonly Random random = new();
 
         private const string PLAYING_STATE_NAME = "Playing";
+        private const string TITLE_STATE_NAME = "Title";
         private const string VOLUME_STATE_NAME = "Volume";
         private const string PAUSED_STATE_NAME = "Paused";
         private const string POSITION_STATE_NAME = "Position";
@@ -29,6 +30,10 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         [JsonIgnore]
         [UiProperty]
         public string Playing => (string)this.States[PLAYING_STATE_NAME];
+
+        [JsonIgnore]
+        [UiProperty]
+        public string Title => (string)this.States[TITLE_STATE_NAME];
 
         [UiProperty]
         public int Volume
@@ -67,6 +72,13 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         {
             get => this.MqttSetTopics[PLAYING_STATE_NAME];
             set => this.MqttSetTopics[PLAYING_STATE_NAME] = value;
+        }
+
+        [UiProperty(true, "(topic, json path)")]
+        public (string topic, string jsonPath) TitleSetMqttTopic
+        {
+            get => this.MqttSetTopics[TITLE_STATE_NAME];
+            set => this.MqttSetTopics[TITLE_STATE_NAME] = value;
         }
 
         [UiProperty(true, "(topic, json path)")]
@@ -130,7 +142,6 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         public int AlarmDuration { get; set; }
 
 
-        private readonly Action<Action> newStateReceivedDebouncer;
         private List<string> orderedSongs;
         private AlarmType? alarmType;
 
@@ -138,6 +149,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         public SpeakerMqttDriver()
         {
             this.States.Add(PLAYING_STATE_NAME, null);
+            this.States.Add(TITLE_STATE_NAME, null);
             this.States.Add(VOLUME_STATE_NAME, 10);
             this.States.Add(PAUSED_STATE_NAME, false);
             this.States.Add(POSITION_STATE_NAME, 0);
@@ -150,6 +162,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             this.MqttGetTopics.Add(BUFFER_LEVEL_STATE_NAME, ("", ""));
 
             this.MqttSetTopics.Add(PLAYING_STATE_NAME, ("", ""));
+            this.MqttSetTopics.Add(TITLE_STATE_NAME, ("", ""));
             this.MqttSetTopics.Add(VOLUME_STATE_NAME, ("", ""));
             this.MqttSetTopics.Add(PAUSED_STATE_NAME, ("", ""));
 
@@ -159,7 +172,6 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
             this.Queue = new List<int>();
 
-            this.newStateReceivedDebouncer = Utils.Utils.Debouncer(1000);
             this.orderedSongs = null;
             this.alarmType = null;
         }
@@ -191,25 +203,24 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         public void PlaySong(string name)
         {
             name = MyHome.Instance.SongsManager.EnsureSong(name); // ensure song is downloaded
-            if (this.SetState(PLAYING_STATE_NAME, name))
+            if (!string.IsNullOrEmpty(name)) // play
             {
-                if (!string.IsNullOrEmpty(name)) // set volume on start playing
-                {
-                    this.SendState(VOLUME_STATE_NAME, this.Volume.ToString());
+                this.SendState(VOLUME_STATE_NAME, this.Volume.ToString()); // set volume on start playing
 
-                    var song = this.Songs.Find(s => s.Name == name);
-                    if (song?.Local == false)
-                        this.SendState(PLAYING_STATE_NAME, song.Url);
-                    else
-                        this.SendState(PLAYING_STATE_NAME, $"{Host}/api/songs/{Uri.EscapeDataString(name)}");
-                }
-                else // on empty value - stop
-                {
-                    this.Queue.Clear();
-                    this.orderedSongs = null;
-                    this.alarmType = null;
-                    this.SendState(PLAYING_STATE_NAME, "");
-                }
+                var song = this.Songs.Find(s => s.Name == name);
+                if (song?.Local == false)
+                    this.SetStateAndSend(PLAYING_STATE_NAME, song.Url);
+                else
+                    this.SetStateAndSend(PLAYING_STATE_NAME, $"{Host}/api/songs/{Uri.EscapeDataString(name)}");
+                this.SetStateAndSend(TITLE_STATE_NAME, name);
+            }
+            else // on empty value - stop
+            {
+                this.Queue.Clear();
+                this.orderedSongs = null;
+                this.alarmType = null;
+                this.SetStateAndSend(PLAYING_STATE_NAME, "");
+                this.SetStateAndSend(TITLE_STATE_NAME, "");
             }
         }
 
@@ -267,28 +278,22 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         protected override bool NewStateReceived(string name, object oldValue, object newValue)
         {
             base.NewStateReceived(name, oldValue, newValue);
-            if (name == PLAYING_STATE_NAME)
+            if (name == PLAYING_STATE_NAME && string.IsNullOrEmpty((string)newValue)) // song ended
             {
-                // debounce because before starting a new song speaker stop the previous one
-                this.newStateReceivedDebouncer(() =>
+                if ((string)newValue == "") // should play next song
                 {
-                    // if we receive empty value for playing state and we want to loop songs, start a new one
-                    if (string.IsNullOrEmpty((string)newValue) && !string.IsNullOrEmpty((string)oldValue))
+                    if (this.alarmType != null) // if alarm was playing repeat it
+                        this.PlaySong(this.Title);
+                    else if (this.Songs.Any(s => s.Name == this.Title)) // if previous value was a song
                     {
-                        if (this.alarmType != null) // if alarm was playing repeat it
-                            this.PlaySong((string)oldValue);
-                        else if (this.Songs.Any(s => s.Name == (string)oldValue)) // if previous value was a song
-                        {
-                            MyHome.Instance.SongsManager.IncreaseSongRating((string)oldValue);
-                            this.NextSong((string)oldValue);
-                        }
+                        MyHome.Instance.SongsManager.IncreaseSongRating(this.Title);
+                        this.NextSong(this.Title);
                     }
-                });
-                this.States[name] = Uri.UnescapeDataString(((string)newValue).Replace($"{Host}/api/songs/", ""));
+                }
+                else
+                    this.SetState(TITLE_STATE_NAME, "");
             }
-            else if (name is POSITION_STATE_NAME or BUFFER_LEVEL_STATE_NAME) // do not save state on position or buffer level update
-                return false;
-            return true;
+            return name == VOLUME_STATE_NAME && (int)oldValue != (int)newValue; // save only the volume state change
         }
     }
 }

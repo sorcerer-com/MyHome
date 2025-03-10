@@ -112,10 +112,9 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                     var value = payload;
                     if (!string.IsNullOrEmpty(item.Value.jsonPath))
                     {
-                        var jsonToken = JToken.Parse(payload).SelectToken(item.Value.jsonPath);
-                        if (jsonToken == null)
+                        if (JToken.Parse(payload).SelectToken(item.Value.jsonPath) is not JValue jsonToken)
                             continue;
-                        value = jsonToken.ToString();
+                        value = jsonToken.Value?.ToString();
                     }
                     var oldValue = this.States[item.Key];
                     if (this.States[item.Key] is bool && (value.ToUpper() == "ON" || value.ToUpper() == "OFF"))
