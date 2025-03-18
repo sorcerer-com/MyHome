@@ -20,7 +20,7 @@
     <!-- AC -->
     <div class="w3-xlarge" style="margin: 2px; white-space: nowrap;"
          v-if="driver.$baseTypes.some(t => t.endsWith('IAcDriver')) && driver.Power">
-        {{Math.round(driver.Temperature, 2)}}
+        {{Math.round(driver.Temperature)}}
 
         <span class="w3-tiny">°C</span>
         <span class="material-icons w3-tiny" style="vertical-align:top;margin-top:8px;">

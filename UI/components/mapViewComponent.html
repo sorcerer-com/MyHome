@@ -5,11 +5,11 @@
      v-on:touchstart="touch" v-on:touchmove="touch">
 
     <div class="w3-display-topright" style="z-index: 1">
-        <a class="material-icons w3-text-gray w3-hover-text-white"
+        <a class="material-icons w3-text-gray w3-hover-text-white" title="Fit screen"
            v-if="!mapMissing" v-on:click="resetMap">
             zoom_out_map
         </a>
-        <a class="material-icons w3-hover-text-white"
+        <a class="material-icons w3-hover-text-white" title="Edit"
            v-if="!mapMissing" v-bind:class="{'w3-text-gray': !edit}" v-on:click="editMap">
             app_registration
         </a>
@@ -36,7 +36,7 @@
                         <span class="w3-show-block w3-small"
                               style="white-space: nowrap; font-weight: bold; text-align: center;"
                               v-bind:title="name">
-                            {{ Math.round(value, 2) }}{{device.Units[name] || '*'}}
+                            {{ Math.round(value) }}{{device.Units[name] || '*'}}
                         </span>
                     </template>
                 </a>

@@ -9,7 +9,7 @@
            v-bind:class="{'w3-text-dark-gray': getSensorsByValueType(name).every(s => isOffline(s))}"
            v-on:click="selectedValueType = name">
             <span class="w3-xlarge room-sensor-value" style="white-space: nowrap">
-                {{Math.round(value, 2)}}
+                {{Math.round(value)}}
                 <span v-if="room.SensorsMetadata[name] && room.SensorsMetadata[name]['unit']" class="w3-small room-sensor-value-unit">
                     {{room.SensorsMetadata[name]['unit']}}
                 </span>
