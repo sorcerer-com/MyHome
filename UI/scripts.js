@@ -33,24 +33,11 @@ function filterObjectBySettings(object, settings) {
 }
 
 
-function createLineChart(canvasId, datasets = {}, allowZoom = true) { // datasets: {label: data}
-    let colors = generateChartColors(Object.keys(datasets).length);
-    let chartDataSets = Object.keys(datasets).map((k, idx) => {
-        return {
-            label: k,
-            data: datasets[k],
-            backgroundColor: `hsla(${colors[idx]}, 0.1)`,
-            borderColor: `hsla(${colors[idx]}, 0.5)`,
-            tension: 0,
-            pointRadius: 0,
-            borderWidth: 2,
-            fill: true
-        }
-    });
+function createLineChart(canvasId, allowZoom = true) {
     let cfg = {
         type: 'line',
         data: {
-            datasets: chartDataSets
+            datasets: []
         },
         options: {
             scales: {
@@ -84,7 +71,8 @@ function createLineChart(canvasId, datasets = {}, allowZoom = true) { // dataset
                 },
                 tooltip: {
                     intersect: false,
-                    mode: "index"
+                    mode: "nearest",
+                    axis: "x"
                 },
                 zoom: {
                     pan: {
@@ -107,7 +95,7 @@ function createLineChart(canvasId, datasets = {}, allowZoom = true) { // dataset
     return chart;
 }
 
-function updateChartData(chart, label, data) { // data: {x: date, y: value}
+function setChartData(chart, label, data, type) { // data: {x: date, y: value}
     let dataset = chart.data.datasets.find(ds => ds.label == label);
     if (dataset) {
         if (dataset.data.length != data.length) // if data get changed
@@ -121,7 +109,8 @@ function updateChartData(chart, label, data) { // data: {x: date, y: value}
             tension: 0,
             pointRadius: 0,
             borderWidth: 2,
-            fill: true
+            fill: true,
+            type: type
         });
         // update colors
         let colors = generateChartColors(chart.data.datasets.length);
@@ -147,6 +136,17 @@ function generateChartColors(count) {
     return result;
 }
 
+function accumulateData(data, groupCallback, sum) {
+    let groups = Object.groupBy(data, groupCallback);
+    let result = [];
+    for (let key of Object.keys(groups)) {
+        let value = groups[key].reduce((sum, curr) => sum + curr.y, 0.0);
+        if (!sum)
+            value /= groups[key].length;
+        result.push({ x: new Date(key), y: Math.round(value * 100) / 100});
+    }
+    return result.sort((a, b) => (a.x > b.x) ? 1 : -1);
+}
 
 function splitTypes(list) {
     let split = list.split(", ");
@@ -175,7 +175,7 @@ function dateToString(date) {
 // execute func once after no call for delay period of time
 const debounce = function (func, delay) {
     let timer;
-    return function () {     //anonymous function
+     return function () {     //anonymous function
         const context = this;
         const args = arguments;
         clearTimeout(timer);

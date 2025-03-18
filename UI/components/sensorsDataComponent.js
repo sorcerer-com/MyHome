@@ -39,8 +39,8 @@
     methods: {
         refreshData: function (autorefresh = true) {
             this.charts = this.charts || {}; // not part of 'data' as it cause stack overflow
-            this.charts["chartLastDay"] = this.charts["chartLastDay"] || createLineChart("chartLastDay", {}, false);
-            this.charts["chartOlder"] = this.charts["chartOlder"] || createLineChart("chartOlder", {}, !window.vue.isMobile);
+            this.charts["chartLastDay"] = this.charts["chartLastDay"] || createLineChart("chartLastDay", false);
+            this.charts["chartOlder"] = this.charts["chartOlder"] || createLineChart("chartOlder", !window.vue.isMobile);
 
             const prevDay = new Date();
             prevDay.setDate(prevDay.getDate() - 1);
@@ -54,8 +54,8 @@
                 if (!this.stats[name]) {
                     // add empty values to preserve the order
                     this.stats[name] = { "LastDay": { Average: 0, Sum: 0 }, "Older": { Average: 0, Sum: 0 } };
-                    updateChartData(this.charts["chartLastDay"], name, {});
-                    updateChartData(this.charts["chartOlder"], name, {});
+                    setChartData(this.charts["chartLastDay"], name, {});
+                    setChartData(this.charts["chartOlder"], name, {});
                 }
                 let request = getSensorData(this.room.Name, sensor.Name, this.selection).done(data => {
                     let lastDayData = Object.keys(data)
@@ -66,10 +66,20 @@
                         .map(k => { return { x: new Date(k), y: data[k] } })
                         .filter(e => e.x >= this.selectedPeriod[0] && e.x < this.selectedPeriod[1])
                         .sort((a, b) => (a.x > b.x) ? 1 : -1);
-                    if (this.charts["chartLastDay"].data.datasets.some(ds => ds.label == name)) // ensure that this call isn't old
-                        updateChartData(this.charts["chartLastDay"], name, lastDayData);
-                    if (this.charts["chartOlder"].data.datasets.some(ds => ds.label == name)) // ensure that this call isn't old
-                        updateChartData(this.charts["chartOlder"], name, olderData);
+                    if (this.charts["chartLastDay"].data.datasets.some(ds => ds.label == name)) { // ensure that this call isn't old
+                        setChartData(this.charts["chartLastDay"], name, lastDayData);
+                        // hourly
+                        let sum = sensor.AggregationMap[this.selection]?.startsWith("AggregationType.Sum");
+                        let data = accumulateData(lastDayData, ({ x }) => (x.getMonth()+1) + "/" + x.getDate() + "/" + x.getFullYear() + " " + x.getHours() + ":30:", sum);
+                        setChartData(this.charts["chartLastDay"], name + " Hourly", data, "bar");
+                    }
+                    if (this.charts["chartOlder"].data.datasets.some(ds => ds.label == name)) { // ensure that this call isn't old
+                        setChartData(this.charts["chartOlder"], name, olderData);
+                        // monthly
+                        let sum = sensor.AggregationMap[this.selection]?.startsWith("AggregationType.Sum");
+                        let data = accumulateData(olderData, ({ x }) => (x.getMonth()+1) + "/15/" + x.getFullYear(), sum); // 15th of month
+                        setChartData(this.charts["chartOlder"], name + " Monthly", data, "bar");
+                    }
 
                     if (name in this.stats) {
                         this.stats[name] = {

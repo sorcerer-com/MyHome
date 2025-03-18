@@ -98,7 +98,7 @@
                         })
                         .sort((a, b) => (a.x > b.x) ? 1 : -1);
 
-                    updateChartData(this.charts["chartSecurity"], room.Name, chartData);
+                    setChartData(this.charts["chartSecurity"], room.Name, chartData);
 
                     this.stats[room.Name] = {
                         Average: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) / chartData.length * 100) / 100,
@@ -118,7 +118,7 @@
                         })
                         .sort((a, b) => (a.x > b.x) ? 1 : -1);
 
-                    updateChartData(this.charts["chartSecurity"], name, chartData);
+                    setChartData(this.charts["chartSecurity"], name, chartData);
 
                     this.stats[name] = {
                         Average: Math.round(chartData.reduce((sum, curr) => sum + curr.y, 0) / chartData.length * 100) / 100,
@@ -211,7 +211,7 @@
                             if (!this.stats[`${sensor.Name}.${valueType}`]) {
                                 // add empty values to preserve the order
                                 this.stats[`${sensor.Name}.${valueType}`] = { Average: 0, Sum: 0 };
-                                updateChartData(this.charts["charts"], `${sensor.Name}.${valueType}`, {});
+                                setChartData(this.charts["charts"], `${sensor.Name}.${valueType}`, {});
                             }
                             getSensorData(room.Name, sensor.Name, valueType).done(data => {
                                 let chartData = Object.keys(data)
@@ -219,7 +219,7 @@
                                     .filter(e => e.x < prevDay)
                                     .sort((a, b) => (a.x > b.x) ? 1 : -1);
                                 if (this.charts["charts"].data.datasets.some(ds => ds.label == `${sensor.Name}.${valueType}`)) // ensure that this call isn't old
-                                    updateChartData(this.charts["charts"], `${sensor.Name}.${valueType}`, chartData);
+                                    setChartData(this.charts["charts"], `${sensor.Name}.${valueType}`, chartData);
 
                                 if (`${sensor.Name}.${valueType}` in this.stats) {
                                     this.stats[`${sensor.Name}.${valueType}`] = {
