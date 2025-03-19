@@ -1,11 +1,12 @@
 ﻿<div id="scrollable-content">
     <!-- SideBar -->
-    <div class="w3-sidebar w3-bar-block w3-transparent w3-animate-left" style="margin-top: 32px; width: revert;">
-        <router-link class="w3-bar-item w3-hover-text-blue-gray"
+    <div class="w3-sidebar w3-bar-block w3-transparent" style="margin-top: 32px; width: revert;">
+        <div class="sidebar-hover w3-large material-icons" style="display: none;">keyboard_arrow_right</div>
+        <router-link class="w3-bar-item w3-round-large w3-animate-left w3-hover-text-blue-gray"
                      v-bind:to="$route.path + '#' + room.Name" v-for="room of rooms">
             {{room.Name}}
         </router-link>
-        <router-link class="w3-bar-item w3-hover-text-blue-gray" v-bind:to="$route.path + '#discovered'"
+        <router-link class="w3-bar-item w3-round-large w3-animate-left w3-hover-text-blue-gray" v-bind:to="$route.path + '#discovered'"
                      v-if="system?.AutoDiscovery">
             <i>Discovered</i>
         </router-link>
