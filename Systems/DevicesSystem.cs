@@ -179,7 +179,6 @@ namespace MyHome.Systems
                 Task.Run(this.DiscoverEwelinkDevices);
 
             this.nextSensorCheckTime += TimeSpan.FromMinutes(this.SensorsCheckInterval);
-            MyHome.Instance.SystemChanged = true;
         }
 
         private DateTime GetNextSensorCheckTime()
