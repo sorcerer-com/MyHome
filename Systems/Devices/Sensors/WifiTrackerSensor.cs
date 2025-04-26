@@ -83,9 +83,6 @@ namespace MyHome.Systems.Devices.Sensors
         {
             base.Setup();
 
-            if (!this.NotTimeseries.Contains("Vcc"))
-                this.NotTimeseries.Add("Vcc");
-
             // subscribe for the topics
             MyHome.Instance.MqttClient.Subscribe(this.BaseMqttTopic + "/" + STATE_TOPIC);
             MyHome.Instance.MqttClient.Subscribe(this.BaseMqttTopic + "/" + SENSOR_TOPIC);

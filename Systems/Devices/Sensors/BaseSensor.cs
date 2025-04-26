@@ -43,9 +43,6 @@ namespace MyHome.Systems.Devices.Sensors
         [UiProperty(true, "name / unit")]
         public Dictionary<string, string> Units { get; } // subname / unit name
 
-        [UiProperty(true, "name")]
-        public List<string> NotTimeseries { get; } // subnames that need code to generate intermediate values
-
         [UiProperty(true)]
         public bool Grouped { get; set; } // whether subnames should be grouped in UI 
 
@@ -76,7 +73,6 @@ namespace MyHome.Systems.Devices.Sensors
             this.AggregationMap = new Dictionary<string, AggregationType>();
             this.Calibration = new Dictionary<string, string>();
             this.Units = new Dictionary<string, string>();
-            this.NotTimeseries = new List<string>();
             this.Grouped = false;
 
             this.LastReadings = new Dictionary<string, double>();
@@ -227,23 +223,6 @@ namespace MyHome.Systems.Devices.Sensors
                 }
                 this.Data[time].TrimExcess();
                 MyHome.Instance.Events.Fire(this, GlobalEventTypes.SensorDataAdded, this.Data[time]);
-                this.ArchiveData();
-                this.SaveData();
-            }
-        }
-
-        public void GenerateTimeseries()
-        {
-            lock (this.Data)
-            {
-                // if subsensor is not timeseries, add last value to fill the gaps in time
-                var now = DateTime.Now;
-                foreach (var subname in this.NotTimeseries.Distinct())
-                {
-                    if (!this.Data.ContainsKey(now))
-                        this.Data[now] = new SensorValue();
-                    this.Data[now].Add(subname, this.Values.ContainsKey(subname) ? this.Values[subname] : 0);
-                }
                 this.ArchiveData();
                 this.SaveData();
             }

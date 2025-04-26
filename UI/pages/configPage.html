@@ -27,7 +27,10 @@
                title="Edit device"
                v-for="device of room.Devices"
                v-on:click="showEdit(room.Name, device, null, saveDevice, deleteDevice)">
-                <span class="w3-show-block overflow-wrap-break-word">{{device.Name}}</span>
+                <span class="w3-show-block overflow-wrap-break-word">
+                    {{device.Name}}
+                    <span v-if="device.SkipOfflineAlerting" class="w3-small" title="Offline Alerting Skipped">!</span>
+                </span>
                 <span class="w3-small">({{device.$type.substr(device.$type.lastIndexOf(".")+1)}})</span>
             </a>
 

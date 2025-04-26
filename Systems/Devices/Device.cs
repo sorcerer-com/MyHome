@@ -33,6 +33,9 @@ namespace MyHome.Systems.Devices
             }
         }
 
+        [UiProperty(true)]
+        public bool SkipOfflineAlerting { get; set; }
+
         [UiProperty]
         public Position Location { get; set; } = new Position(); // location in UI map
 

@@ -145,8 +145,8 @@ namespace MyHome.Systems
             this.Devices.RunForEach(device =>
             {
                 // check for inactive device
-                if (device.LastOnline <= this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 4) &&
-                    device.LastOnline > this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 5))
+                if (!device.SkipOfflineAlerting &&
+                    device.LastOnline <= this.nextSensorCheckTime.AddMinutes(-this.SensorsCheckInterval * 4))
                 {
                     logger.Warn($"Device {device.Name} ({device.Room.Name}) is not active from {device.LastOnline}");
                     alertMsg += $"{device.Name} ({device.Room.Name}) ";
@@ -155,8 +155,6 @@ namespace MyHome.Systems
                 // TODO: maybe move to sensor update
                 if (device is BaseSensor sensor)
                 {
-                    sensor.GenerateTimeseries(); // TODO: remove, but add property to skip offline alerting
-
                     // aggregate one value per SensorsCheckInterval
                     var now = DateTime.Now;
                     var times = sensor.Data.Keys.Where(t => t < now.AddHours(-1) && t >= now.Date.AddHours(now.Hour).AddDays(-1)); // last 24 hours
@@ -169,10 +167,9 @@ namespace MyHome.Systems
             {
                 MyHome.Instance.AddNotification(OfflineDevicesNotification)
                     .Details(alertMsg.Trim())
+                    .Validity(TimeSpan.FromDays(1))
                     .SendAlert();
-            } 
-            else
-                MyHome.Instance.RemoveNotification(OfflineDevicesNotification);
+            }
 
             // discover devices
             if (this.autoDiscovery)
