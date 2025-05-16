@@ -124,6 +124,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             if (string.IsNullOrEmpty(path))
                 return;
 
+            this.PowerOnTV();
             this.States[PLAYING_STATE_NAME] = path;
             this.SendState(PLAYING_STATE_NAME, path);
             this.SendState(VOLUME_STATE_NAME, this.Volume.ToString());
@@ -202,6 +203,20 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
             logger.Debug("Refresh media list");
             MyHome.Instance.MqttClient.Publish($"cmnd/{this.AgentHostName}/media", "{\"refresh\": true}");
+        }
+
+        public void PowerOnTV()
+        {
+            if (MyHome.Instance.BackupMode.Enabled)
+                return;
+
+            logger.Debug("Power off TV");
+            var json = new JObject
+            {
+                ["address"] = "TV_0",
+                ["command"] = "power_on"
+            };
+            MyHome.Instance.MqttClient.Publish($"cmnd/{this.AgentHostName}/cec", json.ToString());
         }
 
         public void PowerOffTV()
