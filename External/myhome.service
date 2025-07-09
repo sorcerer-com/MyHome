@@ -17,5 +17,8 @@ Environment=DOTNET_ROOT=/home/pi/.dotnet
 # Set default display value (used by vlclib)
 Environment=DISPLAY=:0
 
+# Don't log output to journal
+StandardOutput=null
+
 [Install]
 WantedBy=multi-user.target
