@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 import paho.mqtt.client
 import psutil
+import wakeonlan
 
 import utils
 
@@ -205,6 +206,9 @@ class Agent:
             if key == "refresh" and payload["refresh"]:
                 self._update_media_list()
             elif key == "play":
+                # if TV MAC address is defined try to wake it up
+                if "tv_mac" in self._config["MEDIA"]:
+                    wakeonlan.send_magic_packet(self._config["MEDIA"]["tv_mac"])
                 # if cec supported - power on tv and switch to TV
                 if self._cec is not None:
                     self._cec.set_active_source()

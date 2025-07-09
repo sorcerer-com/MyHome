@@ -11,5 +11,8 @@ User=pi
 WorkingDirectory=/home/pi/MyHome/External/Agent
 ExecStart=/home/pi/MyHome/External/Agent/venv/bin/python3 /home/pi/MyHome/External/Agent/main.py
 
+# Don't log output to journal
+StandardOutput=null
+
 [Install]
 WantedBy=multi-user.target
