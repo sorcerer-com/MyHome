@@ -28,11 +28,15 @@
             }
 
             getNotifications().done(notifications => {
-                this.notifications = notifications;
-                setTimeout(this.refreshData, 3000);
+                if (typeof notifications == "string") // redirected to auth proxy login page
+                    window.location.replace("./");
+                else {
+                    this.notifications = notifications;
+                    setTimeout(this.refreshData, 3000);
+                }
             }).fail(response => {
                 if (response.status == 401) // unauthorized
-                    window.location.replace("./login.html");
+                    window.location.replace("./");
                 if (response.status == 0 && !this.restarting) // no connection
                     window.location.reload();
                 setTimeout(this.refreshData, 1000);

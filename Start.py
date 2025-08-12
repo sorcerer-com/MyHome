@@ -60,7 +60,7 @@ def signal_handler(_, __):
 # args - Start.py "command" "web address"
 if len(sys.argv) < 3:
     sys.argv.append("/home/pi/.dotnet/dotnet run -c Release -launch-profile \"MyHome\"")
-    sys.argv.append("http://localhost:5000")
+    sys.argv.append("http://localhost:5000/api/status")
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
