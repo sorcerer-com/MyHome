@@ -1,13 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-
 using JWT.Algorithms;
 using JWT.Builder;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -15,7 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-
+using MyHome.Utils;
 using NLog;
 using NLog.Web;
 
@@ -121,6 +121,10 @@ namespace MyHome
             }
             else if (!ShouldSkipAuthentication(context.Request.Path) && !Authenticated(context, myHome))
             {
+                // try OpenIdConnect provider, if not fallback to login page
+                if (OpenIdConnect.HandleAuth(context, myHome.Config.OidcAddress, myHome.Config.OidcClientId))
+                    return false;
+
                 if (!context.Request.Path.StartsWithSegments("/api")) // pages only
                     context.Response.Redirect("./login.html");
                 else
@@ -129,6 +133,11 @@ namespace MyHome
                 return false;
             }
             context.Session.SetString("time", DateTime.Now.ToString());
+            context.User = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>
+            {
+                new(ClaimTypes.Name, context.Session.GetString("user_name") ?? "system"),
+                new(ClaimTypes.Email, context.Session.GetString("user_email") ?? "")
+            }, nameof(OpenIdConnect)));
             return true;
         }
 
@@ -170,7 +179,8 @@ namespace MyHome
         {
             var isResource = path.StartsWithSegments("/external") || path.StartsWithSegments("/images") ||
                 path == "/scripts.js" || path == "/style.css" || path == "/login.html";
-            return isResource || path.StartsWithSegments("/api/status") || path.StartsWithSegments("/api/songs");
+            return isResource || path.StartsWithSegments("/api/status") || path.StartsWithSegments("/api/oauth2/callback")
+                || path.StartsWithSegments("/api/songs");
         }
 
         private static bool Authenticated(HttpContext context, MyHome myHome)
@@ -194,7 +204,11 @@ namespace MyHome
             }
 
             // session authentication
-            return (context.Session.GetString("password") ?? "") == myHome.Config.Password && !IsSessionExpired(context, myHome);
+            if (IsSessionExpired(context, myHome))
+                return false;
+
+            return (context.Session.GetString("password") ?? "") == myHome.Config.Password ||
+                OpenIdConnect.IsAuthenticated(context, myHome.Config.OidcAddress, myHome.Config.OidcClientId);
         }
 
         private static bool IsSessionExpired(HttpContext context, MyHome myHome)
