@@ -15,8 +15,19 @@ namespace MyHome.Models
         [UiProperty(true)]
         public bool SavePrettyJson { get; set; } = false;
 
+
         [UiProperty(true, "sha256 hash")]
         public string Password { get; set; } = "";
+
+        [UiProperty(true, "OpenIdConnect provider address")]
+        public string OidcAddress { get; set; } = "";
+
+        [UiProperty(true)]
+        public string OidcClientId { get; set; } = "";
+
+        [UiProperty(true)]
+        public string OidcClientSecret { get; set; } = "";
+
 
         [UiProperty(true, "start - end")]
         public (int start, int end) QuietHours { get; set; } = (0, 0);

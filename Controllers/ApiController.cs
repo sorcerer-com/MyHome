@@ -36,6 +36,17 @@ namespace MyHome.Controllers
             return this.Ok();
         }
 
+        [HttpGet("oauth2/callback")]
+        public ActionResult AuthCallback()
+        {
+            if (OpenIdConnect.HandleCallback(this.HttpContext, this.myHome.Config.OidcAddress,
+                this.myHome.Config.OidcClientId, this.myHome.Config.OidcClientSecret))
+            {
+                return this.Redirect("/");
+            }
+            return this.Unauthorized();
+        }
+
         [HttpGet("config")]
         public ActionResult GetConfig()
         {
