@@ -98,7 +98,7 @@ namespace MyHome.Systems.Devices.Sensors
 
                     if (value.Type == JTokenType.String && ((string)value == "ON" || (string)value == "OFF"))
                         value = (string)value == "ON";
-                    data.Add(!string.IsNullOrEmpty(jsonPath) ? jsonPath : topic, (double)value);
+                    data.Add(!string.IsNullOrEmpty(jsonPath) ? jsonPath : topic, value);
                 }
                 this.AddData(DateTime.Now, data);
             }

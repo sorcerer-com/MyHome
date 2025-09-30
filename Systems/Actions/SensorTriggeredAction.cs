@@ -58,10 +58,10 @@ namespace MyHome.Systems.Actions
             if (e.Data is not Dictionary<string, double> values)
                 return false;
 
-            if (!values.ContainsKey(this.SensorSubname))
+            if (!values.TryGetValue(this.SensorSubname, out var value))
                 return false;
 
-            return Utils.Utils.CheckCondition(values[this.SensorSubname], this.ConditionValue, this.Condition);
+            return Utils.Utils.CheckCondition(value, this.ConditionValue, this.Condition);
         }
     }
 }
