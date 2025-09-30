@@ -195,15 +195,16 @@ namespace MyHome.Systems.Devices.Sensors
                 foreach (var item in data)
                 {
                     var name = item.Key;
-                    if (this.SubNamesMap.ContainsKey(name))
-                        name = this.SubNamesMap[name];
+                    if (this.SubNamesMap.TryGetValue(name, out var newName))
+                        name = newName;
 
-                    var value = Convert.ToDouble(item.Value);
-                    if (this.Calibration.ContainsKey(name)) // mapped name
+                    var obj = item.Value;
+                    if (this.Calibration.TryGetValue(name, out var expression)) // mapped name
                     {
-                        MyHome.Instance.ExecuteJint(jint => value = (double)jint.SetValue("x", value).Evaluate(this.Calibration[name]).ToObject(),
-                            "calculate value: " + this.Calibration[name]);
+                        MyHome.Instance.ExecuteJint(jint => obj = jint.SetValue("x", obj).Evaluate(expression).ToObject(),
+                            "calculate value: " + expression);
                     }
+                    var value = Convert.ToDouble(obj);
 
                     this.AggregationMap.TryGetValue(name, out var aggrType);
                     if (aggrType != AggregationType.SumDiff)
