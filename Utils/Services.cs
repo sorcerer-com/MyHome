@@ -115,10 +115,7 @@ namespace MyHome.Utils
             try
             {
                 logger.Trace($"Get content from '{url}'");
-                using var client = new HttpClient
-                {
-                    Timeout = TimeSpan.FromSeconds(5)
-                };
+                using var client = Utils.GetHttpClient();
                 return client.GetStringAsync(url).Result;
             }
             catch (Exception e)
