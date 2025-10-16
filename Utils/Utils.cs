@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -209,7 +210,7 @@ namespace MyHome.Utils
             }
         }
 
-        public static Process StartProcess(string fileName, string arguments, string workingDirectory = null, 
+        public static Process StartProcess(string fileName, string arguments, string workingDirectory = null,
             bool killOnError = true, ILogger logger = null)
         {
             // start capture process
@@ -245,6 +246,25 @@ namespace MyHome.Utils
                 process.BeginErrorReadLine();
             }
             return process;
+        }
+
+        public static HttpClient GetHttpClient(TimeSpan? timeout = null, bool skipCertVerification = false)
+        {
+            HttpClientHandler handler;
+            if (skipCertVerification)
+            {
+                handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => true
+                };
+            }
+            else
+                handler = new HttpClientHandler();
+
+            return new HttpClient(handler)
+            {
+                Timeout = timeout ?? TimeSpan.FromSeconds(5)
+            };
         }
     }
 }
