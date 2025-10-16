@@ -113,10 +113,7 @@ public class BackupMode
     {
         try
         {
-            using var client = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(5)
-            };
+            using var client = Utils.Utils.GetHttpClient(skipCertVerification: true);
             return client.GetAsync($"{this.PeerServer}/api/status").Result.IsSuccessStatusCode;
         }
         catch
@@ -132,10 +129,7 @@ public class BackupMode
         this.nextConfigSync = this.nextConfigSync.AddDays(1);
         try
         {
-            using var client = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(5)
-            };
+            using var client = Utils.Utils.GetHttpClient(skipCertVerification: true);
 
             if (!string.IsNullOrEmpty(MyHome.Instance.Config.Password))
             {

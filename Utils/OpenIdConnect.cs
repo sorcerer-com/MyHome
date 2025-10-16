@@ -31,7 +31,7 @@ namespace MyHome.Utils
                 return false;
 
             var metadata = GetMetadata(oidcAddress);
-            if (metadata == null || !metadata.TryGetValue("authorization_endpoint", out var authEndpoint) || 
+            if (metadata == null || !metadata.TryGetValue("authorization_endpoint", out var authEndpoint) ||
                 string.IsNullOrEmpty((string)authEndpoint))
             {
                 return false;
@@ -89,18 +89,15 @@ namespace MyHome.Utils
                 }
 
                 var metadata = GetMetadata(oidcAddress);
-                if (metadata == null || !metadata.TryGetValue("token_endpoint", out var tokenEndpoint) || 
+                if (metadata == null || !metadata.TryGetValue("token_endpoint", out var tokenEndpoint) ||
                     string.IsNullOrEmpty((string)tokenEndpoint))
                 {
                     return false;
                 }
 
-                using var client = new HttpClient
-                {
-                    Timeout = TimeSpan.FromSeconds(5)
-                };
+                using var client = Utils.GetHttpClient(skipCertVerification: true);
                 var base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{clientId}:{clientSecret}"));
-                client.DefaultRequestHeaders.Authorization = 
+                client.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
 
                 var parameters = new Dictionary<string, string>
@@ -153,11 +150,8 @@ namespace MyHome.Utils
             try
             {
                 logger.Debug($"Get OpenIdConnect userinfo from '{url}'");
-                using var client = new HttpClient
-                {
-                    Timeout = TimeSpan.FromSeconds(5)
-                };
-                client.DefaultRequestHeaders.Authorization = 
+                using var client = Utils.GetHttpClient(skipCertVerification: true);
+                client.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                 var response = client.GetStringAsync(url).Result;
                 var userInfo = JsonConvert.DeserializeObject<Dictionary<string, string>>(response);
@@ -182,10 +176,7 @@ namespace MyHome.Utils
                 try
                 {
                     logger.Debug($"Get OpenIdConnect metadata from '{url}'");
-                    using var client = new HttpClient
-                    {
-                        Timeout = TimeSpan.FromSeconds(5)
-                    };
+                    using var client = Utils.GetHttpClient(skipCertVerification: true);
                     var response = client.GetStringAsync(url).Result;
                     _metadata = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
                     return _metadata;
@@ -210,10 +201,7 @@ namespace MyHome.Utils
                 try
                 {
                     logger.Debug($"Get OpenIdConnect jwks from '{url}'");
-                    using var client = new HttpClient
-                    {
-                        Timeout = TimeSpan.FromSeconds(5)
-                    };
+                    using var client = Utils.GetHttpClient(skipCertVerification: true);
                     var response = client.GetStringAsync(url).Result;
                     var json = JObject.Parse(response);
                     _jwks = json["keys"].ToObject<List<Dictionary<string, object>>>();
