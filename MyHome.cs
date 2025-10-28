@@ -250,15 +250,18 @@ namespace MyHome
 
 
             // retry since sometimes failed because of "Collection was modified"
-            Utils.Utils.Retry(_ =>
+            var res = Utils.Utils.Retry(_ =>
             {
                 var data = JObject.FromObject(this, serializer);
                 var json = data.ToString(this.Config.SavePrettyJson ? Formatting.Indented : Formatting.None);
                 File.WriteAllText(Config.DataFilePath, json);
             }, 3, logger, "save");
 
-            this.SystemChanged = false;
-            this.Events.Fire(this, GlobalEventTypes.Saved);
+            if (res)
+            {
+                this.SystemChanged = false;
+                this.Events.Fire(this, GlobalEventTypes.Saved);
+            }
         }
 
         private void Update()
