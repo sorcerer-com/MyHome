@@ -121,8 +121,7 @@ namespace MyHome.Utils
                 context.Session.SetString("refresh_token", refreshToken);
 
                 var jwks = GetJwks((string)metadata["jwks_uri"]);
-                var publicKey = CreateRsaPublicKey((string)jwks[0]["n"], (string)jwks[0]["e"]);
-                if (!ValidateJwt(idToken, publicKey, clientId))
+                if (!ValidateJwt(idToken, jwks[0], clientId))
                     return false;
 
                 var userInfo = GetUserInfo(oidcAddress, accessToken);
@@ -173,21 +172,24 @@ namespace MyHome.Utils
                     return _metadata;
 
                 var url = $"{address}/.well-known/openid-configuration";
-                try
+
+                Utils.Retry(_ =>
                 {
-                    logger.Debug($"Get OpenIdConnect metadata from '{url}'");
-                    using var client = Utils.GetHttpClient(skipCertVerification: true);
-                    var response = client.GetStringAsync(url).Result;
-                    _metadata = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
-                    return _metadata;
-                }
-                catch (Exception ex)
-                {
-                    logger.Error($"Failed to get OpenIdConnect metadata from '{url}'");
-                    logger.Debug(ex);
-                    _metadata = new Dictionary<string, object>();
-                    return _metadata;
-                }
+                    try
+                    {
+                        logger.Debug($"Get OpenIdConnect metadata from '{url}'");
+                        using var client = Utils.GetHttpClient(skipCertVerification: true);
+                        var response = client.GetStringAsync(url).Result;
+                        _metadata = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error($"Failed to get OpenIdConnect metadata from '{url}'");
+                        logger.Debug(ex);
+                        _metadata = new Dictionary<string, object>();
+                    }
+                }, 3);
+                return _metadata;
             }
         }
 
@@ -198,21 +200,23 @@ namespace MyHome.Utils
                 if (_jwks != null)
                     return _jwks;
 
-                try
+                Utils.Retry(_ =>
                 {
-                    logger.Debug($"Get OpenIdConnect jwks from '{url}'");
-                    using var client = Utils.GetHttpClient(skipCertVerification: true);
-                    var response = client.GetStringAsync(url).Result;
-                    var json = JObject.Parse(response);
-                    _jwks = json["keys"].ToObject<List<Dictionary<string, object>>>();
-                    return _jwks;
-                }
-                catch (Exception ex)
-                {
-                    logger.Error($"Failed to get OpenIdConnect jwks from '{url}'");
-                    logger.Debug(ex);
-                    return null;
-                }
+                    try
+                    {
+                        logger.Debug($"Get OpenIdConnect jwks from '{url}'");
+                        using var client = Utils.GetHttpClient(skipCertVerification: true);
+                        var response = client.GetStringAsync(url).Result;
+                        var json = JObject.Parse(response);
+                        _jwks = json["keys"].ToObject<List<Dictionary<string, object>>>();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error($"Failed to get OpenIdConnect jwks from '{url}'");
+                        logger.Debug(ex);
+                    }
+                }, 3);
+                return _jwks;
             }
         }
 
@@ -229,8 +233,7 @@ namespace MyHome.Utils
                     return false;
 
                 var jwks = GetJwks((string)metadata["jwks_uri"]);
-                var publicKey = CreateRsaPublicKey((string)jwks[0]["n"], (string)jwks[0]["e"]);
-                return ValidateJwt(context.Session.GetString("id_token"), publicKey, clientId);
+                return ValidateJwt(context.Session.GetString("id_token"), jwks[0], clientId);
             }
             catch
             {
@@ -250,20 +253,52 @@ namespace MyHome.Utils
             return $"{context.Request.Scheme}://{context.Request.Host}/api/oauth2/callback"; ;
         }
 
-        private static byte[] Base64UrlDecode(string input)
+        private static bool ValidateJwt(string jwt, Dictionary<string, object> jwk, string clientId)
         {
-            var output = input;
-            output = output.Replace('-', '+'); // 62nd char of encoding
-            output = output.Replace('_', '/'); // 63rd char of encoding
-            switch (output.Length % 4) // Pad with trailing '='s
+            if (string.IsNullOrEmpty(jwt))
+                return false;
+
+            IJwtAlgorithm algorithm;
+            byte[] secrets;
+            if ((string)jwk["kty"] == "RSA")
             {
-                case 0: break; // No pad chars in this case
-                case 2: output += "=="; break; // Two pad chars
-                case 3: output += "="; break; // One pad char
-                default: throw new FormatException("Illegal base64url string!");
+                var publicKey = CreateRsaPublicKey((string)jwk["n"], (string)jwk["e"]);
+                algorithm = new RS256Algorithm(publicKey);
+                secrets = publicKey.ExportRSAPublicKey();
             }
-            var converted = Convert.FromBase64String(output); // Standard base64 decode
-            return converted;
+            else if ((string)jwk["kty"] == "EC")
+            {
+                var publicKey = CreateEcPublicKey((string)jwk["crv"], (string)jwk["x"], (string)jwk["y"]);
+                algorithm = jwk["alg"] switch
+                {
+                    "ES256" => new ES256Algorithm(publicKey),
+                    "ES384" => new ES384Algorithm(publicKey),
+                    "ES512" => new ES512Algorithm(publicKey),
+                    _ => throw new NotSupportedException($"Unsupported EC algorithm: {jwk["alg"]}")
+                };
+                secrets = publicKey.ExportSubjectPublicKeyInfo();
+            }
+            else
+                return false;
+
+
+            var token = JwtBuilder.Create()
+                        .WithAlgorithm(algorithm)
+                        .WithSecret(secrets)
+                        .MustVerifySignature()
+                        .Decode(jwt);
+
+            var json = JObject.Parse(token);
+
+            if (json["aud"].ToString() != clientId)
+                return false;
+
+            long expTime = (long)json["exp"];
+            DateTimeOffset expiration = DateTimeOffset.FromUnixTimeSeconds(expTime);
+            if (expiration <= DateTimeOffset.UtcNow)
+                return false;
+
+            return true;
         }
 
         private static RSA CreateRsaPublicKey(string n, string e)
@@ -280,28 +315,43 @@ namespace MyHome.Utils
             return rsa;
         }
 
-        private static bool ValidateJwt(string jwt, RSA publicKey, string clientId)
+        private static ECDsa CreateEcPublicKey(string crv, string x, string y)
         {
-            if (string.IsNullOrEmpty(jwt))
-                return false;
+            ECCurve curve = crv switch
+            {
+                "P-256" => ECCurve.NamedCurves.nistP256,
+                "P-384" => ECCurve.NamedCurves.nistP384,
+                "P-521" => ECCurve.NamedCurves.nistP521,
+                _ => throw new NotSupportedException($"Unsupported EC curve: {crv}")
+            };
+            var parameters = new ECParameters
+            {
+                Curve = curve,
+                Q = new ECPoint
+                {
+                    X = Base64UrlDecode(x),
+                    Y = Base64UrlDecode(y)
+                }
+            };
+            var ecdsa = ECDsa.Create();
+            ecdsa.ImportParameters(parameters);
+            return ecdsa;
+        }
 
-            var token = JwtBuilder.Create()
-                        .WithAlgorithm(new RS256Algorithm(publicKey))
-                        .WithSecret(publicKey.ExportRSAPublicKey())
-                        .MustVerifySignature()
-                        .Decode(jwt);
-
-            var json = JObject.Parse(token);
-
-            if (json["aud"].ToString() != clientId)
-                return false;
-
-            long expTime = (long)json["exp"];
-            DateTimeOffset expiration = DateTimeOffset.FromUnixTimeSeconds(expTime);
-            if (expiration <= DateTimeOffset.UtcNow)
-                return false;
-
-            return true;
+        private static byte[] Base64UrlDecode(string input)
+        {
+            var output = input;
+            output = output.Replace('-', '+'); // 62nd char of encoding
+            output = output.Replace('_', '/'); // 63rd char of encoding
+            switch (output.Length % 4) // Pad with trailing '='s
+            {
+                case 0: break; // No pad chars in this case
+                case 2: output += "=="; break; // Two pad chars
+                case 3: output += "="; break; // One pad char
+                default: throw new FormatException("Illegal base64url string!");
+            }
+            var converted = Convert.FromBase64String(output); // Standard base64 decode
+            return converted;
         }
 
         private static string GetRandomBase64String()
