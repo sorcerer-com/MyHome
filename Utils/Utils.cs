@@ -35,7 +35,7 @@ namespace MyHome.Utils
 
     public static class Utils
     {
-        public static void Retry(Action<int> action, int times, ILogger logger = null, string operation = null)
+        public static bool Retry(Action<int> action, int times, ILogger logger = null, string operation = null)
         {
             operation = operation != null ? $"'{operation}'" : "";
             for (int i = 0; i < times; i++)
@@ -43,7 +43,7 @@ namespace MyHome.Utils
                 try
                 {
                     action.Invoke(i);
-                    return;
+                    return true;
                 }
                 catch (Exception e)
                 {
@@ -52,6 +52,7 @@ namespace MyHome.Utils
                 }
             }
             logger?.Error($"Action {operation} failed, retries exceeded");
+            return false;
         }
 
         public static Action<Action> Debouncer(int milliseconds = 100)
