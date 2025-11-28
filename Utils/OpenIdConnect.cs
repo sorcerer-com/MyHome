@@ -9,6 +9,7 @@ using System.Web;
 using JWT.Algorithms;
 using JWT.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -44,7 +45,7 @@ namespace MyHome.Utils
                 query["response_type"] = "code";
                 query["client_id"] = clientId;
                 query["scope"] = "openid profile email";
-                query["redirect_uri"] = GetRedirectUrl(context);
+                query["redirect_uri"] = GetRootUrl(context) + "/api/oauth2/callback";
                 query["state"] = GetRandomBase64String();
                 query["nonce"] = GetRandomBase64String();
                 var builder = new UriBuilder((string)authEndpoint)
@@ -57,6 +58,7 @@ namespace MyHome.Utils
                 logger.Trace($"Request for '{context.Request.Path}', {context.Connection.RemoteIpAddress}, Redirect to OpenIdConnect authentication url: {url}");
                 context.Session.SetString("state", query["state"]);
                 context.Session.SetString("nonce", query["nonce"]);
+                context.Session.SetString("original_url", context.Request.GetEncodedUrl());
                 context.Response.Redirect(url);
                 return true;
             }
@@ -68,7 +70,7 @@ namespace MyHome.Utils
             }
         }
 
-        public static bool HandleCallback(HttpContext context, string oidcAddress, string clientId, string clientSecret)
+        public static string HandleCallback(HttpContext context, string oidcAddress, string clientId, string clientSecret)
         {
             try
             {
@@ -80,20 +82,20 @@ namespace MyHome.Utils
                 if (!string.IsNullOrEmpty(error))
                 {
                     logger.Error($"OpenIdConnect callback error: {error} - {errorDesc}");
-                    return false;
+                    return null;
                 }
 
                 if (context.Session.GetString("state") != state)
                 {
                     logger.Error("Invalid OpenIdConnect state parameter");
-                    return false;
+                    return GetRootUrl(context) + "/"; // if session is lost retry
                 }
 
                 var metadata = GetMetadata(oidcAddress);
                 if (metadata == null || !metadata.TryGetValue("token_endpoint", out var tokenEndpoint) ||
                     string.IsNullOrEmpty((string)tokenEndpoint))
                 {
-                    return false;
+                    return null;
                 }
 
                 using var client = Utils.GetHttpClient(skipCertVerification: true);
@@ -105,7 +107,7 @@ namespace MyHome.Utils
                 {
                     { "grant_type", "authorization_code" },
                     { "code", code },
-                    { "redirect_uri", GetRedirectUrl(context) },
+                    { "redirect_uri", GetRootUrl(context) + "/api/oauth2/callback" },
                 };
                 var content = new FormUrlEncodedContent(parameters);
                 var result = client.PostAsync((string)tokenEndpoint, content).Result;
@@ -123,7 +125,7 @@ namespace MyHome.Utils
 
                 var jwks = GetJwks((string)metadata["jwks_uri"]);
                 if (!ValidateJwt(idToken, jwks[0], clientId))
-                    return false;
+                    return null;
 
                 var userInfo = GetUserInfo(oidcAddress, accessToken);
                 logger.Info($"OpenIdConnect login successful for user: {userInfo["sub"]} ({userInfo["name"]})");
@@ -137,10 +139,13 @@ namespace MyHome.Utils
 
                 logger.Error($"Failed to handle OpenIdConnect callback");
                 logger.Debug(ex);
-                return false;
+                return null;
             }
 
-            return true;
+            var redirectUrl = context.Session.GetString("original_url");
+            if (string.IsNullOrEmpty(redirectUrl) || !redirectUrl.StartsWith(GetRootUrl(context)))
+                redirectUrl = GetRootUrl(context) + "/";
+            return redirectUrl;
         }
 
 
@@ -231,15 +236,15 @@ namespace MyHome.Utils
         }
 
 
-        private static string GetRedirectUrl(HttpContext context)
+        private static string GetRootUrl(HttpContext context)
         {
             if (context.Request.Headers.TryGetValue("X-Forwarded-Url", out var forwardedUrl) && forwardedUrl.Count > 0)
             {
                 var idx = forwardedUrl[0].LastIndexOf(context.Request.Path);
                 if (idx > 0)
-                    return $"{forwardedUrl[0][..idx]}/api/oauth2/callback";
+                    return forwardedUrl[0][..idx];
             }
-            return $"{context.Request.Scheme}://{context.Request.Host}/api/oauth2/callback"; ;
+            return $"{context.Request.Scheme}://{context.Request.Host}"; ;
         }
 
         private static bool ValidateJwt(string jwt, Dictionary<string, object> jwk, string clientId)
