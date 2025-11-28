@@ -39,12 +39,13 @@ namespace MyHome.Controllers
         [HttpGet("oauth2/callback")]
         public ActionResult AuthCallback()
         {
-            if (OpenIdConnect.HandleCallback(this.HttpContext, this.myHome.Config.OidcAddress,
-                this.myHome.Config.OidcClientId, this.myHome.Config.OidcClientSecret))
-            {
-                return this.Redirect("/");
-            }
-            return this.Unauthorized();
+            var redirect = OpenIdConnect.HandleCallback(this.HttpContext, this.myHome.Config.OidcAddress,
+                this.myHome.Config.OidcClientId, this.myHome.Config.OidcClientSecret);
+
+            if (!string.IsNullOrEmpty(redirect))
+                return this.Redirect(redirect);
+            else
+                return this.Unauthorized();
         }
 
         [HttpGet("config")]
