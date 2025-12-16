@@ -284,7 +284,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 {
                     if (this.alarmType != null) // if alarm was playing repeat it
                         this.PlaySong(this.Title);
-                    else if (this.Songs.Any(s => s.Name == this.Title)) // if previous value was a song
+                    else
                     {
                         MyHome.Instance.SongsManager.IncreaseSongRating(this.Title);
                         this.NextSong(this.Title);
