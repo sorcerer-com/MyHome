@@ -28,8 +28,8 @@
             }
 
             getNotifications().done(notifications => {
-                if (typeof notifications == "string") // redirected to auth proxy login page
-                    window.location.replace("./");
+                if (typeof notifications == "string") // reload to redirected to auth proxy login page
+                    window.location.reload()
                 else {
                     this.notifications = notifications;
                     setTimeout(this.refreshData, 3000);
