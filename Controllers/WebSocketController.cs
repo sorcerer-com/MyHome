@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
+using MyHome.Utils;
 
 namespace MyHome.Controllers
 {
@@ -20,7 +22,6 @@ namespace MyHome.Controllers
         public WebSocketController(MyHome myHome)
         {
             this.myHome = myHome;
-            this.myHome.Events.Handler += (_, __) => this.shouldRefresh = true;
         }
 
 
@@ -37,37 +38,46 @@ namespace MyHome.Controllers
             {
                 using var webSocket = await this.HttpContext.WebSockets.AcceptWebSocketAsync();
 
-                var buffer = new byte[1024 * 4];
-                var receiveResult = await webSocket.ReceiveAsync(
-                    new ArraySegment<byte>(buffer), CancellationToken.None);
-
-                // implement ping-pong effect to check the connectivity
-                while (!receiveResult.CloseStatus.HasValue)
+                void onGlobalEvent(object _, GlobalEventArgs __) => this.shouldRefresh = true;
+                this.myHome.Events.Handler += onGlobalEvent;
+                try
                 {
-                    await webSocket.SendAsync(
-                        new ArraySegment<byte>(buffer, 0, receiveResult.Count),
-                        receiveResult.MessageType,
-                        receiveResult.EndOfMessage,
-                        CancellationToken.None);
+                    var buffer = new byte[1024 * 4];
+                    var receiveResult = await webSocket.ReceiveAsync(
+                        new ArraySegment<byte>(buffer), CancellationToken.None);
 
-                    if (this.shouldRefresh)
+                    // implement ping-pong effect to check the connectivity
+                    while (!receiveResult.CloseStatus.HasValue)
                     {
                         await webSocket.SendAsync(
-                            new ArraySegment<byte>(Encoding.Default.GetBytes("refresh")),
-                            WebSocketMessageType.Text,
-                            true,
+                            new ArraySegment<byte>(buffer, 0, receiveResult.Count),
+                            receiveResult.MessageType,
+                            receiveResult.EndOfMessage,
                             CancellationToken.None);
-                        this.shouldRefresh = false;
+
+                        if (this.shouldRefresh)
+                        {
+                            await webSocket.SendAsync(
+                                new ArraySegment<byte>(Encoding.Default.GetBytes("refresh")),
+                                WebSocketMessageType.Text,
+                                true,
+                                CancellationToken.None);
+                            this.shouldRefresh = false;
+                        }
+
+                        receiveResult = await webSocket.ReceiveAsync(
+                            new ArraySegment<byte>(buffer), CancellationToken.None);
                     }
 
-                    receiveResult = await webSocket.ReceiveAsync(
-                        new ArraySegment<byte>(buffer), CancellationToken.None);
+                    await webSocket.CloseAsync(
+                        receiveResult.CloseStatus.Value,
+                        receiveResult.CloseStatusDescription,
+                        CancellationToken.None);
                 }
-
-                await webSocket.CloseAsync(
-                    receiveResult.CloseStatus.Value,
-                    receiveResult.CloseStatusDescription,
-                    CancellationToken.None);
+                finally
+                {
+                    this.myHome.Events.Handler -= onGlobalEvent;
+                }
             }
             catch
             {

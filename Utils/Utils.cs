@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -35,6 +35,14 @@ namespace MyHome.Utils
 
     public static class Utils
     {
+        private static readonly TimeSpan DefaultHttpTimeout = TimeSpan.FromSeconds(5);
+
+        private static readonly Lazy<HttpClient> SharedHttpClient =
+            new(() => CreatePooledHttpClient(skipCertVerification: false, DefaultHttpTimeout));
+
+        private static readonly Lazy<HttpClient> SharedHttpClientSkipCert =
+            new(() => CreatePooledHttpClient(skipCertVerification: true, DefaultHttpTimeout));
+
         public static bool Retry(Action<int> action, int times, ILogger logger = null, string operation = null)
         {
             operation = operation != null ? $"'{operation}'" : "";
@@ -249,23 +257,30 @@ namespace MyHome.Utils
             return process;
         }
 
+        /// <summary>
+        /// Returns a pooled, shared <see cref="HttpClient"/> for the default timeout. Do not dispose that instance.
+        /// If <paramref name="timeout"/> is not the default (5 seconds), returns a dedicated client; dispose it when done.
+        /// </summary>
         public static HttpClient GetHttpClient(TimeSpan? timeout = null, bool skipCertVerification = false)
         {
-            HttpClientHandler handler;
-            if (skipCertVerification)
-            {
-                handler = new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => true
-                };
-            }
-            else
-                handler = new HttpClientHandler();
+            var effectiveTimeout = timeout ?? DefaultHttpTimeout;
+            if (effectiveTimeout != DefaultHttpTimeout)
+                return CreatePooledHttpClient(skipCertVerification, effectiveTimeout);
 
-            return new HttpClient(handler)
+            return skipCertVerification ? SharedHttpClientSkipCert.Value : SharedHttpClient.Value;
+        }
+
+        private static HttpClient CreatePooledHttpClient(bool skipCertVerification, TimeSpan timeout)
+        {
+            var handler = new SocketsHttpHandler
             {
-                Timeout = timeout ?? TimeSpan.FromSeconds(5)
+                PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+                PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
             };
+            if (skipCertVerification)
+                handler.SslOptions.RemoteCertificateValidationCallback = static (_, _, _, _) => true;
+
+            return new HttpClient(handler, disposeHandler: true) { Timeout = timeout };
         }
     }
 }

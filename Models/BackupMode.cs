@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System;
 using MyHome.Utils;
 using Newtonsoft.Json;
@@ -113,7 +114,7 @@ public class BackupMode
     {
         try
         {
-            using var client = Utils.Utils.GetHttpClient(skipCertVerification: true);
+            var client = Utils.Utils.GetHttpClient(skipCertVerification: true);
             return client.GetAsync($"{this.PeerServer}/api/status").Result.IsSuccessStatusCode;
         }
         catch
@@ -129,26 +130,36 @@ public class BackupMode
         this.nextConfigSync = this.nextConfigSync.AddDays(1);
         try
         {
-            using var client = Utils.Utils.GetHttpClient(skipCertVerification: true);
+            var client = Utils.Utils.GetHttpClient(skipCertVerification: true);
 
+            AuthenticationHeaderValue authHeader = null;
             if (!string.IsNullOrEmpty(MyHome.Instance.Config.Password))
             {
-                // generate token
                 var token = JwtBuilder.Create()
                           .WithAlgorithm(new HMACSHA256Algorithm())
                           .WithSecret(MyHome.Instance.Config.Password)
                           .AddClaim("exp", DateTimeOffset.UtcNow.AddMinutes(5).ToUnixTimeSeconds())
                           .Encode();
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(token);
+                authHeader = new AuthenticationHeaderValue(token);
+            }
+
+            string GetString(string url)
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                if (authHeader != null)
+                    request.Headers.Authorization = authHeader;
+                var response = client.SendAsync(request).Result;
+                response.EnsureSuccessStatusCode();
+                return response.Content.ReadAsStringAsync().Result;
             }
 
             // config
-            var result = client.GetStringAsync($"{this.PeerServer}/api/config").Result;
+            var result = GetString($"{this.PeerServer}/api/config");
             var json = JToken.Parse(result);
             json.SetObject(MyHome.Instance.Config);
 
             // rooms
-            result = client.GetStringAsync($"{this.PeerServer}/api/rooms").Result;
+            result = GetString($"{this.PeerServer}/api/rooms");
             json = JArray.Parse(result);
 
             var receivedRooms = new List<string>();

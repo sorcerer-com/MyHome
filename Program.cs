@@ -156,7 +156,7 @@ namespace MyHome
                               .AddClaim("exp", expiration.ToUnixTimeSeconds())
                               .Encode();
                     context.Response.StatusCode = StatusCodes.Status200OK;
-                    context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(token));
+                    context.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(token)).AsTask().Wait();
                 }
                 else
                 {

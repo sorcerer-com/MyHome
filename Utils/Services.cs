@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -115,7 +115,7 @@ namespace MyHome.Utils
             try
             {
                 logger.Trace($"Get content from '{url}'");
-                using var client = Utils.GetHttpClient();
+                var client = Utils.GetHttpClient();
                 return client.GetStringAsync(url).Result;
             }
             catch (Exception e)

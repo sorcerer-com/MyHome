@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Net.Mime;
@@ -174,19 +174,23 @@ namespace MyHome.Controllers
         [HttpGet("songs/{fileName}")]
         public ActionResult GetSong(string fileName)
         {
-            var filePath = Path.Join(MyHome.Instance.Config.SongsPath, fileName);
+            var safeName = Path.GetFileName(fileName);
+            if (string.IsNullOrEmpty(safeName))
+                return this.NotFound($"Song '{fileName}' not found");
+
+            var filePath = Path.Join(MyHome.Instance.Config.SongsPath, safeName);
             if (!System.IO.File.Exists(filePath))
-                filePath = Path.Join(Models.Config.SoundsPath, fileName);
+                filePath = Path.Join(Models.Config.SoundsPath, safeName);
 
             if (!System.IO.File.Exists(filePath))
             {
                 var assistant = this.myHome.Systems[nameof(AssistantSystem)] as AssistantSystem;
-                if (assistant.SpeakResponses.TryGetValue(fileName, out var response))
+                if (assistant.SpeakResponses.TryGetValue(safeName, out var response))
                 {
                     var stream = new MemoryStream(response.data);
                     return this.File(stream, "audio/wav");
                 }
-                return this.NotFound($"Song '{fileName}' not found");
+                return this.NotFound($"Song '{safeName}' not found");
             }
 
             // match buffer with the one in Tasmota

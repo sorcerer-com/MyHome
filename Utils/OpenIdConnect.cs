@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -98,10 +99,7 @@ namespace MyHome.Utils
                     return null;
                 }
 
-                using var client = Utils.GetHttpClient(skipCertVerification: true);
-                var base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{clientId}:{clientSecret}"));
-                client.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
+                var client = Utils.GetHttpClient(skipCertVerification: true);
 
                 var parameters = new Dictionary<string, string>
                 {
@@ -110,7 +108,13 @@ namespace MyHome.Utils
                     { "redirect_uri", GetRootUrl(context) + "/api/oauth2/callback" },
                 };
                 var content = new FormUrlEncodedContent(parameters);
-                var result = client.PostAsync((string)tokenEndpoint, content).Result;
+                using var tokenRequest = new HttpRequestMessage(HttpMethod.Post, (string)tokenEndpoint) { Content = content };
+
+                var base64EncodedAuthenticationString = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{clientId}:{clientSecret}"));
+                tokenRequest.Headers.Authorization =
+                    new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
+
+                var result = client.SendAsync(tokenRequest).Result;
                 var json = JToken.Parse(result.Content.ReadAsStringAsync().Result);
 
                 context.Session.Remove("state");
@@ -155,11 +159,13 @@ namespace MyHome.Utils
             try
             {
                 logger.Debug($"Get OpenIdConnect userinfo from '{url}'");
-                using var client = Utils.GetHttpClient(skipCertVerification: true);
-                client.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-                var response = client.GetStringAsync(url).Result;
-                var userInfo = JsonConvert.DeserializeObject<Dictionary<string, string>>(response);
+                var client = Utils.GetHttpClient(skipCertVerification: true);
+                using var userInfoRequest = new HttpRequestMessage(HttpMethod.Get, url);
+                userInfoRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var response = client.SendAsync(userInfoRequest).Result;
+                response.EnsureSuccessStatusCode();
+                var responseBody = response.Content.ReadAsStringAsync().Result;
+                var userInfo = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseBody);
                 return userInfo;
             }
             catch (Exception ex)
@@ -182,7 +188,7 @@ namespace MyHome.Utils
                 var res = Utils.Retry(_ =>
                 {
                     logger.Debug($"Get OpenIdConnect metadata from '{url}'");
-                    using var client = Utils.GetHttpClient(skipCertVerification: true);
+                    var client = Utils.GetHttpClient(skipCertVerification: true);
                     var response = client.GetStringAsync(url).Result;
                     _metadata = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
                 }, 3, logger, "get OpenIdConnect metadata");
@@ -205,7 +211,7 @@ namespace MyHome.Utils
                 Utils.Retry(_ =>
                 {
                     logger.Debug($"Get OpenIdConnect jwks from '{url}'");
-                    using var client = Utils.GetHttpClient(skipCertVerification: true);
+                    var client = Utils.GetHttpClient(skipCertVerification: true);
                     var response = client.GetStringAsync(url).Result;
                     var json = JObject.Parse(response);
                     _jwks = json["keys"].ToObject<List<Dictionary<string, object>>>();
