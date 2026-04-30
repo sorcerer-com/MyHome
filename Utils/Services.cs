@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -108,6 +109,28 @@ namespace MyHome.Utils
                 logger.Debug(e);
                 return false;
             }
+        }
+
+        public static bool SendNtfyMessage(string server, string token, string topic, string message, string title = null, string priority = null)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, new Uri(new Uri(server), topic))
+            {
+                Content = new StringContent(message, Encoding.UTF8)
+            };
+
+            if (!string.IsNullOrEmpty(title))
+                request.Headers.Add("Title", title);
+
+            if (!string.IsNullOrEmpty(priority)) // max/urgent: 5, high: 4, default: 3, low: 2, min: 1
+                request.Headers.Add("Priority", priority);
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var client = Utils.GetHttpClient(skipCertVerification: true);
+            var result = client.SendAsync(request).Result;
+            if (!result.IsSuccessStatusCode)
+                logger.Error($"Cannot send notification to '{server}/{topic}' subject: '{title}'");
+            return result.IsSuccessStatusCode;
         }
 
         public static string GetContent(string url)

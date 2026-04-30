@@ -141,6 +141,16 @@ namespace MyHome.Models
                     Services.SendEMail(MyHome.Instance.Config.SmtpServerAddress, MyHome.Instance.Config.Email, emailPassword,
                         MyHome.Instance.Config.Email, "My Home", "Alert sending failed");
                 }
+
+                var ntfyPriority = this.level switch
+                {
+                    NotificationLevel.Low => "low",
+                    NotificationLevel.Medium => "default",
+                    NotificationLevel.Critical => "high",
+                    _ => "default" // Default case
+                };
+                Services.SendNtfyMessage(MyHome.Instance.Config.NtfyServerAddress, MyHome.Instance.Config.NtfyAccessToken,
+                    MyHome.Instance.Config.NtfyTopic, msg, "MyHome", ntfyPriority);
                 return result;
             }
             catch (Exception e)
