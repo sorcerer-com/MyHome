@@ -51,6 +51,15 @@ namespace MyHome.Models
         [UiProperty(true, "base64 encode")]
         public string EmailPassword { get; set; } = "";
 
+        [UiProperty(true)]
+        public string NtfyServerAddress { get; set; } = "";
+
+        [UiProperty(true)]
+        public string NtfyAccessToken { get; set; } = "";
+
+        [UiProperty(true)]
+        public string NtfyTopic { get; set; } = "";
+
 
         [UiProperty(true, "host[:port]")]
         public string MqttServerAddress { get; set; } = "";
