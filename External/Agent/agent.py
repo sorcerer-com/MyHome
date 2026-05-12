@@ -72,7 +72,7 @@ class Agent:
         self._mqtt.disconnect()
 
     def _mqtt_on_connect(self, client, userdata, flags, rc):
-        logging.info(
+        logging.debug(
             f"MQTT client {client._client_id} connected to {client._host}:{client._port}")
 
         self._mqtt.subscribe(f"cmnd/{self._hostname}/cec")
