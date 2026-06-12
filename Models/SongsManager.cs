@@ -29,12 +29,23 @@ public class SongsManager
         public bool Exists => this.Local && File.Exists(Path.Join(MyHome.Instance.Config.SongsPath, this.Name));
     }
 
+    public sealed class Playlist
+    {
+        [UiProperty]
+        public string Name { get; set; }
+        [UiProperty]
+        public Dictionary<string, int> Songs { get; set; } = new Dictionary<string, int>(); // song name -> rating
+    }
+
     public List<SongInfo> Songs { get; }
+
+    public List<Playlist> Playlists { get; }
 
 
     public SongsManager()
     {
         this.Songs = new List<SongInfo>();
+        this.Playlists = new List<Playlist>();
 
         Directory.CreateDirectory(MyHome.Instance.Config.SongsPath);
     }
@@ -90,6 +101,12 @@ public class SongsManager
         if (song.Exists)
             File.Move(Path.Join(MyHome.Instance.Config.SongsPath, oldName), Path.Join(MyHome.Instance.Config.SongsPath, newName));
         song.Name = newName;
+
+        foreach (var playlist in this.Playlists)
+        {
+            if (playlist.Songs.Remove(oldName, out var rating))
+                playlist.Songs[newName] = rating;
+        }
         return true;
     }
 
@@ -103,7 +120,11 @@ public class SongsManager
         if (song.Exists)
             File.Delete(Path.Join(MyHome.Instance.Config.SongsPath, name));
         if (!keepEntry)
+        {
             this.Songs.Remove(song);
+            foreach (var playlist in this.Playlists)
+                playlist.Songs.Remove(name);
+        }
         return true;
     }
 
@@ -127,11 +148,101 @@ public class SongsManager
         return song.Name;
     }
 
-    public void IncreaseSongRating(string name, int rating = 1)
+    public void IncreaseSongRating(string songName, string playlistName = null, int rating = 1)
     {
-        var song = this.Songs.Find(s => s.Name == name);
-        if (song != null)
-            song.Rating += rating;
+        if (string.IsNullOrEmpty(playlistName))
+        {
+            var song = this.Songs.Find(s => s.Name == songName);
+            if (song != null)
+                song.Rating += rating;
+        }
+        else
+        {
+            var playlist = this.Playlists.Find(p => p.Name == playlistName);
+            if (playlist == null || !playlist.Songs.ContainsKey(songName))
+                return;
+            playlist.Songs[songName] += rating;
+        }
+    }
+
+    public int GetPlaylistSongRating(string playlistName, string songName)
+    {
+        var playlist = this.Playlists.Find(p => p.Name == playlistName);
+        if (playlist == null)
+            return 0;
+        return playlist.Songs.TryGetValue(songName, out var r) ? r : 0;
+    }
+
+
+    public bool CreatePlaylist(string name)
+    {
+        if (string.IsNullOrEmpty(name) || this.Playlists.Exists(p => p.Name == name))
+            return false;
+
+        logger.Debug($"Create playlist: {name}");
+        this.Playlists.Add(new Playlist { Name = name });
+        return true;
+    }
+
+    public bool DeletePlaylist(string name)
+    {
+        var playlist = this.Playlists.Find(p => p.Name == name);
+        if (playlist == null)
+            return false;
+
+        logger.Debug($"Delete playlist: {name}");
+        this.Playlists.Remove(playlist);
+        return true;
+    }
+
+    public bool RenamePlaylist(string oldName, string newName)
+    {
+        if (string.IsNullOrEmpty(newName) || this.Playlists.Exists(p => p.Name == newName))
+            return false;
+
+        var playlist = this.Playlists.Find(p => p.Name == oldName);
+        if (playlist == null)
+            return false;
+
+        logger.Debug($"Rename playlist '{oldName}' to '{newName}'");
+        playlist.Name = newName;
+        return true;
+    }
+
+    public bool AddSongToPlaylist(string playlistName, string songName)
+    {
+        var playlist = this.Playlists.Find(p => p.Name == playlistName);
+        if (playlist == null || !this.Songs.Exists(s => s.Name == songName))
+            return false;
+
+        if (playlist.Songs.ContainsKey(songName))
+            return false;
+
+        logger.Debug($"Add song '{songName}' to playlist '{playlistName}'");
+        playlist.Songs[songName] = playlist.Songs.Values.DefaultIfEmpty(0).Max();
+        return true;
+    }
+
+    public bool RemoveSongFromPlaylist(string playlistName, string songName)
+    {
+        var playlist = this.Playlists.Find(p => p.Name == playlistName);
+        if (playlist == null)
+            return false;
+
+        logger.Debug($"Remove song '{songName}' from playlist '{playlistName}'");
+        return playlist.Songs.Remove(songName);
+    }
+
+    public List<SongInfo> GetPlaylistSongs(string playlistName)
+    {
+        var playlist = this.Playlists.Find(p => p.Name == playlistName);
+        if (playlist == null)
+            return new List<SongInfo>();
+
+        return playlist.Songs.Keys
+            .Select(name => this.Songs.Find(s => s.Name == name))
+            .Where(s => s != null)
+            .ToList();
     }
 
 

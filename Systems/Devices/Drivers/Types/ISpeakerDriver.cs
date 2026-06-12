@@ -14,6 +14,7 @@ public interface ISpeakerDriver
     int Position { get; }
     int BufferLevel { get; }
     bool Shuffle { get; set; }
+    string ActivePlaylist { get; set; }
     int AlarmVolume { get; set; }
     int AlarmDuration { get; set; }
 

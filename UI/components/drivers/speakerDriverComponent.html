@@ -87,7 +87,52 @@
                 </div>
 
                 <hr class="reset-margin margin-bottom-8" v-if="driver.Playing" />
+
                 <div class="w3-left-align">
+                    <!-- playlist bar -->
+                    <div class="w3-bar w3-gray margin-bottom-8" style="width:100%">
+                        <a class="w3-bar-item w3-button w3-small"
+                           v-bind:class="{'w3-light-gray': driver.ActivePlaylist == ''}"
+                           title="All songs"
+                           v-on:click="selectPlaylist('')">
+                            All songs
+                        </a>
+                        <a class="w3-bar-item w3-button w3-small" style="padding-right: 10px;"
+                           v-for="pl of driver.Playlists"
+                           v-bind:class="{'w3-light-gray': driver.ActivePlaylist == pl.Name}"
+                           v-bind:title="pl.Name"
+                           v-on:click="selectPlaylist(pl.Name)">
+                            <span v-if="renamePlaylist?.Name != pl.Name" style="padding-right: 6px">{{pl.Name}}</span>
+                            <a class="material-icons w3-small w3-hover-text-white w3-mi" title="Rename playlist"
+                               v-if="renamePlaylist?.Name != pl.Name"
+                               v-on:click.stop="startRenamePlaylist(pl)">
+                                edit
+                            </a>
+                            <a class="material-icons w3-small w3-hover-text-red" title="Delete playlist"
+                               v-if="renamePlaylist?.Name != pl.Name"
+                               v-on:click.stop="deletePlaylist(pl.Name)">
+                                close
+                            </a>
+
+                            <!-- rename inline -->
+                            <input v-if="renamePlaylist?.Name == pl.Name" type="text"
+                                   class="w3-small" style="width: 90px; padding: 0 2px;"
+                                   v-model="renamePlaylist.newName"
+                                   v-on:click.stop=""
+                                   v-on:keyup.enter="confirmRenamePlaylist"
+                                   v-on:keyup.escape="renamePlaylist = null" autofocus />
+                            <a v-if="renamePlaylist?.Name == pl.Name"
+                               class="material-icons w3-hover-text-green" style="font-size: 14px;"
+                               v-on:click.stop="confirmRenamePlaylist" title="Confirm rename">done</a>
+                        </a>
+
+                        <a class="material-icons w3-bar-item w3-button w3-large"
+                           title="New playlist"
+                           v-on:click="createPlaylist('NewPlaylist')">
+                            playlist_add
+                        </a>
+                    </div>
+
                     <!-- add new song-->
                     <details class="w3-show-inline-block margin-bottom-8">
                         <summary class="w3-show-inline-block w3-cell-top w3-hover-text-dark-gray margin-right-8 material-icons"
@@ -107,9 +152,9 @@
                         </a>
                     </details>
                     <!-- edit -->
-                    <a class="w3-right w3-hover-text-white material-icons"
-                       v-bind:class="{'w3-text-dark-gray': !rename}"
-                       v-on:click="rename = rename ? null : {}"
+                    <a class="w3-right w3-hover-text-white material-icons" title="Edit Mode"
+                       v-bind:class="{'w3-text-dark-gray': !edit}"
+                       v-on:click="edit = edit ? null : {}"
                        v-if="!driver.Playing">
                         edit_square
                     </a>
@@ -124,20 +169,20 @@
                      v-for="song of songs">
 
                     <span class="w3-col m10 s9 w3-left-align overflow-wrap-break-word" style="user-select: none;"
-                          v-bind:class="{'w3-text-gray': song.Local && !song.Exists}"
+                          v-bind:class="{'w3-text-gray': (song.Local && !song.Exists) || !isSongInActivePlaylist(song)}"
                           v-bind:title="song.Name + ' (Rating: ' + song.Rating + ')'"
-                          v-if="rename?.Url != song.Url"
+                          v-if="edit?.Url != song.Url"
                           v-on:dblclick="callDevice('PlaySong', song.Name)">
                         {{song.Name}}
                     </span>
                     <!-- rename -->
-                    <input type="text" class="w3-col m9 s9 w3-left-align" v-model="rename.Name"
-                           v-if="rename?.Url == song.Url" v-on:keyup.enter="renameSong" />
-                    <a class="w3-hover-text-green w3-left margin-left-8 material-icons" v-if="rename?.Url == song.Url" v-on:click="renameSong()">done</a>
-                    <a class="w3-hover-text-dark-gray w3-left margin-left-8 material-icons" v-if="rename?.Url == song.Url" v-on:click="rename = {}">close</a>
+                    <input type="text" class="w3-col m9 s9 w3-left-align" v-model="edit.Name"
+                           v-if="edit?.Url == song.Url" v-on:keyup.enter="renameSong" />
+                    <a class="w3-hover-text-green w3-left margin-left-8 material-icons" v-if="edit?.Url == song.Url" v-on:click="renameSong()">done</a>
+                    <a class="w3-hover-text-dark-gray w3-left margin-left-8 material-icons" v-if="edit?.Url == song.Url" v-on:click="edit = {}">close</a>
 
                     <span class="w3-col m2 s3 w3-right-align" style="line-height: 1"
-                          v-if="!rename">
+                          v-if="!edit">
                         <a class="w3-hover-text-dark-gray material-icons margin-right-8" title="Play"
                            v-if="driver.Title != song.Name"
                            v-on:click="callDevice('PlaySong', song.Name)">
@@ -159,9 +204,9 @@
 
                     <!-- edit buttons -->
                     <span class="w3-col m2 s3 w3-right-align" style="line-height: 1"
-                          v-if="rename && rename.Url != song.Url">
+                          v-if="edit && edit.Url != song.Url && !driver.ActivePlaylist">
                         <a class="w3-hover-text-dark-gray font-size-normal margin-right-8 material-icons" title="Rename"
-                           v-on:click="rename = {...song}">
+                           v-on:click="edit = {...song}">
                             edit
                         </a>
                         <a class="w3-hover-text-red font-size-normal margin-right-8 material-icons" title="Delete"
@@ -171,6 +216,15 @@
                         <a class="w3-hover-text-red font-size-normal margin-right-8 material-icons" title="Remove File"
                            v-on:click="deleteSong(song, true)">
                             remove
+                        </a>
+                    </span>
+
+                    <span class="w3-col m2 s3 w3-right-align" style="line-height: 1"
+                          v-if="edit && driver.ActivePlaylist">
+                        <a class="w3-hover-text-dark-gray font-size-normal margin-right-8 material-icons"
+                           v-bind:title="isSongInActivePlaylist(song) ? 'Remove from playlist' : 'Add to playlist'"
+                           v-on:click="toggleSongInPlaylist(song)">
+                            {{isSongInActivePlaylist(song) ? 'playlist_remove' : 'playlist_add'}}
                         </a>
                     </span>
                 </div>

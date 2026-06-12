@@ -130,10 +130,29 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
         [JsonIgnore]
         [UiProperty]
+        public List<Playlist> Playlists => MyHome.Instance.SongsManager.Playlists;
+
+        [JsonIgnore]
+        [UiProperty]
         public List<int> Queue { get; }
 
         [UiProperty]
         public bool Shuffle { get; set; }
+
+        [JsonIgnore]
+        [UiProperty]
+        public string ActivePlaylist
+        {
+            get => this.activePlaylist;
+            set
+            {
+                if (this.activePlaylist != value)
+                {
+                    this.activePlaylist = value;
+                    this.orderedSongs = null; // regenerate order for the new playlist
+                }
+            }
+        }
 
         [UiProperty(true)]
         public int AlarmVolume { get; set; }
@@ -143,6 +162,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
 
         private List<string> orderedSongs;
+        private string activePlaylist;
         private AlarmType? alarmType;
 
 
@@ -173,6 +193,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
             this.Queue = new List<int>();
 
             this.orderedSongs = null;
+            this.activePlaylist = "";
             this.alarmType = null;
         }
 
@@ -197,6 +218,56 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
         {
             if (MyHome.Instance.SongsManager.DeleteSong(name, keepEntry))
                 MyHome.Instance.SystemChanged = true;
+        }
+
+
+        public void CreatePlaylist(string name)
+        {
+            if (MyHome.Instance.SongsManager.CreatePlaylist(name))
+                MyHome.Instance.SystemChanged = true;
+        }
+
+        public void DeletePlaylist(string name)
+        {
+            if (MyHome.Instance.SongsManager.DeletePlaylist(name))
+            {
+                if (this.ActivePlaylist == name)
+                {
+                    this.ActivePlaylist = "";
+                    this.orderedSongs = null;
+                }
+                MyHome.Instance.SystemChanged = true;
+            }
+        }
+
+        public void RenamePlaylist(string oldName, string newName)
+        {
+            if (MyHome.Instance.SongsManager.RenamePlaylist(oldName, newName))
+            {
+                if (this.ActivePlaylist == oldName)
+                    this.activePlaylist = newName; // set activePlaylist, not ActivePlaylist, to avoid song reorder
+                MyHome.Instance.SystemChanged = true;
+            }
+        }
+
+        public void AddSongToPlaylist(string playlistName, string songName)
+        {
+            if (MyHome.Instance.SongsManager.AddSongToPlaylist(playlistName, songName))
+            {
+                if (this.ActivePlaylist == playlistName)
+                    this.orderedSongs = null;
+                MyHome.Instance.SystemChanged = true;
+            }
+        }
+
+        public void RemoveSongFromPlaylist(string playlistName, string songName)
+        {
+            if (MyHome.Instance.SongsManager.RemoveSongFromPlaylist(playlistName, songName))
+            {
+                if (this.ActivePlaylist == playlistName)
+                    this.orderedSongs = null;
+                MyHome.Instance.SystemChanged = true;
+            }
         }
 
 
@@ -237,16 +308,23 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
 
             if (this.orderedSongs == null)
             {
+                var source = !string.IsNullOrEmpty(this.ActivePlaylist)
+                    ? MyHome.Instance.SongsManager.GetPlaylistSongs(this.ActivePlaylist)
+                    : MyHome.Instance.SongsManager.Songs.Where(s => s.Exists).ToList();
+
+                Func<SongInfo, int> getRating = !string.IsNullOrEmpty(this.ActivePlaylist)
+                    ? s => MyHome.Instance.SongsManager.GetPlaylistSongRating(this.ActivePlaylist, s.Name)
+                    : s => s.Rating;
+
                 if (this.Shuffle)
                 {
-                    var max = MyHome.Instance.SongsManager.Songs.Max(s => s.Rating);
-                    this.orderedSongs = MyHome.Instance.SongsManager.Songs.Where(s => s.Exists)
-                        .OrderByDescending(s => random.NextDouble() + ((double)s.Rating / max)).Select(s => s.Name).ToList();
+                    var max = source.Select(getRating).DefaultIfEmpty(1).Max();
+                    this.orderedSongs = source.OrderByDescending(s => random.NextDouble() + ((double)getRating(s) / max))
+                        .Select(s => s.Name).ToList();
                 }
                 else
                 {
-                    this.orderedSongs = MyHome.Instance.SongsManager.Songs.Where(s => s.Exists)
-                        .OrderByDescending(s => s.Rating).Select(s => s.Name).ToList();
+                    this.orderedSongs = source.OrderByDescending(getRating).Select(s => s.Name).ToList();
                 }
             }
             this.PlaySong(this.orderedSongs[(this.orderedSongs.IndexOf(currentSong) + 1) % this.orderedSongs.Count]);
@@ -286,7 +364,7 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                         this.PlaySong(this.Title);
                     else
                     {
-                        MyHome.Instance.SongsManager.IncreaseSongRating(this.Title);
+                        MyHome.Instance.SongsManager.IncreaseSongRating(this.Title, this.ActivePlaylist);
                         this.NextSong(this.Title);
                     }
                 }

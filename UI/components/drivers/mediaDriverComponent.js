@@ -69,7 +69,7 @@
         },
 
         callDriver: function (funcName, ...args) {
-            callDevice(this.room.Name, this.driver.Name, funcName, args)
+            callDevice(this.room.Name, this.driver.Name, funcName, ...args)
                 .done(() => this.processing = false)
                 .fail(() => this.processing = false);
             this.processing = true;

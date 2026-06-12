@@ -62,16 +62,16 @@
         },
 
         setDevice: function (value) {
-            setDevice(this.room.Name, this.driver.Name, value)
+            this.processing = true;
+            return setDevice(this.room.Name, this.driver.Name, value)
                 .done(() => this.processing = false)
                 .fail(() => this.processing = false);
-            this.processing = true;
         },
         callDevice: function (funcName, ...args) {
-            callDevice(this.room.Name, this.driver.Name, funcName, args)
+            this.processing = true;
+            return callDevice(this.room.Name, this.driver.Name, funcName, ...args)
                 .done(() => this.processing = false)
                 .fail(() => this.processing = false);
-            this.processing = true;
         },
 
         save: function () {
