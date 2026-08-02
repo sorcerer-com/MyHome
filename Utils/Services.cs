@@ -212,7 +212,7 @@ namespace MyHome.Utils
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S112")]
-        public static bool CreateVideo(List<string> imageFilePaths, string outputFilePath)
+        public static bool CreateVideo(List<string> imageFilePaths, string outputFilePath, double imageDuration)
         {
             if (imageFilePaths.Count == 0)
             {
@@ -224,7 +224,7 @@ namespace MyHome.Utils
             try
             {
                 var inputFilePath = Path.Join(Path.GetDirectoryName(outputFilePath), "list.txt");
-                File.WriteAllText(inputFilePath, string.Join("\n", imageFilePaths.Select(f => $"file '{f}'\nduration 1")));
+                File.WriteAllText(inputFilePath, string.Join("\n", imageFilePaths.Select(f => $"file '{f}'\nduration {imageDuration}")));
 
                 var ffmpegProcess = new System.Diagnostics.Process();
                 ffmpegProcess.StartInfo.UseShellExecute = false;
@@ -234,7 +234,7 @@ namespace MyHome.Utils
                 ffmpegProcess.StartInfo.CreateNoWindow = true;
                 ffmpegProcess.StartInfo.FileName = "ffmpeg";
                 // "-c:v h264_v4l2m2m -pix_fmt yuv420p" to use Raspberry Pi hardware acceleration
-                ffmpegProcess.StartInfo.Arguments = $" -f concat -safe 0 -i \"{inputFilePath}\" -c:v h264_v4l2m2m -pix_fmt yuv420p -y \"{outputFilePath}\"";
+                ffmpegProcess.StartInfo.Arguments = $" -f concat -safe 0 -i \"{inputFilePath}\" -c:v h264_v4l2m2m -pix_fmt yuv420p -b:v 10M -y \"{outputFilePath}\"";
                 ffmpegProcess.Start();
 
                 var stdErr = new StringBuilder();

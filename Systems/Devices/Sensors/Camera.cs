@@ -26,7 +26,7 @@ namespace MyHome.Systems.Devices.Sensors
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
-        private const int ArchiveImagesCount = 300;
+        private const int ArchiveImagesCount = 1440; // 60*24, previous 300;
 
         public enum Movement
         {
@@ -446,7 +446,7 @@ namespace MyHome.Systems.Devices.Sensors
             }
 
             var videoFilename = $"{this.Room.Name}_{this.Name}_{DateTime.Now.Date:yyyy-MM-dd}.mp4";
-            Services.CreateVideo(images, Path.Join(path, videoFilename));
+            Services.CreateVideo(images, Path.Join(path, videoFilename), 0.1);
 
             // cleanup cameras records
             Utils.Utils.CleanupFilesByCapacity(
