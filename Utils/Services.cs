@@ -67,6 +67,9 @@ namespace MyHome.Utils
         {
             try
             {
+                if (string.IsNullOrEmpty(number))
+                    return false;
+
                 logger.Debug($"Send SMS '{message.Replace("\n", " ")}' to {number}");
                 if (provider.ToLower() == "telenor")
                 {
