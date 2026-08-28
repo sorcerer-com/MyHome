@@ -197,7 +197,8 @@ namespace MyHome.Utils
                     ffmpegProcess.StartInfo.RedirectStandardError = true;
                     ffmpegProcess.StartInfo.CreateNoWindow = true;
                     ffmpegProcess.StartInfo.FileName = "ffmpeg";
-                    ffmpegProcess.StartInfo.Arguments = $" -i \"{path}\" -vn -f mp3 -y \"{path.Replace(".mp4", ".mp3")}\"";
+                    // force 44.1 kHz audio which is better handled by the speaker
+                    ffmpegProcess.StartInfo.Arguments = $" -i \"{path}\" -vn -ar 44100 -f mp3 -y \"{path.Replace(".mp4", ".mp3")}\"";
                     ffmpegProcess.Start();
                     await ffmpegProcess.WaitForExitAsync();
                     if (ffmpegProcess.ExitCode != 0)
@@ -287,9 +288,10 @@ namespace MyHome.Utils
 
                 var outputFilePath = Path.Join(Path.GetDirectoryName(filePath),
                     Path.GetFileNameWithoutExtension(filePath) + "-normalized" + Path.GetExtension(filePath));
+                // force 44.1 kHz audio which is better handled by the speaker
                 ffmpegProcess.StartInfo.Arguments = $" -i \"{filePath}\" -pass 2 -filter:a loudnorm=linear=true:I=-15:print_format=json:" +
                     $"measured_I={jObj["input_i"]}:measured_tp={jObj["input_tp"]}:measured_LRA={jObj["input_lra"]}:measured_thresh={jObj["input_thresh"]}" +
-                    $" -y \"{outputFilePath}\"";
+                    $" -ar 44100 -y \"{outputFilePath}\"";
                 ffmpegProcess.Start();
 
                 stdErr.Clear();
