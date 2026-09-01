@@ -168,20 +168,30 @@
                      v-bind:class="{'w3-blue-gray': driver.Title == song.Name}"
                      v-for="song of songs">
 
-                    <span class="w3-col m10 s9 w3-left-align overflow-wrap-break-word" style="user-select: none;"
+                    <span class="w3-col m9 s8 w3-left-align overflow-wrap-break-word" style="user-select: none;"
                           v-bind:class="{'w3-text-gray': (song.Local && !song.Exists) || !isSongInActivePlaylist(song)}"
                           v-bind:title="song.Name + ' (Rating: ' + song.Rating + ')'"
                           v-if="edit?.Url != song.Url"
                           v-on:dblclick="callDevice('PlaySong', song.Name)">
                         {{song.Name}}
                     </span>
-                    <!-- rename -->
-                    <input type="text" class="w3-col m9 s9 w3-left-align" v-model="edit.Name"
-                           v-if="edit?.Url == song.Url" v-on:keyup.enter="renameSong" />
-                    <a class="w3-hover-text-green w3-left margin-left-8 material-icons" v-if="edit?.Url == song.Url" v-on:click="renameSong()">done</a>
-                    <a class="w3-hover-text-dark-gray w3-left margin-left-8 material-icons" v-if="edit?.Url == song.Url" v-on:click="edit = {}">close</a>
 
-                    <span class="w3-col m2 s3 w3-right-align" style="line-height: 1"
+                    <!-- rename -->
+                    <span v-if="edit?.Url == song.Url && edit?.newUrl == null">
+                        <input type="text" class="w3-col m9 s9 w3-left-align" v-model="edit.Name" v-on:keyup.enter="renameSong" />
+                        <a class="w3-hover-text-green w3-left margin-left-8 material-icons" v-on:click="renameSong()">done</a>
+                        <a class="w3-hover-text-dark-gray w3-left margin-left-8 material-icons" v-on:click="edit = {}">close</a>
+                    </span>
+                    <!-- change url -->
+                    <span v-if="edit?.Url == song.Url && edit?.newUrl != null">
+                        <span class="w3-col m9 s9 w3-left-align"> {{edit.Name}} </span>
+                        <input type="text" class="w3-col m9 s9 w3-left-align" v-model="edit.newUrl" v-on:keyup.enter="changeSongUrl" />
+                        <a class="w3-hover-text-green w3-left margin-left-8 material-icons" v-on:click="changeSongUrl()">done</a>
+                        <a class="w3-hover-text-dark-gray w3-left margin-left-8 material-icons" v-on:click="edit = {}">close</a>
+                    </span>
+
+                    <!-- play -->
+                    <span class="w3-col m3 s4 w3-right-align" style="line-height: 1"
                           v-if="!edit">
                         <a class="w3-hover-text-dark-gray material-icons margin-right-8" title="Play"
                            v-if="driver.Title != song.Name"
@@ -203,11 +213,15 @@
                     </span>
 
                     <!-- edit buttons -->
-                    <span class="w3-col m2 s3 w3-right-align" style="line-height: 1"
+                    <span class="w3-col m3 s4 w3-right-align" style="line-height: 1"
                           v-if="edit && edit.Url != song.Url && !driver.ActivePlaylist">
                         <a class="w3-hover-text-dark-gray font-size-normal margin-right-8 material-icons" title="Rename"
                            v-on:click="edit = {...song}">
                             edit
+                        </a>
+                        <a class="w3-hover-text-dark-gray font-size-normal margin-right-8 material-icons" title="Change Link"
+                           v-on:click="edit = {...song, newUrl: song.Url}">
+                            link
                         </a>
                         <a class="w3-hover-text-red font-size-normal margin-right-8 material-icons" title="Delete"
                            v-on:click="deleteSong(song, false)">

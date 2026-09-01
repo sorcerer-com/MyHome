@@ -214,6 +214,12 @@ namespace MyHome.Systems.Devices.Drivers.Mqtt
                 MyHome.Instance.SystemChanged = true;
         }
 
+        public void ChangeSongUrl(string name, string newUrl)
+        {
+            if (MyHome.Instance.SongsManager.ChangeSongUrl(name, newUrl))
+                MyHome.Instance.SystemChanged = true;
+        }
+
         public void DeleteSong(string name, bool keepEntry = false)
         {
             if (MyHome.Instance.SongsManager.DeleteSong(name, keepEntry))

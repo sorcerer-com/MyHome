@@ -110,6 +110,20 @@ public class SongsManager
         return true;
     }
 
+    public bool ChangeSongUrl(string name, string newUrl)
+    {
+        logger.Debug($"Change song '{name}' url to '{newUrl}'");
+        if (!newUrl.StartsWith("http"))
+            return false;
+
+        var song = this.Songs.Find(s => s.Name == name);
+        if (song == null)
+            return false;
+
+        song.Url = newUrl;
+        return true;
+    }
+
     public bool DeleteSong(string name, bool keepEntry = false)
     {
         logger.Debug($"Delete song: {name}");

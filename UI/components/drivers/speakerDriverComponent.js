@@ -68,6 +68,13 @@
                 this.edit = null;
             }
         },
+        changeSongUrl: function () {
+            let song = this.driver.Songs.find(s => s.Url == this.edit.Url);
+            if (song) {
+                callDevice(this.room.Name, this.driver.Name, "ChangeSongUrl", song.Name, this.edit.newUrl);
+                this.edit = null;
+            }
+        },
         deleteSong: function (song, keepEntry) {
             if (!keepEntry && !confirm("Are you sure you want to delete the song?"))
                 return;
