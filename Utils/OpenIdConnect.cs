@@ -23,7 +23,7 @@ namespace MyHome.Utils
 
         private static readonly Random random = new();
         private static readonly Lock _lock = new();
-        private static Dictionary<string, object> _metadata = null;
+        private static Dictionary<string, Dictionary<string, object>> _metadata = new Dictionary<string, Dictionary<string, object>>();
         private static List<Dictionary<string, object>> _jwks = null;
         private static DateTime _lastRetry = DateTime.Now;
 
@@ -32,6 +32,8 @@ namespace MyHome.Utils
         {
             if (string.IsNullOrEmpty(oidcAddress))
                 return false;
+            if (oidcAddress.StartsWith('/'))
+                oidcAddress = $"{context.Request.Scheme}://{context.Request.Host}" + oidcAddress;
 
             var metadata = GetMetadata(oidcAddress);
             if (metadata == null || !metadata.TryGetValue("authorization_endpoint", out var authEndpoint) ||
@@ -73,6 +75,11 @@ namespace MyHome.Utils
 
         public static string HandleCallback(HttpContext context, string oidcAddress, string clientId, string clientSecret)
         {
+            if (string.IsNullOrEmpty(oidcAddress))
+                return null;
+            if (oidcAddress.StartsWith('/'))
+                oidcAddress = $"{context.Request.Scheme}://{context.Request.Host}" + oidcAddress;
+
             try
             {
                 var code = context.Request.Query["code"];
@@ -131,7 +138,7 @@ namespace MyHome.Utils
                 if (!ValidateJwt(idToken, jwks[0], clientId))
                     return null;
 
-                var userInfo = GetUserInfo(oidcAddress, accessToken);
+                var userInfo = GetUserInfo((string)metadata["userinfo_endpoint"], accessToken);
                 logger.Info($"OpenIdConnect login successful for user: {userInfo["sub"]} ({userInfo["name"]})");
                 context.Session.SetString("user_id", userInfo["sub"]);
                 context.Session.SetString("user_name", userInfo["name"]);
@@ -153,9 +160,8 @@ namespace MyHome.Utils
         }
 
 
-        public static Dictionary<string, string> GetUserInfo(string address, string token)
+        public static Dictionary<string, string> GetUserInfo(string url, string token)
         {
-            var url = $"{address}/userinfo";
             try
             {
                 logger.Debug($"Get OpenIdConnect userinfo from '{url}'");
@@ -180,8 +186,8 @@ namespace MyHome.Utils
         {
             lock (_lock)
             {
-                if (_metadata != null && (_metadata.Count != 0 || DateTime.Now - _lastRetry < TimeSpan.FromMinutes(5)))
-                    return _metadata;
+                if (_metadata.ContainsKey(address) && (_metadata[address].Count != 0 || DateTime.Now - _lastRetry < TimeSpan.FromMinutes(5)))
+                    return _metadata[address];
 
                 var url = $"{address}/.well-known/openid-configuration";
 
@@ -190,14 +196,14 @@ namespace MyHome.Utils
                     logger.Debug($"Get OpenIdConnect metadata from '{url}'");
                     var client = Utils.GetHttpClient(skipCertVerification: true);
                     var response = client.GetStringAsync(url).Result;
-                    _metadata = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
+                    _metadata[address] = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
                 }, 3, logger, "get OpenIdConnect metadata");
                 if (!res)
                 {
-                    _metadata = new Dictionary<string, object>();
+                    _metadata[address] = new Dictionary<string, object>();
                     _lastRetry = DateTime.Now;
                 }
-                return _metadata;
+                return _metadata[address];
             }
         }
 
@@ -225,6 +231,8 @@ namespace MyHome.Utils
         {
             if (string.IsNullOrEmpty(oidcAddress))
                 return false;
+            if (oidcAddress.StartsWith('/'))
+                oidcAddress = $"{context.Request.Scheme}://{context.Request.Host}" + oidcAddress;
 
             try
             {
@@ -250,7 +258,7 @@ namespace MyHome.Utils
                 if (idx > 0)
                     return forwardedUrl[0][..idx];
             }
-            return $"{context.Request.Scheme}://{context.Request.Host}"; ;
+            return $"{context.Request.Scheme}://{context.Request.Host}";
         }
 
         private static bool ValidateJwt(string jwt, Dictionary<string, object> jwk, string clientId)
